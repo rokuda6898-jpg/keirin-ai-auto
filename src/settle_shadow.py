@@ -25,6 +25,7 @@ BET_TYPE_SUMMARY_CSV = OUTPUT_DIR / "shadow_bet_type_summary.csv"
 STRATEGY_SUMMARY_CSV = OUTPUT_DIR / "shadow_strategy_summary.csv"
 OVERALL_JSON = OUTPUT_DIR / "shadow_overall.json"
 REPORT_MD = OUTPUT_DIR / "shadow_report.md"
+HISTORY_HTML = OUTPUT_DIR / "history.html"
 TARGET_ROI = 0.50
 MIN_BETS_FOR_TARGET_JUDGMENT = 500
 MIN_SECONDS_BEFORE_CLOSE = 60
@@ -456,6 +457,65 @@ def build_report(overall, daily, bet_types, strategies, settled):
     return "\n".join(lines) + "\n"
 
 
+
+def build_public_history_html(settled):
+    view = settled.copy()
+    if view.empty:
+        rows_html = '<div class="empty">まだ予想履歴はありません。</div>'
+        summary_html = ''
+    else:
+        view = view[view.get("is_prospective", False)].copy()
+        view["status"] = np.where(view["is_decided"], "確定", "結果取得待ち")
+        view["result_label"] = np.where(
+            view["is_decided"],
+            np.where(view["is_hit"], "的中", "ハズレ"),
+            "—",
+        )
+        view["stake_display"] = pd.to_numeric(view.get("stake_yen", 0), errors="coerce").fillna(0).map(lambda x: f"{int(x):,}円")
+        view["return_display"] = pd.to_numeric(view.get("actual_return_yen", np.nan), errors="coerce").map(
+            lambda x: "—" if pd.isna(x) else f"{int(x):,}円"
+        )
+        view["profit_display"] = pd.to_numeric(view.get("actual_profit_yen", np.nan), errors="coerce").map(
+            lambda x: "—" if pd.isna(x) else f"{int(x):+,}円"
+        )
+        view = view.sort_values(["date", "venue", "race_no"], ascending=[False, True, True])
+        cards = []
+        for _, row in view.iterrows():
+            cls = "hit" if row["result_label"] == "的中" else ("miss" if row["result_label"] == "ハズレ" else "pending")
+            cards.append(
+                f'<article class="card"><div class="top"><b>{row["date"]}　{row["venue"]} {int(row["race_no"])}R</b>'
+                f'<span class="status {cls}">{row["status"]}</span></div>'
+                f'<div class="buy"><span>{row.get("bet_label", row.get("bet_type", ""))}</span><strong>{row["buy"]}</strong>'
+                f'<span class="result {cls}">{row["result_label"]}</span></div>'
+                f'<div class="money"><span>購入 {row["stake_display"]}</span><span>払戻 {row["return_display"]}</span>'
+                f'<span>損益 {row["profit_display"]}</span></div></article>'
+            )
+        rows_html = "".join(cards)
+        decided = view[view["is_decided"]]
+        stake = pd.to_numeric(decided.get("stake_yen", 0), errors="coerce").fillna(0).sum()
+        ret = pd.to_numeric(decided.get("actual_return_yen", 0), errors="coerce").fillna(0).sum()
+        hits = int(decided.get("is_hit", False).sum()) if len(decided) else 0
+        rate = (ret / stake * 100) if stake else 0
+        summary_html = (
+            f'<section class="stats"><div><small>確定</small><b>{len(decided)}点</b></div>'
+            f'<div><small>的中</small><b>{hits}点</b></div>'
+            f'<div><small>回収率</small><b>{rate:.1f}%</b></div></section>'
+        )
+    generated = datetime.now(ZoneInfo("Asia/Tokyo")).strftime("%Y/%m/%d %H:%M")
+    return f"""<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NEXUS | 予想履歴</title><style>
+*{{box-sizing:border-box}}body{{margin:0;background:#f4f8fd;color:#10233f;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}}
+header{{background:linear-gradient(135deg,#061a38,#0b5bd3);color:white;padding:22px 18px 18px}}.brand{{font-size:30px;font-weight:900;letter-spacing:.16em}}.sub{{opacity:.8;font-size:12px;margin-top:4px}}
+main{{max-width:920px;margin:auto;padding:16px}}.nav{{display:flex;gap:10px;margin-bottom:14px}}.nav a{{text-decoration:none;color:#0b5bd3;background:white;border:1px solid #d7e4f5;border-radius:12px;padding:10px 14px;font-weight:700}}
+h1{{font-size:21px;margin:12px 0}}.stats{{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:12px 0 16px}}.stats div{{background:white;border-radius:14px;padding:13px;box-shadow:0 4px 18px #173d7012}}.stats small{{display:block;color:#6d7e95}}.stats b{{font-size:19px}}
+.card{{background:white;border-radius:15px;padding:14px;margin:10px 0;box-shadow:0 4px 18px #173d7012}}.top,.buy,.money{{display:flex;align-items:center;gap:10px}}.top{{justify-content:space-between}}.buy{{margin:13px 0}}.buy strong{{font-size:21px;letter-spacing:.04em}}.result{{margin-left:auto;font-weight:800}}.status{{font-size:12px;border-radius:999px;padding:5px 9px;background:#edf3fb}}.hit{{color:#087c46}}.miss{{color:#b52b37}}.pending{{color:#6d7e95}}.money{{font-size:13px;color:#52657e;justify-content:space-between;border-top:1px solid #edf2f8;padding-top:10px}}.empty{{background:white;padding:30px;border-radius:15px;text-align:center}}
+footer{{padding:24px;text-align:center;color:#7b899b;font-size:11px}}@media(max-width:520px){{main{{padding:12px}}.brand{{font-size:27px}}.money{{font-size:12px}}}}
+</style></head><body><header><div class="brand">NEXUS</div><div class="sub">KEIRIN PREDICTION SYSTEM</div></header><main>
+<div class="nav"><a href="index.html">今日の予想</a><a href="history.html">予想履歴</a></div><h1>予想履歴</h1>{summary_html}{rows_html}
+</main><footer>更新 {generated} JST ｜ 予想は締切前に記録し、結果確定後に公式払戻で精算</footer></body></html>"""
+
+
+
 def run(args):
     ensure_dirs()
     bets = load_shadow_bets(args.start_date, args.end_date)
@@ -488,6 +548,7 @@ def run(args):
     }
     OVERALL_JSON.write_text(json.dumps(overall, ensure_ascii=False, indent=2), encoding="utf-8")
     REPORT_MD.write_text(build_report(overall, daily, bet_types, strategies, settled), encoding="utf-8")
+    HISTORY_HTML.write_text(build_public_history_html(settled), encoding="utf-8")
 
     print(json.dumps(overall, ensure_ascii=False, indent=2))
     print(f"saved: {SETTLED_CSV}")
