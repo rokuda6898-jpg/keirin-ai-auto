@@ -293,7 +293,13 @@ def build_entry_rows(race_data, race_date, venue, race_no, race_id, source_url, 
                 "result_available": result_available,
                 "is_dnf": int(include_results and (pd.isna(raw_order) or raw_order <= 0)),
                 "result_status": result.get("accidentName") or result.get("accident") or "",
+                # Provenance boundary: keep source/licensing metadata attached to raw-derived rows.
+                # Commercial training/export can exclude rows by these fields without mixing provenance.
+                "data_origin": "external_public_source",
+                "source_provider": "winticket",
                 "source_url": source_url,
+                "commercial_use_status": "review_required",
+                "derived_feature_version": "race_features_v1",
                 "player_name": player.get("name", ""),
                 "race_class": race.get("class", ""),
                 "race_type": race_type,
