@@ -393,28 +393,44 @@ def main():
     for col in ["p_win", "expected_value_win"]:
         top_table[col] = pd.to_numeric(top_table[col], errors="coerce").map(lambda x: "" if pd.isna(x) else f"{x:.4f}")
 
+    race_cards = []
+    for (venue, race_no, race_id), group in pred.groupby(["venue", "race_no", "race_id"], sort=False):
+        leaders = group.sort_values("rank_in_race").head(3)
+        picks = " / ".join(
+            f'<span class="car car-{int(row.car_no)}">{int(row.car_no)}</span> {float(row.p_win):.1%}'
+            for row in leaders.itertuples()
+        )
+        race_bets = shadow_bets[shadow_bets["race_id"].astype(str).eq(str(race_id))] if len(shadow_bets) else shadow_bets
+        if len(race_bets):
+            bet_html = "".join(
+                f'<div class="bet"><b>{row.get("bet_label", row.get("bet_type", ""))}</b>'
+                f'<strong>{row["buy"]}</strong><span>{int(row["stake_yen"]):,}円</span>'
+                f'<small>オッズ {float(row["odds_used"]):.1f}</small></div>'
+                for _, row in race_bets.iterrows()
+            )
+        else:
+            bet_html = '<div class="waiting">買い目候補は締切前オッズ取得後に表示</div>'
+        race_cards.append(
+            f'<article class="race"><div class="race-head"><b>{venue} {int(race_no)}R</b>'
+            f'<span>AI上位　{picks}</span></div>{bet_html}</article>'
+        )
+    generated = datetime.now(ZoneInfo("Asia/Tokyo")).strftime("%Y/%m/%d %H:%M")
     html = f"""
-<!doctype html>
-<html lang="ja">
-<head>
-  <meta charset="utf-8">
-  <title>Keirin AI Predictions</title>
-  <style>
-    body {{ font-family: sans-serif; margin: 24px; }}
-    table {{ border-collapse: collapse; font-size: 14px; }}
-    th, td {{ border: 1px solid #ddd; padding: 6px 8px; }}
-    th {{ background: #f5f5f5; }}
-  </style>
-</head>
-<body>
-  <h1>Keirin AI Predictions</h1>
-  <p>Generated at JST: {datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(timespec="seconds")}</p>
-  <h2>Top predictions</h2>
-  {top_table.to_html(index=False, escape=False)}
-  <h2>Trifecta candidates</h2>
-  {shadow_bets.head(100).to_html(index=False, escape=False) if len(shadow_bets) else "<p>No candidates</p>"}
-</body>
-</html>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NEXUS | 今日の競輪予想</title><style>
+*{{box-sizing:border-box}}body{{margin:0;background:#f4f8fd;color:#10233f;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}}
+header{{background:linear-gradient(135deg,#061a38,#0b5bd3);color:#fff;padding:22px 18px 19px}}.brand{{font-size:32px;font-weight:900;letter-spacing:.17em}}.tag{{font-size:12px;opacity:.82;margin-top:4px}}
+main{{max-width:920px;margin:auto;padding:15px}}nav{{display:flex;gap:10px;margin-bottom:16px}}nav a{{text-decoration:none;color:#0b5bd3;background:white;border:1px solid #d7e4f5;border-radius:12px;padding:10px 14px;font-weight:800}}
+.hero{{background:#071f43;color:white;border-radius:18px;padding:17px;margin-bottom:14px}}.hero h1{{font-size:21px;margin:0 0 5px}}.hero p{{font-size:12px;opacity:.75;margin:0}}
+.race{{background:white;border-radius:16px;padding:14px;margin:10px 0;box-shadow:0 4px 18px #173d7012}}.race-head{{display:flex;justify-content:space-between;gap:10px;align-items:center;border-bottom:1px solid #edf2f8;padding-bottom:11px}}.race-head>b{{font-size:18px}}.race-head>span{{font-size:12px;color:#60728b}}
+.car{{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;font-weight:900;border:1px solid #ccd6e4;background:#fff;color:#111}}.car-2{{background:#222;color:#fff}}.car-3{{background:#e53935;color:#fff}}.car-4{{background:#1769d2;color:#fff}}.car-5{{background:#f0c52d}}.car-6{{background:#45a95a;color:#fff}}.car-7{{background:#f18b28;color:#fff}}
+.bet{{display:grid;grid-template-columns:60px 1fr auto;gap:8px;align-items:center;padding:12px 0 0}}.bet b{{font-size:12px;color:#0b5bd3}}.bet strong{{font-size:20px;letter-spacing:.04em}}.bet span{{font-weight:800}}.bet small{{grid-column:2/4;color:#718096}}.waiting{{padding-top:12px;color:#7a899d;font-size:13px}}
+footer{{text-align:center;padding:24px;color:#7b899b;font-size:11px}}@media(max-width:520px){{main{{padding:12px}}.race-head{{align-items:flex-start;flex-direction:column}}.brand{{font-size:29px}}}}
+</style></head><body><header><div class="brand">NEXUS</div><div class="tag">KEIRIN PREDICTION SYSTEM</div></header><main>
+<nav><a href="index.html">今日の予想</a><a href="history.html">予想履歴</a></nav>
+<section class="hero"><h1>今日の予想</h1><p>更新 {generated} JST ｜ 1日予算 10,000円を基準にAIが配分</p></section>
+{"".join(race_cards) if race_cards else '<div class="race">本日の予想データを取得中です。</div>'}
+</main><footer>NEXUS ｜ オッズ取得状況により買い目は締切前に更新されます</footer></body></html>
 """
     html_path.write_text(html, encoding="utf-8")
 
