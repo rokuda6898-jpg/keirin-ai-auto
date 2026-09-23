@@ -412,7 +412,7 @@ def main():
   <h2>Top predictions</h2>
   {top_table.to_html(index=False, escape=False)}
   <h2>Trifecta candidates</h2>
-  {bets.head(100).to_html(index=False, escape=False) if len(bets) else "<p>No bets</p>"}
+  {shadow_bets.head(100).to_html(index=False, escape=False) if len(shadow_bets) else "<p>No candidates</p>"}
 </body>
 </html>
 """
