@@ -465,7 +465,7 @@ def main():
         close_epoch = pd.to_numeric(base_row.get("close_at", np.nan), errors="coerce")
         start_label = datetime.fromtimestamp(float(start_epoch), ZoneInfo("Asia/Tokyo")).strftime("%H:%M") if pd.notna(start_epoch) else ""
         seconds_to_close_ui = float(close_epoch) - prediction_epoch if pd.notna(close_epoch) else np.nan
-        timing_label = "締め切り間近" if pd.notna(seconds_to_close_ui) and 0 < seconds_to_close_ui <= 1800 else (f"{start_label} 発走" if start_label else "時刻確認中")
+        timing_label = ("締め切り" if pd.notna(seconds_to_close_ui) and seconds_to_close_ui <= 0 else ("締め切り間近" if pd.notna(seconds_to_close_ui) and seconds_to_close_ui <= 300 else ("出走前" if pd.notna(seconds_to_close_ui) else (f"{start_label} 発走" if start_label else "時刻確認中"))))
         leaders = group.sort_values("rank_in_race").head(3)
         picks = " / ".join(
             f'<span class="car car-{int(row.car_no)}">{int(row.car_no)}</span> {float(row.p_win):.1%}'
