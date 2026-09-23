@@ -37,6 +37,9 @@ ODDS_COLUMNS = [
 ]
 TRIFECTA_ODDS_COLUMNS = ["date", "venue", "race_no", "race_id", "buy", "trifecta_odds", "popularity_order", "source_url"]
 BET_SPECS = {
+    # Keep this only as an optional source: the current WINTICKET race odds
+    # payload often omits the win pool entirely. Never derive it from other pools.
+    "win": {"source": "win", "key_len": 1, "ordered": True},
     "trifecta": {"source": "trifecta", "key_len": 3, "ordered": True},
     "trio": {"source": "trio", "key_len": 3, "ordered": False},
     "exacta": {"source": "exacta", "key_len": 2, "ordered": True},
@@ -256,12 +259,25 @@ def parse_race_page(url):
 
 def save_today_frames(all_entries, all_odds):
     entries_df = pd.DataFrame(all_entries).sort_values(["date", "venue", "race_no", "car_no"])
-    entries_df.to_csv(TODAY_CSV, index=False)
-
     odds_df = pd.DataFrame(all_odds, columns=ODDS_COLUMNS)
     if len(odds_df):
         odds_df = odds_df.sort_values(["date", "venue", "race_no", "bet_type", "popularity_order", "buy"])
     odds_df.to_csv(TODAY_ODDS_CSV, index=False)
+
+    # A genuine single-win quote may be present in the same odds endpoint.
+    # If absent, leave odds_win missing; do not infer it from quinella/etc.
+    if len(odds_df):
+        win_odds = odds_df.loc[odds_df["bet_type"].eq("win"), ["race_id", "buy", "odds_used"]].copy()
+        if len(win_odds):
+            win_odds["car_no"] = pd.to_numeric(win_odds["buy"], errors="coerce")
+            win_odds["odds_win"] = pd.to_numeric(win_odds["odds_used"], errors="coerce")
+            win_odds = win_odds.dropna(subset=["car_no", "odds_win"]).drop_duplicates(["race_id", "car_no"], keep="last")
+            entries_df = entries_df.drop(columns=["odds_win"], errors="ignore").merge(
+                win_odds[["race_id", "car_no", "odds_win"]], on=["race_id", "car_no"], how="left"
+            )
+    if "odds_win" not in entries_df.columns:
+        entries_df["odds_win"] = np.nan
+    entries_df.to_csv(TODAY_CSV, index=False)
 
     trifecta_df = odds_df[odds_df["bet_type"].eq("trifecta")].copy() if len(odds_df) else pd.DataFrame(columns=ODDS_COLUMNS)
     if len(trifecta_df):

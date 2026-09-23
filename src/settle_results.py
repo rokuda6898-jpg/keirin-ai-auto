@@ -138,7 +138,14 @@ def settled_return_yen(row, fallback_return):
     stake = pd.to_numeric(row.get("stake_yen"), errors="coerce")
     if pd.notna(payout_per_100) and payout_per_100 > 0 and pd.notna(stake):
         return float(round(float(stake) * float(payout_per_100) / 100.0))
-    return float(fallback_return)
+    # The prediction-time odds are not the official settled payout. Missing
+    # official payoff stays unknown instead of being reported as realized cash.
+    return np.nan
+
+
+def display_number(value, digits=1):
+    parsed = pd.to_numeric(value, errors="coerce")
+    return f"{float(parsed):.{digits}f}" if pd.notna(parsed) and np.isfinite(parsed) else "未取得"
 
 
 def fetch_results(sleep_sec=0.2):
@@ -173,8 +180,11 @@ def summarize(name, bets):
             "roi": np.nan,
         }
 
+    bets = bets[pd.to_numeric(bets["actual_return_yen"], errors="coerce").notna()].copy()
+    if bets.empty:
+        return {"target": name, "bets": 0, "hits": 0, "stake_yen": 0, "return_yen": 0, "profit_yen": 0, "roi": np.nan}
     stake = pd.to_numeric(bets["stake_yen"], errors="coerce").fillna(0).sum()
-    returns = pd.to_numeric(bets["actual_return_yen"], errors="coerce").fillna(0).sum()
+    returns = pd.to_numeric(bets["actual_return_yen"], errors="coerce").sum()
     profit = pd.to_numeric(bets["actual_profit_yen"], errors="coerce").fillna(0).sum()
     return {
         "target": name,
@@ -219,6 +229,9 @@ def build_report(selected, summary):
         if not bool(row.get("is_decided", False)):
             result = "未確定"
             profit = 0
+        elif pd.isna(pd.to_numeric(row.get("actual_return_yen"), errors="coerce")):
+            result = "払戻未取得"
+            profit = "未取得"
         else:
             result = "的中" if row["is_hit"] else f"外れ({row.get('actual_for_bet_type', row.get('actual_trifecta', ''))})"
             profit = int(row["actual_profit_yen"])
@@ -227,7 +240,9 @@ def build_report(selected, summary):
         bet_label = row.get("bet_label", row.get("bet_type", ""))
         lines.append(
             f"| {row['date']} | {row['venue']} | {row['race_no']} | {bet_label} | {row['buy']} | "
-            f"{prob:.3f} | {odds:.1f} | {int(row['expected_profit_yen']):,}円 | {result} | {profit:,}円 |"
+            f"{display_number(prob, 3)} | {display_number(odds)} | "
+            f"{display_number(row.get('expected_profit_yen'), 0)}円 | {result} | "
+            f"{profit if isinstance(profit, str) else f'{profit:,}円'} |"
         )
     lines += ["", "詳細は `outputs/purchase_plan.csv` と `outputs/settled_bets.csv` を見てください。"]
     return "\n".join(lines) + "\n"

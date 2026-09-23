@@ -95,6 +95,61 @@ def stake_from_edge(expected_profit_100yen, base_stake=100, max_stake=500):
     return int(base_stake + extra_units * 100)
 
 
+def allocate_daily_budget(bets, budget_yen=10000, max_per_bet_yen=2000):
+    """Allocate in 100-yen units by probability and positive expected edge."""
+    if bets.empty:
+        return bets.assign(stake_yen=pd.Series(dtype=int))
+    result = bets.copy()
+    budget = max(int(budget_yen), 0) // 100 * 100
+    cap = max(int(max_per_bet_yen), 100) // 100 * 100
+    edge = pd.to_numeric(result["expected_profit_100yen"], errors="coerce").clip(lower=0)
+    probability = pd.to_numeric(result["prob"], errors="coerce").clip(lower=0, upper=1)
+    result["_allocation_weight"] = edge * probability
+    result = result.sort_values("_allocation_weight", ascending=False, kind="mergesort")
+    result["stake_yen"] = 0
+    # First reserve the minimum for the strongest candidates; remaining funds
+    # are assigned in 100-yen increments using the same confidence/edge weight.
+    eligible = result[result["_allocation_weight"].gt(0)].index.tolist()
+    eligible = eligible[: min(len(eligible), budget // 100)]
+    result.loc[eligible, "stake_yen"] = 100
+    remaining_units = max(budget // 100 - len(eligible), 0)
+    while remaining_units and eligible:
+        active = [i for i in eligible if result.at[i, "stake_yen"] < cap]
+        if not active:
+            break
+        weights = result.loc[active, "_allocation_weight"]
+        if float(weights.sum()) <= 0:
+            break
+        # Weighted water filling: each next unit goes to the ticket furthest
+        # below its target share, bounded by the per-ticket cap.
+        chosen = min(active, key=lambda i: (result.at[i, "stake_yen"] / result.at[i, "_allocation_weight"], str(i)))
+        result.at[chosen, "stake_yen"] += 100
+        remaining_units -= 1
+    return result.drop(columns=["_allocation_weight"]).sort_index()
+
+
+def prior_daily_stake(today_tag, replacing_race_ids):
+    """Reserve stakes from earlier same-day snapshots for other races."""
+    latest_by_race = {}
+    paths = sorted(OUTPUT_DIR.glob(f"shadow_bets_{today_tag}*.csv"), key=lambda p: p.stat().st_mtime)
+    replacing = {str(race_id) for race_id in replacing_race_ids}
+    for path in paths:
+        try:
+            frame = pd.read_csv(path, dtype={"race_id": str, "buy": str, "bet_type": str})
+        except (OSError, pd.errors.ParserError):
+            continue
+        if frame.empty or not {"race_id", "stake_yen"}.issubset(frame.columns):
+            continue
+        for race_id, group in frame.groupby("race_id", sort=False):
+            if str(race_id) not in replacing:
+                latest_by_race[str(race_id)] = group.copy()
+    used = sum(
+        pd.to_numeric(group.get("stake_yen", 0), errors="coerce").fillna(0).sum()
+        for group in latest_by_race.values()
+    )
+    return int(used)
+
+
 def ensure_ready():
     if not TODAY_CSV.exists():
         print("today_entries.csv not found; generating sample data")
@@ -205,11 +260,15 @@ def main():
     pred = df.copy()
     pred["p_raw"] = np.clip(calibrated, 1e-6, 1.0)
     pred = normalize_race_prob(pred, "p_raw", "p_win")
-    pred["expected_value_win"] = pred["p_win"] * pd.to_numeric(pred.get("odds_win", np.nan), errors="coerce") - 1
-    pred["stake_yen"] = base_stake_yen
-    pred["win_return_yen"] = (base_stake_yen * pd.to_numeric(pred.get("odds_win", np.nan), errors="coerce")).round(0)
-    pred["win_profit_yen"] = pred["win_return_yen"] - base_stake_yen
-    pred["loss_amount_yen"] = base_stake_yen
+    if "odds_win" not in pred.columns:
+        pred["odds_win"] = np.nan
+    pred["odds_win"] = pd.to_numeric(pred["odds_win"], errors="coerce")
+    valid_win_odds = pred["odds_win"].gt(0) & np.isfinite(pred["odds_win"])
+    pred["expected_value_win"] = (pred["p_win"] * pred["odds_win"] - 1).where(valid_win_odds)
+    pred["stake_yen"] = np.where(valid_win_odds, base_stake_yen, 0)
+    pred["win_return_yen"] = (base_stake_yen * pred["odds_win"]).round(0).where(valid_win_odds)
+    pred["win_profit_yen"] = (pred["win_return_yen"] - base_stake_yen).where(valid_win_odds)
+    pred["loss_amount_yen"] = np.where(valid_win_odds, base_stake_yen, 0)
     pred["expected_profit_yen"] = (base_stake_yen * pred["expected_value_win"]).round(0)
     pred["rank_in_race"] = pred.groupby("race_id")["p_win"].rank(ascending=False, method="first").astype(int)
 
@@ -287,9 +346,15 @@ def main():
             selected_parts.append(g.sort_values("expected_profit_100yen", ascending=False).head(max_per_race))
         bets = pd.concat(selected_parts, ignore_index=True) if selected_parts else candidates.head(0).copy()
         if len(bets):
-            bets["stake_yen"] = bets["expected_profit_100yen"].map(
-                lambda x: stake_from_edge(x, base_stake_yen, max_stake_yen)
-            )
+            daily_budget_yen = get_int_env("BET_DAILY_BUDGET_YEN", 10000)
+            reserved_yen = prior_daily_stake(today_jst, pred["race_id"].astype(str).unique())
+            remaining_budget_yen = max(daily_budget_yen - reserved_yen, 0)
+            bets = allocate_daily_budget(bets, remaining_budget_yen, max_stake_yen)
+            bets = bets[pd.to_numeric(bets["stake_yen"], errors="coerce").ge(100)].copy()
+        else:
+            reserved_yen = prior_daily_stake(today_jst, pred["race_id"].astype(str).unique())
+            remaining_budget_yen = max(get_int_env("BET_DAILY_BUDGET_YEN", 10000) - reserved_yen, 0)
+        if len(bets):
             bets["return_if_hit_yen"] = (bets["stake_yen"] * pd.to_numeric(bets["odds_used"], errors="coerce")).round(0)
             bets["profit_if_hit_yen"] = bets["return_if_hit_yen"] - bets["stake_yen"]
             bets["loss_amount_yen"] = bets["stake_yen"]
@@ -321,6 +386,10 @@ def main():
 
     html_path = OUTPUT_DIR / "index.html"
     top_table = pred[cols].head(100).copy()
+    top_table["odds_win"] = pd.to_numeric(top_table["odds_win"], errors="coerce").map(
+        lambda x: f"{x:.1f}" if pd.notna(x) and x > 0 else "未取得"
+    )
+    top_table = top_table.fillna("未取得")
     for col in ["p_win", "expected_value_win"]:
         top_table[col] = pd.to_numeric(top_table[col], errors="coerce").map(lambda x: "" if pd.isna(x) else f"{x:.4f}")
 
@@ -359,6 +428,9 @@ def main():
         "n_races": int(pred["race_id"].nunique()),
         "base_stake_yen": base_stake_yen,
         "max_stake_yen": max_stake_yen,
+        "daily_budget_yen": get_int_env("BET_DAILY_BUDGET_YEN", 10000),
+        "daily_reserved_yen": reserved_yen if "reserved_yen" in locals() else 0,
+        "daily_remaining_budget_yen": remaining_budget_yen if "remaining_budget_yen" in locals() else get_int_env("BET_DAILY_BUDGET_YEN", 10000),
         "max_seconds_to_close": max_seconds_to_close,
         "strategy_version": strategy_version,
         "snapshot_mode": snapshot_mode,

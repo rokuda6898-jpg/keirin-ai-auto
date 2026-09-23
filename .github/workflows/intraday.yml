@@ -45,7 +45,8 @@ jobs:
         if: steps.upcoming.outputs.count != '0'
         env:
           BET_BASE_STAKE_YEN: 100
-          BET_MAX_STAKE_YEN: 100
+          BET_MAX_STAKE_YEN: 2000
+          BET_DAILY_BUDGET_YEN: 10000
           BET_MAX_SECONDS_TO_CLOSE: 2400
           PREDICTION_SNAPSHOT_MODE: true
           PREDICTION_STRATEGY_VERSION: near_close_v2_20260805

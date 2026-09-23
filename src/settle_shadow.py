@@ -299,7 +299,10 @@ def settle_shadow_rows(bets, results):
 
 def summarize_rows(frame):
     prospective = frame[frame["is_prospective"]].copy()
-    decided = prospective[prospective["is_decided"]].copy()
+    decided = prospective[
+        prospective["is_decided"]
+        & pd.to_numeric(prospective.get("actual_return_yen", np.nan), errors="coerce").notna()
+    ].copy()
     stake = pd.to_numeric(decided.get("stake_yen", 0), errors="coerce").fillna(0).sum()
     returns = pd.to_numeric(decided.get("actual_return_yen", 0), errors="coerce").fillna(0).sum()
     profit = returns - stake
@@ -308,6 +311,10 @@ def summarize_rows(frame):
         "bets_total": int(len(prospective)),
         "bets_decided": int(len(decided)),
         "bets_pending": int((~prospective["is_decided"]).sum()),
+        "bets_missing_official_payout": int(
+            (prospective["is_decided"]
+             & pd.to_numeric(prospective.get("actual_return_yen", np.nan), errors="coerce").isna()).sum()
+        ),
         "bets_excluded_after_close": int(
             frame["evaluation_status"].eq("締切後のため除外").sum()
         ),
@@ -373,6 +380,7 @@ def build_report(overall, daily, bet_types, strategies, settled):
         f"- 締切後のため除外: {overall['bets_excluded_after_close']:,}点",
         f"- 時刻不明のため除外: {overall['bets_excluded_unknown_time']:,}点",
         f"- 確定: {overall['bets_decided']:,}点 / 未確定: {overall['bets_pending']:,}点",
+        f"- 公式払戻未取得: {overall.get('bets_missing_official_payout', 0):,}点（損益集計から除外）",
         f"- 的中: {overall['hits']:,}点（{fmt_pct(overall['hit_rate'])}）",
         f"- 仮想購入額: {overall['stake_yen']:,}円",
         f"- 公式払戻額: {overall['return_yen']:,}円",

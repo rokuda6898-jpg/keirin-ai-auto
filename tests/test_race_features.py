@@ -1,6 +1,8 @@
 import json
 import unittest
 
+import pandas as pd
+
 from race_features import build_entry_rows, recent_avg_finish
 from settle_results import settled_return_yen
 
@@ -70,6 +72,17 @@ class RaceFeatureTests(unittest.TestCase):
             "payouts_quinella_place_json": json.dumps({"1-4": 2150}),
         }
         self.assertEqual(settled_return_yen(row, fallback_return=3940), 4300)
+
+    def test_missing_official_payoff_does_not_use_prediction_odds_as_realized_return(self):
+        row = {
+            "is_decided": True,
+            "is_hit": True,
+            "bet_type": "trio",
+            "buy": "1-2-3",
+            "stake_yen": 100,
+            "payouts_trio_json": "{}",
+        }
+        self.assertTrue(pd.isna(settled_return_yen(row, fallback_return=9999)))
 
 
 if __name__ == "__main__":
