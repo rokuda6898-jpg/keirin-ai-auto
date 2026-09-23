@@ -336,8 +336,9 @@ def main():
     pred["expected_profit_yen"] = (base_stake_yen * pred["expected_value_win"]).round(0)
     pred["rank_in_race"] = pred.groupby("race_id")["p_win"].rank(ascending=False, method="first").astype(int)
 
-    sort_cols = ["date", "venue", "race_no", "rank_in_race"]
-    pred = pred.sort_values(sort_cols)
+    pred["_start_sort"] = pd.to_numeric(pred.get("start_at", np.nan), errors="coerce").fillna(float("inf"))
+    sort_cols = ["date", "_start_sort", "venue", "race_no", "rank_in_race"]
+    pred = pred.sort_values(sort_cols, kind="mergesort")
 
     today_jst = now_jst.strftime("%Y%m%d")
     output_tag = now_jst.strftime("%Y%m%d_%H%M%S") if snapshot_mode else today_jst
@@ -345,7 +346,7 @@ def main():
     latest_path = OUTPUT_DIR / "latest_predictions.csv"
 
     cols = [
-        "date", "venue", "race_no", "race_id", "rank_in_race",
+        "date", "venue", "race_no", "race_id", "start_at", "close_at", "rank_in_race",
         "car_no", "player_id", "style", "score", "odds_win",
         "p_win", "nexus_form_adj", "nexus_line_adj", "nexus_style_adj", "nexus_condition_adj", "nexus_uncertainty", "expected_value_win", "stake_yen", "win_return_yen",
         "win_profit_yen", "loss_amount_yen", "expected_profit_yen",
@@ -459,6 +460,12 @@ def main():
 
     race_cards = []
     for (venue, race_no, race_id), group in pred.groupby(["venue", "race_no", "race_id"], sort=False):
+        base_row = group.iloc[0]
+        start_epoch = pd.to_numeric(base_row.get("start_at", np.nan), errors="coerce")
+        close_epoch = pd.to_numeric(base_row.get("close_at", np.nan), errors="coerce")
+        start_label = datetime.fromtimestamp(float(start_epoch), ZoneInfo("Asia/Tokyo")).strftime("%H:%M") if pd.notna(start_epoch) else ""
+        seconds_to_close_ui = float(close_epoch) - prediction_epoch if pd.notna(close_epoch) else np.nan
+        timing_label = "締め切り間近" if pd.notna(seconds_to_close_ui) and 0 < seconds_to_close_ui <= 1800 else (f"{start_label} 発走" if start_label else "時刻確認中")
         leaders = group.sort_values("rank_in_race").head(3)
         picks = " / ".join(
             f'<span class="car car-{int(row.car_no)}">{int(row.car_no)}</span> {float(row.p_win):.1%}'
@@ -479,8 +486,8 @@ def main():
             for row in group.sort_values("car_no").itertuples()
         )
         race_cards.append(
-            f'<article class="race" id="race-{race_id}"><button class="race-select" type="button" onclick="selectRace(this)">'
-            f'<span><b>{venue} {int(race_no)}R</b><small>レースを選択</small></span><em>›</em></button>'
+            f'<article class="race" id="race-{race_id}" data-venue="{venue}" data-start="{float(start_epoch) if pd.notna(start_epoch) else 99999999999}"><button class="race-select" type="button" onclick="selectRace(this)">'
+            f'<span><b>{venue} {int(race_no)}R</b><small>{timing_label}</small></span><em>›</em></button>'
             f'<div class="race-detail"><div class="race-head"><span>AI上位　{picks}</span></div>'
             f'<div class="race-actions"><button type="button" onclick="showPanel(this, \'picks\')">買い目</button>'
             f'<button type="button" onclick="showPanel(this, \'flow\')">展開予想</button><button type="button" onclick="showPanel(this, \'compare\')">選手比較</button></div>'
@@ -496,17 +503,18 @@ def main():
 header{{background:#fff;color:#17395f;padding:20px 18px 16px;border-bottom:5px solid #1d7de8}}.brand{{display:inline-block;background:linear-gradient(135deg,#07121f,#0b263e);color:#fff;border-radius:9px;padding:15px 26px;font-size:25px;font-weight:900;letter-spacing:.1em;min-width:250px;box-shadow:0 7px 22px #0b5bd326}}.brand:before{{content:"N";color:#35e2e7;font-size:34px;margin-right:12px}}.tag{{display:inline-block;color:#1680ea;font-size:10px;font-weight:800;letter-spacing:.16em;margin-left:12px}}
 main{{max-width:920px;margin:auto;padding:22px 15px 90px}}nav{{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin:0 0 18px;background:#fff;border-bottom:4px solid #1d7de8}}nav a{{text-align:center;text-decoration:none;color:#1680ea;background:#fff;padding:15px 5px;font-weight:800}}
 .hero{{background:linear-gradient(135deg,#071f43,#0d4f9f);color:white;border-radius:20px;padding:20px;margin-bottom:16px;display:flex;justify-content:space-between;gap:16px;align-items:center;box-shadow:0 10px 28px #0b4f9b22}}.eyebrow{{font-size:10px;letter-spacing:.18em;color:#9fcfff;font-weight:900}}.hero h1{{font-size:23px;margin:5px 0}}.hero p{{font-size:12px;opacity:.78;margin:0}}.trust{{background:#ffffff12;border:1px solid #ffffff2e;border-radius:14px;padding:11px 13px;min-width:190px}}.trust b{{display:block;font-size:12px}}.trust small{{display:block;font-size:10px;opacity:.75;margin-top:3px}}
-.venue-jump{{background:#fff;border:1px solid #dce8f5;border-radius:18px;padding:14px;margin-bottom:12px}}.venue-jump>b{{font-size:13px;color:#10233f}}#venueJump{{display:flex;gap:8px;overflow-x:auto;padding-top:10px}}#venueJump button{{white-space:nowrap;border:1px solid #cfe1f4;background:#f7fbff;color:#1679e8;border-radius:999px;padding:9px 14px;font-weight:900}}.race{{background:white;border:1px solid #dce8f5;border-radius:18px;padding:15px;margin:11px 0;box-shadow:0 7px 22px #173d7010;transition:.18s ease}}.race.open{{border-color:#9bc7f5;box-shadow:0 10px 28px #176fc51c}}.race-head{{display:flex;justify-content:space-between;gap:10px;align-items:center;border-bottom:1px solid #edf2f8;padding-bottom:11px}}.race-head>b{{font-size:18px}}.race-head>span{{font-size:12px;color:#60728b}}
+.venue-jump{{background:#fff;border:1px solid #dce8f5;border-radius:18px;padding:14px;margin-bottom:12px}}.race{{display:none}}.race.venue-visible{{display:block}}.venue-jump>b{{font-size:13px;color:#10233f}}#venueJump{{display:flex;gap:8px;overflow-x:auto;padding-top:10px}}#venueJump button{{white-space:nowrap;border:1px solid #cfe1f4;background:#f7fbff;color:#1679e8;border-radius:999px;padding:9px 14px;font-weight:900}}.race{{background:white;border:1px solid #dce8f5;border-radius:18px;padding:15px;margin:11px 0;box-shadow:0 7px 22px #173d7010;transition:.18s ease}}.race.open{{border-color:#9bc7f5;box-shadow:0 10px 28px #176fc51c}}.race-head{{display:flex;justify-content:space-between;gap:10px;align-items:center;border-bottom:1px solid #edf2f8;padding-bottom:11px}}.race-head>b{{font-size:18px}}.race-head>span{{font-size:12px;color:#60728b}}
 .car{{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;font-weight:900;border:1px solid #ccd6e4;background:#fff;color:#111}}.car-2{{background:#222;color:#fff}}.car-3{{background:#e53935;color:#fff}}.car-4{{background:#1769d2;color:#fff}}.car-5{{background:#f0c52d}}.car-6{{background:#45a95a;color:#fff}}.car-7{{background:#f18b28;color:#fff}}
 .bet{{display:grid;grid-template-columns:60px 1fr auto;gap:8px;align-items:center;padding:12px 0 0}}.bet b{{font-size:12px;color:#0b5bd3}}.bet strong{{font-size:20px;letter-spacing:.04em}}.bet span{{font-weight:800}}.bet small{{grid-column:2/4;color:#718096}}.waiting{{padding-top:12px;color:#7a899d;font-size:13px}}.race-select{{width:100%;border:0;background:#fff;color:#10233f;display:flex;justify-content:space-between;align-items:center;padding:2px;cursor:pointer;text-align:left}}.race-select b{{font-size:19px}}.race-select small{{display:block;color:#8191a4;margin-top:4px}}.race-select em{{font-style:normal;color:#1679e8;font-size:32px}}.race-detail{{display:none;padding-top:12px}}.race.open .race-detail{{display:block}}.race-actions{{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}}.race-actions button{{border:1px solid #cfe1f4;background:#f7fbff;color:#1679e8;border-radius:12px;padding:11px;font-weight:800}}.race-panel{{display:none;margin-top:12px;border-top:1px solid #e6eef7;padding-top:10px}}.race-panel.active{{display:block}}.race-panel h3{{margin:0 0 8px;font-size:15px;color:#1679e8}}.riders{{display:flex;gap:7px;overflow-x:auto;padding:5px 0 12px}}.rider{{border:1px solid #d8e6f5;background:#fff;border-radius:12px;padding:7px;min-width:70px}}.rider span{{display:block;font-size:9px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}.compare-view{{display:flex;align-items:center;gap:18px;background:linear-gradient(135deg,#f8fbff,#eef6ff);border:1px solid #dbeafb;border-radius:18px;padding:16px;box-shadow:inset 0 1px #fff}}.donut{{--v:0;width:110px;height:110px;border-radius:50%;background:conic-gradient(#1679e8 calc(var(--v)*1%),#e7eff8 0);display:grid;place-items:center;position:relative}}.donut:after{{content:"";position:absolute;width:76px;height:76px;border-radius:50%;background:#fff}}.donut span{{z-index:1;font-size:18px;font-weight:900;color:#1679e8}}
 footer{{text-align:center;padding:24px;color:#7b899b;font-size:11px}}@media(max-width:520px){{main{{padding:12px 12px 90px}}.race-head{{align-items:flex-start;flex-direction:column}}.brand{{font-size:22px;min-width:220px}}.hero{{align-items:flex-start;flex-direction:column}}.trust{{width:100%}}}}
 </style></head><body><header><div class="brand">NEXUS</div><div class="tag">KEIRIN PREDICTION SYSTEM</div></header><main>
 <nav><a href="index.html">今日の予想</a><a href="history.html">予想履歴</a></nav>
 <section class="hero"><div><span class="eyebrow">TODAY’S KEIRIN</span><h1>今日のレース</h1><p>更新 {generated} JST ｜ 1日予算 10,000円を基準にAIが配分</p></div><div class="trust"><b>予想は事前保存</b><small>的中・不的中を結果確定後に記録</small></div></section>
+<section class="venue-jump"><b>開催場を選択</b><div id="venueJump"></div></section>
 {"".join(race_cards) if race_cards else '<div class="race">本日の予想データを取得中です。</div>'}
 </main><script>
 function selectRace(btn){var r=btn.closest(".race");document.querySelectorAll(".race").forEach(function(x){if(x!==r)x.classList.remove("open")});r.classList.toggle("open");if(r.classList.contains("open"))setTimeout(function(){r.scrollIntoView({behavior:"smooth",block:"center"})},80)}
-function buildVenueJump(){var box=document.getElementById("venueJump");if(!box)return;var seen={};document.querySelectorAll(".race-select b").forEach(function(b){var v=b.textContent.replace(/\s+\d+R.*$/,"").trim();if(seen[v])return;seen[v]=1;var bt=document.createElement("button");bt.textContent=v;bt.onclick=function(){var target=[...document.querySelectorAll(".race-select b")].find(function(x){return x.textContent.trim().startsWith(v+" ")});if(target)target.closest(".race").scrollIntoView({behavior:"smooth",block:"start"})};box.appendChild(bt)})}
+function buildVenueJump(){var box=document.getElementById("venueJump");if(!box)return;var cards=[...document.querySelectorAll(".race")],parent=cards[0]&&cards[0].parentNode;cards.sort(function(a,b){return (+a.dataset.start||9e12)-(+b.dataset.start||9e12)}).forEach(function(r){parent.appendChild(r)});var venues=[...new Set(cards.map(function(r){return r.dataset.venue}).filter(Boolean))];venues.forEach(function(v){var bt=document.createElement("button");bt.textContent=v;bt.onclick=function(){box.querySelectorAll("button").forEach(function(x){x.classList.remove("active")});bt.classList.add("active");cards.forEach(function(r){r.classList.toggle("venue-visible",r.dataset.venue===v);r.classList.remove("open")})};box.appendChild(bt)})}
 document.addEventListener("DOMContentLoaded",buildVenueJump);
 function showPanel(btn,type){var r=btn.closest(".race");r.querySelectorAll(".race-panel").forEach(function(x){x.classList.remove("active")});r.querySelector("."+type+"-panel").classList.add("active")}\nfunction compareRider(btn){var p=btn.closest(".compare-panel"),v=parseFloat(btn.dataset.win)||0;p.querySelector(".donut").style.setProperty("--v",v);p.querySelector(".donut span").textContent=v.toFixed(1)+"%";p.querySelector(".compare-name").textContent=btn.dataset.car+"番 "+btn.dataset.name;p.querySelector(".compare-win").textContent=v.toFixed(1)+"%";p.querySelector(".compare-score").textContent=btn.dataset.score}
 </script><footer>NEXUS ｜ オッズ取得状況により買い目は締切前に更新されます</footer></body></html>
