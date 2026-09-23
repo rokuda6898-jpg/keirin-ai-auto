@@ -229,6 +229,70 @@ def add_today_prior_features(df):
     return today.drop(columns=["_today_row_id"], errors="ignore")
 
 
+def apply_nexus_race_reading(pred):
+    """Blend model probability with pre-race, leakage-safe race-development signals.
+
+    Only observed fields are used. Unobserved behaviour rates (tsuppari/kamashi/
+    tobitsuki/chigire/seri, etc.) are intentionally left neutral until enough
+    measured events exist; they must never be fabricated.
+    """
+    pred = pred.copy()
+    def num(col):
+        return pd.to_numeric(pred[col], errors="coerce") if col in pred.columns else pd.Series(np.nan, index=pred.index)
+
+    score = num("score")
+    recent = num("recent_avg_finish")
+    current = num("current_cup_avg_finish")
+    line_pos = num("line_position")
+    line_size = num("line_size")
+    line_role = num("line_role_win_rate")
+    track = num("track_win_rate")
+    weather = num("weather_win_rate")
+    hour = num("hour_win_rate")
+    wind = num("wind_speed")
+    back = num("back_count")
+    front = num("front_runner_count")
+    stalker = num("stalker_count")
+    closer = num("deep_closer_count")
+    marker = num("marker_count")
+
+    def z_by_race(x):
+        return x.groupby(pred["race_id"]).transform(
+            lambda g: (g - g.mean()) / (g.std(ddof=0) if pd.notna(g.std(ddof=0)) and g.std(ddof=0) > 1e-9 else 1.0)
+        ).fillna(0.0)
+
+    # 27-point philosophy mapped only to currently observed, pre-race fields:
+    # current-meeting/recent form > old reputation; line role without blind line
+    # trust; solo/leader/second-wheel context; style and B/front-run evidence;
+    # track/weather/time/wind compatibility. Odds remain outside this adjustment.
+    form = (-z_by_race(recent) * 0.22) + (-z_by_race(current) * 0.34) + (z_by_race(score) * 0.10)
+    line = z_by_race(line_role) * 0.12
+    line += ((line_pos == 2) & (line_size >= 2)).astype(float) * 0.05
+    line += ((line_pos == 1) & (line_size >= 2)).astype(float) * 0.025
+    line -= (line_size == 1).astype(float) * 0.015
+
+    style_pressure = z_by_race(back.fillna(0) + front.fillna(0)) * 0.045
+    style_finish = z_by_race(stalker.fillna(0) + closer.fillna(0) + marker.fillna(0)) * 0.035
+    condition = z_by_race(track) * 0.05 + z_by_race(weather) * 0.025 + z_by_race(hour) * 0.015
+    # Strong wind increases uncertainty rather than pretending to know direction.
+    uncertainty = wind.fillna(0).clip(lower=0) * 0.004
+
+    pred["nexus_form_adj"] = form
+    pred["nexus_line_adj"] = line
+    pred["nexus_style_adj"] = style_pressure + style_finish
+    pred["nexus_condition_adj"] = condition
+    pred["nexus_uncertainty"] = uncertainty
+
+    logp = np.log(pred["p_raw"].clip(1e-6, 1.0))
+    pred["p_nexus_raw"] = np.exp(
+        logp + pred["nexus_form_adj"] + pred["nexus_line_adj"]
+        + pred["nexus_style_adj"] + pred["nexus_condition_adj"]
+        - pred["nexus_uncertainty"]
+    )
+    pred = normalize_race_prob(pred, "p_nexus_raw", "p_win")
+    return pred
+
+
 def main():
     ensure_dirs()
     ensure_ready()
@@ -259,7 +323,7 @@ def main():
 
     pred = df.copy()
     pred["p_raw"] = np.clip(calibrated, 1e-6, 1.0)
-    pred = normalize_race_prob(pred, "p_raw", "p_win")
+    pred = apply_nexus_race_reading(pred)
     if "odds_win" not in pred.columns:
         pred["odds_win"] = np.nan
     pred["odds_win"] = pd.to_numeric(pred["odds_win"], errors="coerce")
@@ -283,7 +347,7 @@ def main():
     cols = [
         "date", "venue", "race_no", "race_id", "rank_in_race",
         "car_no", "player_id", "style", "score", "odds_win",
-        "p_win", "expected_value_win", "stake_yen", "win_return_yen",
+        "p_win", "nexus_form_adj", "nexus_line_adj", "nexus_style_adj", "nexus_condition_adj", "nexus_uncertainty", "expected_value_win", "stake_yen", "win_return_yen",
         "win_profit_yen", "loss_amount_yen", "expected_profit_yen",
     ]
     for c in cols:
