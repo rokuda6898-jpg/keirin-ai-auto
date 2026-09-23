@@ -411,8 +411,13 @@ def main():
         else:
             bet_html = '<div class="waiting">買い目候補は締切前オッズ取得後に表示</div>'
         race_cards.append(
-            f'<article class="race"><div class="race-head"><b>{venue} {int(race_no)}R</b>'
-            f'<span>AI上位　{picks}</span></div>{bet_html}</article>'
+            f'<article class="race" id="race-{race_id}"><button class="race-select" type="button" onclick="selectRace(this)">'
+            f'<span><b>{venue} {int(race_no)}R</b><small>レースを選択</small></span><em>›</em></button>'
+            f'<div class="race-detail"><div class="race-head"><span>AI上位　{picks}</span></div>'
+            f'<div class="race-actions"><button type="button" onclick="showPanel(this, \'picks\')">買い目</button>'
+            f'<button type="button" onclick="showPanel(this, \'flow\')">展開予想</button></div>'
+            f'<div class="race-panel picks-panel"><h3>買い目</h3>{bet_html}</div>'
+            f'<div class="race-panel flow-panel"><h3>展開予想</h3><p>AI上位　{picks}</p></div></div></article>'
         )
     generated = datetime.now(ZoneInfo("Asia/Tokyo")).strftime("%Y/%m/%d %H:%M")
     html = f"""
@@ -424,13 +429,16 @@ main{{max-width:920px;margin:auto;padding:22px 15px 90px}}nav{{display:grid;grid
 .hero{{background:#071f43;color:white;border-radius:18px;padding:17px;margin-bottom:14px}}.hero h1{{font-size:21px;margin:0 0 5px}}.hero p{{font-size:12px;opacity:.75;margin:0}}
 .race{{background:white;border-radius:16px;padding:14px;margin:10px 0;box-shadow:0 4px 18px #173d7012}}.race-head{{display:flex;justify-content:space-between;gap:10px;align-items:center;border-bottom:1px solid #edf2f8;padding-bottom:11px}}.race-head>b{{font-size:18px}}.race-head>span{{font-size:12px;color:#60728b}}
 .car{{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;font-weight:900;border:1px solid #ccd6e4;background:#fff;color:#111}}.car-2{{background:#222;color:#fff}}.car-3{{background:#e53935;color:#fff}}.car-4{{background:#1769d2;color:#fff}}.car-5{{background:#f0c52d}}.car-6{{background:#45a95a;color:#fff}}.car-7{{background:#f18b28;color:#fff}}
-.bet{{display:grid;grid-template-columns:60px 1fr auto;gap:8px;align-items:center;padding:12px 0 0}}.bet b{{font-size:12px;color:#0b5bd3}}.bet strong{{font-size:20px;letter-spacing:.04em}}.bet span{{font-weight:800}}.bet small{{grid-column:2/4;color:#718096}}.waiting{{padding-top:12px;color:#7a899d;font-size:13px}}
+.bet{{display:grid;grid-template-columns:60px 1fr auto;gap:8px;align-items:center;padding:12px 0 0}}.bet b{{font-size:12px;color:#0b5bd3}}.bet strong{{font-size:20px;letter-spacing:.04em}}.bet span{{font-weight:800}}.bet small{{grid-column:2/4;color:#718096}}.waiting{{padding-top:12px;color:#7a899d;font-size:13px}}.race-select{{width:100%;border:0;background:#fff;color:#10233f;display:flex;justify-content:space-between;align-items:center;padding:2px;cursor:pointer;text-align:left}}.race-select b{{font-size:19px}}.race-select small{{display:block;color:#8191a4;margin-top:4px}}.race-select em{{font-style:normal;color:#1679e8;font-size:32px}}.race-detail{{display:none;padding-top:12px}}.race.open .race-detail{{display:block}}.race-actions{{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}}.race-actions button{{border:1px solid #cfe1f4;background:#f7fbff;color:#1679e8;border-radius:12px;padding:11px;font-weight:800}}.race-panel{{display:none;margin-top:12px;border-top:1px solid #e6eef7;padding-top:10px}}.race-panel.active{{display:block}}.race-panel h3{{margin:0 0 8px;font-size:15px;color:#1679e8}}
 footer{{text-align:center;padding:24px;color:#7b899b;font-size:11px}}@media(max-width:520px){{main{{padding:12px}}.race-head{{align-items:flex-start;flex-direction:column}}.brand{{font-size:29px}}}}
 </style></head><body><header><div class="brand">NEXUS</div><div class="tag">KEIRIN PREDICTION SYSTEM</div></header><main>
 <nav><a href="index.html">今日の予想</a><a href="history.html">予想履歴</a></nav>
 <section class="hero"><h1>今日の予想</h1><p>更新 {generated} JST ｜ 1日予算 10,000円を基準にAIが配分</p></section>
 {"".join(race_cards) if race_cards else '<div class="race">本日の予想データを取得中です。</div>'}
-</main><footer>NEXUS ｜ オッズ取得状況により買い目は締切前に更新されます</footer></body></html>
+</main><script>
+function selectRace(btn){var r=btn.closest(".race");document.querySelectorAll(".race").forEach(function(x){if(x!==r)x.classList.remove("open")});r.classList.toggle("open")}
+function showPanel(btn,type){var r=btn.closest(".race");r.querySelectorAll(".race-panel").forEach(function(x){x.classList.remove("active")});r.querySelector("."+type+"-panel").classList.add("active")}
+</script><footer>NEXUS ｜ オッズ取得状況により買い目は締切前に更新されます</footer></body></html>
 """
     html_path.write_text(html, encoding="utf-8")
 
