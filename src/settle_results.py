@@ -114,6 +114,9 @@ def parse_result_page(url):
         "start_at": race.get("startAt"),
         "close_at": race.get("closeAt"),
         "decided_at": race.get("decidedAt"),
+        # Official completion is based on actual published finish order, never on
+        # scheduled time or a provider status string alone.
+        "official_result_available": bool(len(top3) == 3),
         "source_url": url,
     }
     for bet_type, buy in actual.items():
@@ -276,6 +279,7 @@ def run_settlement(args):
         settled["is_hit"] = pd.Series(index=settled.index, dtype=bool)
         settled["actual_return_yen"] = pd.Series(index=settled.index, dtype=float)
         settled["actual_profit_yen"] = pd.Series(index=settled.index, dtype=float)
+        settled["display_status"] = pd.Series("結果取得待ち", index=settled.index, dtype=object)
     else:
         results = fetch_results()
         settled = bets.merge(results, on="race_id", how="left")
@@ -284,7 +288,10 @@ def run_settlement(args):
             lambda row: row.get(f"actual_{row.get('bet_type', 'trifecta')}", row.get("actual_trifecta", "")),
             axis=1,
         )
-        settled["is_decided"] = settled["actual_for_bet_type"].fillna("").astype(str).str.len().gt(0)
+        official = settled.get("official_result_available", pd.Series(False, index=settled.index))
+        official = official.fillna(False).astype(bool)
+        settled["is_decided"] = official & settled["actual_for_bet_type"].fillna("").astype(str).str.len().gt(0)
+        settled["display_status"] = np.where(settled["is_decided"], "確定", "結果取得待ち")
         settled["is_hit"] = settled.apply(
             lambda row: bool(row["is_decided"]) and str(row["buy"]) in str(row.get("actual_for_bet_type", "")).split("|"),
             axis=1,
