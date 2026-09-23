@@ -7,6 +7,9 @@ on:
       - "outputs/**"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
+  workflow_run:
+    workflows: ["daily-keirin-predict", "intraday-keirin-odds", "settle-keirin-results"]
+    types: [completed]
 
 permissions:
   contents: read
