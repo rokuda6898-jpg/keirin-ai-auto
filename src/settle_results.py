@@ -249,9 +249,7 @@ def build_report(selected, summary):
             f"{profit if isinstance(profit, str) else f'{profit:,}円'} |"
         )
     lines += ["", "詳細は `outputs/purchase_plan.csv` と `outputs/settled_bets.csv` を見てください。"]
-    return "
-".join(lines) + "
-"
+    return "\n".join(lines) + "\n"
 
 
 def build_history_html(settled):
