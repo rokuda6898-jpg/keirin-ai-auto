@@ -95,8 +95,8 @@ def stake_from_edge(expected_profit_100yen, base_stake=100, max_stake=500):
     return int(base_stake + extra_units * 100)
 
 
-def allocate_daily_budget(bets, budget_yen=10000, max_per_bet_yen=2000):
-    """Allocate in 100-yen units by probability and positive expected edge."""
+def allocate_race_budget(bets, budget_yen=10000, max_per_bet_yen=10000):
+    """Allocate one race budget in 100-yen units by probability and positive expected edge."""
     if bets.empty:
         return bets.assign(stake_yen=pd.Series(dtype=int))
     result = bets.copy()
@@ -411,14 +411,14 @@ def main():
             selected_parts.append(g.sort_values("expected_profit_100yen", ascending=False).head(max_per_race))
         bets = pd.concat(selected_parts, ignore_index=True) if selected_parts else candidates.head(0).copy()
         if len(bets):
-            daily_budget_yen = get_int_env("BET_DAILY_BUDGET_YEN", 10000)
-            reserved_yen = prior_daily_stake(today_jst, pred["race_id"].astype(str).unique())
-            remaining_budget_yen = max(daily_budget_yen - reserved_yen, 0)
-            bets = allocate_daily_budget(bets, remaining_budget_yen, max_stake_yen)
+            race_budget_yen = get_int_env("BET_RACE_BUDGET_YEN", 10000)
+            allocated = []
+            for _, race_bets in bets.groupby("race_id", sort=False):
+                allocated.append(allocate_race_budget(race_bets, race_budget_yen, race_budget_yen))
+            bets = pd.concat(allocated, ignore_index=True) if allocated else bets
             bets = bets[pd.to_numeric(bets["stake_yen"], errors="coerce").ge(100)].copy()
         else:
-            reserved_yen = prior_daily_stake(today_jst, pred["race_id"].astype(str).unique())
-            remaining_budget_yen = max(get_int_env("BET_DAILY_BUDGET_YEN", 10000) - reserved_yen, 0)
+            race_budget_yen = get_int_env("BET_RACE_BUDGET_YEN", 10000)
         if len(bets):
             bets["return_if_hit_yen"] = (bets["stake_yen"] * pd.to_numeric(bets["odds_used"], errors="coerce")).round(0)
             bets["profit_if_hit_yen"] = bets["return_if_hit_yen"] - bets["stake_yen"]
@@ -547,9 +547,9 @@ function compareRider(btn){{var p=btn.closest(".compare-panel"),v=parseFloat(btn
         "n_races": int(pred["race_id"].nunique()),
         "base_stake_yen": base_stake_yen,
         "max_stake_yen": max_stake_yen,
-        "daily_budget_yen": get_int_env("BET_DAILY_BUDGET_YEN", 10000),
+        "race_budget_yen": get_int_env("BET_RACE_BUDGET_YEN", 10000),
         "daily_reserved_yen": reserved_yen if "reserved_yen" in locals() else 0,
-        "daily_remaining_budget_yen": remaining_budget_yen if "remaining_budget_yen" in locals() else get_int_env("BET_DAILY_BUDGET_YEN", 10000),
+        "budget_basis": "per_race",
         "max_seconds_to_close": max_seconds_to_close,
         "strategy_version": strategy_version,
         "snapshot_mode": snapshot_mode,
