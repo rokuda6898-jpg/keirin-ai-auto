@@ -46,6 +46,11 @@ jobs:
         run: |
           python src/settle_results.py
 
+      - name: Rebuild historical prediction history on manual run
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          python src/rebuild_prediction_history.py
+
       - name: Append settlement growth log
         run: |
           python src/update_growth_log.py --kind settle
@@ -67,6 +72,8 @@ jobs:
             outputs/settled_bets.csv
             outputs/settlement_summary.csv
             outputs/japanese_report.md
+            outputs/prediction_history.csv
+            outputs/history.html
             outputs/growth_log.csv
             outputs/trial_report.md
             outputs/shadow_race_results.csv
