@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from fetch_today_entries import fetch_today_entries
 from settle_results import (
     PREDICTION_HISTORY_CSV,
     build_history_html,
@@ -57,6 +58,18 @@ def main():
     if bets.empty:
         raise SystemExit("no recoverable staked snapshots found")
 
+    # Re-fetch each historical racecard date to recover the canonical source URL.
+    schedule_parts = []
+    for race_date in sorted(bets["date"].dropna().astype(str).unique()):
+        try:
+            entries = fetch_today_entries(race_date=race_date)
+            schedule_parts.append(entries[["race_id", "source_url"]].drop_duplicates("race_id"))
+        except Exception as exc:
+            print(f"historical racecard fetch failed: {race_date} {exc}")
+    if schedule_parts:
+        schedule = pd.concat(schedule_parts, ignore_index=True).drop_duplicates("race_id", keep="last")
+        bets = bets.drop(columns=["source_url"], errors="ignore").merge(schedule, on="race_id", how="left")
+
     results = []
     for url in bets.get("source_url", pd.Series(dtype=str)).dropna().drop_duplicates():
         try:
@@ -64,9 +77,6 @@ def main():
         except Exception as exc:
             print(f"result fetch failed: {url} {exc}")
 
-    # Older bet snapshots do not carry source_url. Recover URLs from committed
-    # prediction/entry files is provider-specific, so preserve these rows as
-    # pending rather than fabricating a result.
     result_df = pd.DataFrame(results)
     if not result_df.empty:
         bets = bets.merge(result_df, on="race_id", how="left")
