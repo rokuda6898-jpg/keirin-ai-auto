@@ -41,12 +41,12 @@ def load_final_snapshots(start="20260919", end="20260925"):
         return pd.DataFrame()
     all_bets = pd.concat(frames, ignore_index=True, sort=False)
     all_bets = normalize_bets_for_settlement(all_bets)
-    all_bets["stake_yen"] = pd.to_numeric(all_bets["stake_yen"], errors="coerce").fillna(0)
-    all_bets = all_bets[all_bets["stake_yen"].gt(0)].copy()
+    all_bets["buy"] = all_bets["buy"].fillna("").astype(str).str.strip()
+    all_bets = all_bets[all_bets["buy"].ne("")].copy()
     if all_bets.empty:
         return all_bets
 
-    # Pick the last snapshot that contained an actual staked prediction for each race.
+    # Pick the last snapshot that contained an published prediction for each race.
     last = all_bets.groupby(["date", "race_id"], dropna=False)["_snapshot"].transform("max")
     final = all_bets[all_bets["_snapshot"].eq(last)].copy()
     key = [c for c in ["date", "race_id", "bet_type", "buy"] if c in final.columns]
@@ -56,7 +56,7 @@ def load_final_snapshots(start="20260919", end="20260925"):
 def main():
     bets = load_final_snapshots()
     if bets.empty:
-        raise SystemExit("no recoverable staked snapshots found")
+        raise SystemExit("no recoverable prediction snapshots found")
 
     # Re-fetch each historical racecard date to recover the canonical source URL.
     schedule_parts = []
