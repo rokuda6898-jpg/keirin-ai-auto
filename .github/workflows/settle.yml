@@ -3,7 +3,10 @@ name: settle-keirin-results
 on:
   workflow_dispatch:
   schedule:
-    # 23:30 JST
+    # During the racing day, settle official results every 15 minutes.
+    # GitHub Actions cron is UTC: 00:00-14:59 UTC = 09:00-23:59 JST.
+    - cron: "*/15 0-14 * * *"
+    # Final catch-up after the day's racing.
     - cron: "30 14 * * *"
 
 permissions:
