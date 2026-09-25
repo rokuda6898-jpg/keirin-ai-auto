@@ -18,6 +18,7 @@ PURCHASE_PLAN_CSV = OUTPUT_DIR / "purchase_plan.csv"
 SETTLEMENT_SUMMARY_CSV = OUTPUT_DIR / "settlement_summary.csv"
 REPORT_MD = OUTPUT_DIR / "japanese_report.md"
 HISTORY_HTML = OUTPUT_DIR / "history.html"
+PREDICTION_HISTORY_CSV = OUTPUT_DIR / "prediction_history.csv"
 PAYOUT_SPECS = {
     "trifecta": ("trifecta", True),
     "trio": ("trio", False),
@@ -298,6 +299,37 @@ def normalize_bets_for_settlement(bets):
     return normalized
 
 
+
+def update_prediction_history(settled):
+    """Persist settled predictions across workflow runs without double counting."""
+    current = settled.copy()
+    if current.empty:
+        if PREDICTION_HISTORY_CSV.exists():
+            return pd.read_csv(PREDICTION_HISTORY_CSV, dtype={"race_id": str, "buy": str})
+        return current
+
+    current["race_id"] = current["race_id"].astype(str)
+    current["buy"] = current["buy"].astype(str)
+    if PREDICTION_HISTORY_CSV.exists():
+        try:
+            history = pd.read_csv(PREDICTION_HISTORY_CSV, dtype={"race_id": str, "buy": str})
+        except (OSError, pd.errors.ParserError, pd.errors.EmptyDataError):
+            history = current.head(0).copy()
+        combined = pd.concat([history, current], ignore_index=True, sort=False)
+    else:
+        combined = current
+
+    # A ticket is the same logical prediction across repeated settlement runs.
+    # Keep the newest row so pending rows are replaced by official results.
+    key = [column for column in ["date", "race_id", "bet_type", "buy"] if column in combined.columns]
+    if key:
+        combined = combined.drop_duplicates(key, keep="last")
+    sort_key = [column for column in ["date", "venue", "race_no", "candidate_rank"] if column in combined.columns]
+    if sort_key:
+        combined = combined.sort_values(sort_key, kind="mergesort")
+    combined.to_csv(PREDICTION_HISTORY_CSV, index=False)
+    return combined
+
 def run_settlement(args):
     ensure_dirs()
     bets = pd.read_csv(LATEST_BETS_CSV, dtype={"race_id": str})
@@ -360,7 +392,9 @@ def run_settlement(args):
     )
     summary.to_csv(SETTLEMENT_SUMMARY_CSV, index=False)
     REPORT_MD.write_text(build_report(selected, summary), encoding="utf-8")
-    HISTORY_HTML.write_text(build_history_html(settled), encoding="utf-8")
+    history = update_prediction_history(settled)
+    HISTORY_HTML.write_text(build_history_html(history), encoding="utf-8")
+    print(f"history rows: {len(history)}")
     print(summary.to_string(index=False))
     print(f"saved: {PURCHASE_PLAN_CSV}")
     print(f"saved: {SETTLED_BETS_CSV}")
