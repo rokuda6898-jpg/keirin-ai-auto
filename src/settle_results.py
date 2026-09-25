@@ -16,7 +16,8 @@ LATEST_BETS_CSV = OUTPUT_DIR / "latest_bets.csv"
 SETTLED_BETS_CSV = OUTPUT_DIR / "settled_bets.csv"
 PURCHASE_PLAN_CSV = OUTPUT_DIR / "purchase_plan.csv"
 SETTLEMENT_SUMMARY_CSV = OUTPUT_DIR / "settlement_summary.csv"
-REPORT_MD = OUTPUT_DIR / "japanese_report.md"\nHISTORY_HTML = OUTPUT_DIR / "history.html"
+REPORT_MD = OUTPUT_DIR / "japanese_report.md"
+HISTORY_HTML = OUTPUT_DIR / "history.html"
 PAYOUT_SPECS = {
     "trifecta": ("trifecta", True),
     "trio": ("trio", False),
@@ -248,7 +249,9 @@ def build_report(selected, summary):
             f"{profit if isinstance(profit, str) else f'{profit:,}円'} |"
         )
     lines += ["", "詳細は `outputs/purchase_plan.csv` と `outputs/settled_bets.csv` を見てください。"]
-    return "\n".join(lines) + "\n"
+    return "
+".join(lines) + "
+"
 
 
 def build_history_html(settled):
@@ -358,7 +361,8 @@ def run_settlement(args):
         ]
     )
     summary.to_csv(SETTLEMENT_SUMMARY_CSV, index=False)
-    REPORT_MD.write_text(build_report(selected, summary), encoding="utf-8")\n    HISTORY_HTML.write_text(build_history_html(settled), encoding="utf-8")
+    REPORT_MD.write_text(build_report(selected, summary), encoding="utf-8")
+    HISTORY_HTML.write_text(build_history_html(settled), encoding="utf-8")
     print(summary.to_string(index=False))
     print(f"saved: {PURCHASE_PLAN_CSV}")
     print(f"saved: {SETTLED_BETS_CSV}")
