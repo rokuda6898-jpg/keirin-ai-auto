@@ -5,6 +5,7 @@ from pathlib import Path
 import pandas as pd
 
 from fetch_today_entries import fetch_today_entries
+from predict import allocate_daily_budget
 from settle_results import (
     PREDICTION_HISTORY_CSV,
     build_history_html,
@@ -50,7 +51,25 @@ def load_final_snapshots(start="20260919", end="20260925"):
     last = all_bets.groupby(["date", "race_id"], dropna=False)["_snapshot"].transform("max")
     final = all_bets[all_bets["_snapshot"].eq(last)].copy()
     key = [c for c in ["date", "race_id", "bet_type", "buy"] if c in final.columns]
-    return final.drop_duplicates(key, keep="last")
+    final = final.drop_duplicates(key, keep="last")
+
+    # Reconstruct missing bankroll allocations with the same production allocator.
+    # Allocation is daily: total 10,000 yen, in 100-yen units, max 2,000 yen per ticket.
+    final["stake_yen"] = pd.to_numeric(final.get("stake_yen", 0), errors="coerce")
+    rebuilt = []
+    for _, day in final.groupby("date", sort=False):
+        existing = day["stake_yen"].fillna(0)
+        if existing.gt(0).any():
+            rebuilt.append(day)
+            continue
+        required = {"expected_profit_100yen", "prob"}
+        if required.issubset(day.columns):
+            rebuilt.append(allocate_daily_budget(day, budget_yen=10000, max_per_bet_yen=2000))
+        else:
+            day = day.copy()
+            day["stake_yen"] = 0
+            rebuilt.append(day)
+    return pd.concat(rebuilt, ignore_index=True, sort=False)
 
 
 def main():
