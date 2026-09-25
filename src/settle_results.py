@@ -13,6 +13,7 @@ from fetch_today_entries import extract_preloaded_state, find_query_data, http_g
 
 TODAY_CSV = RAW_DIR / "today_entries.csv"
 LATEST_BETS_CSV = OUTPUT_DIR / "latest_bets.csv"
+PREDICTION_LEDGER_CSV = OUTPUT_DIR / "prediction_ledger.csv"
 SETTLED_BETS_CSV = OUTPUT_DIR / "settled_bets.csv"
 PURCHASE_PLAN_CSV = OUTPUT_DIR / "purchase_plan.csv"
 SETTLEMENT_SUMMARY_CSV = OUTPUT_DIR / "settlement_summary.csv"
@@ -332,7 +333,13 @@ def update_prediction_history(settled):
 
 def run_settlement(args):
     ensure_dirs()
-    bets = pd.read_csv(LATEST_BETS_CSV, dtype={"race_id": str})
+    # Settle from the durable cumulative ledger when available. latest_bets.csv
+    # is only the current purchase-gated view and may legitimately be empty.
+    source = PREDICTION_LEDGER_CSV if PREDICTION_LEDGER_CSV.exists() else LATEST_BETS_CSV
+    try:
+        bets = pd.read_csv(source, dtype={"race_id": str, "buy": str})
+    except (pd.errors.EmptyDataError, pd.errors.ParserError):
+        bets = pd.DataFrame()
     bets = normalize_bets_for_settlement(bets)
 
     if bets.empty:
