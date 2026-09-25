@@ -437,8 +437,23 @@ def main():
         shadow_bets["odds_snapshot"] = odds_snapshot_label
     shadow_path = OUTPUT_DIR / f"shadow_bets_{output_tag}.csv"
     latest_shadow_path = OUTPUT_DIR / "latest_shadow_bets.csv"
+    prediction_ledger_path = OUTPUT_DIR / "prediction_ledger.csv"
     shadow_bets.to_csv(shadow_path, index=False)
     shadow_bets.to_csv(latest_shadow_path, index=False)
+
+    # Durable cumulative prediction ledger. Keep predictions even when the
+    # purchase/profit gate is closed so history and later result verification
+    # cannot disappear when latest_bets.csv is empty or overwritten.
+    if len(shadow_bets):
+        try:
+            ledger = pd.read_csv(prediction_ledger_path, dtype={"race_id": str, "buy": str, "bet_type": str})
+        except (FileNotFoundError, pd.errors.EmptyDataError, pd.errors.ParserError):
+            ledger = pd.DataFrame()
+        ledger = pd.concat([ledger, shadow_bets], ignore_index=True, sort=False)
+        ledger_key = [x for x in ["date", "race_id", "bet_type", "buy"] if x in ledger.columns]
+        if ledger_key:
+            ledger = ledger.drop_duplicates(ledger_key, keep="last")
+        ledger.to_csv(prediction_ledger_path, index=False)
     if not profit_gate["target_passed"]:
         bets = bets.head(0).copy()
 
