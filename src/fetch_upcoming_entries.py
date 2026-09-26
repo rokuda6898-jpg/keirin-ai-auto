@@ -23,7 +23,23 @@ def select_upcoming_races(schedule, now_epoch, min_minutes=5, max_minutes=40):
     ].copy()
 
 
-def fetch_upcoming(min_minutes=5, max_minutes=40, sleep_sec=0.2):
+def _race_entry_set(frame, race_id):
+    cars = pd.to_numeric(
+        frame.loc[frame["race_id"].astype(str).eq(str(race_id)), "car_no"],
+        errors="coerce",
+    ).dropna().astype(int)
+    return set(cars.tolist())
+
+
+def _entries_complete(frame, race_id):
+    """A fetched race must contain a contiguous official car-number field."""
+    cars = _race_entry_set(frame, race_id)
+    if not cars:
+        return False
+    return cars == set(range(1, max(cars) + 1))
+
+
+def fetch_upcoming(min_minutes=5, max_minutes=40, sleep_sec=0.2, retry_sec=5.0):
     ensure_dirs()
     now = datetime.now(ZoneInfo("Asia/Tokyo"))
     if not RACE_SCHEDULE_CSV.exists():
@@ -44,13 +60,29 @@ def fetch_upcoming(min_minutes=5, max_minutes=40, sleep_sec=0.2):
     failures = []
     for row in upcoming.to_dict("records"):
         url = row.get("source_url")
-        try:
-            entries, odds = parse_race_page(url)
-            race_id = str(row["race_id"])
-            all_entries.extend(item for item in entries if str(item.get("race_id")) == race_id)
-            all_odds.extend(item for item in odds if str(item.get("race_id")) == race_id)
-        except Exception as error:
-            failures.append({"race_id": row.get("race_id"), "url": url, "error": str(error)})
+        race_id = str(row["race_id"])
+        last_error = None
+        # Do not pass a partially fetched field (for example 1,2,5,6,7)
+        # into prediction. Retry every 5 seconds until the official field is
+        # complete or the race is too close to safely refresh.
+        while True:
+            try:
+                entries, odds = parse_race_page(url)
+                race_entries = [item for item in entries if str(item.get("race_id")) == race_id]
+                check = pd.DataFrame(race_entries)
+                if len(check) and _entries_complete(check, race_id):
+                    all_entries.extend(race_entries)
+                    all_odds.extend(item for item in odds if str(item.get("race_id")) == race_id)
+                    break
+                last_error = f"incomplete field: {sorted(_race_entry_set(check, race_id)) if len(check) else []}"
+            except Exception as error:
+                last_error = str(error)
+
+            seconds_left = float(row.get("close_at", 0) or 0) - datetime.now(ZoneInfo("Asia/Tokyo")).timestamp()
+            if seconds_left <= 300:
+                failures.append({"race_id": race_id, "url": url, "error": last_error or "incomplete field"})
+                break
+            time.sleep(retry_sec)
         time.sleep(sleep_sec)
 
     if not all_entries:
@@ -80,8 +112,9 @@ def main():
     parser.add_argument("--min-minutes", type=float, default=5)
     parser.add_argument("--max-minutes", type=float, default=40)
     parser.add_argument("--sleep-sec", type=float, default=0.2)
+    parser.add_argument("--retry-sec", type=float, default=5.0)
     args = parser.parse_args()
-    return fetch_upcoming(args.min_minutes, args.max_minutes, args.sleep_sec)
+    return fetch_upcoming(args.min_minutes, args.max_minutes, args.sleep_sec, args.retry_sec)
 
 
 if __name__ == "__main__":
