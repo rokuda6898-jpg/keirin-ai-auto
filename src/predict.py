@@ -266,13 +266,21 @@ def apply_nexus_race_reading(pred):
     # trust; solo/leader/second-wheel context; style and B/front-run evidence;
     # track/weather/time/wind compatibility. Odds remain outside this adjustment.
     form = (-z_by_race(recent) * 0.22) + (-z_by_race(current) * 0.34) + (z_by_race(score) * 0.10)
-    line = z_by_race(line_role) * 0.12
-    line += ((line_pos == 2) & (line_size >= 2)).astype(float) * 0.05
-    line += ((line_pos == 1) & (line_size >= 2)).astype(float) * 0.025
-    line -= (line_size == 1).astype(float) * 0.015
+    line = z_by_race(line_role) * 0.18
+    # The model already captures much of raw self-propelled strength. Avoid
+    # double-counting it here: reward a strong second wheel/line context more
+    # than simply being the line leader.
+    line += ((line_pos == 2) & (line_size >= 2)).astype(float) * 0.12
+    line += ((line_pos == 1) & (line_size >= 2)).astype(float) * 0.015
+    line += ((line_pos >= 3) & (line_size >= 3)).astype(float) * 0.025
+    line -= (line_size == 1).astype(float) * 0.025
 
-    style_pressure = z_by_race(back.fillna(0) + front.fillna(0)) * 0.045
-    style_finish = z_by_race(stalker.fillna(0) + closer.fillna(0) + marker.fillna(0)) * 0.035
+    # Keep measured attacking evidence, but at a lower weight so back/front
+    # counts do not stack on top of the base model and force a self-runner to
+    # the top. Give finishing/marking evidence more room to represent riders
+    # who benefit from the expected line development.
+    style_pressure = z_by_race(back.fillna(0) + front.fillna(0)) * 0.020
+    style_finish = z_by_race(stalker.fillna(0) + closer.fillna(0) + marker.fillna(0)) * 0.060
     condition = z_by_race(track) * 0.05 + z_by_race(weather) * 0.025 + z_by_race(hour) * 0.015
     # Strong wind increases uncertainty rather than pretending to know direction.
     uncertainty = wind.fillna(0).clip(lower=0) * 0.004
