@@ -32,11 +32,20 @@ def _race_entry_set(frame, race_id):
 
 
 def _entries_complete(frame, race_id):
-    """A fetched race must contain a contiguous official car-number field."""
+    """Require every official starter, including missing tail cars such as 8/9."""
+    race = frame.loc[frame["race_id"].astype(str).eq(str(race_id))].copy()
     cars = _race_entry_set(frame, race_id)
-    if not cars:
+    if not cars or race.empty:
         return False
-    return cars == set(range(1, max(cars) + 1))
+
+    expected_values = pd.to_numeric(race.get("entries_number"), errors="coerce").dropna()
+    if len(expected_values):
+        expected_count = int(expected_values.max())
+    else:
+        # Fallback only when the source omits entriesNumber.
+        expected_count = max(cars)
+
+    return cars == set(range(1, expected_count + 1))
 
 
 def fetch_upcoming(min_minutes=5, max_minutes=40, sleep_sec=0.2, retry_sec=5.0):
