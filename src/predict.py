@@ -261,41 +261,51 @@ def apply_nexus_race_reading(pred):
             lambda g: (g - g.mean()) / (g.std(ddof=0) if pd.notna(g.std(ddof=0)) and g.std(ddof=0) > 1e-9 else 1.0)
         ).fillna(0.0)
 
-    # 27-point philosophy mapped only to currently observed, pre-race fields:
-    # current-meeting/recent form > old reputation; line role without blind line
-    # trust; solo/leader/second-wheel context; style and B/front-run evidence;
-    # track/weather/time/wind compatibility. Odds remain outside this adjustment.
-    form = (-z_by_race(recent) * 0.22) + (-z_by_race(current) * 0.34) + (z_by_race(score) * 0.10)
-    line = z_by_race(line_role) * 0.18
-    # The model already captures much of raw self-propelled strength. Avoid
-    # double-counting it here: reward a strong second wheel/line context more
-    # than simply being the line leader.
-    line += ((line_pos == 2) & (line_size >= 2)).astype(float) * 0.12
-    line += ((line_pos == 1) & (line_size >= 2)).astype(float) * 0.015
-    line += ((line_pos >= 3) & (line_size >= 3)).astype(float) * 0.025
-    line -= (line_size == 1).astype(float) * 0.025
+    # NEXUS race-reading mix: line/development 30, form 20, score 15,
+    # style/finishing 15, track conditions 10, matchup/development 10.
+    # Line weight is deliberately split between line strength and disruption
+    # risk so a 30% line component does not become a line-sweep assumption.
+    form = (-z_by_race(recent) * 0.15) + (-z_by_race(current) * 0.05)
+    score_adj = z_by_race(score) * 0.15
 
-    # Keep measured attacking evidence, but at a lower weight so back/front
-    # counts do not stack on top of the base model and force a self-runner to
-    # the top. Give finishing/marking evidence more room to represent riders
-    # who benefit from the expected line development.
-    style_pressure = z_by_race(back.fillna(0) + front.fillna(0)) * 0.020
-    style_finish = z_by_race(stalker.fillna(0) + closer.fillna(0) + marker.fillna(0)) * 0.060
-    condition = z_by_race(track) * 0.05 + z_by_race(weather) * 0.025 + z_by_race(hour) * 0.015
-    # Strong wind increases uncertainty rather than pretending to know direction.
+    line_strength = z_by_race(line_role) * 0.15
+    line_strength += ((line_pos == 2) & (line_size >= 2)).astype(float) * 0.08
+    line_strength += ((line_pos == 1) & (line_size >= 2)).astype(float) * 0.03
+    line_strength += ((line_pos >= 3) & (line_size >= 3)).astype(float) * 0.02
+    line_strength -= (line_size == 1).astype(float) * 0.03
+
+    attack = z_by_race(back.fillna(0) + front.fillna(0))
+    finish = z_by_race(stalker.fillna(0) + closer.fillna(0) + marker.fillna(0))
+    style_pressure = attack * 0.06
+    style_finish = finish * 0.09
+    condition = z_by_race(track) * 0.10
+
+    # Matchup/development rewards riders capable of breaking the expected line:
+    # attacking pressure and finishing/marking ability both contribute, while
+    # races with several strong attackers naturally spread probability wider.
+    matchup = attack * 0.05 + finish * 0.05
+    race_attack_spread = attack.groupby(pred["race_id"]).transform("std").fillna(0.0)
+    disruption = race_attack_spread.clip(lower=0, upper=2.0) * 0.04
+    line = line_strength * (1.0 - disruption.clip(upper=0.35))
+
+    # Weather/time are retained only as small uncertainty signals; the explicit
+    # 10% condition bucket is track suitability rather than fabricated weather fit.
     uncertainty = wind.fillna(0).clip(lower=0) * 0.004
+    uncertainty += (z_by_race(weather).abs() + z_by_race(hour).abs()) * 0.002
 
     pred["nexus_form_adj"] = form
     pred["nexus_line_adj"] = line
+    pred["nexus_score_adj"] = score_adj
     pred["nexus_style_adj"] = style_pressure + style_finish
     pred["nexus_condition_adj"] = condition
+    pred["nexus_matchup_adj"] = matchup
     pred["nexus_uncertainty"] = uncertainty
 
     logp = np.log(pred["p_raw"].clip(1e-6, 1.0))
     pred["p_nexus_raw"] = np.exp(
         logp + pred["nexus_form_adj"] + pred["nexus_line_adj"]
-        + pred["nexus_style_adj"] + pred["nexus_condition_adj"]
-        - pred["nexus_uncertainty"]
+        + pred["nexus_score_adj"] + pred["nexus_style_adj"] + pred["nexus_condition_adj"]
+        + pred["nexus_matchup_adj"] - pred["nexus_uncertainty"]
     )
     pred = normalize_race_prob(pred, "p_nexus_raw", "p_win")
     return pred
