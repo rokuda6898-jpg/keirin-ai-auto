@@ -32,7 +32,7 @@ DEFAULT_BET_CONFIGS = {
     "quinella": {"min_prob": 0.05, "min_ev": 1200, "max_odds": 300, "max_per_race": 2},
     "quinella_place": {"min_prob": 0.10, "min_ev": 300, "max_odds": 100, "max_per_race": 2},
     "trio": {"min_prob": 0.07, "min_ev": 800, "max_odds": 300, "max_per_race": 2},
-    "trifecta": {"min_prob": 0.07, "min_ev": 800, "max_odds": 300, "max_per_race": 2},
+    "trifecta": {"min_prob": 0.002, "min_ev": -100, "max_odds": 500, "max_per_race": 35},
 }
 
 
@@ -374,7 +374,7 @@ def main():
         seconds_to_close = close_at - prediction_epoch if pd.notna(close_at) else np.nan
         if pd.isna(seconds_to_close) or seconds_to_close <= 300 or seconds_to_close > max_seconds_to_close:
             continue
-        candidates = make_multi_bet_candidates(g, top_k=5)
+        candidates = make_multi_bet_candidates(g, top_k=min(len(g), 9))
         race_odds = today_odds[today_odds["race_id"].eq(str(race_id))]
         if len(candidates) == 0 or len(race_odds) == 0:
             continue
@@ -416,7 +416,8 @@ def main():
         selected_parts = []
         for (_, bet_type), g in candidates[candidates["is_selected"]].groupby(["race_id", "bet_type"], sort=False):
             max_per_race = DEFAULT_BET_CONFIGS.get(bet_type, {}).get("max_per_race", 1)
-            selected_parts.append(g.sort_values("expected_profit_100yen", ascending=False).head(max_per_race))
+            rank_cols = ["prob", "expected_profit_100yen"] if bet_type == "trifecta" else ["expected_profit_100yen", "prob"]
+            selected_parts.append(g.sort_values(rank_cols, ascending=False).head(max_per_race))
         bets = pd.concat(selected_parts, ignore_index=True) if selected_parts else candidates.head(0).copy()
         if len(bets):
             race_budget_yen = get_int_env("BET_RACE_BUDGET_YEN", 10000)
