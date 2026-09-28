@@ -20,6 +20,7 @@ SETTLEMENT_SUMMARY_CSV = OUTPUT_DIR / "settlement_summary.csv"
 REPORT_MD = OUTPUT_DIR / "japanese_report.md"
 HISTORY_HTML = OUTPUT_DIR / "history.html"
 PREDICTION_HISTORY_CSV = OUTPUT_DIR / "prediction_history.csv"
+LATEST_RESULTS_JSON = OUTPUT_DIR / "latest_results.json"
 PAYOUT_SPECS = {
     "trifecta": ("trifecta", True),
     "trio": ("trio", False),
@@ -353,6 +354,8 @@ def run_settlement(args):
         settled["display_status"] = pd.Series("結果取得待ち", index=settled.index, dtype=object)
     else:
         results = fetch_results()
+        public_results = results[["race_id", "actual_trifecta", "actual_trifecta_odds", "official_result_available"]].copy()
+        public_results.to_json(LATEST_RESULTS_JSON, orient="records", force_ascii=False)
         settled = bets.merge(results, on="race_id", how="left")
         settled["is_selected"] = pd.to_numeric(settled["expected_profit_yen"], errors="coerce").fillna(-10**9) > args.min_expected_profit
         settled["actual_for_bet_type"] = settled.apply(
