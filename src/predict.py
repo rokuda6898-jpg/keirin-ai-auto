@@ -379,7 +379,7 @@ def main():
     # Durable one-row-per-race ledger for measuring AI top-1 win accuracy.
     top1_ledger_path = OUTPUT_DIR / "top1_prediction_ledger.csv"
     top1 = pred[pred["rank_in_race"].eq(1)][
-        ["date", "venue", "race_no", "race_id", "start_at", "close_at", "car_no", "player_id", "p_win"]
+        ["date", "venue", "race_no", "race_id", "start_at", "close_at", "car_no", "player_id", "p_win", "nexus_form_adj", "nexus_line_adj", "nexus_style_adj", "nexus_condition_adj", "nexus_matchup_adj", "nexus_uncertainty"]
     ].copy()
     top1 = top1.rename(columns={"car_no": "predicted_winner_car_no", "player_id": "predicted_winner_player_id", "p_win": "predicted_win_prob"})
     top1["prediction_created_at_jst"] = now_jst.isoformat(timespec="seconds")
