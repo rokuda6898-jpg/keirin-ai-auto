@@ -74,6 +74,33 @@ def audit_site_output():
     return problems
 
 
+def audit_results():
+    problems = []
+    path = OUTPUT_DIR / "latest_results.json"
+    try:
+        entries = pd.read_csv(TODAY_CSV, dtype={"race_id": str})
+    except Exception:
+        return problems
+    now = datetime.now(ZoneInfo("Asia/Tokyo")).timestamp()
+    overdue = set()
+    if "close_at" in entries.columns:
+        close_at = pd.to_numeric(entries["close_at"], errors="coerce")
+        overdue = set(entries.loc[close_at.notna() & (close_at < now - 30 * 60), "race_id"].astype(str))
+    if not overdue:
+        return problems
+    if not path.exists() or path.stat().st_size == 0:
+        return [{"type": "results_missing", "overdue_races": sorted(overdue)}]
+    try:
+        rows = json.loads(path.read_text(encoding="utf-8"))
+        decided = {str(x.get("race_id")) for x in rows if x.get("official_result_available")}
+        missing = sorted(overdue - decided)
+        if missing:
+            problems.append({"type": "results_overdue", "race_ids": missing})
+    except Exception as exc:
+        problems.append({"type": "results_unreadable", "detail": str(exc)})
+    return problems
+
+
 def audit_prediction_outputs():
     problems = []
     latest = OUTPUT_DIR / "latest_predictions.csv"
@@ -107,7 +134,10 @@ def repair():
         return False, "fetch_failed"
     if run([sys.executable, "src/predict.py"]) != 0:
         return False, "predict_failed"
-    return True, "rebuilt_daily_snapshot"
+    # Also refresh settlement; this is idempotent and closes stale result gaps.
+    if run([sys.executable, "src/settle_results.py"]) != 0:
+        return False, "settlement_refresh_failed"
+    return True, "rebuilt_snapshot_and_results"
 
 
 def main():
@@ -117,7 +147,7 @@ def main():
     for attempt in range(MAX_REPAIR_ATTEMPTS + 1):
         entry_problems, stats = audit_entries()
         prediction_problems = audit_prediction_outputs()
-        problems = entry_problems + prediction_problems + audit_budget() + audit_site_output()
+        problems = entry_problems + prediction_problems + audit_budget() + audit_site_output() + audit_results()
         history.append({"attempt": attempt, "problems": problems})
         if not problems:
             status = "healthy" if not repaired else "repaired"
