@@ -20,7 +20,7 @@ SETTLEMENT_SUMMARY_CSV = OUTPUT_DIR / "settlement_summary.csv"
 REPORT_MD = OUTPUT_DIR / "japanese_report.md"
 HISTORY_HTML = OUTPUT_DIR / "history.html"
 PREDICTION_HISTORY_CSV = OUTPUT_DIR / "prediction_history.csv"
-LATEST_RESULTS_JSON = OUTPUT_DIR / "latest_results.json"
+LATEST_RESULTS_JSON = OUTPUT_DIR / "latest_results.json"\nTOP1_LEDGER_CSV = OUTPUT_DIR / "top1_prediction_ledger.csv"\nTOP1_ACCURACY_JSON = OUTPUT_DIR / "top1_accuracy.json"
 PAYOUT_SPECS = {
     "trifecta": ("trifecta", True),
     "trio": ("trio", False),
@@ -332,6 +332,35 @@ def update_prediction_history(settled):
     combined.to_csv(PREDICTION_HISTORY_CSV, index=False)
     return combined
 
+def update_top1_accuracy(results):
+    if not TOP1_LEDGER_CSV.exists() or results.empty:
+        return
+    try:
+        ledger = pd.read_csv(TOP1_LEDGER_CSV, dtype={"race_id": str})
+    except (pd.errors.EmptyDataError, pd.errors.ParserError):
+        return
+    if ledger.empty:
+        return
+    actual = results[["race_id", "actual_trifecta", "official_result_available"]].copy()
+    actual["actual_winner_car_no"] = pd.to_numeric(
+        actual["actual_trifecta"].fillna("").astype(str).str.split("-").str[0], errors="coerce"
+    )
+    merged = ledger.merge(actual, on="race_id", how="inner")
+    merged = merged[merged["official_result_available"].fillna(False).astype(bool)].copy()
+    merged["predicted_winner_car_no"] = pd.to_numeric(merged["predicted_winner_car_no"], errors="coerce")
+    merged = merged[merged["predicted_winner_car_no"].notna() & merged["actual_winner_car_no"].notna()]
+    hits = int((merged["predicted_winner_car_no"] == merged["actual_winner_car_no"]).sum())
+    races = int(len(merged))
+    payload = {
+        "updated_at_jst": datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(timespec="seconds"),
+        "races": races,
+        "hits": hits,
+        "hit_rate": (hits / races if races else None),
+    }
+    TOP1_ACCURACY_JSON.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"AI top1 accuracy: {hits}/{races} = {payload['hit_rate']:.2%}" if races else "AI top1 accuracy: no settled races")
+
+
 def run_settlement(args):
     ensure_dirs()
     # Settle from the durable cumulative ledger when available. latest_bets.csv
@@ -356,6 +385,7 @@ def run_settlement(args):
         results = fetch_results()
         public_results = results[["race_id", "actual_trifecta", "actual_trifecta_odds", "official_result_available"]].copy()
         public_results.to_json(LATEST_RESULTS_JSON, orient="records", force_ascii=False)
+        update_top1_accuracy(results)
         settled = bets.merge(results, on="race_id", how="left")
         settled["is_selected"] = pd.to_numeric(settled["expected_profit_yen"], errors="coerce").fillna(-10**9) > args.min_expected_profit
         settled["actual_for_bet_type"] = settled.apply(
