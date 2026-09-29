@@ -48,6 +48,32 @@ def audit_entries():
     return problems, stats
 
 
+def audit_budget():
+    problems = []
+    path = OUTPUT_DIR / "latest_shadow_bets.csv"
+    if not path.exists() or path.stat().st_size == 0:
+        return problems
+    try:
+        bets = pd.read_csv(path, dtype={"race_id": str})
+        if bets.empty or "stake_yen" not in bets.columns:
+            return problems
+        for race_id, group in bets.groupby("race_id"):
+            total = int(pd.to_numeric(group["stake_yen"], errors="coerce").fillna(0).sum())
+            if total != 10000:
+                problems.append({"type": "race_budget_mismatch", "race_id": str(race_id), "total_yen": total})
+    except Exception as exc:
+        problems.append({"type": "budget_audit_failed", "detail": str(exc)})
+    return problems
+
+
+def audit_site_output():
+    problems = []
+    html = OUTPUT_DIR / "index.html"
+    if not html.exists() or html.stat().st_size < 1000:
+        problems.append({"type": "site_output_missing_or_too_small"})
+    return problems
+
+
 def audit_prediction_outputs():
     problems = []
     latest = OUTPUT_DIR / "latest_predictions.csv"
@@ -91,7 +117,7 @@ def main():
     for attempt in range(MAX_REPAIR_ATTEMPTS + 1):
         entry_problems, stats = audit_entries()
         prediction_problems = audit_prediction_outputs()
-        problems = entry_problems + prediction_problems
+        problems = entry_problems + prediction_problems + audit_budget() + audit_site_output()
         history.append({"attempt": attempt, "problems": problems})
         if not problems:
             status = "healthy" if not repaired else "repaired"
