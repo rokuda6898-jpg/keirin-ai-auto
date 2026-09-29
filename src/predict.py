@@ -376,6 +376,21 @@ def main():
     pred[cols].to_csv(pred_path, index=False)
     pred[cols].to_csv(latest_path, index=False)
 
+    # Durable one-row-per-race ledger for measuring AI top-1 win accuracy.
+    top1_ledger_path = OUTPUT_DIR / "top1_prediction_ledger.csv"
+    top1 = pred[pred["rank_in_race"].eq(1)][
+        ["date", "venue", "race_no", "race_id", "start_at", "close_at", "car_no", "player_id", "p_win"]
+    ].copy()
+    top1 = top1.rename(columns={"car_no": "predicted_winner_car_no", "player_id": "predicted_winner_player_id", "p_win": "predicted_win_prob"})
+    top1["prediction_created_at_jst"] = now_jst.isoformat(timespec="seconds")
+    try:
+        old_top1 = pd.read_csv(top1_ledger_path, dtype={"race_id": str})
+    except (FileNotFoundError, pd.errors.EmptyDataError, pd.errors.ParserError):
+        old_top1 = pd.DataFrame()
+    top1_ledger = pd.concat([old_top1, top1], ignore_index=True, sort=False)
+    top1_ledger = top1_ledger.drop_duplicates(["date", "race_id"], keep="last")
+    top1_ledger.to_csv(top1_ledger_path, index=False)
+
     bet_rows = []
     today_odds = load_today_odds()
     for race_id, g in pred.groupby("race_id", sort=False):
