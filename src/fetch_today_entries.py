@@ -241,40 +241,46 @@ def _entry_rows_complete(rows):
     return complete, cars, expected
 
 
-def parse_race_page(url):
-    html = http_get(url)
-    state = extract_preloaded_state(html)
-    race_data = find_query_data(state, "FETCH_KEIRIN_RACE")
-    if not race_data:
-        raise ValueError(f"race data not found: {url}")
+def parse_race_page(url, completeness_attempts=5, completeness_retry_sec=5.0):
+    last_incomplete = None
+    for completeness_attempt in range(max(int(completeness_attempts), 1)):
+        html = http_get(url)
+        state = extract_preloaded_state(html)
+        race_data = find_query_data(state, "FETCH_KEIRIN_RACE")
+        if not race_data:
+            raise ValueError(f"race data not found: {url}")
 
-    schedule = race_data["schedule"]
-    race = race_data["race"]
-    race_date = normalize_date(schedule["date"])
-    venue = get_venue_name(state, race_data)
-    race_no = int(race["number"])
-    race_id = str(race["id"])
+        schedule = race_data["schedule"]
+        race = race_data["race"]
+        race_date = normalize_date(schedule["date"])
+        venue = get_venue_name(state, race_data)
+        race_no = int(race["number"])
+        race_id = str(race["id"])
 
-    entry_rows = build_entry_rows(
-        race_data,
-        race_date=race_date,
-        venue=venue,
-        race_no=race_no,
-        race_id=race_id,
-        source_url=url,
-        include_results=False,
-    )
-
-    complete, cars, expected = _entry_rows_complete(entry_rows)
-    if not complete:
-        raise ValueError(
-            f"incomplete race field: race_id={race_id} expected={expected} cars={cars} url={url}"
+        entry_rows = build_entry_rows(
+            race_data,
+            race_date=race_date,
+            venue=venue,
+            race_no=race_no,
+            race_id=race_id,
+            source_url=url,
+            include_results=False,
         )
+        complete, cars, expected = _entry_rows_complete(entry_rows)
+        if complete:
+            odds_data = find_query_data(state, "FETCH_KEIRIN_RACE_ODDS")
+            odds_rows = build_odds_rows(odds_data, race_date, venue, race_no, race_id, url)
+            return entry_rows, odds_rows
 
-    odds_data = find_query_data(state, "FETCH_KEIRIN_RACE_ODDS")
-    odds_rows = build_odds_rows(odds_data, race_date, venue, race_no, race_id, url)
+        last_incomplete = (
+            f"incomplete race field: race_id={race_id} expected={expected} "
+            f"cars={cars} attempt={completeness_attempt + 1}/{completeness_attempts} url={url}"
+        )
+        if completeness_attempt + 1 < completeness_attempts:
+            time.sleep(completeness_retry_sec)
 
-    return entry_rows, odds_rows
+    raise ValueError(last_incomplete or f"incomplete race field: {url}")
+
 
 
 def save_today_frames(all_entries, all_odds):
