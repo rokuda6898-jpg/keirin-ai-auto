@@ -20,7 +20,9 @@ SETTLEMENT_SUMMARY_CSV = OUTPUT_DIR / "settlement_summary.csv"
 REPORT_MD = OUTPUT_DIR / "japanese_report.md"
 HISTORY_HTML = OUTPUT_DIR / "history.html"
 PREDICTION_HISTORY_CSV = OUTPUT_DIR / "prediction_history.csv"
-LATEST_RESULTS_JSON = OUTPUT_DIR / "latest_results.json"\nTOP1_LEDGER_CSV = OUTPUT_DIR / "top1_prediction_ledger.csv"\nTOP1_ACCURACY_JSON = OUTPUT_DIR / "top1_accuracy.json"
+LATEST_RESULTS_JSON = OUTPUT_DIR / "latest_results.json"
+TOP1_LEDGER_CSV = OUTPUT_DIR / "top1_prediction_ledger.csv"
+TOP1_ACCURACY_JSON = OUTPUT_DIR / "top1_accuracy.json"
 PAYOUT_SPECS = {
     "trifecta": ("trifecta", True),
     "trio": ("trio", False),
