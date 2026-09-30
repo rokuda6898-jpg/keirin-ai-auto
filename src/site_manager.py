@@ -33,14 +33,18 @@ def audit_entries():
     stats = {}
     for race_id, group in df.groupby("race_id"):
         cars = sorted(pd.to_numeric(group["car_no"], errors="coerce").dropna().astype(int).unique().tolist())
-        expected = max(cars) if cars else 0
-        # Japanese keirin fields are normally contiguous 1..N. A missing number is
-        # a stronger corruption signal than merely having 5/7/9 rows.
-        missing_cars = sorted(set(range(1, expected + 1)) - set(cars))
+        expected_values = pd.to_numeric(group.get("entries_number"), errors="coerce").dropna()
+        expected = int(expected_values.max()) if len(expected_values) else 0
+        # Never infer the official field size from max(car_no): if tail riders
+        # (for example 8/9) disappear together, max(car_no) makes a 9-car race
+        # look like a valid 7-car race. entries_number is source-declared.
+        missing_cars = sorted(set(range(1, expected + 1)) - set(cars)) if expected > 0 else []
         duplicate_cars = sorted(group.loc[group.duplicated("car_no", keep=False), "car_no"].dropna().astype(int).unique().tolist())
-        stats[str(race_id)] = {"cars": cars, "count": len(cars), "expected_contiguous": expected}
-        if missing_cars:
-            problems.append({"type": "missing_riders", "race_id": str(race_id), "missing_cars": missing_cars, "cars": cars})
+        stats[str(race_id)] = {"cars": cars, "count": len(cars), "expected_entries": expected}
+        if expected <= 0:
+            problems.append({"type": "missing_expected_field_size", "race_id": str(race_id), "cars": cars})
+        elif len(cars) != expected or missing_cars:
+            problems.append({"type": "missing_riders", "race_id": str(race_id), "expected": expected, "missing_cars": missing_cars, "cars": cars})
         if duplicate_cars:
             problems.append({"type": "duplicate_riders", "race_id": str(race_id), "cars": duplicate_cars})
         if len(cars) < 5 or len(cars) > 9:
