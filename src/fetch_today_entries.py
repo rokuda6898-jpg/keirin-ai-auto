@@ -346,6 +346,14 @@ def fetch_today_entries(race_date=None, max_races=None, sleep_sec=0.2):
 
     if not all_entries:
         raise ValueError(f"failed to fetch any entries for {race_date}: {failures[:3]}")
+    # Atomic daily snapshot: never publish a partial day. Previously a single
+    # incomplete race could fail while all other races were saved, silently
+    # turning a rider-level defect into a whole-race omission.
+    if failures:
+        raise ValueError(
+            f"refusing partial daily snapshot for {race_date}: "
+            f"{len(failures)}/{len(links)} races failed; first={failures[:3]}"
+        )
 
     entries_df, odds_df, trifecta_df = save_today_frames(all_entries, all_odds)
     schedule_columns = ["date", "venue", "race_no", "race_id", "start_at", "close_at", "source_url"]
