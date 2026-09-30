@@ -37,5 +37,14 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add outputs data/raw || true
           git diff --staged --quiet || git commit -m "Manager: repair and audit keirin data"
-          git pull --rebase
+          # Another writer can finish after this run checked out main. Rebase
+          # generated outputs is conflict-prone, so refresh and regenerate once
+          # against the newest main before pushing.
+          if ! git pull --rebase; then
+            git rebase --abort || true
+            git reset --hard origin/main
+            python src/site_manager.py
+            git add outputs data/raw || true
+            git diff --staged --quiet || git commit -m "Manager: repair and audit keirin data"
+          fi
           git push
