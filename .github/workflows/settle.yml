@@ -92,5 +92,18 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add models outputs || true
           git diff --staged --quiet || git commit -m "Settle keirin predictions"
-          git pull --rebase
+          # Another writer can finish after this run checked out main. Rebase
+          # generated outputs is conflict-prone, so refresh and regenerate once
+          # against the newest main before pushing.
+          if ! git pull --rebase; then
+            git rebase --abort || true
+            git reset --hard origin/main
+            python src/fetch_today_entries.py
+            python src/settle_results.py
+            python src/update_growth_log.py --kind settle
+            python src/settle_shadow.py
+            python src/report_growth.py --days 31 --start-date 2026-07-01
+            git add models outputs || true
+            git diff --staged --quiet || git commit -m "Settle keirin predictions"
+          fi
           git push
