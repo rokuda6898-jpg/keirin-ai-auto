@@ -227,6 +227,20 @@ def build_odds_rows(odds_data, race_date, venue, race_no, race_id, url):
     return rows
 
 
+def _entry_rows_complete(rows):
+    """Validate fetched starters against the source-declared field size."""
+    if not rows:
+        return False, [], 0
+    frame = pd.DataFrame(rows)
+    cars = sorted(pd.to_numeric(frame.get("car_no"), errors="coerce").dropna().astype(int).unique().tolist())
+    expected_values = pd.to_numeric(frame.get("entries_number"), errors="coerce").dropna()
+    expected = int(expected_values.max()) if len(expected_values) else 0
+    if expected <= 0:
+        return False, cars, expected
+    complete = len(cars) == expected and set(cars) == set(range(1, expected + 1))
+    return complete, cars, expected
+
+
 def parse_race_page(url):
     html = http_get(url)
     state = extract_preloaded_state(html)
@@ -250,6 +264,12 @@ def parse_race_page(url):
         source_url=url,
         include_results=False,
     )
+
+    complete, cars, expected = _entry_rows_complete(entry_rows)
+    if not complete:
+        raise ValueError(
+            f"incomplete race field: race_id={race_id} expected={expected} cars={cars} url={url}"
+        )
 
     odds_data = find_query_data(state, "FETCH_KEIRIN_RACE_ODDS")
     odds_rows = build_odds_rows(odds_data, race_date, venue, race_no, race_id, url)
