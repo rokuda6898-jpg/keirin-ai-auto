@@ -446,7 +446,10 @@ def add_strength_features(df: pd.DataFrame) -> pd.DataFrame:
 
 def prepare_features(df: pd.DataFrame, fill_values=None):
     df = add_categorical_codes(df)
-    df = add_player_elo_features(df)
+    # Live prediction may already contain Elo calculated on history+today.
+    # Do not overwrite that with an Elo calculation using today's races only.
+    if "player_elo" not in df.columns or pd.to_numeric(df["player_elo"], errors="coerce").notna().sum() == 0:
+        df = add_player_elo_features(df)
     df = add_strength_features(df)
 
     for col in FEATURE_COLS:
