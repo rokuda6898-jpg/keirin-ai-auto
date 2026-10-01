@@ -238,7 +238,19 @@ def _entry_rows_complete(rows):
     expected = int(expected_values.max()) if len(expected_values) else 0
     if expected <= 0:
         return False, cars, expected
-    complete = len(cars) == expected and set(cars) == set(range(1, expected + 1))
+    declared_values = pd.to_numeric(frame.get("declared_entries_number"), errors="coerce").dropna()
+    declared = int(declared_values.max()) if len(declared_values) else expected
+    cancelled = set()
+    if "cancelled_car_numbers" in frame.columns:
+        for value in frame["cancelled_car_numbers"].dropna().astype(str).unique():
+            cancelled.update(int(x) for x in re.findall(r"\\d+", value))
+    expected_active = set(range(1, declared + 1)) - cancelled
+    complete = (
+        expected > 0
+        and len(cars) == expected
+        and set(cars) == expected_active
+        and expected + len(cancelled) == declared
+    )
     return complete, cars, expected
 
 
@@ -257,6 +269,18 @@ def parse_race_page(url, completeness_attempts=5, completeness_retry_sec=5.0):
         venue = get_venue_name(state, race_data)
         race_no = int(race["number"])
         race_id = str(race["id"])
+
+        raw_entries = race_data.get("entries", []) or []
+        declared = int(race.get("entriesNumber") or len(raw_entries) or 0)
+        raw_cars = sorted(
+            int(entry.get("number")) for entry in raw_entries
+            if entry.get("number") is not None
+        )
+        if declared <= 0 or len(raw_cars) != declared or set(raw_cars) != set(range(1, declared + 1)):
+            raise ValueError(
+                f"incomplete raw race field: race_id={race_id} declared={declared} "
+                f"raw_cars={raw_cars} url={url}"
+            )
 
         entry_rows = build_entry_rows(
             race_data,
@@ -300,7 +324,8 @@ def cache_complete_races(entries_df, odds_df):
         expected = pd.to_numeric(group.get("entries_number"), errors="coerce").dropna()
         expected_n = int(expected.iloc[0]) if len(expected) else len(group)
         cars = sorted(pd.to_numeric(group["car_no"], errors="coerce").dropna().astype(int).unique().tolist())
-        if expected_n <= 0 or cars != list(range(1, expected_n + 1)):
+        complete, _, _ = _entry_rows_complete(group.to_dict("records"))
+        if not complete:
             continue
         rid = str(race_id)
         _atomic_csv_write(group, RACE_CACHE_DIR / f"{rid}_entries.csv")
