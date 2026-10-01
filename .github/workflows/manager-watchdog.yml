@@ -54,15 +54,24 @@ jobs:
               return;
             }
 
-            if (latest.status !== "completed" && updatedAgeMinutes > 22) {
-              core.warning("Manager appears stalled; dispatching a fresh supervisor run.");
+            if (latest.status !== "completed" && updatedAgeMinutes > 12) {
+              core.warning("Manager appears stalled; cancelling it before dispatching the newest code.");
+              try {
+                await github.rest.actions.cancelWorkflowRun({
+                  owner, repo, run_id: latest.id
+                });
+              } catch (e) {
+                core.warning(`cancel failed for run ${latest.id}: ${e.message}`);
+              }
+              // Give GitHub a moment to release the shared writer concurrency lock.
+              await new Promise(resolve => setTimeout(resolve, 5000));
               await github.rest.actions.createWorkflowDispatch({
                 owner, repo, workflow_id, ref: "main"
               });
               return;
             }
 
-            if (ageMinutes > 25) {
+            if (ageMinutes > 18) {
               core.warning("Manager heartbeat is stale; dispatching a fresh run.");
               await github.rest.actions.createWorkflowDispatch({
                 owner, repo, workflow_id, ref: "main"
