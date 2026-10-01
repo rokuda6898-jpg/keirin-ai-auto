@@ -11,6 +11,7 @@ import pandas as pd
 from common import TODAY_CSV, OUTPUT_DIR, RAW_DIR
 
 STATUS_PATH = OUTPUT_DIR / "manager_status.json"
+RACE_SCHEDULE_PATH = OUTPUT_DIR / "latest_race_schedule.csv"
 MAX_REPAIR_ATTEMPTS = 3
 RETRY_SECONDS = 5
 
@@ -50,6 +51,35 @@ def audit_entries():
         if len(cars) < 5 or len(cars) > 9:
             problems.append({"type": "implausible_rider_count", "race_id": str(race_id), "count": len(cars), "cars": cars})
     return problems, stats
+
+
+def audit_race_coverage():
+    """Detect entire races disappearing from the daily snapshot."""
+    problems = []
+    if not RACE_SCHEDULE_PATH.exists():
+        return [{"type": "race_schedule_missing"}]
+    try:
+        schedule = pd.read_csv(RACE_SCHEDULE_PATH, dtype={"race_id": str})
+        entries = pd.read_csv(TODAY_CSV, dtype={"race_id": str})
+        today = datetime.now(ZoneInfo("Asia/Tokyo")).strftime("%Y-%m-%d")
+        if "date" in schedule.columns:
+            schedule = schedule[schedule["date"].astype(str).eq(today)]
+        expected_ids = set(schedule["race_id"].dropna().astype(str))
+        actual_ids = set(entries["race_id"].dropna().astype(str))
+        missing = sorted(expected_ids - actual_ids)
+        extra = sorted(actual_ids - expected_ids)
+        if missing:
+            problems.append({
+                "type": "missing_entire_races",
+                "expected_races": len(expected_ids),
+                "actual_races": len(actual_ids),
+                "race_ids": missing,
+            })
+        if extra:
+            problems.append({"type": "unexpected_races", "race_ids": extra})
+    except Exception as exc:
+        problems.append({"type": "race_coverage_audit_failed", "detail": str(exc)})
+    return problems
 
 
 def audit_budget():
@@ -201,7 +231,7 @@ def main():
     for attempt in range(MAX_REPAIR_ATTEMPTS + 1):
         entry_problems, stats = audit_entries()
         prediction_problems = audit_prediction_outputs()
-        problems = entry_problems + prediction_problems + audit_budget() + audit_live_bets() + audit_site_output() + audit_results()
+        problems = entry_problems + audit_race_coverage() + prediction_problems + audit_budget() + audit_live_bets() + audit_site_output() + audit_results()
         history.append({"attempt": attempt, "problems": problems})
         if not problems:
             status = "healthy" if not repaired else "repaired"
