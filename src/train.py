@@ -20,6 +20,8 @@ from common import (
     FEATURE_COLS,
     OUTPUT_DIR,
     add_player_prior_features,
+    add_player_elo_features,
+    add_pair_history_features,
     prepare_features,
     normalize_race_prob,
 )
@@ -199,6 +201,52 @@ def evaluate_race_ranker(train_df, test_df):
     }
 
 
+def evaluate_walk_forward(df, folds=4):
+    """Expanding-window Top1 validation across several future periods."""
+    dates = sorted(pd.Series(df["date"].dropna().unique()).tolist())
+    if len(dates) < 20:
+        return []
+    start = max(int(len(dates) * 0.50), 5)
+    remaining = len(dates) - start
+    step = max(remaining // folds, 1)
+    rows = []
+    for fold in range(folds):
+        test_start_i = start + fold * step
+        test_end_i = len(dates) if fold == folds - 1 else min(start + (fold + 1) * step, len(dates))
+        if test_start_i >= len(dates) or test_end_i <= test_start_i:
+            continue
+        train_end = dates[test_start_i]
+        test_end = dates[test_end_i - 1]
+        tr = df[df["date"] < train_end].copy()
+        te = df[(df["date"] >= train_end) & (df["date"] <= test_end)].copy()
+        if len(tr) < 100 or te["race_id"].nunique() < 5:
+            continue
+        Xtr, fills = prepare_features(tr)
+        Xte, _ = prepare_features(te, fills)
+        m = HistGradientBoostingClassifier(
+            max_iter=300, learning_rate=0.045, max_leaf_nodes=31,
+            l2_regularization=0.02, random_state=100 + fold,
+        )
+        m.fit(Xtr, tr["target_win"].astype(int))
+        prob = m.predict_proba(Xte)[:, 1]
+        scored = te[["race_id","finish_pos"]].copy()
+        scored["p_raw"] = prob
+        scored = normalize_race_prob(scored)
+        scored["rank"] = scored.groupby("race_id")["p_win"].rank(ascending=False, method="first")
+        top = scored[scored["rank"].eq(1)]
+        winners = scored[pd.to_numeric(scored["finish_pos"], errors="coerce").eq(1)]["p_win"].clip(1e-9,1)
+        rows.append({
+            "fold": fold + 1,
+            "train_through": str(pd.Timestamp(train_end).date()),
+            "test_through": str(pd.Timestamp(test_end).date()),
+            "train_races": int(tr["race_id"].nunique()),
+            "test_races": int(te["race_id"].nunique()),
+            "top1_hit_rate": float(pd.to_numeric(top["finish_pos"], errors="coerce").eq(1).mean()) if len(top) else None,
+            "race_logloss": float(-np.log(winners).mean()) if len(winners) else None,
+        })
+    return rows
+
+
 def main():
     ensure_dirs()
     ensure_history()
@@ -213,7 +261,12 @@ def main():
     df["date"] = pd.to_datetime(df["date"])
     df["target_win"] = (pd.to_numeric(df["finish_pos"], errors="coerce") == 1).astype(int)
     df = df.sort_values(["date", "race_id", "car_no"])
+    # Compute all stateful pre-race history features once on the full
+    # chronological stream, before any time split. Each helper is leakage-safe:
+    # the current race result is applied only after its pre-race features exist.
     df = add_player_prior_features(df)
+    df = add_player_elo_features(df)
+    df = add_pair_history_features(df)
 
     dates = sorted(df["date"].dropna().unique())
     if len(dates) < 10:
@@ -285,6 +338,12 @@ def main():
     (OUTPUT_DIR / "model_ablation.json").write_text(json.dumps(ablations, ensure_ascii=False, indent=2), encoding="utf-8")
     pd.DataFrame(ablations).drop(columns=["dropped_features"], errors="ignore").to_csv(OUTPUT_DIR / "model_ablation.csv", index=False)
 
+    walk_forward = evaluate_walk_forward(df, folds=4)
+    pd.DataFrame(walk_forward).to_csv(OUTPUT_DIR / "walk_forward_top1.csv", index=False)
+    (OUTPUT_DIR / "walk_forward_top1.json").write_text(
+        json.dumps(walk_forward, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+
     metrics = {
         "trained_at_jst": datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(timespec="seconds"),
         "model": "HistGradientBoostingClassifier + race probability normalization",
@@ -303,6 +362,7 @@ def main():
         "backtest": backtest_summaries,
         "feature_ablation": ablations,
         "shadow_race_ranker": ranker_metrics,
+        "walk_forward": walk_forward,
     }
 
     X_full, production_fill_values = prepare_features(df)
