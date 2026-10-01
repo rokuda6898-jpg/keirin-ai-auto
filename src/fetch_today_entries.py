@@ -284,6 +284,15 @@ def parse_race_page(url, completeness_attempts=5, completeness_retry_sec=5.0):
 
 
 
+def _atomic_csv_write(frame, path):
+    """Write a CSV atomically so a killed refresh cannot leave a half-written cache."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    frame.to_csv(tmp, index=False)
+    os.replace(tmp, path)
+
+
 def cache_complete_races(entries_df, odds_df):
     """Persist each complete race independently so one bad refresh cannot erase it."""
     RACE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
@@ -294,9 +303,34 @@ def cache_complete_races(entries_df, odds_df):
         if expected_n <= 0 or cars != list(range(1, expected_n + 1)):
             continue
         rid = str(race_id)
-        group.to_csv(RACE_CACHE_DIR / f"{rid}_entries.csv", index=False)
+        _atomic_csv_write(group, RACE_CACHE_DIR / f"{rid}_entries.csv")
         race_odds = odds_df[odds_df["race_id"].astype(str).eq(rid)] if len(odds_df) else odds_df
-        race_odds.to_csv(RACE_CACHE_DIR / f"{rid}_odds.csv", index=False)
+        _atomic_csv_write(race_odds, RACE_CACHE_DIR / f"{rid}_odds.csv")
+
+
+def cache_complete_race_rows(entry_rows, odds_rows):
+    """Checkpoint one validated race immediately, even if another race later fails."""
+    if not entry_rows:
+        return
+    entries_df = pd.DataFrame(entry_rows)
+    odds_df = pd.DataFrame(odds_rows, columns=ODDS_COLUMNS)
+    cache_complete_races(entries_df, odds_df)
+
+
+def load_cached_race(race_id):
+    entry_path = RACE_CACHE_DIR / f"{race_id}_entries.csv"
+    odds_path = RACE_CACHE_DIR / f"{race_id}_odds.csv"
+    if not entry_path.exists():
+        return None, None
+    try:
+        entries = pd.read_csv(entry_path, dtype={"race_id": str})
+        complete, _, _ = _entry_rows_complete(entries.to_dict("records"))
+        if not complete:
+            return None, None
+        odds = pd.read_csv(odds_path, dtype={"race_id": str}) if odds_path.exists() else pd.DataFrame(columns=ODDS_COLUMNS)
+        return entries, odds
+    except Exception:
+        return None, None
 
 
 def guard_against_destructive_shrink(entries_df):
@@ -373,6 +407,9 @@ def fetch_today_entries(race_date=None, max_races=None, sleep_sec=0.2):
             if not entries:
                 print(f"skipped {i}/{len(links)}: {link} date mismatch")
                 continue
+            # Checkpoint each good race immediately. A later failure must not
+            # throw away the races already obtained successfully.
+            cache_complete_race_rows(entries, odds)
             all_entries.extend(entries)
             all_odds.extend(odds)
             print(f"fetched {i}/{len(links)}: {link} entries={len(entries)} odds={len(odds)}")
