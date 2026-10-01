@@ -334,6 +334,27 @@ def update_prediction_history(settled):
     combined.to_csv(PREDICTION_HISTORY_CSV, index=False)
     return combined
 
+def classify_top1_misses(scored):
+    """Classify repeatable prediction failure patterns without inventing race events."""
+    if scored.empty:
+        return scored
+    out = scored.copy()
+    pred = pd.to_numeric(out.get("predicted_winner_car_no"), errors="coerce")
+    actual = pd.to_numeric(out.get("actual_winner_car_no"), errors="coerce")
+    margin = pd.to_numeric(out.get("top1_top2_margin"), errors="coerce")
+    second = pd.to_numeric(out.get("second_pick_car_no"), errors="coerce")
+    line_pos = pd.to_numeric(out.get("line_position"), errors="coerce")
+    pressure = pd.to_numeric(out.get("race_attack_pressure"), errors="coerce")
+    out["is_hit"] = pred.eq(actual)
+    out["miss_reason"] = "hit"
+    miss = ~out["is_hit"]
+    out.loc[miss & second.eq(actual), "miss_reason"] = "second_pick_won"
+    out.loc[miss & margin.notna() & margin.le(0.03), "miss_reason"] = "low_confidence_top2_close"
+    out.loc[miss & line_pos.eq(1) & pressure.notna() & pressure.ge(pressure.median()), "miss_reason"] = "leader_overrated_under_pressure"
+    out.loc[miss & out["miss_reason"].eq("hit"), "miss_reason"] = "other_model_miss"
+    return out
+
+
 def update_top1_accuracy(results):
     if not TOP1_LEDGER_CSV.exists() or results.empty:
         return
@@ -365,7 +386,15 @@ def update_top1_accuracy(results):
     merged = merged[merged["official_result_available"].fillna(False).astype(bool)].copy()
     merged["predicted_winner_car_no"] = pd.to_numeric(merged["predicted_winner_car_no"], errors="coerce")
     merged = merged[merged["predicted_winner_car_no"].notna() & merged["actual_winner_car_no"].notna()]
-    hits = int((merged["predicted_winner_car_no"] == merged["actual_winner_car_no"]).sum())
+    merged = classify_top1_misses(merged)
+    merged.to_csv(OUTPUT_DIR / "top1_miss_analysis.csv", index=False)
+    miss_summary = (
+        merged[~merged["is_hit"]].groupby("miss_reason", as_index=False)
+        .agg(misses=("race_id","size"))
+        .sort_values("misses", ascending=False)
+    )
+    miss_summary.to_csv(OUTPUT_DIR / "top1_miss_summary.csv", index=False)
+    hits = int(merged["is_hit"].sum())
     races = int(len(merged))
     payload = {
         "updated_at_jst": datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(timespec="seconds"),
