@@ -376,6 +376,25 @@ def update_top1_accuracy(results):
     TOP1_ACCURACY_JSON.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"AI top1 accuracy: {hits}/{races} = {payload['hit_rate']:.2%}" if races else "AI top1 accuracy: no settled races")
 
+    variant_path = OUTPUT_DIR / "top1_variant_ledger.csv"
+    if variant_path.exists():
+        try:
+            variants = pd.read_csv(variant_path, dtype={"race_id": str})
+            scored = variants.merge(actual[["race_id","actual_winner_car_no","official_result_available"]], on="race_id", how="inner")
+            scored = scored[scored["official_result_available"].fillna(False).astype(bool)].copy()
+            scored["predicted_winner_car_no"] = pd.to_numeric(scored["predicted_winner_car_no"], errors="coerce")
+            scored["is_hit"] = scored["predicted_winner_car_no"].eq(scored["actual_winner_car_no"])
+            summary = scored.groupby("variant", as_index=False).agg(races=("race_id","size"), hits=("is_hit","sum"))
+            summary["hit_rate"] = summary["hits"] / summary["races"]
+            summary["updated_at_jst"] = datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(timespec="seconds")
+            summary.sort_values(["hit_rate","races"], ascending=[False,False]).to_csv(
+                OUTPUT_DIR / "top1_variant_summary.csv", index=False
+            )
+            scored.to_csv(OUTPUT_DIR / "top1_variant_results.csv", index=False)
+            print("Top1 shadow variants:\n" + summary.to_string(index=False))
+        except (OSError, pd.errors.ParserError, pd.errors.EmptyDataError) as exc:
+            print(f"Top1 variant settlement skipped: {exc}")
+
 
 def run_settlement(args):
     ensure_dirs()
