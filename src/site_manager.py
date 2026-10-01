@@ -217,7 +217,10 @@ def audit_entries():
         cars = sorted(pd.to_numeric(group["car_no"], errors="coerce").dropna().astype(int).unique().tolist())
         expected_values = pd.to_numeric(group.get("entries_number"), errors="coerce").dropna()
         expected = int(expected_values.max()) if len(expected_values) else 0
-        declared_values = pd.to_numeric(group.get("declared_entries_number"), errors="coerce").dropna()
+        if "declared_entries_number" in group.columns:
+            declared_values = pd.to_numeric(group["declared_entries_number"], errors="coerce").dropna()
+        else:
+            declared_values = pd.Series(dtype=float)
         declared = int(declared_values.max()) if len(declared_values) else expected
         cancelled = set()
         if "cancelled_car_numbers" in group.columns:
