@@ -162,7 +162,12 @@ def repair():
     # Rebuild the entire daily snapshot. Partial patching is deliberately avoided:
     # it was the source of stale/missing rider states.
     if run([sys.executable, "src/fetch_today_entries.py"]) != 0:
-        return False, "fetch_failed"
+        # Full-day fetching is atomic and can fail when even one source race is
+        # temporarily incomplete. Fall back to the persisted daily schedule and
+        # rebuild the active near-close races instead of leaving TODAY_CSV absent.
+        fallback = [sys.executable, "src/fetch_upcoming_entries.py", "--min-minutes", "5", "--max-minutes", "40", "--retry-sec", "5"]
+        if run(fallback) != 0 or not TODAY_CSV.exists():
+            return False, "fetch_failed_full_and_upcoming"
     if run([sys.executable, "src/predict.py"]) != 0:
         return False, "predict_failed"
     # Also refresh settlement; this is idempotent and closes stale result gaps.
