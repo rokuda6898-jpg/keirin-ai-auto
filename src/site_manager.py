@@ -70,6 +70,33 @@ def audit_budget():
     return problems
 
 
+def audit_live_bets():
+    """Detect the failure mode where predictions/bet candidates exist but the live bet output is empty."""
+    problems = []
+    shadow_path = OUTPUT_DIR / "latest_shadow_bets.csv"
+    live_path = OUTPUT_DIR / "latest_bets.csv"
+    if not shadow_path.exists() or shadow_path.stat().st_size == 0:
+        return problems
+    try:
+        shadow = pd.read_csv(shadow_path, dtype={"race_id": str})
+    except (pd.errors.EmptyDataError, pd.errors.ParserError, OSError):
+        return problems
+    if shadow.empty:
+        return problems
+    try:
+        live = pd.read_csv(live_path, dtype={"race_id": str}) if live_path.exists() else pd.DataFrame()
+    except (pd.errors.EmptyDataError, pd.errors.ParserError, OSError):
+        live = pd.DataFrame()
+    # The site intentionally renders shadow recommendations even while the
+    # external-profit purchase gate is closed. Empty latest_bets must therefore
+    # never masquerade as a prediction/data failure.
+    if live.empty and "purchase_authorized" in shadow.columns:
+        authorized = shadow["purchase_authorized"].astype(str).str.lower().isin({"true", "1", "yes"}).any()
+        if authorized:
+            problems.append({"type": "authorized_bets_missing", "shadow_rows": int(len(shadow))})
+    return problems
+
+
 def audit_site_output():
     problems = []
     html = OUTPUT_DIR / "index.html"
@@ -151,7 +178,7 @@ def main():
     for attempt in range(MAX_REPAIR_ATTEMPTS + 1):
         entry_problems, stats = audit_entries()
         prediction_problems = audit_prediction_outputs()
-        problems = entry_problems + prediction_problems + audit_budget() + audit_site_output() + audit_results()
+        problems = entry_problems + prediction_problems + audit_budget() + audit_live_bets() + audit_site_output() + audit_results()
         history.append({"attempt": attempt, "problems": problems})
         if not problems:
             status = "healthy" if not repaired else "repaired"
