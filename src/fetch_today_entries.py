@@ -246,7 +246,7 @@ def _entry_rows_complete(rows):
     cancelled = set()
     if "cancelled_car_numbers" in frame.columns:
         for value in frame["cancelled_car_numbers"].dropna().astype(str).unique():
-            cancelled.update(int(x) for x in re.findall(r"\\d+", value))
+            cancelled.update(int(x) for x in re.findall(r"\d+", value))
     expected_active = set(range(1, declared + 1)) - cancelled
     complete = (
         expected > 0
