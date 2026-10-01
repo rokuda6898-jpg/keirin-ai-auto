@@ -41,6 +41,59 @@ def rollback_last_good():
     return True
 
 
+def restore_races_from_cache(problems):
+    """Restore known-good individual races before touching the network."""
+    cache_dir = RAW_DIR / "race_cache"
+    if not cache_dir.exists() or not TODAY_CSV.exists():
+        return False
+    wanted = set()
+    for p in problems or []:
+        if p.get("type") in {"missing_entire_races", "missing_riders", "duplicate_riders", "missing_player_identity", "duplicate_player_identity"}:
+            wanted.update(str(x) for x in (p.get("race_ids") or ([p.get("race_id")] if p.get("race_id") else [])))
+    if not wanted:
+        return False
+    try:
+        base = pd.read_csv(TODAY_CSV, dtype={"race_id": str, "player_id": str})
+        odds = pd.read_csv(TODAY_ODDS_CSV, dtype={"race_id": str}) if TODAY_ODDS_CSV.exists() else pd.DataFrame()
+    except Exception:
+        return False
+    restored = 0
+    for rid in sorted(wanted):
+        ep = cache_dir / f"{rid}_entries.csv"
+        if not ep.exists():
+            continue
+        try:
+            race = pd.read_csv(ep, dtype={"race_id": str, "player_id": str})
+            expected = pd.to_numeric(race.get("entries_number"), errors="coerce").dropna()
+            n = int(expected.iloc[0]) if len(expected) else len(race)
+            cars = sorted(pd.to_numeric(race["car_no"], errors="coerce").dropna().astype(int).unique().tolist())
+            if n <= 0 or cars != list(range(1, n + 1)):
+                continue
+            base = base[~base["race_id"].astype(str).eq(rid)]
+            base = pd.concat([base, race], ignore_index=True, sort=False)
+            op = cache_dir / f"{rid}_odds.csv"
+            if op.exists():
+                ro = pd.read_csv(op, dtype={"race_id": str})
+                if len(odds) and "race_id" in odds.columns:
+                    odds = odds[~odds["race_id"].astype(str).eq(rid)]
+                odds = pd.concat([odds, ro], ignore_index=True, sort=False)
+            restored += 1
+        except Exception:
+            continue
+    if not restored:
+        return False
+    fetch_mod = importlib.import_module("fetch_today_entries")
+    fetch_mod.save_today_frames(base.to_dict("records"), odds.to_dict("records"))
+    ok, gate_problems = validate_source_gate()
+    if not ok:
+        print(f"race-cache restore failed source gate: {gate_problems}", flush=True)
+        rollback_last_good()
+        return False
+    snapshot_last_good()
+    print(f"restored {restored} races from per-race cache", flush=True)
+    return True
+
+
 def repair_missing_races_in_place(problems):
     """Recover only damaged/missing races and merge them into the last good day."""
     race_ids = set()
@@ -504,11 +557,12 @@ def repair(problems=None):
             "missing_riders", "missing_entire_races", "duplicate_riders",
             "missing_player_identity", "duplicate_player_identity",
         }
-        # Level 2+ means this exact failure has already recurred several
-        # times; skip repeating the same local repair and move to a full rebuild.
-        targeted_ok = level < 2 and bool(kinds & targeted_types) and repair_missing_races_in_place(problems)
+        cache_ok = bool(kinds & targeted_types) and restore_races_from_cache(problems)
+        # If cache cannot fully restore the day, try focused network recovery.
+        # Level 2+ skips repeating a network strategy that already failed.
+        targeted_ok = cache_ok or (level < 2 and bool(kinds & targeted_types) and repair_missing_races_in_place(problems))
         if targeted_ok:
-            actions.append("targeted_race_repair_gated")
+            actions.append("race_cache_or_targeted_repair_gated")
         else:
             # Escalate after focused recovery fails or recurrence history says
             # the focused strategy is no longer effective.
