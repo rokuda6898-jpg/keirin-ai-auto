@@ -107,6 +107,9 @@ FEATURE_COLS = [
     "wind_speed",
     "meeting_day",
     "entries_number",
+    "field_size_7",
+    "field_size_9",
+    "lines_per_field",
     "is_grade_race",
     "start_hour",
     "day_of_week",
@@ -181,6 +184,11 @@ def add_categorical_codes(df: pd.DataFrame) -> pd.DataFrame:
     df["start_hour"] = ((start_at // 3600 + 9) % 24).where(start_at.notna())
     if "entries_number" not in df.columns and "race_id" in df.columns:
         df["entries_number"] = df.groupby("race_id")["race_id"].transform("count")
+    entries = pd.to_numeric(df.get("entries_number"), errors="coerce")
+    lines = pd.to_numeric(df.get("number_of_lines"), errors="coerce")
+    df["field_size_7"] = entries.eq(7).astype(float)
+    df["field_size_9"] = entries.eq(9).astype(float)
+    df["lines_per_field"] = lines / entries.replace(0, np.nan)
     return df
 
 
