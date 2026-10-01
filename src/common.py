@@ -45,6 +45,10 @@ FEATURE_COLS = [
     "player_prior_strength_rank",
     "player_prior_strength_gap_to_best",
     "player_prior_strength_vs_field",
+    "player_elo",
+    "player_elo_rank",
+    "player_elo_vs_field",
+    "player_recent_weighted_finish",
     "player_recent5_avg_finish",
     "player_recent10_avg_finish",
     "player_recent5_win_rate",
@@ -281,6 +285,71 @@ def add_player_prior_features(df: pd.DataFrame) -> pd.DataFrame:
     return work.drop(columns=["_original_order", "_date_dt"], errors="ignore")
 
 
+def add_player_elo_features(df: pd.DataFrame, k_factor=20.0, base_rating=1500.0) -> pd.DataFrame:
+    """Leakage-safe multiplayer Elo plus recency-weighted finish.
+
+    Each row receives the player's rating immediately before that race. Ratings
+    are updated only after all starters in the race have been assigned their
+    pre-race features.
+    """
+    df = df.copy()
+    if not {"race_id", "player_id", "date"}.issubset(df.columns):
+        return df
+    work = df.copy()
+    work["_orig"] = np.arange(len(work))
+    work["_date"] = pd.to_datetime(work["date"], errors="coerce")
+    sort_cols = [x for x in ["_date", "race_id", "race_no", "car_no", "_orig"] if x in work.columns]
+    work = work.sort_values(sort_cols, kind="mergesort")
+    ratings = {}
+    histories = {}
+    elo_out = pd.Series(np.nan, index=work.index, dtype=float)
+    weighted_finish = pd.Series(np.nan, index=work.index, dtype=float)
+
+    for _, idx in work.groupby("race_id", sort=False).groups.items():
+        idx = list(idx)
+        players = work.loc[idx, "player_id"].astype(str)
+        pre = np.array([ratings.get(pid, base_rating) for pid in players], dtype=float)
+        elo_out.loc[idx] = pre
+        race_date = work.loc[idx, "_date"].iloc[0]
+        for row_idx, pid in zip(idx, players):
+            hist = histories.get(pid, [])
+            vals, weights = [], []
+            for d, pos in hist[-20:]:
+                age = max((race_date - d).days, 0) if pd.notna(race_date) and pd.notna(d) else 365
+                vals.append(pos)
+                weights.append(0.5 ** (age / 90.0))
+            if weights and sum(weights) > 0:
+                weighted_finish.loc[row_idx] = float(np.average(vals, weights=weights))
+
+        finish = pd.to_numeric(work.loc[idx, "finish_pos"], errors="coerce").to_numpy(dtype=float)
+        observed = np.isfinite(finish)
+        if observed.sum() >= 2:
+            n = len(idx)
+            delta = np.zeros(n, dtype=float)
+            for i in range(n):
+                if not observed[i]:
+                    continue
+                for j in range(n):
+                    if i == j or not observed[j]:
+                        continue
+                    actual = 1.0 if finish[i] < finish[j] else (0.5 if finish[i] == finish[j] else 0.0)
+                    expected = 1.0 / (1.0 + 10.0 ** ((pre[j] - pre[i]) / 400.0))
+                    delta[i] += actual - expected
+                delta[i] /= max(observed.sum() - 1, 1)
+            for i, pid in enumerate(players):
+                if observed[i]:
+                    ratings[pid] = pre[i] + k_factor * delta[i]
+                    histories.setdefault(pid, []).append((race_date, float(finish[i])))
+
+    work["player_elo"] = elo_out
+    work["player_recent_weighted_finish"] = weighted_finish
+    grp = work["player_elo"].groupby(work["race_id"], dropna=False)
+    work["player_elo_rank"] = grp.rank(ascending=False, method="average")
+    work["player_elo_vs_field"] = work["player_elo"] - grp.transform("mean")
+    work = work.sort_values("_orig", kind="mergesort")
+    return work.drop(columns=["_orig", "_date"], errors="ignore")
+
+
 def add_strength_features(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     race_key = "race_id" if "race_id" in df.columns else None
@@ -377,6 +446,7 @@ def add_strength_features(df: pd.DataFrame) -> pd.DataFrame:
 
 def prepare_features(df: pd.DataFrame, fill_values=None):
     df = add_categorical_codes(df)
+    df = add_player_elo_features(df)
     df = add_strength_features(df)
 
     for col in FEATURE_COLS:
