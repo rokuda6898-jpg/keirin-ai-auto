@@ -1,6 +1,7 @@
 import json
 import shutil
 import subprocess
+import importlib
 import sys
 import time
 from datetime import datetime
@@ -38,6 +39,75 @@ def rollback_last_good():
     if LAST_GOOD_ODDS.exists():
         shutil.copy2(LAST_GOOD_ODDS, RAW_DIR / "today_odds.csv")
     return True
+
+
+def repair_missing_races_in_place(problems):
+    """Recover only damaged/missing races and merge them into the last good day."""
+    race_ids = set()
+    for problem in problems or []:
+        if problem.get("type") == "missing_entire_races":
+            race_ids.update(str(x) for x in problem.get("race_ids", []))
+        elif problem.get("type") in {"missing_riders", "duplicate_riders", "missing_player_identity", "duplicate_player_identity"}:
+            if problem.get("race_id"):
+                race_ids.add(str(problem["race_id"]))
+    if not race_ids or not RACE_SCHEDULE_PATH.exists():
+        return False
+
+    try:
+        fetch_mod = importlib.import_module("fetch_today_entries")
+        schedule = pd.read_csv(RACE_SCHEDULE_PATH, dtype={"race_id": str})
+        base_path = LAST_GOOD_ENTRIES if LAST_GOOD_ENTRIES.exists() else TODAY_CSV
+        base = pd.read_csv(base_path, dtype={"race_id": str})
+        odds_path = RAW_DIR / "today_odds.csv"
+        base_odds = pd.read_csv(LAST_GOOD_ODDS if LAST_GOOD_ODDS.exists() else odds_path, dtype={"race_id": str}) if (LAST_GOOD_ODDS.exists() or odds_path.exists()) else pd.DataFrame()
+        repaired_entries, repaired_odds = [], []
+
+        for race_id in sorted(race_ids):
+            rows = schedule[schedule["race_id"].astype(str).eq(race_id)]
+            if rows.empty:
+                return False
+            url = rows.iloc[0].get("source_url")
+            success = False
+            # Focus retries on the broken race instead of refetching all 82.
+            for _ in range(12):
+                try:
+                    entries, odds = fetch_mod.parse_race_page(url, completeness_attempts=1)
+                    check = pd.DataFrame(entries)
+                    cars = sorted(pd.to_numeric(check.get("car_no"), errors="coerce").dropna().astype(int).unique().tolist())
+                    expected_values = pd.to_numeric(check.get("entries_number"), errors="coerce").dropna()
+                    expected = int(expected_values.max()) if len(expected_values) else 0
+                    if expected > 0 and cars == list(range(1, expected + 1)):
+                        repaired_entries.extend(entries)
+                        repaired_odds.extend(odds)
+                        success = True
+                        break
+                except Exception as exc:
+                    print(f"targeted repair failed race={race_id}: {exc}", flush=True)
+                time.sleep(5)
+            if not success:
+                return False
+
+        base = base[~base["race_id"].astype(str).isin(race_ids)]
+        merged = pd.concat([base, pd.DataFrame(repaired_entries)], ignore_index=True, sort=False)
+        if not base_odds.empty:
+            base_odds = base_odds[~base_odds["race_id"].astype(str).isin(race_ids)]
+            merged_odds = pd.concat([base_odds, pd.DataFrame(repaired_odds)], ignore_index=True, sort=False)
+        else:
+            merged_odds = pd.DataFrame(repaired_odds)
+
+        # save_today_frames performs one atomic publication of the repaired set.
+        fetch_mod.save_today_frames(merged.to_dict("records"), merged_odds.to_dict("records"))
+        gate_ok, gate_problems, _ = validate_source_gate()
+        if not gate_ok:
+            print(f"targeted repair rejected by gate: {gate_problems}", flush=True)
+            rollback_last_good()
+            return False
+        snapshot_last_good()
+        return True
+    except Exception as exc:
+        print(f"targeted repair exception: {exc}", flush=True)
+        rollback_last_good()
+        return False
 
 
 def validate_source_gate():
@@ -368,16 +438,26 @@ def repair(problems=None):
         pre_ok, _, _ = validate_source_gate()
         if pre_ok:
             snapshot_last_good()
-        if run([sys.executable, "src/fetch_today_entries.py"]) != 0:
-            rollback_last_good()
-            return False, "full_day_data_rebuild_failed_rolled_back"
-        gate_ok, gate_problems, _ = validate_source_gate()
-        if not gate_ok:
-            rolled_back = rollback_last_good()
-            append_incident_history(gate_problems, "publication_gate_rejected")
-            return False, "publication_gate_rejected_rolled_back" if rolled_back else "publication_gate_rejected_no_backup"
-        snapshot_last_good()
-        actions.append("full_day_data_rebuild_gated")
+
+        targeted_types = {
+            "missing_riders", "missing_entire_races", "duplicate_riders",
+            "missing_player_identity", "duplicate_player_identity",
+        }
+        targeted_ok = bool(kinds & targeted_types) and repair_missing_races_in_place(problems)
+        if targeted_ok:
+            actions.append("targeted_race_repair_gated")
+        else:
+            # Escalate only after focused recovery fails.
+            if run([sys.executable, "src/fetch_today_entries.py"]) != 0:
+                rollback_last_good()
+                return False, "targeted_and_full_day_rebuild_failed_rolled_back"
+            gate_ok, gate_problems, _ = validate_source_gate()
+            if not gate_ok:
+                rolled_back = rollback_last_good()
+                append_incident_history(gate_problems, "publication_gate_rejected")
+                return False, "publication_gate_rejected_rolled_back" if rolled_back else "publication_gate_rejected_no_backup"
+            snapshot_last_good()
+            actions.append("full_day_data_rebuild_gated")
 
     # Prediction/site/bet faults are regenerated from the already validated
     # source snapshot. A successful command is not enough; the next audit loop
