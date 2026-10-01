@@ -35,7 +35,7 @@ DEFAULT_BET_CONFIGS = {
     "quinella": {"min_prob": 0.05, "min_ev": 1200, "max_odds": 300, "max_per_race": 2},
     "quinella_place": {"min_prob": 0.10, "min_ev": 300, "max_odds": 100, "max_per_race": 2},
     "trio": {"min_prob": 0.07, "min_ev": 800, "max_odds": 300, "max_per_race": 2},
-    "trifecta": {"min_prob": 0.002, "min_ev": -100, "max_odds": 500, "max_per_race": 35},
+    "trifecta": {"min_prob": 0.01, "min_ev": 100, "max_odds": 300, "max_per_race": 8},
 }
 
 
@@ -99,7 +99,7 @@ def stake_from_edge(expected_profit_100yen, base_stake=100, max_stake=500):
 
 
 def allocate_race_budget(bets, budget_yen=10000, max_per_bet_yen=10000):
-    """Allocate one race budget in 100-yen units by probability and positive expected edge."""
+    """Allocate up to one race budget; never force weak tickets to consume the full budget."""
     if bets.empty:
         return bets.assign(stake_yen=pd.Series(dtype=int))
     result = bets.copy()
@@ -110,12 +110,21 @@ def allocate_race_budget(bets, budget_yen=10000, max_per_bet_yen=10000):
     result["_allocation_weight"] = edge * probability
     result = result.sort_values("_allocation_weight", ascending=False, kind="mergesort")
     result["stake_yen"] = 0
-    # First reserve the minimum for the strongest candidates; remaining funds
-    # are assigned in 100-yen increments using the same confidence/edge weight.
+
+    # Confidence/edge controls how much of the 10,000-yen ceiling is actually used.
+    # This prevents a thin race from being force-filled simply because a budget exists.
     eligible = result[result["_allocation_weight"].gt(0)].index.tolist()
-    eligible = eligible[: min(len(eligible), budget // 100)]
+    if not eligible or budget <= 0:
+        return result.drop(columns=["_allocation_weight"]).sort_index()
+    best_prob = float(probability.loc[eligible].max())
+    best_ev = float(edge.loc[eligible].max())
+    confidence = min(1.0, max(0.20, best_prob / 0.30))
+    edge_factor = min(1.0, max(0.25, best_ev / 300.0))
+    spend_budget = min(budget, max(100, int((budget * confidence * edge_factor) // 100 * 100)))
+
+    eligible = eligible[: min(len(eligible), spend_budget // 100)]
     result.loc[eligible, "stake_yen"] = 100
-    remaining_units = max(budget // 100 - len(eligible), 0)
+    remaining_units = max(spend_budget // 100 - len(eligible), 0)
     while remaining_units and eligible:
         active = [i for i in eligible if result.at[i, "stake_yen"] < cap]
         if not active:
@@ -123,8 +132,6 @@ def allocate_race_budget(bets, budget_yen=10000, max_per_bet_yen=10000):
         weights = result.loc[active, "_allocation_weight"]
         if float(weights.sum()) <= 0:
             break
-        # Weighted water filling: each next unit goes to the ticket furthest
-        # below its target share, bounded by the per-ticket cap.
         chosen = min(active, key=lambda i: (result.at[i, "stake_yen"] / result.at[i, "_allocation_weight"], str(i)))
         result.at[chosen, "stake_yen"] += 100
         remaining_units -= 1
