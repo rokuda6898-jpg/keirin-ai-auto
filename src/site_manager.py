@@ -77,8 +77,22 @@ def repair_missing_races_in_place(problems):
                     expected_values = pd.to_numeric(check.get("entries_number"), errors="coerce").dropna()
                     expected = int(expected_values.max()) if len(expected_values) else 0
                     if expected > 0 and cars == list(range(1, expected + 1)):
-                        repaired_entries.extend(entries)
-                        repaired_odds.extend(odds)
+                        # Do not trust a single apparently-complete response.
+                        # Fetch once more and require the same car/player mapping.
+                        time.sleep(2)
+                        confirm_entries, confirm_odds = fetch_mod.parse_race_page(url, completeness_attempts=1)
+                        confirm = pd.DataFrame(confirm_entries)
+                        def signature(frame):
+                            pairs = frame[["car_no", "player_id"]].copy()
+                            pairs["car_no"] = pd.to_numeric(pairs["car_no"], errors="coerce")
+                            pairs["player_id"] = pairs["player_id"].fillna("").astype(str)
+                            return sorted((int(a), b) for a, b in pairs.dropna(subset=["car_no"]).itertuples(index=False, name=None))
+                        if signature(check) != signature(confirm):
+                            print(f"double-fetch mismatch race={race_id}; retrying", flush=True)
+                            time.sleep(3)
+                            continue
+                        repaired_entries.extend(confirm_entries)
+                        repaired_odds.extend(confirm_odds)
                         success = True
                         break
                 except Exception as exc:
