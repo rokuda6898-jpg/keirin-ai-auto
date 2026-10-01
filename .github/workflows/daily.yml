@@ -87,5 +87,10 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add outputs models || true
           git diff --staged --quiet || git commit -m "Update keirin predictions"
-          git pull --rebase
-          git push
+          for attempt in 1 2 3 4; do
+            git pull --rebase && git push && exit 0
+            git rebase --abort || true
+            echo "daily push race: retry $attempt/4"
+            sleep 2
+          done
+          exit 1
