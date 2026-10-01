@@ -355,9 +355,41 @@ def apply_nexus_race_reading(pred):
     return pred
 
 
+def add_shadow_race_scenario(pred):
+    """Classify race topology and score plausible development paths in shadow mode."""
+    out = pred.copy()
+    def num(col, default=np.nan):
+        if col not in out.columns:
+            return pd.Series(default, index=out.index, dtype=float)
+        return pd.to_numeric(out[col], errors="coerce")
+    line_pos = num("line_position")
+    line_size = num("line_size")
+    lines = num("number_of_lines")
+    attack_raw = num("back_count", 0).fillna(0) + num("front_runner_count", 0).fillna(0)
+    finish_raw = num("stalker_count", 0).fillna(0) + num("deep_closer_count", 0).fillna(0) + num("marker_count", 0).fillna(0)
+    strength = num("rider_strength")
+    attack_rank = attack_raw.groupby(out["race_id"]).rank(ascending=False, method="min")
+    attackers = attack_raw.groupby(out["race_id"]).transform(lambda g: int((g > g.median()).sum()))
+    out["race_scenario_type"] = np.where(
+        lines.le(2), "two_line",
+        np.where(lines.ge(4), "fragmented", np.where(attackers.ge(3), "attack_conflict", "three_line"))
+    )
+    # Scenario components are intentionally transparent and remain shadow-only.
+    out["scenario_control"] = np.where(line_pos.eq(1), 0.10, 0.0) + np.where(attack_rank.eq(1), 0.08, 0.0)
+    out["scenario_second_wheel"] = np.where((line_pos.eq(2)) & (line_size.ge(2)), 0.08, 0.0)
+    out["scenario_breakaway"] = np.where(attackers.ge(3), -0.05 * attack_rank.fillna(0) + 0.05 * finish_raw.groupby(out["race_id"]).rank(pct=True), 0.0)
+    out["scenario_strength"] = strength.groupby(out["race_id"]).transform(
+        lambda g: (g-g.mean())/(g.std(ddof=0) if pd.notna(g.std(ddof=0)) and g.std(ddof=0)>1e-9 else 1.0)
+    ).fillna(0) * 0.05
+    out["scenario_score"] = pd.to_numeric(out["p_win"], errors="coerce").clip(lower=1e-9) * np.exp(
+        out["scenario_control"] + out["scenario_second_wheel"] + out["scenario_breakaway"] + out["scenario_strength"]
+    )
+    return out
+
+
 def build_top1_variants(pred):
     """Create leakage-safe shadow Top1 variants without changing production ranking."""
-    base = pred.copy()
+    base = add_shadow_race_scenario(pred.copy())
     line_pos = pd.to_numeric(base.get("line_position"), errors="coerce")
     line_size = pd.to_numeric(base.get("line_size"), errors="coerce")
     back = pd.to_numeric(base.get("back_count"), errors="coerce").fillna(0)
@@ -366,7 +398,10 @@ def build_top1_variants(pred):
     attackers = attack_raw.groupby(base["race_id"]).transform(lambda g: int((g > g.median()).sum()))
     number_of_lines = pd.to_numeric(base.get("number_of_lines"), errors="coerce").fillna(0)
 
-    variants = {"production": pd.to_numeric(base["p_win"], errors="coerce").clip(lower=1e-9)}
+    variants = {
+        "production": pd.to_numeric(base["p_win"], errors="coerce").clip(lower=1e-9),
+        "race_scenario": pd.to_numeric(base["scenario_score"], errors="coerce").clip(lower=1e-9),
+    }
     # More line influence in simple two-line races; less when the race is fragmented.
     variable_line_factor = np.where(number_of_lines.le(2), 1.20, np.where(number_of_lines.ge(4), 0.72, 0.92))
     variants["variable_line"] = variants["production"] * np.exp(
