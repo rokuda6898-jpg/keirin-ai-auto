@@ -20,6 +20,7 @@ from common import (
     MODEL_PATH,
     OUTPUT_DIR,
     add_player_prior_features,
+    add_player_elo_features,
     prepare_features,
     normalize_race_prob,
 )
@@ -224,6 +225,7 @@ def add_today_prior_features(df):
         df["finish_pos"] = np.nan
     combined = pd.concat([hist, df], ignore_index=True, sort=False)
     combined = add_player_prior_features(combined)
+    combined = add_player_elo_features(combined)
     today = combined[combined["_today_row_id"].notna()].copy()
     today = today.sort_values("_today_row_id", kind="mergesort")
     return today.drop(columns=["_today_row_id"], errors="ignore")
