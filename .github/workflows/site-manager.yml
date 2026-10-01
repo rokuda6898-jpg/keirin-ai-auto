@@ -2,6 +2,13 @@ name: keirin-site-manager
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "tests/**"
+      - ".gitignore"
+      - ".github/workflows/site-manager.yml"
   schedule:
     # Every 10 minutes during the active Japanese racing window.
     - cron: "*/10 22-23,0-13 * * *"
