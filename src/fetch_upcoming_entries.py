@@ -149,12 +149,23 @@ def fetch_upcoming(min_minutes=5, max_minutes=40, sleep_sec=0.2, retry_sec=5.0):
     if TODAY_CSV.exists():
         try:
             base_entries = pd.read_csv(TODAY_CSV, dtype={"race_id": str})
+            # The near-close refresher is only allowed to patch an already
+            # complete daily snapshot. If whole races are absent, rebuilding
+            # from a small window would preserve the corruption indefinitely.
+            scheduled_day_ids = set(schedule["race_id"].dropna().astype(str))
+            base_ids = set(base_entries["race_id"].dropna().astype(str))
+            missing_base_ids = sorted(scheduled_day_ids - base_ids)
+            if missing_base_ids:
+                raise ValueError(
+                    f"base daily snapshot incomplete; refusing near-close merge: "
+                    f"missing_races={missing_base_ids}"
+                )
             base_entries = base_entries[~base_entries["race_id"].astype(str).isin(target_ids)]
             merged_entries = pd.concat([base_entries, fresh_entries], ignore_index=True, sort=False)
-        except (OSError, pd.errors.ParserError, pd.errors.EmptyDataError):
-            merged_entries = fresh_entries
+        except (OSError, pd.errors.ParserError, pd.errors.EmptyDataError) as exc:
+            raise ValueError(f"base daily snapshot unreadable; refusing partial rebuild: {exc}") from exc
     else:
-        merged_entries = fresh_entries
+        raise ValueError("base daily snapshot missing; refusing near-close-only rebuild")
     if TODAY_ODDS_CSV.exists():
         try:
             base_odds = pd.read_csv(TODAY_ODDS_CSV, dtype={"race_id": str})
