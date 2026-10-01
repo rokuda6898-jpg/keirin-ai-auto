@@ -180,7 +180,12 @@ def build_entry_rows(race_data, race_date, venue, race_no, race_id, source_url, 
     players = {str(player.get("id")): player for player in race_data.get("players", [])}
     records = {str(record.get("playerId")): record for record in race_data.get("records", [])}
     results = {str(result.get("playerId")): result for result in race_data.get("results", []) or []}
-    entries = [entry for entry in race_data.get("entries", []) if not entry.get("absent")]
+    raw_entries = race_data.get("entries", []) or []
+    entries = [entry for entry in raw_entries if not entry.get("absent")]
+    cancelled_cars = sorted(
+        int(entry.get("number")) for entry in raw_entries
+        if entry.get("absent") and entry.get("number") is not None
+    )
     field_size = len(entries)
     lines, number_of_lines, line_type = line_features(race_data.get("linePrediction"))
 
@@ -279,7 +284,12 @@ def build_entry_rows(race_data, race_date, venue, race_no, race_id, source_url, 
                 "weather": weather,
                 "wind_speed": _number(race.get("windSpeed")),
                 "meeting_day": schedule.get("day", schedule.get("index", np.nan)),
-                "entries_number": race.get("entriesNumber", field_size),
+                # entries_number is the number of active starters. Keep the
+                # originally declared field and cancellations separately so a
+                # legitimate withdrawal is not mistaken for a missing rider.
+                "entries_number": field_size,
+                "declared_entries_number": race.get("entriesNumber", len(raw_entries)),
+                "cancelled_car_numbers": ",".join(str(x) for x in cancelled_cars),
                 "is_grade_race": int(bool(race.get("isGradeRace", False))),
                 "start_at": race.get("startAt", np.nan),
                 "close_at": race.get("closeAt", np.nan),
