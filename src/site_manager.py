@@ -398,6 +398,49 @@ def append_incident_history(problems, action=None):
         f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
 
+def incident_recurrence_counts(problems, lookback=200):
+    """Count recent recurrences by problem type and race id."""
+    keys = set()
+    for p in problems or []:
+        kind = str(p.get("type", "unknown"))
+        race_ids = p.get("race_ids") or ([p.get("race_id")] if p.get("race_id") else ["*"])
+        for race_id in race_ids:
+            keys.add((kind, str(race_id)))
+    counts = {key: 0 for key in keys}
+    if not keys or not INCIDENT_HISTORY_PATH.exists():
+        return counts
+    try:
+        lines = INCIDENT_HISTORY_PATH.read_text(encoding="utf-8").splitlines()[-lookback:]
+        for line in lines:
+            try:
+                rec = json.loads(line)
+            except Exception:
+                continue
+            for old in rec.get("problems", []) or []:
+                kind = str(old.get("type", "unknown"))
+                race_ids = old.get("race_ids") or ([old.get("race_id")] if old.get("race_id") else ["*"])
+                for race_id in race_ids:
+                    key = (kind, str(race_id))
+                    if key in counts:
+                        counts[key] += 1
+    except OSError:
+        pass
+    return counts
+
+
+def escalation_level(problems):
+    """Escalate repeated failures instead of repeating the same repair forever."""
+    counts = incident_recurrence_counts(problems)
+    worst = max(counts.values(), default=0)
+    if worst >= 5:
+        return 3, counts
+    if worst >= 3:
+        return 2, counts
+    if worst >= 1:
+        return 1, counts
+    return 0, counts
+
+
 def summarize_health(problems, stats):
     kinds = [str(p.get("type")) for p in problems]
     severity = "critical" if any(k in {
@@ -445,6 +488,10 @@ def repair(problems=None):
     bet_kinds = {"race_budget_mismatch", "budget_audit_failed", "authorized_bets_missing"}
 
     actions = []
+    level, recurrence = escalation_level(problems)
+    if level:
+        print(f"incident recurrence escalation level={level} counts={recurrence}", flush=True)
+
     # Any source-data integrity problem gets the strongest repair: an atomic
     # full-day rebuild. Never mask it with a near-close-only snapshot.
     if kinds & data_kinds:
@@ -457,11 +504,14 @@ def repair(problems=None):
             "missing_riders", "missing_entire_races", "duplicate_riders",
             "missing_player_identity", "duplicate_player_identity",
         }
-        targeted_ok = bool(kinds & targeted_types) and repair_missing_races_in_place(problems)
+        # Level 2+ means this exact failure has already recurred several
+        # times; skip repeating the same local repair and move to a full rebuild.
+        targeted_ok = level < 2 and bool(kinds & targeted_types) and repair_missing_races_in_place(problems)
         if targeted_ok:
             actions.append("targeted_race_repair_gated")
         else:
-            # Escalate only after focused recovery fails.
+            # Escalate after focused recovery fails or recurrence history says
+            # the focused strategy is no longer effective.
             if run([sys.executable, "src/fetch_today_entries.py"]) != 0:
                 rollback_last_good()
                 return False, "targeted_and_full_day_rebuild_failed_rolled_back"
@@ -545,6 +595,13 @@ def main():
         "attempts": history,
         "race_stats": stats,
         "health": summarize_health(history[-1]["problems"] if history else [], stats),
+        "recurrence": {
+            "level": escalation_level(history[-1]["problems"] if history else [])[0],
+            "counts": {
+                f"{kind}:{race_id}": count
+                for (kind, race_id), count in escalation_level(history[-1]["problems"] if history else [])[1].items()
+            },
+        },
     }
     STATUS_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(payload, ensure_ascii=False, indent=2))
