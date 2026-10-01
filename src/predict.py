@@ -415,6 +415,42 @@ def save_top1_variants(pred, now_jst):
     combined = combined.drop_duplicates(["date","race_id","variant"], keep="last")
     combined.to_csv(path, index=False)
 
+    # Shadow consensus: measure whether agreement between independent race-reading
+    # variants is more reliable than treating every Top1 prediction equally.
+    vote = current.copy()
+    vote["predicted_winner_car_no"] = pd.to_numeric(vote["predicted_winner_car_no"], errors="coerce")
+    rows = []
+    for race_id, g in vote.groupby("race_id", sort=False):
+        counts = g["predicted_winner_car_no"].dropna().value_counts()
+        if counts.empty:
+            continue
+        winner = int(counts.index[0])
+        votes = int(counts.iloc[0])
+        total = int(len(g))
+        if votes == total:
+            level = "unanimous"
+        elif votes > total / 2:
+            level = "majority"
+        else:
+            level = "split"
+        base = g.iloc[0]
+        rows.append({
+            "date": base.get("date",""), "venue": base.get("venue",""), "race_no": base.get("race_no",""),
+            "race_id": str(race_id), "consensus_winner_car_no": winner,
+            "consensus_votes": votes, "model_count": total, "consensus_level": level,
+            "prediction_created_at_jst": now_jst.isoformat(timespec="seconds"),
+        })
+    consensus = pd.DataFrame(rows)
+    consensus_path = OUTPUT_DIR / "top1_consensus_ledger.csv"
+    try:
+        old_consensus = pd.read_csv(consensus_path, dtype={"race_id": str})
+    except (FileNotFoundError, pd.errors.EmptyDataError, pd.errors.ParserError):
+        old_consensus = pd.DataFrame()
+    consensus = pd.concat([old_consensus, consensus], ignore_index=True, sort=False)
+    if len(consensus):
+        consensus = consensus.drop_duplicates(["date","race_id"], keep="last")
+    consensus.to_csv(consensus_path, index=False)
+
 
 def main():
     ensure_dirs()
