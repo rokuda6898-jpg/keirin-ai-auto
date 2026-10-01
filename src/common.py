@@ -54,6 +54,10 @@ FEATURE_COLS = [
     "player_recent5_win_rate",
     "player_recent10_win_rate",
     "player_form_trend_5_vs_10",
+    "meeting_prior_races",
+    "meeting_prior_avg_finish",
+    "meeting_form_delta",
+    "meeting_finish_trend",
     "h2h_prior_meetings",
     "h2h_prior_win_share",
     "line_pair_prior_races",
@@ -264,6 +268,26 @@ def add_player_prior_features(df: pd.DataFrame) -> pd.DataFrame:
     work["player_recent5_win_rate"] = prior_win_obs.groupby(player, dropna=False).transform(lambda s: s.rolling(5, min_periods=2).mean())
     work["player_recent10_win_rate"] = prior_win_obs.groupby(player, dropna=False).transform(lambda s: s.rolling(10, min_periods=3).mean())
     work["player_form_trend_5_vs_10"] = work["player_recent10_avg_finish"] - work["player_recent5_avg_finish"]
+
+    # Current-meeting form, using only earlier races in the same meeting.
+    # Prefer an explicit meeting/cup identifier when available; otherwise the
+    # venue + meeting day/date sequence is approximated from contiguous dates.
+    if "meeting_id" in work.columns and work["meeting_id"].notna().any():
+        meeting_key = work["meeting_id"].astype(str)
+    else:
+        venue = work.get("venue", pd.Series("", index=work.index)).fillna("").astype(str)
+        # Keirin meetings normally span consecutive days. A gap >1 day starts
+        # a new inferred meeting for that rider/venue.
+        gap = work.groupby([player, venue], dropna=False)["_date_dt"].diff().dt.days
+        block = gap.gt(1).groupby([player, venue], dropna=False).cumsum()
+        meeting_key = venue + ":" + block.astype(str)
+    meeting_group = [player, meeting_key]
+    prior_meeting_finish = finish.groupby(meeting_group, dropna=False).shift(1)
+    work["meeting_prior_races"] = prior_meeting_finish.groupby(meeting_group, dropna=False).transform("count")
+    work["meeting_prior_avg_finish"] = prior_meeting_finish.groupby(meeting_group, dropna=False).transform("mean")
+    work["meeting_form_delta"] = work["player_prior_avg_finish"] - work["meeting_prior_avg_finish"]
+    prev_meeting_finish = prior_meeting_finish.groupby(meeting_group, dropna=False).shift(1)
+    work["meeting_finish_trend"] = prev_meeting_finish - prior_meeting_finish
 
     event_dates = work["_date_dt"].where(observed.astype(bool))
     prev_dates = event_dates.groupby(player, dropna=False).transform(lambda s: s.ffill().shift(1))
