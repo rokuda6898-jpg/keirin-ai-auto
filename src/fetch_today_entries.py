@@ -386,6 +386,36 @@ def save_today_frames(all_entries, all_odds):
     return entries_df, odds_df, trifecta_df
 
 
+def _race_id_from_link(link):
+    m = re.search(r"/racecard/(\\d{10})/\\d+/\\d+", str(link))
+    return m.group(1) if m else ""
+
+
+def write_source_attempt_log(race_date, attempts):
+    """Keep provider outcomes so fallback order can adapt to real failures."""
+    path = RAW_DIR / "source_attempts.jsonl"
+    checked_at = datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(timespec="seconds")
+    with path.open("a", encoding="utf-8") as fh:
+        for item in attempts:
+            row = {"checked_at_jst": checked_at, "date": race_date, **item}
+            fh.write(json.dumps(row, ensure_ascii=False) + "\\n")
+
+
+def cached_race_ids_for_date(race_date):
+    ids = set()
+    if not RACE_CACHE_DIR.exists():
+        return ids
+    compact_date = race_date.replace("-", "")
+    for path in RACE_CACHE_DIR.glob("*_entries.csv"):
+        rid = path.name.removesuffix("_entries.csv")
+        if compact_date not in rid:
+            continue
+        entries, _ = load_cached_race(rid)
+        if entries is not None:
+            ids.add(rid)
+    return ids
+
+
 def fetch_today_entries(race_date=None, max_races=None, sleep_sec=0.2):
     ensure_dirs()
     race_date = race_date or datetime.now(ZoneInfo("Asia/Tokyo")).strftime("%Y-%m-%d")
@@ -399,9 +429,12 @@ def fetch_today_entries(race_date=None, max_races=None, sleep_sec=0.2):
     all_entries = []
     all_odds = []
     failures = []
+    source_attempts = []
     for i, link in enumerate(links, start=1):
         try:
-            entries, odds = parse_race_page(link)
+            # One provider attempt per race. If it is incomplete, keep the
+            # already-good cache and hand this race to the next provider layer.
+            entries, odds = parse_race_page(link, completeness_attempts=1)
             entries = [r for r in entries if r.get("date") == race_date]
             odds = [r for r in odds if r.get("date") == race_date]
             if not entries:
@@ -412,11 +445,24 @@ def fetch_today_entries(race_date=None, max_races=None, sleep_sec=0.2):
             cache_complete_race_rows(entries, odds)
             all_entries.extend(entries)
             all_odds.extend(odds)
+            source_attempts.append({"provider": "winticket", "race_id": str(entries[0].get("race_id", "")), "status": "complete"})
             print(f"fetched {i}/{len(links)}: {link} entries={len(entries)} odds={len(odds)}")
         except Exception as e:
-            failures.append({"url": link, "error": str(e)})
+            race_id = _race_id_from_link(link)
+            failures.append({"url": link, "race_id": race_id, "error": str(e)})
+            source_attempts.append({"provider": "winticket", "race_id": race_id, "status": "incomplete", "error": str(e)})
             print(f"failed {i}/{len(links)}: {link} error={e}")
         time.sleep(sleep_sec)
+
+    write_source_attempt_log(race_date, source_attempts)
+    if failures:
+        cached = cached_race_ids_for_date(race_date)
+        unresolved = [f for f in failures if str(f.get("race_id", "")) not in cached]
+        print(
+            f"fallback required: provider=winticket failures={len(failures)} "
+            f"already_cached={len(failures) - len(unresolved)} unresolved={len(unresolved)}",
+            flush=True,
+        )
 
     if not all_entries:
         raise ValueError(f"failed to fetch any entries for {race_date}: {failures[:3]}")
