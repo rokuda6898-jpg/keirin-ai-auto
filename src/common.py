@@ -45,6 +45,11 @@ FEATURE_COLS = [
     "player_prior_strength_rank",
     "player_prior_strength_gap_to_best",
     "player_prior_strength_vs_field",
+    "player_recent5_avg_finish",
+    "player_recent10_avg_finish",
+    "player_recent5_win_rate",
+    "player_recent10_win_rate",
+    "player_form_trend_5_vs_10",
     "win_rate",
     "win_rate_rank",
     "win_rate_gap_to_best",
@@ -207,6 +212,16 @@ def add_player_prior_features(df: pd.DataFrame) -> pd.DataFrame:
     work["player_prior_place2_rate"] = safe_rate(prior_place2)
     work["player_prior_place3_rate"] = safe_rate(prior_place3)
     work["player_prior_avg_finish"] = safe_rate(prior_finish_sum)
+
+    # Leakage-safe rolling form: shift first so the current race result is never
+    # used to predict itself. These react faster than lifetime priors.
+    prior_finish = finish.groupby(player, dropna=False).shift(1)
+    prior_win_obs = finish.eq(1).astype(float).where(observed.astype(bool)).groupby(player, dropna=False).shift(1)
+    work["player_recent5_avg_finish"] = prior_finish.groupby(player, dropna=False).transform(lambda s: s.rolling(5, min_periods=2).mean())
+    work["player_recent10_avg_finish"] = prior_finish.groupby(player, dropna=False).transform(lambda s: s.rolling(10, min_periods=3).mean())
+    work["player_recent5_win_rate"] = prior_win_obs.groupby(player, dropna=False).transform(lambda s: s.rolling(5, min_periods=2).mean())
+    work["player_recent10_win_rate"] = prior_win_obs.groupby(player, dropna=False).transform(lambda s: s.rolling(10, min_periods=3).mean())
+    work["player_form_trend_5_vs_10"] = work["player_recent10_avg_finish"] - work["player_recent5_avg_finish"]
 
     event_dates = work["_date_dt"].where(observed.astype(bool))
     prev_dates = event_dates.groupby(player, dropna=False).transform(lambda s: s.ffill().shift(1))
