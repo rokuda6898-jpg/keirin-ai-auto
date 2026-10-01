@@ -1,4 +1,5 @@
 import json
+import shutil
 import subprocess
 import sys
 import time
@@ -12,9 +13,49 @@ from common import TODAY_CSV, OUTPUT_DIR, RAW_DIR
 
 STATUS_PATH = OUTPUT_DIR / "manager_status.json"
 INCIDENT_HISTORY_PATH = OUTPUT_DIR / "manager_incident_history.jsonl"
+LAST_GOOD_DIR = RAW_DIR / "last_good"
+LAST_GOOD_ENTRIES = LAST_GOOD_DIR / "today_entries.csv"
+LAST_GOOD_ODDS = LAST_GOOD_DIR / "today_odds.csv"
 RACE_SCHEDULE_PATH = OUTPUT_DIR / "latest_race_schedule.csv"
 MAX_REPAIR_ATTEMPTS = 3
 RETRY_SECONDS = 5
+
+
+def snapshot_last_good():
+    """Persist only an already-audited source snapshot as rollback material."""
+    LAST_GOOD_DIR.mkdir(parents=True, exist_ok=True)
+    if TODAY_CSV.exists():
+        shutil.copy2(TODAY_CSV, LAST_GOOD_ENTRIES)
+    odds = RAW_DIR / "today_odds.csv"
+    if odds.exists():
+        shutil.copy2(odds, LAST_GOOD_ODDS)
+
+
+def rollback_last_good():
+    if not LAST_GOOD_ENTRIES.exists():
+        return False
+    shutil.copy2(LAST_GOOD_ENTRIES, TODAY_CSV)
+    if LAST_GOOD_ODDS.exists():
+        shutil.copy2(LAST_GOOD_ODDS, RAW_DIR / "today_odds.csv")
+    return True
+
+
+def validate_source_gate():
+    """Publication gate: source data must pass both rider and whole-race audits."""
+    entry_problems, stats = audit_entries()
+    coverage_problems = audit_race_coverage()
+    identity_problems = []
+    try:
+        entries = pd.read_csv(TODAY_CSV, dtype={"race_id": str, "player_id": str})
+        if "player_id" in entries.columns:
+            for race_id, group in entries.groupby("race_id"):
+                ids = group["player_id"].fillna("").astype(str).str.strip()
+                if ids.eq("").any() or ids.duplicated().any():
+                    identity_problems.append({"type": "source_identity_gate_failed", "race_id": str(race_id)})
+    except Exception as exc:
+        identity_problems.append({"type": "source_identity_gate_unreadable", "detail": str(exc)})
+    problems = entry_problems + coverage_problems + identity_problems
+    return not problems, problems, stats
 
 
 def audit_entries():
@@ -323,9 +364,20 @@ def repair(problems=None):
     # Any source-data integrity problem gets the strongest repair: an atomic
     # full-day rebuild. Never mask it with a near-close-only snapshot.
     if kinds & data_kinds:
+        # Keep the last known-good source before touching production input.
+        pre_ok, _, _ = validate_source_gate()
+        if pre_ok:
+            snapshot_last_good()
         if run([sys.executable, "src/fetch_today_entries.py"]) != 0:
-            return False, "full_day_data_rebuild_failed"
-        actions.append("full_day_data_rebuild")
+            rollback_last_good()
+            return False, "full_day_data_rebuild_failed_rolled_back"
+        gate_ok, gate_problems, _ = validate_source_gate()
+        if not gate_ok:
+            rolled_back = rollback_last_good()
+            append_incident_history(gate_problems, "publication_gate_rejected")
+            return False, "publication_gate_rejected_rolled_back" if rolled_back else "publication_gate_rejected_no_backup"
+        snapshot_last_good()
+        actions.append("full_day_data_rebuild_gated")
 
     # Prediction/site/bet faults are regenerated from the already validated
     # source snapshot. A successful command is not enough; the next audit loop
@@ -375,6 +427,9 @@ def main():
             "health": summarize_health(problems, stats),
         })
         if not problems:
+            # Only audited source snapshots are eligible to become rollback
+            # checkpoints. This prevents a corrupt fetch from replacing backup.
+            snapshot_last_good()
             status = "healthy" if not repaired else "repaired"
             break
         if attempt >= MAX_REPAIR_ATTEMPTS:
