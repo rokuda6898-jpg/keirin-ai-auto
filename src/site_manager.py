@@ -227,8 +227,7 @@ def audit_entries():
         if "cancelled_car_numbers" in group.columns:
             for value in group["cancelled_car_numbers"].dropna().astype(str).unique():
                 cancelled.update(int(x) for x in re.findall(r"\d+", value))
-        expected_cars = set(range(1, declared + 1)) - cancelled
-        missing_cars = sorted(expected_cars - set(cars))
+        # Older cached snapshots may have active/declaration counts but an empty\n        # cancelled_car_numbers field. If the active count is explicit and the\n        # exact number of absent car slots equals declared-active, recover those\n        # slots as withdrawals instead of falsely reporting missing riders.\n        all_declared_cars = set(range(1, declared + 1))\n        absent_slots = all_declared_cars - set(cars)\n        if not cancelled and expected > 0 and declared > expected and len(cars) == expected and len(absent_slots) == declared - expected:\n            cancelled = set(absent_slots)\n        expected_cars = all_declared_cars - cancelled\n        missing_cars = sorted(expected_cars - set(cars))
         duplicate_cars = sorted(group.loc[group.duplicated("car_no", keep=False), "car_no"].dropna().astype(int).unique().tolist())
         stats[str(race_id)] = {"cars": cars, "count": len(cars), "expected_entries": expected, "declared_entries": declared, "cancelled_cars": sorted(cancelled)}
         if expected <= 0 or declared <= 0:
