@@ -11,6 +11,7 @@ from fetch_today_entries import RACE_SCHEDULE_CSV, parse_race_page, save_today_f
 
 UPCOMING_COUNT_FILE = RAW_DIR / "upcoming_races_count.txt"
 UPCOMING_METADATA_FILE = RAW_DIR / "upcoming_entries_metadata.json"
+ODDS_HISTORY_FILE = RAW_DIR / "win_odds_history.csv"
 
 
 def select_upcoming_races(schedule, now_epoch, min_minutes=5, max_minutes=40):
@@ -46,6 +47,31 @@ def _entries_complete(frame, race_id):
         expected_count = max(cars)
 
     return cars == set(range(1, expected_count + 1))
+
+
+def append_win_odds_history(entries, captured_at):
+    frame = pd.DataFrame(entries)
+    needed = ["race_id", "car_no", "player_id", "odds_win", "close_at"]
+    if frame.empty or not {"race_id", "car_no", "odds_win"}.issubset(frame.columns):
+        return
+    for col in needed:
+        if col not in frame.columns:
+            frame[col] = pd.NA
+    snap = frame[needed].copy()
+    snap["odds_win"] = pd.to_numeric(snap["odds_win"], errors="coerce")
+    snap = snap[snap["odds_win"].gt(0)].copy()
+    if snap.empty:
+        return
+    snap["captured_at"] = float(captured_at)
+    snap["seconds_to_close"] = pd.to_numeric(snap["close_at"], errors="coerce") - float(captured_at)
+    if ODDS_HISTORY_FILE.exists():
+        try:
+            old = pd.read_csv(ODDS_HISTORY_FILE, dtype={"race_id": str, "player_id": str})
+        except (OSError, pd.errors.ParserError, pd.errors.EmptyDataError):
+            old = pd.DataFrame()
+        snap = pd.concat([old, snap], ignore_index=True, sort=False)
+    snap = snap.drop_duplicates(["race_id","car_no","captured_at"], keep="last")
+    snap.to_csv(ODDS_HISTORY_FILE, index=False)
 
 
 def fetch_upcoming(min_minutes=5, max_minutes=40, sleep_sec=0.2, retry_sec=5.0):
@@ -118,6 +144,7 @@ def fetch_upcoming(min_minutes=5, max_minutes=40, sleep_sec=0.2, retry_sec=5.0):
     from fetch_today_entries import ODDS_COLUMNS
     fresh_entries = pd.DataFrame(all_entries)
     fresh_odds = pd.DataFrame(all_odds, columns=ODDS_COLUMNS)
+    append_win_odds_history(all_entries, datetime.now(ZoneInfo("Asia/Tokyo")).timestamp())
     target_ids = set(fresh_entries["race_id"].astype(str))
     if TODAY_CSV.exists():
         try:
