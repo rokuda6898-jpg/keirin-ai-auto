@@ -54,4 +54,15 @@ jobs:
             git add outputs data/raw || true
             git diff --staged --quiet || git commit -m "Manager: repair and audit keirin data"
           fi
-          git push
+          for attempt in 1 2 3 4; do
+            git push && exit 0
+            echo "manager push race: retry $attempt/4"
+            git fetch origin main
+            git rebase origin/main && continue
+            git rebase --abort || true
+            git reset --hard origin/main
+            python src/site_manager.py
+            git add outputs data/raw || true
+            git diff --staged --quiet || git commit -m "Manager: repair and audit keirin data"
+          done
+          exit 1
