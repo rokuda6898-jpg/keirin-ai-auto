@@ -35,7 +35,7 @@ DEFAULT_BET_CONFIGS = {
     "quinella": {"min_prob": 0.05, "min_ev": 1200, "max_odds": 300, "max_per_race": 2},
     "quinella_place": {"min_prob": 0.10, "min_ev": 300, "max_odds": 100, "max_per_race": 2},
     "trio": {"min_prob": 0.07, "min_ev": 800, "max_odds": 300, "max_per_race": 2},
-    "trifecta": {"min_prob": 0.01, "min_ev": 100, "max_odds": 300, "max_per_race": 8},
+    "trifecta": {"min_prob": 0.01, "min_ev": 100, "max_odds": 9999, "max_per_race": 15},
 }
 
 
