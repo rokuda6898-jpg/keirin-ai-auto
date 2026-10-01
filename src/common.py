@@ -96,6 +96,14 @@ FEATURE_COLS = [
     "line_size",
     "is_line_leader",
     "number_of_lines",
+    "line_leader_strength",
+    "line_second_strength",
+    "strength_vs_line_leader",
+    "strength_vs_line_second",
+    "line_strength_mean",
+    "line_strength_max",
+    "other_line_attack_pressure",
+    "race_attack_pressure",
     "wind_speed",
     "meeting_day",
     "entries_number",
@@ -294,6 +302,31 @@ def add_strength_features(df: pd.DataFrame) -> pd.DataFrame:
         df["score_gap_to_best"] = score_group.transform("max") - score
         df["score_vs_field"] = score - score_group.transform("mean")
         df["win_rate_gap_to_best"] = win_rate_group.transform("max") - win_rate
+
+        # Pre-race interaction features: strength of own line and pressure from
+        # rival attacking lines. These use only fields known before the race.
+        line_id = pd.to_numeric(df.get("line_id"), errors="coerce")
+        line_pos = pd.to_numeric(df.get("line_position"), errors="coerce")
+        attack = num("back_count", 0).fillna(0) + num("front_runner_count", 0).fillna(0)
+        df["_attack_tmp"] = attack
+        df["_line_key_tmp"] = race_ids.astype(str) + ":" + line_id.fillna(-1).astype(str)
+        line_key = df["_line_key_tmp"]
+
+        df["line_strength_mean"] = df["rider_strength"].groupby(line_key, dropna=False).transform("mean")
+        df["line_strength_max"] = df["rider_strength"].groupby(line_key, dropna=False).transform("max")
+
+        leader_strength = df["rider_strength"].where(line_pos.eq(1))
+        second_strength = df["rider_strength"].where(line_pos.eq(2))
+        df["line_leader_strength"] = leader_strength.groupby(line_key, dropna=False).transform("max")
+        df["line_second_strength"] = second_strength.groupby(line_key, dropna=False).transform("max")
+        df["strength_vs_line_leader"] = df["rider_strength"] - df["line_leader_strength"]
+        df["strength_vs_line_second"] = df["rider_strength"] - df["line_second_strength"]
+
+        line_attack = attack.groupby(line_key, dropna=False).transform("sum")
+        race_attack = attack.groupby(race_ids, dropna=False).transform("sum")
+        df["race_attack_pressure"] = race_attack
+        df["other_line_attack_pressure"] = (race_attack - line_attack).clip(lower=0)
+        df = df.drop(columns=["_attack_tmp", "_line_key_tmp"], errors="ignore")
     else:
         df["rider_strength_rank"] = np.nan
         df["rider_strength_gap_to_best"] = np.nan
@@ -306,6 +339,12 @@ def add_strength_features(df: pd.DataFrame) -> pd.DataFrame:
         df["place2_rate_rank"] = np.nan
         df["place3_rate_rank"] = np.nan
         df["recent_avg_finish_rank"] = np.nan
+        for col in [
+            "line_leader_strength","line_second_strength","strength_vs_line_leader",
+            "strength_vs_line_second","line_strength_mean","line_strength_max",
+            "other_line_attack_pressure","race_attack_pressure",
+        ]:
+            df[col] = np.nan
 
     return df
 
