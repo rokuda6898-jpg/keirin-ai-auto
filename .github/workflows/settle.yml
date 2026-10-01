@@ -107,4 +107,15 @@ jobs:
             git add models outputs data/raw/today_entries.csv data/raw/today_odds.csv || true
             git diff --staged --quiet || git commit -m "Settle keirin predictions"
           fi
-          git push
+          for attempt in 1 2 3 4; do
+            git push && exit 0
+            echo "settlement push race: retry $attempt/4"
+            git fetch origin main
+            git rebase origin/main && continue
+            git rebase --abort || true
+            git reset --hard origin/main
+            python src/settle_results.py
+            git add models outputs data/raw/today_entries.csv data/raw/today_odds.csv || true
+            git diff --staged --quiet || git commit -m "Settle keirin predictions"
+          done
+          exit 1
