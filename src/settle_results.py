@@ -343,7 +343,21 @@ def update_top1_accuracy(results):
         return
     if ledger.empty:
         return
-    actual = results[["race_id", "actual_trifecta", "official_result_available"]].copy()
+    # Preserve previously settled Top1 results: intraday TODAY_CSV only contains
+    # the current active slice, so using only this run's results resets accuracy
+    # to zero or a tiny sample as races rotate out.
+    cache_path = OUTPUT_DIR / "top1_settled_results.csv"
+    current_actual = results[["race_id", "actual_trifecta", "official_result_available"]].copy()
+    if cache_path.exists():
+        try:
+            cached = pd.read_csv(cache_path, dtype={"race_id": str})
+        except (OSError, pd.errors.ParserError, pd.errors.EmptyDataError):
+            cached = current_actual.head(0)
+        actual = pd.concat([cached, current_actual], ignore_index=True, sort=False)
+        actual = actual.drop_duplicates("race_id", keep="last")
+    else:
+        actual = current_actual
+    actual.to_csv(cache_path, index=False)
     actual["actual_winner_car_no"] = pd.to_numeric(
         actual["actual_trifecta"].fillna("").astype(str).str.split("-").str[0], errors="coerce"
     )
