@@ -11,6 +11,7 @@ import pandas as pd
 from common import TODAY_CSV, OUTPUT_DIR, RAW_DIR
 
 STATUS_PATH = OUTPUT_DIR / "manager_status.json"
+INCIDENT_HISTORY_PATH = OUTPUT_DIR / "manager_incident_history.jsonl"
 RACE_SCHEDULE_PATH = OUTPUT_DIR / "latest_race_schedule.csv"
 MAX_REPAIR_ATTEMPTS = 3
 RETRY_SECONDS = 5
@@ -201,6 +202,77 @@ def audit_prediction_outputs():
     return problems
 
 
+def audit_identity_and_prediction_quality():
+    problems = []
+    try:
+        entries = pd.read_csv(TODAY_CSV, dtype={"race_id": str, "player_id": str})
+    except Exception:
+        return problems
+
+    # A car must map to exactly one rider and a rider must not occupy multiple
+    # cars in the same race. This catches malformed snapshots that still have
+    # the correct row count.
+    if "player_id" in entries.columns:
+        for race_id, group in entries.groupby("race_id"):
+            valid = group.dropna(subset=["player_id"]).copy()
+            if valid["player_id"].astype(str).duplicated().any():
+                dup = sorted(valid.loc[valid["player_id"].astype(str).duplicated(keep=False), "player_id"].astype(str).unique().tolist())
+                problems.append({"type": "duplicate_player_identity", "race_id": str(race_id), "player_ids": dup})
+            if valid["player_id"].astype(str).isin({"", "nan", "None"}).any() or len(valid) != len(group):
+                problems.append({"type": "missing_player_identity", "race_id": str(race_id)})
+
+    latest = OUTPUT_DIR / "latest_predictions.csv"
+    if latest.exists() and latest.stat().st_size:
+        try:
+            pred = pd.read_csv(latest, dtype={"race_id": str, "player_id": str})
+            if "p_win" in pred.columns:
+                pred["p_win"] = pd.to_numeric(pred["p_win"], errors="coerce")
+                for race_id, group in pred.groupby("race_id"):
+                    probs = group["p_win"]
+                    if probs.isna().any() or (~probs.between(0, 1)).any():
+                        problems.append({"type": "invalid_prediction_probability", "race_id": str(race_id)})
+                    total = float(probs.sum(skipna=True))
+                    if len(group) and abs(total - 1.0) > 0.02:
+                        problems.append({"type": "prediction_probability_not_normalized", "race_id": str(race_id), "sum": total})
+        except Exception as exc:
+            problems.append({"type": "prediction_quality_audit_failed", "detail": str(exc)})
+    return problems
+
+
+def audit_freshness():
+    problems = []
+    now = datetime.now(ZoneInfo("Asia/Tokyo")).timestamp()
+    # During active racing, stale prediction artifacts can look structurally
+    # perfect while actually serving old information.
+    latest = OUTPUT_DIR / "latest_predictions.csv"
+    try:
+        schedule = pd.read_csv(RACE_SCHEDULE_PATH, dtype={"race_id": str})
+        close_at = pd.to_numeric(schedule.get("close_at"), errors="coerce")
+        active = close_at.notna() & close_at.gt(now) & close_at.le(now + 60 * 60)
+        if active.any() and latest.exists():
+            age = now - latest.stat().st_mtime
+            if age > 45 * 60:
+                problems.append({"type": "stale_predictions", "age_seconds": int(age)})
+        elif active.any() and not latest.exists():
+            problems.append({"type": "prediction_missing"})
+    except Exception:
+        pass
+    return problems
+
+
+def append_incident_history(problems, action=None):
+    if not problems:
+        return
+    record = {
+        "at_jst": datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(timespec="seconds"),
+        "problem_types": sorted({str(p.get("type")) for p in problems}),
+        "problems": problems,
+        "repair_action": action,
+    }
+    with INCIDENT_HISTORY_PATH.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+
 def summarize_health(problems, stats):
     kinds = [str(p.get("type")) for p in problems]
     severity = "critical" if any(k in {
@@ -236,8 +308,13 @@ def repair(problems=None):
         "missing_expected_field_size", "missing_riders", "duplicate_riders",
         "implausible_rider_count", "missing_entire_races", "unexpected_races",
         "race_schedule_missing", "race_coverage_audit_failed",
+        "duplicate_player_identity", "missing_player_identity",
     }
-    prediction_kinds = {"prediction_missing", "prediction_missing_riders", "prediction_unreadable"}
+    prediction_kinds = {
+        "prediction_missing", "prediction_missing_riders", "prediction_unreadable",
+        "invalid_prediction_probability", "prediction_probability_not_normalized",
+        "prediction_quality_audit_failed", "stale_predictions",
+    }
     result_kinds = {"results_missing", "results_overdue", "results_unreadable"}
     site_kinds = {"site_output_missing_or_too_small", "site_missing_race", "site_race_has_no_valid_cars", "site_output_unreadable"}
     bet_kinds = {"race_budget_mismatch", "budget_audit_failed", "authorized_bets_missing"}
@@ -281,7 +358,17 @@ def main():
     for attempt in range(MAX_REPAIR_ATTEMPTS + 1):
         entry_problems, stats = audit_entries()
         prediction_problems = audit_prediction_outputs()
-        problems = entry_problems + audit_race_coverage() + prediction_problems + audit_budget() + audit_live_bets() + audit_site_output() + audit_results()
+        problems = (
+            entry_problems
+            + audit_race_coverage()
+            + prediction_problems
+            + audit_identity_and_prediction_quality()
+            + audit_freshness()
+            + audit_budget()
+            + audit_live_bets()
+            + audit_site_output()
+            + audit_results()
+        )
         history.append({
             "attempt": attempt,
             "problems": problems,
@@ -294,6 +381,7 @@ def main():
             status = "unhealthy"
             break
         ok, action = repair(problems)
+        append_incident_history(problems, action)
         repaired = repaired or ok
         history[-1]["repair_action"] = action
         if not ok:
