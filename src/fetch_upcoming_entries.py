@@ -98,6 +98,19 @@ def fetch_upcoming(min_minutes=5, max_minutes=40, sleep_sec=0.2, retry_sec=5.0):
         UPCOMING_COUNT_FILE.write_text("0", encoding="ascii")
         raise ValueError(f"failed to fetch upcoming entries: {failures[:3]}")
 
+    # Atomic near-close snapshot: never replace today's input with only the
+    # subset that happened to fetch successfully. That previously made whole
+    # races disappear from prediction/site output during transient source gaps.
+    fetched_ids = {str(item.get("race_id")) for item in all_entries}
+    scheduled_ids = {str(item.get("race_id")) for item in upcoming.to_dict("records")}
+    missing_ids = sorted(scheduled_ids - fetched_ids)
+    if failures or missing_ids:
+        UPCOMING_COUNT_FILE.write_text("0", encoding="ascii")
+        raise ValueError(
+            f"refusing partial upcoming snapshot: scheduled={len(scheduled_ids)} "
+            f"fetched={len(fetched_ids)} missing={missing_ids} failures={failures[:3]}"
+        )
+
     entries, odds, _ = save_today_frames(all_entries, all_odds)
     fetched_races = int(entries["race_id"].nunique())
     UPCOMING_COUNT_FILE.write_text(str(fetched_races), encoding="ascii")
