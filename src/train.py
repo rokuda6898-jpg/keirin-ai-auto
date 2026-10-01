@@ -123,6 +123,47 @@ def write_backtest_outputs(test_df, test_prob, stake_yen):
     return summaries
 
 
+def evaluate_feature_ablation(df, train_df, calib_df, test_df, feature_drop, name):
+    """Time-ordered shadow experiment; never changes the production model."""
+    from common import FEATURE_COLS
+    keep = [x for x in FEATURE_COLS if x not in set(feature_drop)]
+    def prep(frame, fills=None):
+        from common import add_categorical_codes, add_strength_features
+        x = add_strength_features(add_categorical_codes(frame))[keep].copy()
+        for col in keep:
+            x[col] = pd.to_numeric(x[col], errors="coerce")
+        if fills is None:
+            fills = {col: float(x[col].median()) if pd.notna(x[col].median()) else 0.0 for col in keep}
+        return x.fillna(fills), fills
+
+    Xtr, fills = prep(train_df)
+    Xcal, _ = prep(calib_df, fills)
+    Xte, _ = prep(test_df, fills)
+    m = HistGradientBoostingClassifier(max_iter=300, learning_rate=0.045, max_leaf_nodes=31, l2_regularization=0.02, random_state=42)
+    m.fit(Xtr, train_df["target_win"].astype(int))
+    raw_cal = m.predict_proba(Xcal)[:,1] if len(Xcal) else np.array([])
+    raw_test = m.predict_proba(Xte)[:,1]
+    cal = None
+    if len(raw_cal) > 20 and len(set(calib_df["target_win"].astype(int))) == 2:
+        cal = IsotonicRegression(out_of_bounds="clip")
+        cal.fit(raw_cal, calib_df["target_win"].astype(int))
+    prob = cal.predict(raw_test) if cal is not None else raw_test
+    tmp = test_df[["race_id","finish_pos"]].copy()
+    tmp["p_raw"] = prob
+    tmp = normalize_race_prob(tmp)
+    tmp["rank"] = tmp.groupby("race_id")["p_win"].rank(ascending=False, method="first")
+    top = tmp[tmp["rank"].eq(1)]
+    winners = tmp[pd.to_numeric(tmp["finish_pos"], errors="coerce").eq(1)]["p_win"].clip(1e-9,1)
+    return {
+        "variant": name,
+        "dropped_features": feature_drop,
+        "top1_hit_rate": float(pd.to_numeric(top["finish_pos"], errors="coerce").eq(1).mean()) if len(top) else None,
+        "race_logloss": float(-np.log(winners).mean()) if len(winners) else None,
+        "brier": float(brier_score_loss(test_df["target_win"].astype(int), prob)) if len(test_df) else None,
+        "features": len(keep),
+    }
+
+
 def main():
     ensure_dirs()
     ensure_history()
@@ -192,6 +233,15 @@ def main():
     top1_hit_rate = float(pd.to_numeric(top1["finish_pos"], errors="coerce").eq(1).mean()) if len(top1) else None
     backtest_summaries = write_backtest_outputs(test_df, test_prob, stake_yen)
 
+    ablations = [
+        evaluate_feature_ablation(df, train_df, calib_df, test_df, [], "all_features_calibrated"),
+        evaluate_feature_ablation(df, train_df, calib_df, test_df, ["player_id_code"], "no_player_id"),
+        evaluate_feature_ablation(df, train_df, calib_df, test_df, ["car_no","bracket_no"], "no_car_bracket"),
+        evaluate_feature_ablation(df, train_df, calib_df, test_df, ["player_id_code","car_no","bracket_no"], "no_identity_or_gate"),
+    ]
+    (OUTPUT_DIR / "model_ablation.json").write_text(json.dumps(ablations, ensure_ascii=False, indent=2), encoding="utf-8")
+    pd.DataFrame(ablations).drop(columns=["dropped_features"], errors="ignore").to_csv(OUTPUT_DIR / "model_ablation.csv", index=False)
+
     metrics = {
         "trained_at_jst": datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(timespec="seconds"),
         "model": "HistGradientBoostingClassifier + race probability normalization",
@@ -208,6 +258,7 @@ def main():
         "top1_hit_rate": top1_hit_rate,
         "stake_yen": stake_yen,
         "backtest": backtest_summaries,
+        "feature_ablation": ablations,
     }
 
     X_full, production_fill_values = prepare_features(df)
