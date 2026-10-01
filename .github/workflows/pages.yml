@@ -15,6 +15,7 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  actions: write
 
 concurrency:
   group: pages
@@ -43,3 +44,46 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Verify the actually published site
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import csv, os, sys, time, urllib.request
+          from pathlib import Path
+
+          page_url = os.environ["PAGE_URL"].rstrip("/") + "/"
+          expected = set()
+          schedule = Path("outputs/latest_race_schedule.csv")
+          if schedule.exists():
+              with schedule.open(encoding="utf-8-sig", newline="") as f:
+                  expected = {str(r.get("race_id", "")).strip() for r in csv.DictReader(f) if str(r.get("race_id", "")).strip()}
+          if not expected:
+              print("No expected race ids; refusing to certify published site.")
+              sys.exit(2)
+
+          last_missing = expected
+          for attempt in range(6):
+              req = urllib.request.Request(page_url + f"?verify={int(time.time())}", headers={"Cache-Control":"no-cache","User-Agent":"keirin-site-verifier/1.0"})
+              with urllib.request.urlopen(req, timeout=30) as res:
+                  html = res.read().decode("utf-8", errors="replace")
+              missing = {race_id for race_id in expected if race_id not in html}
+              if not missing:
+                  print(f"published-site verified: races={len(expected)}")
+                  sys.exit(0)
+              last_missing = missing
+              print(f"published-site mismatch attempt={attempt+1}/6 missing={len(missing)} sample={sorted(missing)[:10]}")
+              time.sleep(10)
+
+          print(f"published-site verification FAILED missing={len(last_missing)}")
+          sys.exit(2)
+          PY
+
+      - name: Trigger manager recovery if published site verification fails
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run site-manager.yml --ref main
