@@ -67,7 +67,8 @@ def restore_races_from_cache(problems):
             expected = pd.to_numeric(race.get("entries_number"), errors="coerce").dropna()
             n = int(expected.iloc[0]) if len(expected) else len(race)
             cars = sorted(pd.to_numeric(race["car_no"], errors="coerce").dropna().astype(int).unique().tolist())
-            if n <= 0 or cars != list(range(1, n + 1)):
+            complete, _, _ = importlib.import_module("fetch_today_entries")._entry_rows_complete(race.to_dict("records"))
+            if not complete:
                 continue
             base = base[~base["race_id"].astype(str).eq(rid)]
             base = pd.concat([base, race], ignore_index=True, sort=False)
@@ -129,7 +130,8 @@ def repair_missing_races_in_place(problems):
                     cars = sorted(pd.to_numeric(check.get("car_no"), errors="coerce").dropna().astype(int).unique().tolist())
                     expected_values = pd.to_numeric(check.get("entries_number"), errors="coerce").dropna()
                     expected = int(expected_values.max()) if len(expected_values) else 0
-                    if expected > 0 and cars == list(range(1, expected + 1)):
+                    complete, _, _ = fetch_mod._entry_rows_complete(check.to_dict("records"))
+                    if complete:
                         # Do not trust a single apparently-complete response.
                         # Fetch once more and require the same car/player mapping.
                         time.sleep(2)
@@ -215,16 +217,20 @@ def audit_entries():
         cars = sorted(pd.to_numeric(group["car_no"], errors="coerce").dropna().astype(int).unique().tolist())
         expected_values = pd.to_numeric(group.get("entries_number"), errors="coerce").dropna()
         expected = int(expected_values.max()) if len(expected_values) else 0
-        # Never infer the official field size from max(car_no): if tail riders
-        # (for example 8/9) disappear together, max(car_no) makes a 9-car race
-        # look like a valid 7-car race. entries_number is source-declared.
-        missing_cars = sorted(set(range(1, expected + 1)) - set(cars)) if expected > 0 else []
+        declared_values = pd.to_numeric(group.get("declared_entries_number"), errors="coerce").dropna()
+        declared = int(declared_values.max()) if len(declared_values) else expected
+        cancelled = set()
+        if "cancelled_car_numbers" in group.columns:
+            for value in group["cancelled_car_numbers"].dropna().astype(str).unique():
+                cancelled.update(int(x) for x in re.findall(r"\\d+", value))
+        expected_cars = set(range(1, declared + 1)) - cancelled
+        missing_cars = sorted(expected_cars - set(cars))
         duplicate_cars = sorted(group.loc[group.duplicated("car_no", keep=False), "car_no"].dropna().astype(int).unique().tolist())
-        stats[str(race_id)] = {"cars": cars, "count": len(cars), "expected_entries": expected}
-        if expected <= 0:
+        stats[str(race_id)] = {"cars": cars, "count": len(cars), "expected_entries": expected, "declared_entries": declared, "cancelled_cars": sorted(cancelled)}
+        if expected <= 0 or declared <= 0:
             problems.append({"type": "missing_expected_field_size", "race_id": str(race_id), "cars": cars})
-        elif len(cars) != expected or missing_cars:
-            problems.append({"type": "missing_riders", "race_id": str(race_id), "expected": expected, "missing_cars": missing_cars, "cars": cars})
+        elif len(cars) != expected or set(cars) != expected_cars or expected + len(cancelled) != declared:
+            problems.append({"type": "missing_riders", "race_id": str(race_id), "expected": expected, "declared": declared, "cancelled_cars": sorted(cancelled), "missing_cars": missing_cars, "cars": cars})
         if duplicate_cars:
             problems.append({"type": "duplicate_riders", "race_id": str(race_id), "cars": duplicate_cars})
         if len(cars) < 5 or len(cars) > 9:
