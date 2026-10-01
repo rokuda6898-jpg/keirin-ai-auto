@@ -238,7 +238,10 @@ def _entry_rows_complete(rows):
     expected = int(expected_values.max()) if len(expected_values) else 0
     if expected <= 0:
         return False, cars, expected
-    declared_values = pd.to_numeric(frame.get("declared_entries_number"), errors="coerce").dropna()
+    if "declared_entries_number" in frame.columns:
+        declared_values = pd.to_numeric(frame["declared_entries_number"], errors="coerce").dropna()
+    else:
+        declared_values = pd.Series(dtype=float)
     declared = int(declared_values.max()) if len(declared_values) else expected
     cancelled = set()
     if "cancelled_car_numbers" in frame.columns:
