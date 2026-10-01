@@ -8,7 +8,7 @@ from zoneinfo import ZoneInfo
 import joblib
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.ensemble import HistGradientBoostingClassifier, HistGradientBoostingRegressor
 from sklearn.isotonic import IsotonicRegression
 from sklearn.metrics import brier_score_loss, roc_auc_score
 
@@ -164,6 +164,41 @@ def evaluate_feature_ablation(df, train_df, calib_df, test_df, feature_drop, nam
     }
 
 
+def evaluate_race_ranker(train_df, test_df):
+    """Shadow race-ranking model.
+
+    Learns a graded within-race relevance target (winner highest) and is scored
+    only by which rider it ranks first. It never replaces the production model.
+    """
+    Xtr, fills = prepare_features(train_df)
+    Xte, _ = prepare_features(test_df, fills)
+    finish_train = pd.to_numeric(train_df["finish_pos"], errors="coerce")
+    field_train = pd.to_numeric(train_df.get("entries_number"), errors="coerce")
+    if field_train.isna().all():
+        field_train = train_df.groupby("race_id")["race_id"].transform("count")
+    relevance = ((field_train + 1 - finish_train).clip(lower=0) / field_train.clip(lower=1)).fillna(0.0)
+    ranker = HistGradientBoostingRegressor(
+        loss="squared_error",
+        max_iter=300,
+        learning_rate=0.045,
+        max_leaf_nodes=31,
+        l2_regularization=0.02,
+        random_state=43,
+    )
+    ranker.fit(Xtr, relevance)
+    score = ranker.predict(Xte)
+    out = test_df[["race_id","finish_pos"]].copy()
+    out["rank_score"] = score
+    out["rank"] = out.groupby("race_id")["rank_score"].rank(ascending=False, method="first")
+    top = out[out["rank"].eq(1)]
+    hit = float(pd.to_numeric(top["finish_pos"], errors="coerce").eq(1).mean()) if len(top) else None
+    return ranker, fills, {
+        "variant": "shadow_race_ranker",
+        "races": int(out["race_id"].nunique()),
+        "top1_hit_rate": hit,
+    }
+
+
 def main():
     ensure_dirs()
     ensure_history()
@@ -232,6 +267,14 @@ def main():
     top1 = pred_df[pred_df["rank_in_race"].eq(1)]
     top1_hit_rate = float(pd.to_numeric(top1["finish_pos"], errors="coerce").eq(1).mean()) if len(top1) else None
     backtest_summaries = write_backtest_outputs(test_df, test_prob, stake_yen)
+    ranker_model, ranker_fill_values, ranker_metrics = evaluate_race_ranker(train_df, test_df)
+    joblib.dump(
+        {"model": ranker_model, "fill_values": ranker_fill_values, "features": FEATURE_COLS, "metrics": ranker_metrics},
+        MODEL_PATH.parent / "shadow_rank_model.joblib",
+    )
+    (OUTPUT_DIR / "shadow_rank_metrics.json").write_text(
+        json.dumps(ranker_metrics, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
 
     ablations = [
         evaluate_feature_ablation(df, train_df, calib_df, test_df, [], "all_features_calibrated"),
@@ -259,6 +302,7 @@ def main():
         "stake_yen": stake_yen,
         "backtest": backtest_summaries,
         "feature_ablation": ablations,
+        "shadow_race_ranker": ranker_metrics,
     }
 
     X_full, production_fill_values = prepare_features(df)
