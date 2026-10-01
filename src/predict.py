@@ -214,6 +214,46 @@ def load_today_odds():
     return pd.DataFrame(columns=["race_id", "bet_type", "buy", "odds_used"])
 
 
+def add_live_odds_movement(df):
+    path = RAW_DIR / "win_odds_history.csv"
+    out = df.copy()
+    for col in ["odds_move_pct","odds_move_last_pct","odds_snapshot_count"]:
+        out[col] = np.nan
+    if not path.exists():
+        return out
+    try:
+        hist = pd.read_csv(path, dtype={"race_id": str, "player_id": str})
+    except (OSError, pd.errors.ParserError, pd.errors.EmptyDataError):
+        return out
+    if hist.empty:
+        return out
+    hist["odds_win"] = pd.to_numeric(hist["odds_win"], errors="coerce")
+    hist["captured_at"] = pd.to_numeric(hist["captured_at"], errors="coerce")
+    hist = hist.dropna(subset=["race_id","car_no","odds_win","captured_at"]).sort_values("captured_at")
+    rows = []
+    for (race_id, car_no), g in hist.groupby(["race_id","car_no"], sort=False):
+        vals = g["odds_win"].to_numpy(dtype=float)
+        if not len(vals) or vals[0] <= 0:
+            continue
+        rows.append({
+            "race_id": str(race_id),
+            "car_no": int(car_no),
+            "odds_move_pct": (vals[-1] / vals[0]) - 1.0,
+            "odds_move_last_pct": ((vals[-1] / vals[-2]) - 1.0) if len(vals) >= 2 and vals[-2] > 0 else 0.0,
+            "odds_snapshot_count": len(vals),
+        })
+    if not rows:
+        return out
+    movement = pd.DataFrame(rows)
+    out["race_id"] = out["race_id"].astype(str)
+    out["_car_merge"] = pd.to_numeric(out["car_no"], errors="coerce")
+    movement["_car_merge"] = pd.to_numeric(movement["car_no"], errors="coerce")
+    out = out.drop(columns=["odds_move_pct","odds_move_last_pct","odds_snapshot_count"], errors="ignore").merge(
+        movement.drop(columns=["car_no"]), on=["race_id","_car_merge"], how="left"
+    )
+    return out.drop(columns=["_car_merge"], errors="ignore")
+
+
 def add_today_prior_features(df):
     if not HISTORY_CSV.exists():
         return df
@@ -398,6 +438,7 @@ def main():
     if "race_id" not in df.columns:
         raise ValueError("today_entries.csv must have race_id column")
     df = add_today_prior_features(df)
+    df = add_live_odds_movement(df)
 
     X, _ = prepare_features(df, fill_values)
 
@@ -437,7 +478,7 @@ def main():
 
     cols = [
         "date", "venue", "race_no", "race_id", "start_at", "close_at", "rank_in_race",
-        "car_no", "player_id", "style", "score", "odds_win",
+        "car_no", "player_id", "style", "score", "odds_win", "odds_move_pct", "odds_move_last_pct", "odds_snapshot_count",
         "p_win", "top1_top2_margin", "nexus_form_adj", "nexus_line_adj", "nexus_style_adj", "nexus_condition_adj", "nexus_uncertainty", "expected_value_win", "stake_yen", "win_return_yen",
         "win_profit_yen", "loss_amount_yen", "expected_profit_yen",
     ]
