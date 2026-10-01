@@ -120,6 +120,10 @@ FEATURE_COLS = [
     "previous_term_group",
     "odds_win",
     "distance",
+    "track_style_code",
+    "class_change",
+    "is_promoted",
+    "is_demoted",
     "style_code",
     "venue_code",
     "race_class_code",
@@ -176,6 +180,20 @@ def add_categorical_codes(df: pd.DataFrame) -> pd.DataFrame:
     df["prefecture_code"] = df.get("prefecture", pd.Series(index=df.index, dtype=object)).map(lambda x: stable_bucket(x, 100))
     df["gender_code"] = df.get("gender", pd.Series(index=df.index, dtype=object)).map(lambda x: stable_bucket(x, 10))
     df["player_id_code"] = df.get("player_id", pd.Series(index=df.index, dtype=object)).map(lambda x: stable_bucket(x, 2000))
+
+    # Interaction features known before the race.
+    distance = pd.to_numeric(df.get("distance", pd.Series(index=df.index, dtype=float)), errors="coerce")
+    track_bucket = pd.Series(np.where(distance < 375, 333, np.where(distance >= 450, 500, 400)), index=df.index)
+    style_text = df.get("style", pd.Series("", index=df.index)).fillna("").astype(str)
+    df["track_style_code"] = [
+        stable_bucket(f"{int(tb)}:{style}", 100) if pd.notna(tb) else -1.0
+        for tb, style in zip(track_bucket, style_text)
+    ]
+    current_class = pd.to_numeric(df.get("current_term_class", pd.Series(index=df.index, dtype=float)), errors="coerce")
+    previous_class = pd.to_numeric(df.get("previous_term_class", pd.Series(index=df.index, dtype=float)), errors="coerce")
+    df["class_change"] = current_class - previous_class
+    df["is_promoted"] = df["class_change"].gt(0).astype(float)
+    df["is_demoted"] = df["class_change"].lt(0).astype(float)
 
     dates = pd.to_datetime(df.get("date", pd.Series(index=df.index, dtype=object)), errors="coerce")
     df["day_of_week"] = dates.dt.dayofweek
