@@ -424,6 +424,34 @@ def update_top1_accuracy(results):
         except (OSError, pd.errors.ParserError, pd.errors.EmptyDataError) as exc:
             print(f"Top1 variant settlement skipped: {exc}")
 
+    consensus_path = OUTPUT_DIR / "top1_consensus_ledger.csv"
+    if consensus_path.exists():
+        try:
+            consensus = pd.read_csv(consensus_path, dtype={"race_id": str})
+            scored_consensus = consensus.merge(
+                actual[["race_id","actual_winner_car_no","official_result_available"]],
+                on="race_id", how="inner"
+            )
+            scored_consensus = scored_consensus[
+                scored_consensus["official_result_available"].fillna(False).astype(bool)
+            ].copy()
+            scored_consensus["consensus_winner_car_no"] = pd.to_numeric(
+                scored_consensus["consensus_winner_car_no"], errors="coerce"
+            )
+            scored_consensus["is_hit"] = scored_consensus["consensus_winner_car_no"].eq(
+                scored_consensus["actual_winner_car_no"]
+            )
+            summary = scored_consensus.groupby("consensus_level", as_index=False).agg(
+                races=("race_id","size"), hits=("is_hit","sum")
+            )
+            summary["hit_rate"] = summary["hits"] / summary["races"]
+            summary["updated_at_jst"] = datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(timespec="seconds")
+            scored_consensus.to_csv(OUTPUT_DIR / "top1_consensus_results.csv", index=False)
+            summary.to_csv(OUTPUT_DIR / "top1_consensus_summary.csv", index=False)
+            print("Top1 consensus confidence:\n" + summary.to_string(index=False))
+        except (OSError, pd.errors.ParserError, pd.errors.EmptyDataError) as exc:
+            print(f"Top1 consensus settlement skipped: {exc}")
+
 
 def run_settlement(args):
     ensure_dirs()
