@@ -209,8 +209,11 @@ def ensure_ready():
         subprocess.check_call([sys.executable, "src/train.py"])
 
 
-def make_trifecta_candidates(race_df: pd.DataFrame, top_k_riders=5):
-    riders = race_df.sort_values("p_win", ascending=False).head(top_k_riders)
+def make_trifecta_candidates(race_df: pd.DataFrame, top_k_riders=None):
+    """Build trifecta candidates from every available starter by default."""
+    riders = race_df.sort_values("p_win", ascending=False)
+    if top_k_riders is not None:
+        riders = riders.head(int(top_k_riders))
     rows = riders[["car_no", "p_win"]].to_dict("records")
     results = []
 
@@ -617,7 +620,7 @@ def main():
     pred["loss_amount_yen"] = np.where(valid_win_odds, base_stake_yen, 0)
     pred["expected_profit_yen"] = (base_stake_yen * pred["expected_value_win"]).round(0)
     pred["rank_in_race"] = pred.groupby("race_id")["p_win"].rank(ascending=False, method="first").astype(int)
-    # Confidence is the gap between the first and second win probabilities.
+    # Hard integrity gate: never silently publish a partial rider ranking.\n    expected_counts = df.groupby("race_id")["car_no"].nunique()\n    predicted_counts = pred.groupby("race_id")["car_no"].nunique()\n    incomplete = expected_counts[expected_counts.ne(predicted_counts.reindex(expected_counts.index).fillna(0).astype(int))]\n    if len(incomplete):\n        details = {str(rid): {"expected": int(expected_counts.loc[rid]), "predicted": int(predicted_counts.get(rid, 0))} for rid in incomplete.index}\n        raise RuntimeError(f"incomplete rider prediction detected; refusing partial publish: {details}")\n    # Confidence is the gap between the first and second win probabilities.
     # Keep it separate from p_win so close two-rider races are not treated as
     # equally certain as races with a clear first choice.
     ordered_prob = pred.groupby("race_id")["p_win"].transform(
