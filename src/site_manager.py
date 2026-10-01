@@ -201,27 +201,77 @@ def audit_prediction_outputs():
     return problems
 
 
+def summarize_health(problems, stats):
+    kinds = [str(p.get("type")) for p in problems]
+    severity = "critical" if any(k in {
+        "missing_riders", "missing_entire_races", "entries_unreadable",
+        "entries_empty", "prediction_missing", "prediction_missing_riders",
+    } for k in kinds) else ("warning" if kinds else "ok")
+    expected_riders = sum(int(v.get("expected_entries", 0) or 0) for v in stats.values())
+    actual_riders = sum(int(v.get("count", 0) or 0) for v in stats.values())
+    return {
+        "severity": severity,
+        "problem_types": sorted(set(kinds)),
+        "race_count": len(stats),
+        "expected_riders": expected_riders,
+        "actual_riders": actual_riders,
+        "rider_integrity_ok": bool(stats) and expected_riders == actual_riders and not any(
+            k in {"missing_riders", "missing_entire_races", "duplicate_riders"} for k in kinds
+        ),
+    }
+
+
 def run(cmd):
     print("+", " ".join(cmd), flush=True)
     return subprocess.run(cmd, check=False).returncode
 
 
-def repair():
-    # Rebuild the entire daily snapshot. Partial patching is deliberately avoided:
-    # it was the source of stale/missing rider states.
-    if run([sys.executable, "src/fetch_today_entries.py"]) != 0:
-        # Full-day fetching is atomic and can fail when even one source race is
-        # temporarily incomplete. Fall back to the persisted daily schedule and
-        # rebuild the active near-close races instead of leaving TODAY_CSV absent.
-        fallback = [sys.executable, "src/fetch_upcoming_entries.py", "--min-minutes", "5", "--max-minutes", "40", "--retry-sec", "5"]
-        if run(fallback) != 0 or not TODAY_CSV.exists():
-            return False, "fetch_failed_full_and_upcoming"
-    if run([sys.executable, "src/predict.py"]) != 0:
-        return False, "predict_failed"
-    # Also refresh settlement; this is idempotent and closes stale result gaps.
-    if run([sys.executable, "src/settle_results.py"]) != 0:
-        return False, "settlement_refresh_failed"
-    return True, "rebuilt_snapshot_and_results"
+def repair(problems=None):
+    """Choose the smallest safe repair for the detected failure class."""
+    problems = problems or []
+    kinds = {str(p.get("type")) for p in problems}
+
+    data_kinds = {
+        "entries_unreadable", "entries_empty", "missing_columns",
+        "missing_expected_field_size", "missing_riders", "duplicate_riders",
+        "implausible_rider_count", "missing_entire_races", "unexpected_races",
+        "race_schedule_missing", "race_coverage_audit_failed",
+    }
+    prediction_kinds = {"prediction_missing", "prediction_missing_riders", "prediction_unreadable"}
+    result_kinds = {"results_missing", "results_overdue", "results_unreadable"}
+    site_kinds = {"site_output_missing_or_too_small", "site_missing_race", "site_race_has_no_valid_cars", "site_output_unreadable"}
+    bet_kinds = {"race_budget_mismatch", "budget_audit_failed", "authorized_bets_missing"}
+
+    actions = []
+    # Any source-data integrity problem gets the strongest repair: an atomic
+    # full-day rebuild. Never mask it with a near-close-only snapshot.
+    if kinds & data_kinds:
+        if run([sys.executable, "src/fetch_today_entries.py"]) != 0:
+            return False, "full_day_data_rebuild_failed"
+        actions.append("full_day_data_rebuild")
+
+    # Prediction/site/bet faults are regenerated from the already validated
+    # source snapshot. A successful command is not enough; the next audit loop
+    # must independently prove every race/rider is present.
+    if (kinds & (data_kinds | prediction_kinds | site_kinds | bet_kinds)) or not (OUTPUT_DIR / "latest_predictions.csv").exists():
+        if run([sys.executable, "src/predict.py"]) != 0:
+            return False, "predict_regeneration_failed"
+        actions.append("prediction_regeneration")
+
+    if kinds & (data_kinds | result_kinds):
+        if run([sys.executable, "src/settle_results.py"]) != 0:
+            return False, "settlement_refresh_failed"
+        actions.append("settlement_refresh")
+
+    if not actions:
+        # Unknown failures get a conservative full integrity rebuild rather than
+        # being silently ignored.
+        if run([sys.executable, "src/fetch_today_entries.py"]) != 0:
+            return False, "conservative_full_rebuild_fetch_failed"
+        if run([sys.executable, "src/predict.py"]) != 0:
+            return False, "conservative_full_rebuild_predict_failed"
+        actions.extend(["conservative_full_day_rebuild", "prediction_regeneration"])
+    return True, "+".join(actions)
 
 
 def main():
@@ -232,14 +282,18 @@ def main():
         entry_problems, stats = audit_entries()
         prediction_problems = audit_prediction_outputs()
         problems = entry_problems + audit_race_coverage() + prediction_problems + audit_budget() + audit_live_bets() + audit_site_output() + audit_results()
-        history.append({"attempt": attempt, "problems": problems})
+        history.append({
+            "attempt": attempt,
+            "problems": problems,
+            "health": summarize_health(problems, stats),
+        })
         if not problems:
             status = "healthy" if not repaired else "repaired"
             break
         if attempt >= MAX_REPAIR_ATTEMPTS:
             status = "unhealthy"
             break
-        ok, action = repair()
+        ok, action = repair(problems)
         repaired = repaired or ok
         history[-1]["repair_action"] = action
         if not ok:
@@ -253,6 +307,7 @@ def main():
         "repaired": repaired,
         "attempts": history,
         "race_stats": stats,
+        "health": summarize_health(history[-1]["problems"] if history else [], stats),
     }
     STATUS_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(payload, ensure_ascii=False, indent=2))
