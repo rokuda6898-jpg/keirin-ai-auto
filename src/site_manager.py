@@ -101,7 +101,25 @@ def audit_site_output():
     problems = []
     html = OUTPUT_DIR / "index.html"
     if not html.exists() or html.stat().st_size < 1000:
-        problems.append({"type": "site_output_missing_or_too_small"})
+        return [{"type": "site_output_missing_or_too_small"}]
+    try:
+        content = html.read_text(encoding="utf-8")
+        entries = pd.read_csv(TODAY_CSV, dtype={"race_id": str})
+        # The published HTML must contain every race/car currently present in
+        # the validated prediction input. This catches stale pages that are
+        # large enough to pass the old file-size-only health check.
+        for race_id, group in entries.groupby("race_id"):
+            race_id = str(race_id)
+            if race_id not in content:
+                problems.append({"type": "site_missing_race", "race_id": race_id})
+                continue
+            cars = sorted(pd.to_numeric(group["car_no"], errors="coerce").dropna().astype(int).unique().tolist())
+            # Prediction audit is the authoritative car-level check; here require
+            # the race itself to be represented in the actual published artifact.
+            if not cars:
+                problems.append({"type": "site_race_has_no_valid_cars", "race_id": race_id})
+    except Exception as exc:
+        problems.append({"type": "site_output_unreadable", "detail": str(exc)})
     return problems
 
 
