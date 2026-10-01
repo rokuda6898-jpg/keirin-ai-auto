@@ -225,7 +225,7 @@ def audit_entries():
         cancelled = set()
         if "cancelled_car_numbers" in group.columns:
             for value in group["cancelled_car_numbers"].dropna().astype(str).unique():
-                cancelled.update(int(x) for x in re.findall(r"\\d+", value))
+                cancelled.update(int(x) for x in re.findall(r"\d+", value))
         expected_cars = set(range(1, declared + 1)) - cancelled
         missing_cars = sorted(expected_cars - set(cars))
         duplicate_cars = sorted(group.loc[group.duplicated("car_no", keep=False), "car_no"].dropna().astype(int).unique().tolist())
