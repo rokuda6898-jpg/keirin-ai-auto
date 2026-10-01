@@ -450,9 +450,23 @@ def main():
 
     # Durable one-row-per-race ledger for measuring AI top-1 win accuracy.
     top1_ledger_path = OUTPUT_DIR / "top1_prediction_ledger.csv"
-    top1 = pred[pred["rank_in_race"].eq(1)][
-        ["date", "venue", "race_no", "race_id", "start_at", "close_at", "car_no", "player_id", "p_win"]
-    ].copy()
+    top1_cols = [
+        "date","venue","race_no","race_id","start_at","close_at","car_no","player_id","p_win",
+        "top1_top2_margin","line_position","line_size","style","rider_strength","player_elo",
+        "race_attack_pressure","other_line_attack_pressure",
+    ]
+    for col in top1_cols:
+        if col not in pred.columns:
+            pred[col] = np.nan
+    top1 = pred[pred["rank_in_race"].eq(1)][top1_cols].copy()
+    runner = pred[pred["rank_in_race"].eq(2)][
+        ["race_id","car_no","player_id","p_win","line_position","style","rider_strength","player_elo"]
+    ].copy().rename(columns={
+        "car_no":"second_pick_car_no","player_id":"second_pick_player_id","p_win":"second_pick_prob",
+        "line_position":"second_pick_line_position","style":"second_pick_style",
+        "rider_strength":"second_pick_strength","player_elo":"second_pick_elo",
+    })
+    top1 = top1.merge(runner, on="race_id", how="left")
     top1 = top1.rename(columns={"car_no": "predicted_winner_car_no", "player_id": "predicted_winner_player_id", "p_win": "predicted_win_prob"})
     top1["prediction_created_at_jst"] = now_jst.isoformat(timespec="seconds")
     try:
