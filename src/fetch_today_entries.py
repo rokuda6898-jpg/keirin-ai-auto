@@ -21,6 +21,7 @@ BASE_URL = "https://www.winticket.jp"
 RACECARD_URL = f"{BASE_URL}/keirin/racecard"
 TRIFECTA_ODDS_CSV = RAW_DIR / "today_trifecta_odds.csv"
 RACE_SCHEDULE_CSV = OUTPUT_DIR / "latest_race_schedule.csv"
+RACE_CACHE_DIR = RAW_DIR / "race_cache"
 ODDS_COLUMNS = [
     "date",
     "venue",
@@ -283,6 +284,39 @@ def parse_race_page(url, completeness_attempts=5, completeness_retry_sec=5.0):
 
 
 
+def cache_complete_races(entries_df, odds_df):
+    """Persist each complete race independently so one bad refresh cannot erase it."""
+    RACE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    for race_id, group in entries_df.groupby("race_id", sort=False):
+        expected = pd.to_numeric(group.get("entries_number"), errors="coerce").dropna()
+        expected_n = int(expected.iloc[0]) if len(expected) else len(group)
+        cars = sorted(pd.to_numeric(group["car_no"], errors="coerce").dropna().astype(int).unique().tolist())
+        if expected_n <= 0 or cars != list(range(1, expected_n + 1)):
+            continue
+        rid = str(race_id)
+        group.to_csv(RACE_CACHE_DIR / f"{rid}_entries.csv", index=False)
+        race_odds = odds_df[odds_df["race_id"].astype(str).eq(rid)] if len(odds_df) else odds_df
+        race_odds.to_csv(RACE_CACHE_DIR / f"{rid}_odds.csv", index=False)
+
+
+def guard_against_destructive_shrink(entries_df):
+    """Refuse a snapshot that would catastrophically shrink an existing same-day set."""
+    if not TODAY_CSV.exists():
+        return
+    try:
+        old = pd.read_csv(TODAY_CSV, dtype={"race_id": str})
+    except Exception:
+        return
+    if old.empty or "race_id" not in old.columns or entries_df.empty:
+        return
+    old_races = old["race_id"].astype(str).nunique()
+    new_races = entries_df["race_id"].astype(str).nunique()
+    # A full-day replacement should never collapse a healthy snapshot by more
+    # than 20%. This is a final write barrier in addition to fetch completeness.
+    if old_races >= 10 and new_races < max(1, int(old_races * 0.80)):
+        raise ValueError(f"destructive snapshot shrink blocked: old_races={old_races} new_races={new_races}")
+
+
 def save_today_frames(all_entries, all_odds):
     entries_df = pd.DataFrame(all_entries).sort_values(["date", "venue", "race_no", "car_no"])
     odds_df = pd.DataFrame(all_odds, columns=ODDS_COLUMNS)
@@ -303,6 +337,9 @@ def save_today_frames(all_entries, all_odds):
             )
     if "odds_win" not in entries_df.columns:
         entries_df["odds_win"] = np.nan
+
+    guard_against_destructive_shrink(entries_df)
+    cache_complete_races(entries_df, odds_df)
     entries_df.to_csv(TODAY_CSV, index=False)
 
     trifecta_df = odds_df[odds_df["bet_type"].eq("trifecta")].copy() if len(odds_df) else pd.DataFrame(columns=ODDS_COLUMNS)
