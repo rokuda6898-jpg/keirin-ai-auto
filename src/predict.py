@@ -515,6 +515,18 @@ def main():
 
     X, _ = prepare_features(df, fill_values)
 
+    # Production models can temporarily lag behind newly introduced shadow
+    # features. Always predict with the exact feature schema used at fit time;
+    # new columns remain available for shadow evaluation until the next gated
+    # retrain promotes them.
+    trained_features = bundle.get("features")
+    if trained_features:
+        trained_features = list(trained_features)
+        for col in trained_features:
+            if col not in X.columns:
+                X[col] = float(fill_values.get(col, 0.0))
+        X = X.reindex(columns=trained_features)
+
     raw = model.predict_proba(X)[:, 1]
     calibrated = calibrator.predict(raw) if calibrator is not None else raw
 
