@@ -38,7 +38,9 @@ jobs:
       - name: Run manager and self-repair
         run: python src/site_manager.py
       - name: Persist repaired outputs and health status
-        if: always()
+        # Publication gate: if the manager exits unhealthy, never commit the
+        # damaged raw snapshot or generated outputs.
+        if: success()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -51,6 +53,8 @@ jobs:
             git rebase --abort || true
             git reset --hard origin/main
             python src/site_manager.py
+            # The manager must exit successfully again after resetting to the
+            # newest main before any regenerated state is staged.
             git add outputs data/raw || true
             git diff --staged --quiet || git commit -m "Manager: repair and audit keirin data"
           fi
