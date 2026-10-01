@@ -38,7 +38,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Fetch today entries for result URLs
+      - name: Refresh today entries for result URLs
+        continue-on-error: true
         run: |
           python src/fetch_today_entries.py
 
@@ -90,7 +91,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add models outputs || true
+          git add models outputs data/raw/today_entries.csv data/raw/today_odds.csv || true
           git diff --staged --quiet || git commit -m "Settle keirin predictions"
           # Another writer can finish after this run checked out main. Rebase
           # generated outputs is conflict-prone, so refresh and regenerate once
@@ -98,12 +99,12 @@ jobs:
           if ! git pull --rebase; then
             git rebase --abort || true
             git reset --hard origin/main
-            python src/fetch_today_entries.py
+            python src/fetch_today_entries.py || true
             python src/settle_results.py
             python src/update_growth_log.py --kind settle
             python src/settle_shadow.py
             python src/report_growth.py --days 31 --start-date 2026-07-01
-            git add models outputs || true
+            git add models outputs data/raw/today_entries.csv data/raw/today_odds.csv || true
             git diff --staged --quiet || git commit -m "Settle keirin predictions"
           fi
           git push
