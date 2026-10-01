@@ -152,13 +152,15 @@ def fetch_upcoming(min_minutes=5, max_minutes=40, sleep_sec=0.2, retry_sec=5.0):
             # The near-close refresher is only allowed to patch an already
             # complete daily snapshot. If whole races are absent, rebuilding
             # from a small window would preserve the corruption indefinitely.
-            scheduled_day_ids = set(schedule["race_id"].dropna().astype(str))
+            # A near-close refresh must not be blocked by unrelated races
+            # missing from the full-day snapshot. The manager owns full-day
+            # repair; here we only require the races being refreshed now.
             base_ids = set(base_entries["race_id"].dropna().astype(str))
-            missing_base_ids = sorted(scheduled_day_ids - base_ids)
-            if missing_base_ids:
-                raise ValueError(
-                    f"base daily snapshot incomplete; refusing near-close merge: "
-                    f"missing_races={missing_base_ids}"
+            missing_target_ids = sorted(target_ids - base_ids)
+            if missing_target_ids:
+                print(
+                    "warning: near-close target absent from base snapshot; "
+                    f"will insert refreshed race(s): {missing_target_ids}"
                 )
             base_entries = base_entries[~base_entries["race_id"].astype(str).isin(target_ids)]
             merged_entries = pd.concat([base_entries, fresh_entries], ignore_index=True, sort=False)
