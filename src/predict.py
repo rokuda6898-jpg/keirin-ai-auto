@@ -416,6 +416,13 @@ def main():
     pred["loss_amount_yen"] = np.where(valid_win_odds, base_stake_yen, 0)
     pred["expected_profit_yen"] = (base_stake_yen * pred["expected_value_win"]).round(0)
     pred["rank_in_race"] = pred.groupby("race_id")["p_win"].rank(ascending=False, method="first").astype(int)
+    # Confidence is the gap between the first and second win probabilities.
+    # Keep it separate from p_win so close two-rider races are not treated as
+    # equally certain as races with a clear first choice.
+    ordered_prob = pred.groupby("race_id")["p_win"].transform(
+        lambda s: s.sort_values(ascending=False).iloc[1] if len(s) > 1 else 0.0
+    )
+    pred["top1_top2_margin"] = np.where(pred["rank_in_race"].eq(1), pred["p_win"] - ordered_prob, np.nan)
 
     pred["_start_sort"] = pd.to_numeric(pred.get("start_at", np.nan), errors="coerce").fillna(float("inf"))
     sort_cols = ["date", "_start_sort", "venue", "race_no", "rank_in_race"]
@@ -429,7 +436,7 @@ def main():
     cols = [
         "date", "venue", "race_no", "race_id", "start_at", "close_at", "rank_in_race",
         "car_no", "player_id", "style", "score", "odds_win",
-        "p_win", "nexus_form_adj", "nexus_line_adj", "nexus_style_adj", "nexus_condition_adj", "nexus_uncertainty", "expected_value_win", "stake_yen", "win_return_yen",
+        "p_win", "top1_top2_margin", "nexus_form_adj", "nexus_line_adj", "nexus_style_adj", "nexus_condition_adj", "nexus_uncertainty", "expected_value_win", "stake_yen", "win_return_yen",
         "win_profit_yen", "loss_amount_yen", "expected_profit_yen",
     ]
     for c in cols:
