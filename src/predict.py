@@ -3,6 +3,7 @@ import os
 import subprocess
 import sys
 import hashlib
+import shutil
 from datetime import datetime
 from itertools import permutations
 from zoneinfo import ZoneInfo
@@ -150,6 +151,52 @@ def prior_daily_stake(today_tag, replacing_race_ids):
         for group in latest_by_race.values()
     )
     return int(used)
+
+
+MODEL_LAST_GOOD_PATH = MODEL_PATH.parent / "last_good_win_model.joblib"
+
+
+def validate_model_bundle(bundle):
+    required = {"model", "fill_values"}
+    missing = required - set(bundle.keys()) if isinstance(bundle, dict) else required
+    if missing:
+        raise ValueError(f"model bundle missing keys: {sorted(missing)}")
+    model = bundle["model"]
+    if not hasattr(model, "predict_proba"):
+        raise ValueError("production model has no predict_proba")
+    trained = bundle.get("features")
+    if trained is None and hasattr(model, "feature_names_in_"):
+        trained = list(model.feature_names_in_)
+    if not trained:
+        raise ValueError("production model feature schema is unavailable")
+    if len(set(map(str, trained))) != len(trained):
+        raise ValueError("production model feature schema contains duplicates")
+    return list(trained)
+
+
+def load_validated_model_bundle():
+    """Load production model, falling back to the last validated generation."""
+    primary_error = None
+    try:
+        bundle = joblib.load(MODEL_PATH)
+        validate_model_bundle(bundle)
+        # A successfully deserialized and structurally valid production model
+        # becomes rollback material. Runtime prediction is checked below before
+        # replacing this checkpoint again.
+        return bundle, "production"
+    except Exception as exc:
+        primary_error = exc
+        print(f"production model validation failed: {exc}", flush=True)
+
+    if MODEL_LAST_GOOD_PATH.exists():
+        try:
+            bundle = joblib.load(MODEL_LAST_GOOD_PATH)
+            validate_model_bundle(bundle)
+            print(f"using last-good model after production failure: {primary_error}", flush=True)
+            return bundle, "last_good"
+        except Exception as exc:
+            raise RuntimeError(f"production and last-good models are invalid: production={primary_error}; last_good={exc}") from exc
+    raise RuntimeError(f"production model is invalid and no last-good model exists: {primary_error}")
 
 
 def ensure_ready():
@@ -502,7 +549,7 @@ def main():
     odds_snapshot_label = os.getenv("ODDS_SNAPSHOT_LABEL", "near-close snapshot").strip()
     profit_gate = load_profit_gate()
 
-    bundle = joblib.load(MODEL_PATH)
+    bundle, model_source = load_validated_model_bundle()
     model = bundle["model"]
     calibrator = bundle.get("calibrator")
     fill_values = bundle["fill_values"]
@@ -519,7 +566,7 @@ def main():
     # features. Always predict with the exact feature schema used at fit time;
     # new columns remain available for shadow evaluation until the next gated
     # retrain promotes them.
-    trained_features = bundle.get("features")
+    trained_features = validate_model_bundle(bundle)
     if trained_features:
         trained_features = list(trained_features)
         for col in trained_features:
@@ -527,8 +574,34 @@ def main():
                 X[col] = float(fill_values.get(col, 0.0))
         X = X.reindex(columns=trained_features)
 
-    raw = model.predict_proba(X)[:, 1]
-    calibrated = calibrator.predict(raw) if calibrator is not None else raw
+    try:
+        raw = model.predict_proba(X)[:, 1]
+        calibrated = calibrator.predict(raw) if calibrator is not None else raw
+        if len(calibrated) != len(X) or not np.isfinite(calibrated).all():
+            raise ValueError("model produced non-finite or wrong-length probabilities")
+        if model_source == "production":
+            MODEL_LAST_GOOD_PATH.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(MODEL_PATH, MODEL_LAST_GOOD_PATH)
+    except Exception as exc:
+        if model_source != "last_good" and MODEL_LAST_GOOD_PATH.exists():
+            print(f"production inference failed; retrying last-good model: {exc}", flush=True)
+            bundle = joblib.load(MODEL_LAST_GOOD_PATH)
+            trained_features = validate_model_bundle(bundle)
+            model = bundle["model"]
+            calibrator = bundle.get("calibrator")
+            fill_values = bundle["fill_values"]
+            X, _ = prepare_features(df, fill_values)
+            for col in trained_features:
+                if col not in X.columns:
+                    X[col] = float(fill_values.get(col, 0.0))
+            X = X.reindex(columns=trained_features)
+            raw = model.predict_proba(X)[:, 1]
+            calibrated = calibrator.predict(raw) if calibrator is not None else raw
+            if len(calibrated) != len(X) or not np.isfinite(calibrated).all():
+                raise RuntimeError("last-good model also failed inference") from exc
+            model_source = "last_good"
+        else:
+            raise
 
     pred = df.copy()
     pred["p_raw"] = np.clip(calibrated, 1e-6, 1.0)
