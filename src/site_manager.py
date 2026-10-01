@@ -10,7 +10,7 @@ from zoneinfo import ZoneInfo
 
 import pandas as pd
 
-from common import TODAY_CSV, OUTPUT_DIR, RAW_DIR
+from common import TODAY_CSV, TODAY_ODDS_CSV, OUTPUT_DIR, RAW_DIR
 
 STATUS_PATH = OUTPUT_DIR / "manager_status.json"
 INCIDENT_HISTORY_PATH = OUTPUT_DIR / "manager_incident_history.jsonl"
@@ -85,7 +85,7 @@ def restore_races_from_cache(problems):
         return False
     fetch_mod = importlib.import_module("fetch_today_entries")
     fetch_mod.save_today_frames(base.to_dict("records"), odds.to_dict("records"))
-    ok, gate_problems = validate_source_gate()
+    ok, gate_problems, _ = validate_source_gate()
     if not ok:
         print(f"race-cache restore failed source gate: {gate_problems}", flush=True)
         rollback_last_good()
