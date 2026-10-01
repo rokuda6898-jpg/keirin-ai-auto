@@ -311,6 +311,69 @@ def apply_nexus_race_reading(pred):
     return pred
 
 
+def build_top1_variants(pred):
+    """Create leakage-safe shadow Top1 variants without changing production ranking."""
+    base = pred.copy()
+    line_pos = pd.to_numeric(base.get("line_position"), errors="coerce")
+    line_size = pd.to_numeric(base.get("line_size"), errors="coerce")
+    back = pd.to_numeric(base.get("back_count"), errors="coerce").fillna(0)
+    front = pd.to_numeric(base.get("front_runner_count"), errors="coerce").fillna(0)
+    attack_raw = back + front
+    attackers = attack_raw.groupby(base["race_id"]).transform(lambda g: int((g > g.median()).sum()))
+    number_of_lines = pd.to_numeric(base.get("number_of_lines"), errors="coerce").fillna(0)
+
+    variants = {"production": pd.to_numeric(base["p_win"], errors="coerce").clip(lower=1e-9)}
+    # More line influence in simple two-line races; less when the race is fragmented.
+    variable_line_factor = np.where(number_of_lines.le(2), 1.20, np.where(number_of_lines.ge(4), 0.72, 0.92))
+    variants["variable_line"] = variants["production"] * np.exp(
+        pd.to_numeric(base.get("nexus_line_adj"), errors="coerce").fillna(0) * (variable_line_factor - 1.0)
+    )
+    # Test whether strong second wheels are still undervalued.
+    variants["second_wheel"] = variants["production"] * np.exp(
+        (((line_pos == 2) & (line_size >= 2)).astype(float) * 0.10)
+        - ((line_pos == 1).astype(float) * 0.025)
+    )
+    # Multiple attacking riders increase pace conflict: suppress attack-heavy leaders,
+    # slightly reward finish/marker profiles instead of assuming the self-powered rider wins.
+    finish_raw = (
+        pd.to_numeric(base.get("stalker_count"), errors="coerce").fillna(0)
+        + pd.to_numeric(base.get("deep_closer_count"), errors="coerce").fillna(0)
+        + pd.to_numeric(base.get("marker_count"), errors="coerce").fillna(0)
+    )
+    crowded = attackers.ge(3).astype(float)
+    attack_z = attack_raw.groupby(base["race_id"]).transform(
+        lambda g: (g-g.mean())/(g.std(ddof=0) if g.std(ddof=0) > 1e-9 else 1.0)
+    ).fillna(0)
+    finish_z = finish_raw.groupby(base["race_id"]).transform(
+        lambda g: (g-g.mean())/(g.std(ddof=0) if g.std(ddof=0) > 1e-9 else 1.0)
+    ).fillna(0)
+    variants["pace_conflict"] = variants["production"] * np.exp(crowded * (-0.09 * attack_z + 0.07 * finish_z))
+
+    rows = []
+    for name, score in variants.items():
+        work = base[["date","venue","race_no","race_id","start_at","close_at","car_no","player_id"]].copy()
+        work["variant"] = name
+        work["variant_score"] = pd.to_numeric(score, errors="coerce").fillna(0)
+        idx = work.groupby("race_id")["variant_score"].idxmax()
+        top = work.loc[idx].copy()
+        top = top.rename(columns={"car_no":"predicted_winner_car_no","player_id":"predicted_winner_player_id"})
+        rows.append(top)
+    return pd.concat(rows, ignore_index=True)
+
+
+def save_top1_variants(pred, now_jst):
+    path = OUTPUT_DIR / "top1_variant_ledger.csv"
+    current = build_top1_variants(pred)
+    current["prediction_created_at_jst"] = now_jst.isoformat(timespec="seconds")
+    try:
+        old = pd.read_csv(path, dtype={"race_id": str})
+    except (FileNotFoundError, pd.errors.EmptyDataError, pd.errors.ParserError):
+        old = pd.DataFrame()
+    combined = pd.concat([old, current], ignore_index=True, sort=False)
+    combined = combined.drop_duplicates(["date","race_id","variant"], keep="last")
+    combined.to_csv(path, index=False)
+
+
 def main():
     ensure_dirs()
     ensure_ready()
@@ -390,6 +453,7 @@ def main():
     top1_ledger = pd.concat([old_top1, top1], ignore_index=True, sort=False)
     top1_ledger = top1_ledger.drop_duplicates(["date", "race_id"], keep="last")
     top1_ledger.to_csv(top1_ledger_path, index=False)
+    save_top1_variants(pred, now_jst)
 
     bet_rows = []
     today_odds = load_today_odds()
