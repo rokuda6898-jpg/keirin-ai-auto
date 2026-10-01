@@ -111,8 +111,34 @@ def fetch_upcoming(min_minutes=5, max_minutes=40, sleep_sec=0.2, retry_sec=5.0):
             f"fetched={len(fetched_ids)} missing={missing_ids} failures={failures[:3]}"
         )
 
-    entries, odds, _ = save_today_frames(all_entries, all_odds)
-    fetched_races = int(entries["race_id"].nunique())
+    # Merge refreshed near-close races into the existing full-day snapshot.
+    # Never replace TODAY_CSV with only the current 5-40 minute window; doing so
+    # made entire races (and therefore their riders) disappear from the site.
+    from common import TODAY_CSV, TODAY_ODDS_CSV
+    from fetch_today_entries import ODDS_COLUMNS
+    fresh_entries = pd.DataFrame(all_entries)
+    fresh_odds = pd.DataFrame(all_odds, columns=ODDS_COLUMNS)
+    target_ids = set(fresh_entries["race_id"].astype(str))
+    if TODAY_CSV.exists():
+        try:
+            base_entries = pd.read_csv(TODAY_CSV, dtype={"race_id": str})
+            base_entries = base_entries[~base_entries["race_id"].astype(str).isin(target_ids)]
+            merged_entries = pd.concat([base_entries, fresh_entries], ignore_index=True, sort=False)
+        except (OSError, pd.errors.ParserError, pd.errors.EmptyDataError):
+            merged_entries = fresh_entries
+    else:
+        merged_entries = fresh_entries
+    if TODAY_ODDS_CSV.exists():
+        try:
+            base_odds = pd.read_csv(TODAY_ODDS_CSV, dtype={"race_id": str})
+            base_odds = base_odds[~base_odds["race_id"].astype(str).isin(target_ids)]
+            merged_odds = pd.concat([base_odds, fresh_odds], ignore_index=True, sort=False)
+        except (OSError, pd.errors.ParserError, pd.errors.EmptyDataError):
+            merged_odds = fresh_odds
+    else:
+        merged_odds = fresh_odds
+    entries, odds, _ = save_today_frames(merged_entries.to_dict("records"), merged_odds.to_dict("records"))
+    fetched_races = int(fresh_entries["race_id"].nunique())
     UPCOMING_COUNT_FILE.write_text(str(fetched_races), encoding="ascii")
     metadata = {
         "fetched_at_jst": now.isoformat(timespec="seconds"),
