@@ -332,7 +332,7 @@ def audit_site_output():
         return [{"type": "site_output_missing_or_too_small"}]
     try:
         content = html.read_text(encoding="utf-8")
-        entries = pd.read_csv(TODAY_CSV, dtype={"race_id": str})
+        entries = pd.read_csv(TODAY_CSV, dtype={"race_id": str, "player_id": str})
         # The published HTML must contain every race/car currently present in
         # the validated prediction input. This catches stale pages that are
         # large enough to pass the old file-size-only health check.
