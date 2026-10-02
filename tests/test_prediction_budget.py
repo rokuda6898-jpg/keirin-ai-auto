@@ -2,7 +2,7 @@ import unittest
 
 import pandas as pd
 
-from predict import allocate_daily_budget
+from predict import allocate_race_budget
 
 
 class PredictionBudgetTests(unittest.TestCase):
@@ -14,19 +14,24 @@ class PredictionBudgetTests(unittest.TestCase):
             }
         )
 
-        allocated = allocate_daily_budget(bets, budget_yen=1500, max_per_bet_yen=1000)
+        allocated = allocate_race_budget(bets, budget_yen=1500, max_per_bet_yen=1000)
 
         stakes = allocated["stake_yen"]
-        self.assertLessEqual(int(stakes.sum()), 1500)
+        self.assertEqual(int(stakes.sum()), 1500)
         self.assertTrue(stakes.ge(100).all())
         self.assertTrue(stakes.mod(100).eq(0).all())
         self.assertLessEqual(int(stakes.max()), 1000)
         self.assertGreater(int(stakes.iloc[0]), int(stakes.iloc[1]))
         self.assertGreater(int(stakes.iloc[1]), int(stakes.iloc[2]))
 
+    def test_single_selected_ticket_uses_full_race_budget(self):
+        bets = pd.DataFrame({"prob": [0.2], "expected_profit_100yen": [150]})
+        allocated = allocate_race_budget(bets, budget_yen=10000, max_per_bet_yen=10000)
+        self.assertEqual(int(allocated["stake_yen"].sum()), 10000)
+
     def test_zero_budget_does_not_create_subminimum_stakes(self):
         bets = pd.DataFrame({"prob": [0.8], "expected_profit_100yen": [200]})
-        allocated = allocate_daily_budget(bets, budget_yen=0)
+        allocated = allocate_race_budget(bets, budget_yen=0)
         self.assertEqual(int(allocated["stake_yen"].sum()), 0)
 
 

@@ -3,6 +3,7 @@ import os
 import subprocess
 import sys
 import hashlib
+import html
 import shutil
 from datetime import datetime
 from itertools import permutations
@@ -64,6 +65,19 @@ def get_int_env(name, default):
         return int(default)
 
 
+
+
+def rider_display_name(row):
+    value = getattr(row, "player_name", "")
+    try:
+        missing = pd.isna(value)
+    except Exception:
+        missing = False
+    if missing or not str(value).strip():
+        value = getattr(row, "player_id", "")
+    return html.escape(str(value).strip(), quote=True)
+
+
 def file_sha256(path):
     digest = hashlib.sha256()
     with open(path, "rb") as stream:
@@ -99,7 +113,7 @@ def stake_from_edge(expected_profit_100yen, base_stake=100, max_stake=500):
 
 
 def allocate_race_budget(bets, budget_yen=10000, max_per_bet_yen=10000):
-    """Allocate up to one race budget; never force weak tickets to consume the full budget."""
+    """Allocate the full configured per-race budget across positive-edge selected tickets."""
     if bets.empty:
         return bets.assign(stake_yen=pd.Series(dtype=int))
     result = bets.copy()
@@ -111,16 +125,12 @@ def allocate_race_budget(bets, budget_yen=10000, max_per_bet_yen=10000):
     result = result.sort_values("_allocation_weight", ascending=False, kind="mergesort")
     result["stake_yen"] = 0
 
-    # Confidence/edge controls how much of the 10,000-yen ceiling is actually used.
-    # This prevents a thin race from being force-filled simply because a budget exists.
+    # Product rule: when a race has selected positive-edge tickets, allocate
+    # the full per-race budget. The manager independently enforces this invariant.
     eligible = result[result["_allocation_weight"].gt(0)].index.tolist()
     if not eligible or budget <= 0:
         return result.drop(columns=["_allocation_weight"]).sort_index()
-    best_prob = float(probability.loc[eligible].max())
-    best_ev = float(edge.loc[eligible].max())
-    confidence = min(1.0, max(0.20, best_prob / 0.30))
-    edge_factor = min(1.0, max(0.25, best_ev / 300.0))
-    spend_budget = min(budget, max(100, int((budget * confidence * edge_factor) // 100 * 100)))
+    spend_budget = budget
 
     eligible = eligible[: min(len(eligible), spend_budget // 100)]
     result.loc[eligible, "stake_yen"] = 100
@@ -627,7 +637,14 @@ def main():
     pred["loss_amount_yen"] = np.where(valid_win_odds, base_stake_yen, 0)
     pred["expected_profit_yen"] = (base_stake_yen * pred["expected_value_win"]).round(0)
     pred["rank_in_race"] = pred.groupby("race_id")["p_win"].rank(ascending=False, method="first").astype(int)
-    # Hard integrity gate: never silently publish a partial rider ranking.\n    expected_counts = df.groupby("race_id")["car_no"].nunique()\n    predicted_counts = pred.groupby("race_id")["car_no"].nunique()\n    incomplete = expected_counts[expected_counts.ne(predicted_counts.reindex(expected_counts.index).fillna(0).astype(int))]\n    if len(incomplete):\n        details = {str(rid): {"expected": int(expected_counts.loc[rid]), "predicted": int(predicted_counts.get(rid, 0))} for rid in incomplete.index}\n        raise RuntimeError(f"incomplete rider prediction detected; refusing partial publish: {details}")\n    # Confidence is the gap between the first and second win probabilities.
+    # Hard integrity gate: never silently publish a partial rider ranking.
+    expected_counts = df.groupby("race_id")["car_no"].nunique()
+    predicted_counts = pred.groupby("race_id")["car_no"].nunique()
+    incomplete = expected_counts[expected_counts.ne(predicted_counts.reindex(expected_counts.index).fillna(0).astype(int))]
+    if len(incomplete):
+        details = {str(rid): {"expected": int(expected_counts.loc[rid]), "predicted": int(predicted_counts.get(rid, 0))} for rid in incomplete.index}
+        raise RuntimeError(f"incomplete rider prediction detected; refusing partial publish: {details}")
+    # Confidence is the gap between the first and second win probabilities.
     # Keep it separate from p_win so close two-rider races are not treated as
     # equally certain as races with a clear first choice.
     ordered_prob = pred.groupby("race_id")["p_win"].transform(
@@ -646,7 +663,7 @@ def main():
 
     cols = [
         "date", "venue", "race_no", "race_id", "start_at", "close_at", "rank_in_race",
-        "car_no", "player_id", "style", "score", "odds_win", "odds_move_pct", "odds_move_last_pct", "odds_snapshot_count",
+        "car_no", "player_id", "player_name", "style", "score", "odds_win", "odds_move_pct", "odds_move_last_pct", "odds_snapshot_count",
         "p_win", "top1_top2_margin", "nexus_form_adj", "nexus_line_adj", "nexus_style_adj", "nexus_condition_adj", "nexus_uncertainty", "expected_value_win", "stake_yen", "win_return_yen",
         "win_profit_yen", "loss_amount_yen", "expected_profit_yen",
     ]
@@ -827,7 +844,7 @@ def main():
         else:
             bet_html = '<div class="waiting">買い目候補は締切前オッズ取得後に表示</div>'
         riders_html = "".join(
-            f'<button class="rider" type="button" data-car="{int(row.car_no)}" data-name="{row.player_id}" data-score="{float(row.score) if pd.notna(row.score) else 0:.1f}" data-win="{float(row.p_win)*100:.1f}" onclick="compareRider(this)"><i class="car car-{int(row.car_no)}">{int(row.car_no)}</i><span>{row.player_id}</span></button>'
+            f'<button class="rider" type="button" data-car="{int(row.car_no)}" data-player-id="{html.escape(str(row.player_id), quote=True)}" data-name="{rider_display_name(row)}" data-score="{float(row.score) if pd.notna(row.score) else 0:.1f}" data-win="{float(row.p_win)*100:.1f}" onclick="compareRider(this)"><i class="car car-{int(row.car_no)}">{int(row.car_no)}</i><span>{rider_display_name(row)}</span></button>'
             for row in group.sort_values("car_no").itertuples()
         )
         race_cards.append(

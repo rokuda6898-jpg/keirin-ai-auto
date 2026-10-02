@@ -1,4 +1,5 @@
 import re
+import html
 import json
 import shutil
 import subprocess
@@ -257,7 +258,7 @@ def audit_race_coverage():
         return [{"type": "race_schedule_missing"}]
     try:
         schedule = pd.read_csv(RACE_SCHEDULE_PATH, dtype={"race_id": str})
-        entries = pd.read_csv(TODAY_CSV, dtype={"race_id": str})
+        entries = pd.read_csv(TODAY_CSV, dtype={"race_id": str, "player_id": str})
         today = datetime.now(ZoneInfo("Asia/Tokyo")).strftime("%Y-%m-%d")
         if "date" in schedule.columns:
             schedule = schedule[schedule["date"].astype(str).eq(today)]
@@ -345,6 +346,27 @@ def audit_site_output():
             # the race itself to be represented in the actual published artifact.
             if not cars:
                 problems.append({"type": "site_race_has_no_valid_cars", "race_id": race_id})
+            if "player_name" in group.columns:
+                marker = f'<article class="race" id="race-{race_id}"'
+                start = content.find(marker)
+                end = content.find('<article class="race"', start + len(marker)) if start >= 0 else -1
+                race_html = content[start:] if start >= 0 and end < 0 else content[start:end]
+                for _, rider in group.iterrows():
+                    name = str(rider.get("player_name", "")).strip()
+                    player_id = str(rider.get("player_id", "")).strip()
+                    if not name or name in {"nan", "None"}:
+                        continue
+                    expected = (
+                        f'data-player-id="{html.escape(player_id, quote=True)}" '
+                        f'data-name="{html.escape(name, quote=True)}"'
+                    )
+                    if expected not in race_html:
+                        problems.append({
+                            "type": "site_player_name_mismatch",
+                            "race_id": race_id,
+                            "player_id": player_id,
+                            "player_name": name,
+                        })
     except Exception as exc:
         problems.append({"type": "site_output_unreadable", "detail": str(exc)})
     return problems
@@ -384,8 +406,16 @@ def audit_prediction_outputs():
         problems.append({"type": "prediction_missing"})
         return problems
     try:
-        pred = pd.read_csv(latest, dtype={"race_id": str})
-        entries = pd.read_csv(TODAY_CSV, dtype={"race_id": str})
+        pred = pd.read_csv(latest, dtype={"race_id": str, "player_id": str})
+        entries = pd.read_csv(TODAY_CSV, dtype={"race_id": str, "player_id": str})
+        if "player_name" in entries.columns:
+            if "player_name" not in pred.columns:
+                problems.append({"type": "prediction_player_name_missing"})
+            else:
+                names = pred["player_name"].fillna("").astype(str).str.strip()
+                missing_names = int(names.isin({"", "nan", "None"}).sum())
+                if missing_names:
+                    problems.append({"type": "prediction_player_name_missing", "rows": missing_names})
         for race_id, group in entries.groupby("race_id"):
             source_cars = set(pd.to_numeric(group["car_no"], errors="coerce").dropna().astype(int))
             p = pred[pred["race_id"].astype(str).eq(str(race_id))]
@@ -550,12 +580,12 @@ def repair(problems=None):
         "duplicate_player_identity", "missing_player_identity",
     }
     prediction_kinds = {
-        "prediction_missing", "prediction_missing_riders", "prediction_unreadable",
+        "prediction_missing", "prediction_missing_riders", "prediction_player_name_missing", "prediction_unreadable",
         "invalid_prediction_probability", "prediction_probability_not_normalized",
         "prediction_quality_audit_failed", "stale_predictions",
     }
     result_kinds = {"results_missing", "results_overdue", "results_unreadable"}
-    site_kinds = {"site_output_missing_or_too_small", "site_missing_race", "site_race_has_no_valid_cars", "site_output_unreadable"}
+    site_kinds = {"site_output_missing_or_too_small", "site_missing_race", "site_race_has_no_valid_cars", "site_player_name_mismatch", "site_output_unreadable"}
     bet_kinds = {"race_budget_mismatch", "budget_audit_failed", "authorized_bets_missing"}
 
     actions = []

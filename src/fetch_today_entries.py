@@ -379,9 +379,43 @@ def guard_against_destructive_shrink(entries_df):
         raise ValueError(f"destructive snapshot shrink blocked: old_races={old_races} new_races={new_races}")
 
 
+
+
+def merge_existing_same_day_odds(entries_df, fresh_odds_df, existing_path=None):
+    """Keep last-known same-day odds when a refresh returns no odds for a race."""
+    path = Path(existing_path) if existing_path is not None else TODAY_ODDS_CSV
+    fresh = fresh_odds_df.copy()
+    if not path.exists():
+        return fresh
+    try:
+        old = pd.read_csv(path, dtype={"race_id": str})
+    except (OSError, pd.errors.ParserError, pd.errors.EmptyDataError):
+        return fresh
+    if old.empty:
+        return fresh
+
+    if "date" in entries_df.columns and "date" in old.columns:
+        current_dates = set(entries_df["date"].dropna().astype(str))
+        old = old[old["date"].astype(str).isin(current_dates)].copy()
+    if old.empty:
+        return fresh
+    if fresh.empty:
+        return old.reset_index(drop=True)
+
+    if "race_id" in fresh.columns and "race_id" in old.columns:
+        fresh_ids = set(fresh["race_id"].dropna().astype(str))
+        old = old[~old["race_id"].astype(str).isin(fresh_ids)].copy()
+    merged = pd.concat([old, fresh], ignore_index=True, sort=False)
+    key = [c for c in ["race_id", "bet_type", "buy"] if c in merged.columns]
+    if key:
+        merged = merged.drop_duplicates(key, keep="last")
+    return merged.reset_index(drop=True)
+
+
 def save_today_frames(all_entries, all_odds):
     entries_df = pd.DataFrame(all_entries).sort_values(["date", "venue", "race_no", "car_no"])
     odds_df = pd.DataFrame(all_odds, columns=ODDS_COLUMNS)
+    odds_df = merge_existing_same_day_odds(entries_df, odds_df)
     if len(odds_df):
         odds_df = odds_df.sort_values(["date", "venue", "race_no", "bet_type", "popularity_order", "buy"])
     odds_df.to_csv(TODAY_ODDS_CSV, index=False)
