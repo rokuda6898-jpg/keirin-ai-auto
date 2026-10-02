@@ -1,5 +1,5 @@
 import re
-import html
+import html as html_lib
 import json
 import shutil
 import subprocess
@@ -357,8 +357,8 @@ def audit_site_output():
                     if not name or name in {"nan", "None"}:
                         continue
                     expected = (
-                        f'data-player-id="{html.escape(player_id, quote=True)}" '
-                        f'data-name="{html.escape(name, quote=True)}"'
+                        f'data-player-id="{html_lib.escape(player_id, quote=True)}" '
+                        f'data-name="{html_lib.escape(name, quote=True)}"'
                     )
                     if expected not in race_html:
                         problems.append({

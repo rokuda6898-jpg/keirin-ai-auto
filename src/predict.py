@@ -3,7 +3,7 @@ import os
 import subprocess
 import sys
 import hashlib
-import html
+import html as html_lib
 import shutil
 from datetime import datetime
 from itertools import permutations
@@ -75,7 +75,7 @@ def rider_display_name(row):
         missing = False
     if missing or not str(value).strip():
         value = getattr(row, "player_id", "")
-    return html.escape(str(value).strip(), quote=True)
+    return html_lib.escape(str(value).strip(), quote=True)
 
 
 def file_sha256(path):
@@ -844,7 +844,7 @@ def main():
         else:
             bet_html = '<div class="waiting">買い目候補は締切前オッズ取得後に表示</div>'
         riders_html = "".join(
-            f'<button class="rider" type="button" data-car="{int(row.car_no)}" data-player-id="{html.escape(str(row.player_id), quote=True)}" data-name="{rider_display_name(row)}" data-score="{float(row.score) if pd.notna(row.score) else 0:.1f}" data-win="{float(row.p_win)*100:.1f}" onclick="compareRider(this)"><i class="car car-{int(row.car_no)}">{int(row.car_no)}</i><span>{rider_display_name(row)}</span></button>'
+            f'<button class="rider" type="button" data-car="{int(row.car_no)}" data-player-id="{html_lib.escape(str(row.player_id), quote=True)}" data-name="{rider_display_name(row)}" data-score="{float(row.score) if pd.notna(row.score) else 0:.1f}" data-win="{float(row.p_win)*100:.1f}" onclick="compareRider(this)"><i class="car car-{int(row.car_no)}">{int(row.car_no)}</i><span>{rider_display_name(row)}</span></button>'
             for row in group.sort_values("car_no").itertuples()
         )
         race_cards.append(
