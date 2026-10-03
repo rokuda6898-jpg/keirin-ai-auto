@@ -783,7 +783,7 @@ def main():
     max_stake_yen = get_int_env("BET_MAX_STAKE_YEN", 500)
     max_seconds_to_close = get_int_env("BET_MAX_SECONDS_TO_CLOSE", 3600)
     snapshot_mode = os.getenv("PREDICTION_SNAPSHOT_MODE", "false").strip().lower() in {"1", "true", "yes"}
-    strategy_version = os.getenv("PREDICTION_STRATEGY_VERSION", "near_close_v2_20260805").strip()
+    strategy_version = os.getenv("PREDICTION_STRATEGY_VERSION", "near_close_v4_position_20261004").strip()
     odds_snapshot_label = os.getenv("ODDS_SNAPSHOT_LABEL", "near-close snapshot").strip()
     profit_gate = load_profit_gate()
 
