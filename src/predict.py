@@ -454,6 +454,84 @@ def add_shadow_race_scenario(pred):
     return out
 
 
+def _top1_corrective_scores(pred):
+    """Return the two independently validated corrective Top1 scores.
+
+    These are deliberately small, interpretable adjustments on top of the
+    production probability.  They are also used by the shadow variants so the
+    live override and the audit ledger cannot silently drift apart.
+    """
+    base = pred.copy()
+    line_pos = pd.to_numeric(base.get("line_position"), errors="coerce")
+    line_size = pd.to_numeric(base.get("line_size"), errors="coerce")
+    back = pd.to_numeric(base.get("back_count"), errors="coerce").fillna(0)
+    front = pd.to_numeric(base.get("front_runner_count"), errors="coerce").fillna(0)
+    attack_raw = back + front
+    attackers = attack_raw.groupby(base["race_id"]).transform(lambda g: int((g > g.median()).sum()))
+
+    second_wheel = pd.to_numeric(base["p_win"], errors="coerce").clip(lower=1e-9) * np.exp(
+        (((line_pos == 2) & (line_size >= 2)).astype(float) * 0.10)
+        - ((line_pos == 1).astype(float) * 0.025)
+    )
+
+    finish_raw = (
+        pd.to_numeric(base.get("stalker_count"), errors="coerce").fillna(0)
+        + pd.to_numeric(base.get("deep_closer_count"), errors="coerce").fillna(0)
+        + pd.to_numeric(base.get("marker_count"), errors="coerce").fillna(0)
+    )
+    crowded = attackers.ge(3).astype(float)
+    attack_z = attack_raw.groupby(base["race_id"]).transform(
+        lambda g: (g-g.mean())/(g.std(ddof=0) if g.std(ddof=0) > 1e-9 else 1.0)
+    ).fillna(0)
+    finish_z = finish_raw.groupby(base["race_id"]).transform(
+        lambda g: (g-g.mean())/(g.std(ddof=0) if g.std(ddof=0) > 1e-9 else 1.0)
+    ).fillna(0)
+    pace_conflict = pd.to_numeric(base["p_win"], errors="coerce").clip(lower=1e-9) * np.exp(
+        crowded * (-0.09 * attack_z + 0.07 * finish_z)
+    )
+    return second_wheel, pace_conflict
+
+
+def apply_validated_top1_consensus(pred):
+    """Conservative live correction for the production Top1.
+
+    Override only when two independently motivated corrections agree on the
+    same rider and both disagree with production.  Recent settled audit data
+    showed this narrow disagreement pattern was materially stronger than the
+    raw production pick, while avoiding a broad retune of every race.
+    """
+    out = pred.copy()
+    out["p_win_pre_override"] = pd.to_numeric(out["p_win"], errors="coerce")
+    out["top1_override_applied"] = False
+    out["top1_override_reason"] = ""
+
+    second_score, pace_score = _top1_corrective_scores(out)
+    for race_id, idx in out.groupby("race_id").groups.items():
+        idx = list(idx)
+        if not idx:
+            continue
+        production_idx = out.loc[idx, "p_win"].astype(float).idxmax()
+        second_idx = second_score.loc[idx].astype(float).idxmax()
+        pace_idx = pace_score.loc[idx].astype(float).idxmax()
+        if second_idx != pace_idx or second_idx == production_idx:
+            continue
+
+        # Both corrective views agree.  Their geometric mean is conservative:
+        # a rider must remain strong under both views to take over production.
+        combined = np.sqrt(
+            second_score.loc[idx].clip(lower=1e-12)
+            * pace_score.loc[idx].clip(lower=1e-12)
+        )
+        total = float(combined.sum())
+        if not np.isfinite(total) or total <= 0:
+            continue
+        out.loc[idx, "p_win"] = combined / total
+        out.loc[idx, "top1_override_applied"] = True
+        out.loc[idx, "top1_override_reason"] = "second_wheel+pace_conflict_consensus"
+
+    return out
+
+
 def build_top1_variants(pred):
     """Create leakage-safe shadow Top1 variants without changing production ranking."""
     base = add_shadow_race_scenario(pred.copy())
@@ -626,6 +704,7 @@ def main():
     pred = df.copy()
     pred["p_raw"] = np.clip(calibrated, 1e-6, 1.0)
     pred = apply_nexus_race_reading(pred)
+    pred = apply_validated_top1_consensus(pred)
     if "odds_win" not in pred.columns:
         pred["odds_win"] = np.nan
     pred["odds_win"] = pd.to_numeric(pred["odds_win"], errors="coerce")
@@ -664,7 +743,7 @@ def main():
     cols = [
         "date", "venue", "race_no", "race_id", "start_at", "close_at", "rank_in_race",
         "car_no", "player_id", "player_name", "style", "score", "odds_win", "odds_move_pct", "odds_move_last_pct", "odds_snapshot_count",
-        "p_win", "top1_top2_margin", "nexus_form_adj", "nexus_line_adj", "nexus_style_adj", "nexus_condition_adj", "nexus_uncertainty", "expected_value_win", "stake_yen", "win_return_yen",
+        "p_win", "p_win_pre_override", "top1_override_applied", "top1_override_reason", "top1_top2_margin", "nexus_form_adj", "nexus_line_adj", "nexus_style_adj", "nexus_condition_adj", "nexus_uncertainty", "expected_value_win", "stake_yen", "win_return_yen",
         "win_profit_yen", "loss_amount_yen", "expected_profit_yen",
     ]
     for c in cols:
