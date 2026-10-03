@@ -2,6 +2,12 @@ name: weekly-keirin-train
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - "src/train.py"
+      - "src/multi_bet_backtest.py"
+      - "src/predict.py"
+      - ".github/workflows/weekly_train.yml"
   schedule:
     # Monday 05:30 JST
     - cron: "30 20 * * 0"
