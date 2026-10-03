@@ -475,6 +475,13 @@ def run_settlement(args):
         settled["display_status"] = pd.Series("結果取得待ち", index=settled.index, dtype=object)
     else:
         results = fetch_results()
+        for column, default in [
+            ("actual_trifecta", ""),
+            ("actual_trifecta_odds", np.nan),
+            ("official_result_available", False),
+        ]:
+            if column not in results.columns:
+                results[column] = default
         public_results = results[["race_id", "actual_trifecta", "actual_trifecta_odds", "official_result_available"]].copy()
         public_results.to_json(LATEST_RESULTS_JSON, orient="records", force_ascii=False)
         update_top1_accuracy(results)
