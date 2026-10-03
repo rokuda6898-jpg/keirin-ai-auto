@@ -247,6 +247,65 @@ def evaluate_walk_forward(df, folds=4):
     return rows
 
 
+def _topk_position_coverage(frame, score_col, finish_position, k):
+    work = frame[["race_id", "finish_pos", score_col]].copy()
+    work["_rank"] = work.groupby("race_id")[score_col].rank(ascending=False, method="first")
+    actual = work[pd.to_numeric(work["finish_pos"], errors="coerce").eq(finish_position)]
+    if len(actual) == 0:
+        return None
+    return float(actual["_rank"].le(k).mean())
+
+
+def evaluate_position_models(train_df, test_df, X_train, X_test, baseline_pred):
+    """Train held-out second/third-place specialists and compare to p_win ranking."""
+    models = {}
+    scored = test_df[["race_id", "finish_pos"]].copy()
+    for position, name in [(2, "second"), (3, "third")]:
+        y = pd.to_numeric(train_df["finish_pos"], errors="coerce").eq(position).astype(int)
+        model = HistGradientBoostingClassifier(
+            max_iter=300,
+            learning_rate=0.045,
+            max_leaf_nodes=31,
+            l2_regularization=0.03,
+            random_state=50 + position,
+        )
+        model.fit(X_train, y)
+        raw = model.predict_proba(X_test)[:, 1]
+        scored[f"p_{name}_raw"] = raw
+        scored = normalize_race_prob(scored, f"p_{name}_raw", f"p_{name}")
+        models[name] = model
+
+    base = baseline_pred[["race_id", "finish_pos", "p_win"]].copy()
+    metrics = {
+        "second_top4_baseline": _topk_position_coverage(base, "p_win", 2, 4),
+        "second_top4_candidate": _topk_position_coverage(scored, "p_second", 2, 4),
+        "third_top6_baseline": _topk_position_coverage(base, "p_win", 3, 6),
+        "third_top6_candidate": _topk_position_coverage(scored, "p_third", 3, 6),
+    }
+    gains = []
+    for cand_key, base_key in [
+        ("second_top4_candidate", "second_top4_baseline"),
+        ("third_top6_candidate", "third_top6_baseline"),
+    ]:
+        cand = metrics.get(cand_key)
+        base_value = metrics.get(base_key)
+        if cand is not None and base_value is not None:
+            gains.append(cand - base_value)
+
+    metrics["average_coverage_gain"] = float(np.mean(gains)) if gains else None
+    metrics["target_passed"] = bool(
+        gains
+        and all(gain >= -1e-9 for gain in gains)
+        and float(np.mean(gains)) >= 0.005
+    )
+    metrics["gate_reason"] = (
+        "position specialists improved held-out placement coverage"
+        if metrics["target_passed"]
+        else "position specialists did not beat the p_win placement baseline"
+    )
+    return models, metrics
+
+
 def main():
     ensure_dirs()
     ensure_history()
@@ -315,6 +374,10 @@ def main():
     pred_df = normalize_race_prob(pred_df)
     pred_df["rank_in_race"] = pred_df.groupby("race_id")["p_win"].rank(ascending=False, method="first")
 
+    position_eval_models, position_metrics = evaluate_position_models(
+        train_df, test_df, X_train, X_test, pred_df
+    )
+
     winner_probs = pred_df[pred_df["finish_pos"] == 1]["p_win"].clip(1e-9, 1.0)
     race_logloss = float(-np.log(winner_probs).mean()) if len(winner_probs) else None
     top1 = pred_df[pred_df["rank_in_race"].eq(1)]
@@ -363,6 +426,7 @@ def main():
         "feature_ablation": ablations,
         "shadow_race_ranker": ranker_metrics,
         "walk_forward": walk_forward,
+        "position_models": position_metrics,
     }
 
     X_full, production_fill_values = prepare_features(df)
@@ -384,6 +448,36 @@ def main():
     }
 
     joblib.dump(bundle, MODEL_PATH)
+
+    position_model_path = MODEL_PATH.parent / "position_models.joblib"
+    position_metrics_path = MODEL_PATH.parent / "position_metrics.json"
+    with open(position_metrics_path, "w", encoding="utf-8") as f:
+        json.dump(position_metrics, f, ensure_ascii=False, indent=2)
+
+    if position_metrics.get("target_passed"):
+        second_model = HistGradientBoostingClassifier(
+            max_iter=300, learning_rate=0.045, max_leaf_nodes=31,
+            l2_regularization=0.03, random_state=52,
+        )
+        third_model = HistGradientBoostingClassifier(
+            max_iter=300, learning_rate=0.045, max_leaf_nodes=31,
+            l2_regularization=0.03, random_state=53,
+        )
+        second_model.fit(X_full, pd.to_numeric(df["finish_pos"], errors="coerce").eq(2).astype(int))
+        third_model.fit(X_full, pd.to_numeric(df["finish_pos"], errors="coerce").eq(3).astype(int))
+        joblib.dump(
+            {
+                "second_model": second_model,
+                "third_model": third_model,
+                "fill_values": production_fill_values,
+                "features": FEATURE_COLS,
+                "metrics": position_metrics,
+            },
+            position_model_path,
+        )
+        print(f"promoted position models: {position_model_path}")
+    else:
+        print("position model gate failed; keeping existing production position models")
 
     with open(METRICS_PATH, "w", encoding="utf-8") as f:
         json.dump(metrics, f, ensure_ascii=False, indent=2)
