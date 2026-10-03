@@ -233,7 +233,8 @@ def build_report(selected, summary):
     if selected.empty:
         top = selected
     else:
-        top = selected.sort_values(["date", "venue", "race_no", "candidate_rank"]).head(50)
+        sort_cols = [col for col in ["date", "venue", "race_no", "candidate_rank"] if col in selected.columns]
+        top = selected.sort_values(sort_cols, kind="mergesort").head(50) if sort_cols else selected.head(50)
     for _, row in top.iterrows():
         if not bool(row.get("is_decided", False)):
             result = "未確定"
