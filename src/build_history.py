@@ -356,6 +356,7 @@ def build_history(
     sample_mod=None,
     sample_offset=0,
     min_races=None,
+    merge_existing=False,
 ):
     ensure_dirs()
     cups = collect_cups(months_back=months_back)
@@ -386,6 +387,18 @@ def build_history(
     else:
         race_urls_to_fetch = all_race_urls
 
+    existing_history = pd.DataFrame()
+    existing_odds = pd.DataFrame()
+    if merge_existing:
+        try:
+            existing_history = pd.read_csv(HISTORY_CSV, dtype={"race_id": str, "player_id": str})
+        except (FileNotFoundError, pd.errors.EmptyDataError, pd.errors.ParserError):
+            existing_history = pd.DataFrame()
+        try:
+            existing_odds = pd.read_csv(HISTORY_ODDS_CSV, dtype={"race_id": str, "buy": str, "bet_type": str})
+        except (FileNotFoundError, pd.errors.EmptyDataError, pd.errors.ParserError):
+            existing_odds = pd.DataFrame()
+
     all_rows, all_odds_rows, race_failures = fetch_history_races(
         race_urls_to_fetch, sleep_sec, use_cache, workers=workers, progress_every=progress_every
     )
@@ -395,7 +408,9 @@ def build_history(
         raise ValueError(f"no history rows built: {failures[:3]}")
 
     df = pd.DataFrame(all_rows)
-    df = df.drop_duplicates(["race_id", "player_id"]).sort_values(["date", "venue", "race_no", "car_no"])
+    if merge_existing and len(existing_history):
+        df = pd.concat([existing_history, df], ignore_index=True, sort=False)
+    df = df.drop_duplicates(["race_id", "player_id"], keep="last").sort_values(["date", "venue", "race_no", "car_no"])
     fetched_races = int(df["race_id"].nunique())
     if min_races and fetched_races < int(min_races):
         raise ValueError(
@@ -405,8 +420,10 @@ def build_history(
     df.to_csv(HISTORY_CSV, index=False)
 
     odds_df = pd.DataFrame(all_odds_rows, columns=ODDS_COLUMNS)
+    if merge_existing and len(existing_odds):
+        odds_df = pd.concat([existing_odds, odds_df], ignore_index=True, sort=False)
     if len(odds_df):
-        odds_df = odds_df.drop_duplicates(["race_id", "bet_type", "buy"]).sort_values(
+        odds_df = odds_df.drop_duplicates(["race_id", "bet_type", "buy"], keep="last").sort_values(
             ["date", "venue", "race_no", "bet_type", "popularity_order", "buy"]
         )
     odds_df.to_csv(HISTORY_ODDS_CSV, index=False)
@@ -427,6 +444,8 @@ def build_history(
         "cups": len(cups),
         "candidate_races": len(all_race_urls),
         "fetched_races": len(race_urls_to_fetch),
+        "merge_existing": bool(merge_existing),
+        "existing_races_before_merge": int(existing_history["race_id"].nunique()) if len(existing_history) and "race_id" in existing_history.columns else 0,
         "sample_mod": sample_mod,
         "sample_offset": sample_offset if sample_mod else None,
         "races": int(df["race_id"].nunique()),
@@ -449,6 +468,7 @@ def main():
     parser.add_argument("--max-cups", type=int, default=None)
     parser.add_argument("--max-races", type=int, default=None)
     parser.add_argument("--min-races", type=int, default=None)
+    parser.add_argument("--merge-existing", action="store_true")
     parser.add_argument("--sleep-sec", type=float, default=0.2)
     parser.add_argument("--no-cache", action="store_true")
     parser.add_argument("--workers", type=int, default=1)
@@ -467,6 +487,7 @@ def main():
         sample_mod=args.sample_mod,
         sample_offset=args.sample_offset,
         min_races=args.min_races,
+        merge_existing=args.merge_existing,
     )
 
 
