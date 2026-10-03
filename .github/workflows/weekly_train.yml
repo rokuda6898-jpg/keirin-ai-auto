@@ -39,6 +39,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Validate source and tests
+        run: |
+          python -m compileall -q src tests
+          python -m unittest discover -s tests -p "test_*.py"
+
       - name: Ingest external data if configured
         env:
           KEIRIN_HISTORY_CSV_URL: ${{ secrets.KEIRIN_HISTORY_CSV_URL }}
