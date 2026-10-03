@@ -256,6 +256,54 @@ def _topk_position_coverage(frame, score_col, finish_position, k):
     return float(actual["_rank"].le(k).mean())
 
 
+def _adaptive_trifecta_top10_coverage(frame, second_col, third_col):
+    """Race-level coverage of the actual trifecta inside the model's top 10 tickets."""
+    hits = 0
+    races = 0
+    for _, race in frame.groupby("race_id", sort=False):
+        actual = race[pd.to_numeric(race["finish_pos"], errors="coerce").isin([1, 2, 3])].copy()
+        if len(actual) < 3:
+            continue
+        actual = actual.sort_values("finish_pos")
+        actual_buy = "-".join(str(int(x)) for x in actual["car_no"].tolist()[:3])
+
+        win_ranked = race.sort_values("p_win", ascending=False, kind="mergesort")
+        probs = pd.to_numeric(win_ranked["p_win"], errors="coerce").fillna(0).tolist()
+        if len(probs) < 3:
+            continue
+        margin = float(probs[0] - probs[1])
+        head_count = 1 if margin >= 0.40 else (2 if margin >= 0.03 else 3)
+
+        heads = set(pd.to_numeric(win_ranked.head(head_count)["car_no"], errors="coerce").dropna().astype(int))
+        second_ranked = race.sort_values(second_col, ascending=False, kind="mergesort")
+        third_ranked = race.sort_values(third_col, ascending=False, kind="mergesort")
+        seconds = set(pd.to_numeric(second_ranked.head(min(4, len(race)))["car_no"], errors="coerce").dropna().astype(int))
+        thirds = set(pd.to_numeric(third_ranked.head(min(6, len(race)))["car_no"], errors="coerce").dropna().astype(int))
+
+        candidates = []
+        rows = race[["car_no", "p_win", second_col, third_col]].to_dict("records")
+        for a in rows:
+            for b in rows:
+                for d in rows:
+                    ca, cb, cd = int(a["car_no"]), int(b["car_no"]), int(d["car_no"])
+                    if len({ca, cb, cd}) < 3:
+                        continue
+                    if ca not in heads or cb not in seconds or cd not in thirds:
+                        continue
+                    p1 = float(a["p_win"])
+                    a2 = float(a[second_col]); b2 = float(b[second_col])
+                    a3 = float(a[third_col]); b3 = float(b[third_col]); d3 = float(d[third_col])
+                    p2 = b2 / max(1.0 - a2, 1e-9)
+                    p3 = d3 / max(1.0 - a3 - b3, 1e-9)
+                    prob = max(0.0, min(1.0, p1 * p2 * p3))
+                    candidates.append((prob, f"{ca}-{cb}-{cd}"))
+
+        top10 = sorted(candidates, key=lambda x: x[0], reverse=True)[:10]
+        races += 1
+        hits += int(any(buy == actual_buy for _, buy in top10))
+    return (float(hits / races) if races else None, int(hits), int(races))
+
+
 def evaluate_position_models(train_df, test_df, X_train, X_test, baseline_pred):
     """Train held-out second/third-place specialists and compare to p_win ranking."""
     models = {}
@@ -275,12 +323,33 @@ def evaluate_position_models(train_df, test_df, X_train, X_test, baseline_pred):
         scored = normalize_race_prob(scored, f"p_{name}_raw", f"p_{name}")
         models[name] = model
 
-    base = baseline_pred[["race_id", "finish_pos", "p_win"]].copy()
+    base = test_df[["race_id", "car_no", "finish_pos"]].copy()
+    base["p_win"] = pd.to_numeric(baseline_pred["p_win"], errors="coerce").values
+    base["p_second"] = base["p_win"]
+    base["p_third"] = base["p_win"]
+
+    candidate = test_df[["race_id", "car_no", "finish_pos"]].copy()
+    candidate["p_win"] = pd.to_numeric(baseline_pred["p_win"], errors="coerce").values
+    candidate["p_second"] = pd.to_numeric(scored["p_second"], errors="coerce").values
+    candidate["p_third"] = pd.to_numeric(scored["p_third"], errors="coerce").values
+
+    baseline_tri_rate, baseline_tri_hits, tri_races = _adaptive_trifecta_top10_coverage(
+        base, "p_second", "p_third"
+    )
+    candidate_tri_rate, candidate_tri_hits, _ = _adaptive_trifecta_top10_coverage(
+        candidate, "p_second", "p_third"
+    )
+
     metrics = {
         "second_top4_baseline": _topk_position_coverage(base, "p_win", 2, 4),
-        "second_top4_candidate": _topk_position_coverage(scored, "p_second", 2, 4),
+        "second_top4_candidate": _topk_position_coverage(candidate, "p_second", 2, 4),
         "third_top6_baseline": _topk_position_coverage(base, "p_win", 3, 6),
-        "third_top6_candidate": _topk_position_coverage(scored, "p_third", 3, 6),
+        "third_top6_candidate": _topk_position_coverage(candidate, "p_third", 3, 6),
+        "trifecta_top10_baseline": baseline_tri_rate,
+        "trifecta_top10_candidate": candidate_tri_rate,
+        "trifecta_top10_baseline_hits": baseline_tri_hits,
+        "trifecta_top10_candidate_hits": candidate_tri_hits,
+        "trifecta_top10_races": tri_races,
     }
     gains = []
     for cand_key, base_key in [
@@ -293,15 +362,21 @@ def evaluate_position_models(train_df, test_df, X_train, X_test, baseline_pred):
             gains.append(cand - base_value)
 
     metrics["average_coverage_gain"] = float(np.mean(gains)) if gains else None
+    tri_gain = None
+    if candidate_tri_rate is not None and baseline_tri_rate is not None:
+        tri_gain = float(candidate_tri_rate - baseline_tri_rate)
+    metrics["trifecta_top10_gain"] = tri_gain
     metrics["target_passed"] = bool(
         gains
         and all(gain >= -1e-9 for gain in gains)
         and float(np.mean(gains)) >= 0.005
+        and tri_gain is not None
+        and tri_gain >= 0.005
     )
     metrics["gate_reason"] = (
-        "position specialists improved held-out placement coverage"
+        "position specialists improved held-out placement and trifecta top10 coverage"
         if metrics["target_passed"]
-        else "position specialists did not beat the p_win placement baseline"
+        else "position specialists failed the held-out placement/trifecta coverage gate"
     )
     return models, metrics
 
