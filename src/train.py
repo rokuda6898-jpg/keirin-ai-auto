@@ -427,6 +427,73 @@ def evaluate_position_models(train_df, test_df, X_train, X_test, baseline_pred):
     return {}, metrics
 
 
+def evaluate_incumbent_on_external_test(test_df):
+    """Score the current production bundle only on races after it was trained.
+
+    This avoids declaring a new candidate better by comparing against races that
+    may have already been seen by the incumbent.
+    """
+    if not MODEL_PATH.exists() or not METRICS_PATH.exists():
+        return {
+            "available": False,
+            "reason": "production model or metrics missing",
+        }
+    try:
+        incumbent = joblib.load(MODEL_PATH)
+        incumbent_metrics = json.loads(METRICS_PATH.read_text(encoding="utf-8"))
+        trained_at = pd.Timestamp(incumbent_metrics.get("trained_at_jst"))
+        cutoff = trained_at.tz_localize(None).normalize()
+        external = test_df[pd.to_datetime(test_df["date"]).dt.tz_localize(None) > cutoff].copy()
+        if external["race_id"].nunique() < 500:
+            return {
+                "available": False,
+                "reason": "fewer than 500 fully post-training races are available",
+                "external_races": int(external["race_id"].nunique()),
+                "cutoff_date": str(cutoff.date()),
+            }
+
+        features = list(incumbent.get("features") or [])
+        fills = incumbent.get("fill_values") or {}
+        model = incumbent.get("model")
+        calibrator = incumbent.get("calibrator")
+        if model is None or not hasattr(model, "predict_proba") or not features:
+            return {"available": False, "reason": "production bundle is incomplete"}
+
+        X, _ = prepare_features(external, fills)
+        for col in features:
+            if col not in X.columns:
+                X[col] = float(fills.get(col, 0.0))
+        X = X.reindex(columns=features)
+        raw = model.predict_proba(X)[:, 1]
+        prob = calibrator.predict(raw) if calibrator is not None else raw
+
+        scored = external[["race_id", "finish_pos"]].copy()
+        scored["p_raw"] = np.clip(prob, 1e-9, 1.0)
+        scored = normalize_race_prob(scored)
+        scored["rank_in_race"] = scored.groupby("race_id")["p_win"].rank(
+            ascending=False, method="first"
+        )
+        winners = scored[pd.to_numeric(scored["finish_pos"], errors="coerce").eq(1)]
+        top = scored[scored["rank_in_race"].eq(1)]
+        return {
+            "available": True,
+            "cutoff_date": str(cutoff.date()),
+            "external_races": int(scored["race_id"].nunique()),
+            "top1_hit_rate": float(
+                pd.to_numeric(top["finish_pos"], errors="coerce").eq(1).mean()
+            ) if len(top) else None,
+            "race_logloss": float(
+                -np.log(pd.to_numeric(winners["p_win"], errors="coerce").clip(1e-9, 1.0)).mean()
+            ) if len(winners) else None,
+            "race_ids": set(scored["race_id"].astype(str)),
+        }
+    except Exception as exc:
+        return {
+            "available": False,
+            "reason": f"production comparison failed: {exc}",
+        }
+
+
 def main():
     ensure_dirs()
     ensure_history()
@@ -499,6 +566,64 @@ def main():
         train_df, test_df, X_train, X_test, pred_df
     )
 
+    incumbent_external = evaluate_incumbent_on_external_test(test_df)
+    candidate_external = None
+    promotion_gate = {
+        "target_passed": False,
+        "reason": "external incumbent comparison unavailable",
+    }
+    if incumbent_external.get("available"):
+        external_ids = incumbent_external.pop("race_ids")
+        cand_ext = pred_df[pred_df["race_id"].astype(str).isin(external_ids)].copy()
+        cand_ext["rank_in_race_external"] = cand_ext.groupby("race_id")["p_win"].rank(
+            ascending=False, method="first"
+        )
+        cand_top = cand_ext[cand_ext["rank_in_race_external"].eq(1)]
+        cand_winners = cand_ext[
+            pd.to_numeric(cand_ext["finish_pos"], errors="coerce").eq(1)
+        ]
+        candidate_external = {
+            "external_races": int(cand_ext["race_id"].nunique()),
+            "top1_hit_rate": float(
+                pd.to_numeric(cand_top["finish_pos"], errors="coerce").eq(1).mean()
+            ) if len(cand_top) else None,
+            "race_logloss": float(
+                -np.log(pd.to_numeric(cand_winners["p_win"], errors="coerce").clip(1e-9, 1.0)).mean()
+            ) if len(cand_winners) else None,
+        }
+        incumbent_rate = incumbent_external.get("top1_hit_rate")
+        candidate_rate = candidate_external.get("top1_hit_rate")
+        incumbent_loss = incumbent_external.get("race_logloss")
+        candidate_loss = candidate_external.get("race_logloss")
+        top1_gain = (
+            float(candidate_rate - incumbent_rate)
+            if candidate_rate is not None and incumbent_rate is not None
+            else None
+        )
+        logloss_change = (
+            float(candidate_loss - incumbent_loss)
+            if candidate_loss is not None and incumbent_loss is not None
+            else None
+        )
+        promotion_gate = {
+            "target_passed": bool(
+                candidate_external["external_races"] >= 500
+                and top1_gain is not None
+                and top1_gain >= 0.003
+                and logloss_change is not None
+                and logloss_change <= 0.02
+            ),
+            "external_races": candidate_external["external_races"],
+            "top1_gain": top1_gain,
+            "logloss_change": logloss_change,
+            "rule": ">=500 post-incumbent races, top1 +0.3pp, race logloss no worse than +0.02",
+        }
+        promotion_gate["reason"] = (
+            "candidate beat production on post-training races"
+            if promotion_gate["target_passed"]
+            else "candidate did not beat production on the external promotion gate"
+        )
+
     winner_probs = pred_df[pred_df["finish_pos"] == 1]["p_win"].clip(1e-9, 1.0)
     race_logloss = float(-np.log(winner_probs).mean()) if len(winner_probs) else None
     top1 = pred_df[pred_df["rank_in_race"].eq(1)]
@@ -548,6 +673,9 @@ def main():
         "shadow_race_ranker": ranker_metrics,
         "walk_forward": walk_forward,
         "position_models": position_metrics,
+        "incumbent_external": incumbent_external,
+        "candidate_external": candidate_external,
+        "promotion_gate": promotion_gate,
     }
 
     X_full, production_fill_values = prepare_features(df)
@@ -612,6 +740,17 @@ def main():
 
     with open(METRICS_PATH, "w", encoding="utf-8") as f:
         json.dump(metrics, f, ensure_ascii=False, indent=2)
+    with open(MODEL_PATH.parent / "candidate_promotion.json", "w", encoding="utf-8") as f:
+        json.dump(
+            {
+                "incumbent_external": incumbent_external,
+                "candidate_external": candidate_external,
+                "promotion_gate": promotion_gate,
+            },
+            f,
+            ensure_ascii=False,
+            indent=2,
+        )
 
     print(json.dumps(metrics, ensure_ascii=False, indent=2))
     print(f"saved model: {MODEL_PATH}")
