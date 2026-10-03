@@ -141,6 +141,26 @@ jobs:
           cp /tmp/production_win_model.joblib models/win_model.joblib
           cp /tmp/production_metrics.json models/metrics.json
 
+      - name: Promote candidate only if external gate passes
+        if: steps.history_gate.outputs.ready == 'true'
+        run: |
+          if python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path("models/candidate_promotion.json")
+          if not p.exists():
+              raise SystemExit(1)
+          d = json.loads(p.read_text(encoding="utf-8"))
+          raise SystemExit(0 if d.get("promotion_gate", {}).get("target_passed") else 1)
+          PY
+          then
+            cp models/candidate_win_model.joblib models/win_model.joblib
+            cp models/candidate_metrics.json models/metrics.json
+            echo "Candidate promoted to production."
+          else
+            echo "Candidate failed external promotion gate. Production remains unchanged."
+          fi
+
       - name: Upload model artifact
         uses: actions/upload-artifact@v4
         with:
