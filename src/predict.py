@@ -78,6 +78,8 @@ def filter_trifecta_candidates_by_confidence(candidates, race_df):
     """
     if candidates is None or len(candidates) == 0:
         return candidates
+    if not load_v4_validation_gate().get("target_passed", False):
+        return candidates
     if "bet_type" not in candidates.columns or "buy" not in candidates.columns:
         return candidates
 
@@ -281,9 +283,47 @@ def load_validated_model_bundle():
 
 
 POSITION_MODEL_PATH = MODEL_PATH.parent / "position_models.joblib"
+V4_VALIDATION_PATH = MODEL_PATH.parent / "v4_validation_summary.json"
+
+
+def load_v4_validation_gate():
+    if not V4_VALIDATION_PATH.exists():
+        return {
+            "target_passed": False,
+            "reason": "strict 30000-race v4 validation has not completed",
+            "evaluated_races": 0,
+        }
+    try:
+        result = json.loads(V4_VALIDATION_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return {
+            "target_passed": False,
+            "reason": f"v4 validation result unreadable: {exc}",
+            "evaluated_races": 0,
+        }
+    evaluated = int(result.get("evaluated_races") or 0)
+    passed = bool(result.get("target_passed", False)) and evaluated >= 30000
+    return {
+        **result,
+        "target_passed": passed,
+        "reason": (
+            result.get("gate_rule", "strict v4 validation passed")
+            if passed
+            else result.get("gate_reason", "v4 has not passed strict 30000-race validation")
+        ),
+        "evaluated_races": evaluated,
+    }
 
 
 def load_position_model_bundle():
+    gate = load_v4_validation_gate()
+    if not gate.get("target_passed", False):
+        print(
+            f"v4 locked; using legacy position probabilities: "
+            f"{gate.get('reason')} races={gate.get('evaluated_races', 0)}",
+            flush=True,
+        )
+        return None
     if not POSITION_MODEL_PATH.exists():
         return None
     try:
