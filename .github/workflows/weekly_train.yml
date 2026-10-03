@@ -40,6 +40,8 @@ jobs:
           pip install -r requirements.txt
 
       - name: Validate source and tests
+        env:
+          PYTHONPATH: src
         run: |
           python -m compileall -q src tests
           python -m unittest discover -s tests -p "test_*.py"
