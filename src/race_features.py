@@ -62,9 +62,24 @@ def recent_avg_finish(record, race_date, current_race_id=None):
     return float(np.mean(orders)) if orders else np.nan
 
 
-def current_cup_avg_finish(record):
+def current_cup_avg_finish(record, race_date, current_race_id=None):
+    """Average only already-completed races from the current meeting.
+
+    Historical pages are fetched after the event has finished, so
+    currentCupResults can contain the race being reconstructed (or later
+    meeting results).  Using those rows would leak the answer into training.
+    Restrict the feature strictly to results whose race date is before the
+    target race date and always exclude the current race id.
+    """
+    current = datetime.strptime(str(race_date), "%Y-%m-%d").date()
     orders = []
     for result in record.get("currentCupResults", []) or []:
+        race_id = str(result.get("raceId", ""))
+        if not race_id or race_id == str(current_race_id):
+            continue
+        event_date = _race_date_from_id(race_id)
+        if event_date is None or event_date >= current:
+            continue
         order = _number(result.get("order"))
         if pd.notna(order) and order > 0:
             orders.append(order)
@@ -252,7 +267,7 @@ def build_entry_rows(race_data, race_date, venue, race_no, race_id, source_url, 
                 "style": record.get("style", ""),
                 "recent_avg_finish": recent_avg_finish(record, race_date, current_race_id=race_id),
                 "recent_races_count": len(recent),
-                "current_cup_avg_finish": current_cup_avg_finish(record),
+                "current_cup_avg_finish": current_cup_avg_finish(record, race_date, current_race_id=race_id),
                 "days_since_last_race": days_since_last_race(record, race_date, current_race_id=race_id),
                 "venue_win_rate": np.nan,
                 "track_win_rate": track["win"],
