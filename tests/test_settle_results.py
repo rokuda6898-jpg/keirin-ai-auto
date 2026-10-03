@@ -59,6 +59,10 @@ class SettleResultsTests(unittest.TestCase):
             purchase_plan = output_dir / "purchase_plan.csv"
             summary_csv = output_dir / "settlement_summary.csv"
             report_md = output_dir / "japanese_report.md"
+            prediction_ledger = output_dir / "prediction_ledger.csv"
+            prediction_history = output_dir / "prediction_history.csv"
+            history_html = output_dir / "history.html"
+            latest_results = output_dir / "latest_results.json"
             pd.DataFrame([{
                 "date": "2026-09-24", "venue": "test", "race_no": 1,
                 "race_id": "010120260924", "bet_type": "exacta", "buy": "1-2",
