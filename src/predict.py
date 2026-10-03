@@ -99,8 +99,16 @@ def filter_trifecta_candidates_by_confidence(candidates, race_df):
         mode = "near_tie_3head"
 
     head_cars = set(pd.to_numeric(riders.head(head_count)["car_no"], errors="coerce").dropna().astype(int))
-    second_cars = set(pd.to_numeric(riders.head(min(4, len(riders)))["car_no"], errors="coerce").dropna().astype(int))
-    third_cars = set(pd.to_numeric(riders.head(min(6, len(riders)))["car_no"], errors="coerce").dropna().astype(int))
+    second_ranked = race_df.sort_values(
+        "p_second" if "p_second" in race_df.columns else "p_win",
+        ascending=False, kind="mergesort",
+    )
+    third_ranked = race_df.sort_values(
+        "p_third" if "p_third" in race_df.columns else "p_win",
+        ascending=False, kind="mergesort",
+    )
+    second_cars = set(pd.to_numeric(second_ranked.head(min(4, len(second_ranked)))["car_no"], errors="coerce").dropna().astype(int))
+    third_cars = set(pd.to_numeric(third_ranked.head(min(6, len(third_ranked)))["car_no"], errors="coerce").dropna().astype(int))
 
     out = candidates.copy()
     out["trifecta_portfolio_mode"] = ""
@@ -272,6 +280,71 @@ def load_validated_model_bundle():
     raise RuntimeError(f"production model is invalid and no last-good model exists: {primary_error}")
 
 
+POSITION_MODEL_PATH = MODEL_PATH.parent / "position_models.joblib"
+
+
+def load_position_model_bundle():
+    if not POSITION_MODEL_PATH.exists():
+        return None
+    try:
+        bundle = joblib.load(POSITION_MODEL_PATH)
+        required = {"second_model", "third_model", "fill_values", "features"}
+        if not isinstance(bundle, dict) or not required.issubset(bundle):
+            raise ValueError("position model bundle is incomplete")
+        for key in ["second_model", "third_model"]:
+            if not hasattr(bundle[key], "predict_proba"):
+                raise ValueError(f"{key} has no predict_proba")
+        metrics = bundle.get("metrics", {})
+        if metrics and not bool(metrics.get("target_passed", False)):
+            raise ValueError("position model bundle did not pass validation")
+        return bundle
+    except Exception as exc:
+        print(f"position models unavailable; using p_win fallback: {exc}", flush=True)
+        return None
+
+
+def apply_position_models(pred):
+    """Attach race-normalized second/third probabilities with safe fallback."""
+    out = pred.copy()
+    bundle = load_position_model_bundle()
+    if bundle is None:
+        out["p_second"] = pd.to_numeric(out["p_win"], errors="coerce")
+        out["p_third"] = pd.to_numeric(out["p_win"], errors="coerce")
+        out["position_model_source"] = "p_win_fallback"
+        return out
+
+    try:
+        trained_features = list(bundle["features"])
+        X, _ = prepare_features(out, bundle["fill_values"])
+        for col in trained_features:
+            if col not in X.columns:
+                X[col] = float(bundle["fill_values"].get(col, 0.0))
+        X = X.reindex(columns=trained_features)
+
+        second_raw = bundle["second_model"].predict_proba(X)[:, 1]
+        third_raw = bundle["third_model"].predict_proba(X)[:, 1]
+        if (
+            len(second_raw) != len(out)
+            or len(third_raw) != len(out)
+            or not np.isfinite(second_raw).all()
+            or not np.isfinite(third_raw).all()
+        ):
+            raise ValueError("position model produced invalid probabilities")
+
+        out["p_second_raw"] = np.clip(second_raw, 1e-9, 1.0)
+        out["p_third_raw"] = np.clip(third_raw, 1e-9, 1.0)
+        out = normalize_race_prob(out, "p_second_raw", "p_second")
+        out = normalize_race_prob(out, "p_third_raw", "p_third")
+        out["position_model_source"] = "position_specialists"
+        return out
+    except Exception as exc:
+        print(f"position inference failed; using p_win fallback: {exc}", flush=True)
+        out["p_second"] = pd.to_numeric(out["p_win"], errors="coerce")
+        out["p_third"] = pd.to_numeric(out["p_win"], errors="coerce")
+        out["position_model_source"] = "p_win_fallback"
+        return out
+
+
 def ensure_ready():
     if not TODAY_CSV.exists():
         print("today_entries.csv not found; generating sample data")
@@ -287,15 +360,19 @@ def make_trifecta_candidates(race_df: pd.DataFrame, top_k_riders=None):
     riders = race_df.sort_values("p_win", ascending=False)
     if top_k_riders is not None:
         riders = riders.head(int(top_k_riders))
-    rows = riders[["car_no", "p_win"]].to_dict("records")
+    position_cols = [col for col in ["p_second", "p_third"] if col in riders.columns]
+    rows = riders[["car_no", "p_win", *position_cols]].to_dict("records")
     results = []
 
     for a, b, c in permutations(rows, 3):
         p1 = float(a["p_win"])
-        denom2 = max(1.0 - p1, 1e-9)
-        p2 = float(b["p_win"]) / denom2
-        denom3 = max(1.0 - p1 - float(b["p_win"]), 1e-9)
-        p3 = float(c["p_win"]) / denom3
+        a_second = float(a.get("p_second", a["p_win"]))
+        b_second = float(b.get("p_second", b["p_win"]))
+        a_third = float(a.get("p_third", a["p_win"]))
+        b_third = float(b.get("p_third", b["p_win"]))
+        c_third = float(c.get("p_third", c["p_win"]))
+        p2 = b_second / max(1.0 - a_second, 1e-9)
+        p3 = c_third / max(1.0 - a_third - b_third, 1e-9)
         prob = max(0.0, min(1.0, p1 * p2 * p3))
 
         results.append({
@@ -768,6 +845,7 @@ def main():
     pred["p_raw"] = np.clip(calibrated, 1e-6, 1.0)
     pred = apply_nexus_race_reading(pred)
     pred = apply_validated_top1_consensus(pred)
+    pred = apply_position_models(pred)
     if "odds_win" not in pred.columns:
         pred["odds_win"] = np.nan
     pred["odds_win"] = pd.to_numeric(pred["odds_win"], errors="coerce")
@@ -814,7 +892,7 @@ def main():
     cols = [
         "date", "venue", "race_no", "race_id", "start_at", "close_at", "rank_in_race",
         "car_no", "player_id", "player_name", "style", "score", "odds_win", "odds_move_pct", "odds_move_last_pct", "odds_snapshot_count",
-        "p_win", "p_win_pre_override", "top1_override_applied", "top1_override_reason", "top1_top2_margin", "top1_confidence_class", "place2_rate", "place3_rate", "line_role_place2_rate", "line_role_place3_rate", "nexus_form_adj", "nexus_line_adj", "nexus_style_adj", "nexus_condition_adj", "nexus_uncertainty", "expected_value_win", "stake_yen", "win_return_yen",
+        "p_win", "p_second", "p_third", "position_model_source", "p_win_pre_override", "top1_override_applied", "top1_override_reason", "top1_top2_margin", "top1_confidence_class", "place2_rate", "place3_rate", "line_role_place2_rate", "line_role_place3_rate", "nexus_form_adj", "nexus_line_adj", "nexus_style_adj", "nexus_condition_adj", "nexus_uncertainty", "expected_value_win", "stake_yen", "win_return_yen",
         "win_profit_yen", "loss_amount_yen", "expected_profit_yen",
     ]
     for c in cols:
