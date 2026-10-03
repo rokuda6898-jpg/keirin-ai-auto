@@ -629,6 +629,13 @@ def build_top1_variants(pred):
     ).fillna(0)
     variants["pace_conflict"] = variants["production"] * np.exp(crowded * (-0.09 * attack_z + 0.07 * finish_z))
 
+    # Shadow-only guard against over-promoting pure chasers to Top1. Recent
+    # settled races showed the production Top1 was materially weaker when the
+    # selected rider's style was 追. Keep the penalty mild and audit it before
+    # any live promotion.
+    style = base.get("style", pd.Series("", index=base.index)).astype(str)
+    variants["chaser_guard"] = variants["production"] * np.where(style.eq("追"), 0.85, 1.0)
+
     rows = []
     for name, score in variants.items():
         work = base[["date","venue","race_no","race_id","start_at","close_at","car_no","player_id"]].copy()
@@ -786,6 +793,14 @@ def main():
         lambda s: s.sort_values(ascending=False).iloc[1] if len(s) > 1 else 0.0
     )
     pred["top1_top2_margin"] = np.where(pred["rank_in_race"].eq(1), pred["p_win"] - ordered_prob, np.nan)
+    race_margin = pred.groupby("race_id")["p_win"].transform(
+        lambda s: float(s.nlargest(2).iloc[0] - s.nlargest(2).iloc[1]) if len(s) > 1 else 1.0
+    )
+    pred["top1_confidence_class"] = np.select(
+        [race_margin.ge(0.40), race_margin.ge(0.20), race_margin.ge(0.08)],
+        ["S", "A", "B"],
+        default="C",
+    )
 
     pred["_start_sort"] = pd.to_numeric(pred.get("start_at", np.nan), errors="coerce").fillna(float("inf"))
     sort_cols = ["date", "_start_sort", "venue", "race_no", "rank_in_race"]
@@ -799,7 +814,7 @@ def main():
     cols = [
         "date", "venue", "race_no", "race_id", "start_at", "close_at", "rank_in_race",
         "car_no", "player_id", "player_name", "style", "score", "odds_win", "odds_move_pct", "odds_move_last_pct", "odds_snapshot_count",
-        "p_win", "p_win_pre_override", "top1_override_applied", "top1_override_reason", "top1_top2_margin", "nexus_form_adj", "nexus_line_adj", "nexus_style_adj", "nexus_condition_adj", "nexus_uncertainty", "expected_value_win", "stake_yen", "win_return_yen",
+        "p_win", "p_win_pre_override", "top1_override_applied", "top1_override_reason", "top1_top2_margin", "top1_confidence_class", "place2_rate", "place3_rate", "line_role_place2_rate", "line_role_place3_rate", "nexus_form_adj", "nexus_line_adj", "nexus_style_adj", "nexus_condition_adj", "nexus_uncertainty", "expected_value_win", "stake_yen", "win_return_yen",
         "win_profit_yen", "loss_amount_yen", "expected_profit_yen",
     ]
     for c in cols:
@@ -813,7 +828,7 @@ def main():
     top1_ledger_path = OUTPUT_DIR / "top1_prediction_ledger.csv"
     top1_cols = [
         "date","venue","race_no","race_id","start_at","close_at","car_no","player_id","p_win",
-        "top1_top2_margin","line_position","line_size","style","rider_strength","player_elo",
+        "top1_top2_margin","top1_confidence_class","line_position","line_size","style","rider_strength","player_elo",
         "race_attack_pressure","other_line_attack_pressure",
     ]
     for col in top1_cols:
