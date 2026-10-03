@@ -408,6 +408,21 @@ def audit_prediction_outputs():
     try:
         pred = pd.read_csv(latest, dtype={"race_id": str, "player_id": str})
         entries = pd.read_csv(TODAY_CSV, dtype={"race_id": str, "player_id": str})
+        # Strategy-schema freshness gate: when live ranking logic changes, an
+        # older but structurally valid CSV must not be treated as healthy.
+        # Regenerate predictions so the published output actually uses the
+        # current Top1 consensus guard.
+        required_strategy_columns = {
+            "p_win_pre_override",
+            "top1_override_applied",
+            "top1_override_reason",
+        }
+        missing_strategy_columns = sorted(required_strategy_columns - set(pred.columns))
+        if missing_strategy_columns:
+            problems.append({
+                "type": "prediction_strategy_schema_stale",
+                "missing_columns": missing_strategy_columns,
+            })
         if "player_name" in entries.columns:
             if "player_name" not in pred.columns:
                 problems.append({"type": "prediction_player_name_missing"})
@@ -581,6 +596,7 @@ def repair(problems=None):
     }
     prediction_kinds = {
         "prediction_missing", "prediction_missing_riders", "prediction_player_name_missing", "prediction_unreadable",
+        "prediction_strategy_schema_stale",
         "invalid_prediction_probability", "prediction_probability_not_normalized",
         "prediction_quality_audit_failed", "stale_predictions",
     }
