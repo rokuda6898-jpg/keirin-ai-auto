@@ -18,6 +18,10 @@ class SettleResultsTests(unittest.TestCase):
             purchase_plan = output_dir / "purchase_plan.csv"
             summary_csv = output_dir / "settlement_summary.csv"
             report_md = output_dir / "japanese_report.md"
+            prediction_ledger = output_dir / "prediction_ledger.csv"
+            prediction_history = output_dir / "prediction_history.csv"
+            history_html = output_dir / "history.html"
+            latest_results = output_dir / "latest_results.json"
             pd.DataFrame(
                 columns=["date", "venue", "race_no", "race_id", "bet_type", "buy"]
             ).to_csv(latest_bets, index=False)
@@ -29,6 +33,10 @@ class SettleResultsTests(unittest.TestCase):
                 PURCHASE_PLAN_CSV=purchase_plan,
                 SETTLEMENT_SUMMARY_CSV=summary_csv,
                 REPORT_MD=report_md,
+                PREDICTION_LEDGER_CSV=prediction_ledger,
+                PREDICTION_HISTORY_CSV=prediction_history,
+                HISTORY_HTML=history_html,
+                LATEST_RESULTS_JSON=latest_results,
             ), mock.patch.object(settle_results, "ensure_dirs"), mock.patch.object(
                 settle_results, "fetch_results"
             ) as fetch_results:
@@ -68,6 +76,10 @@ class SettleResultsTests(unittest.TestCase):
                 PURCHASE_PLAN_CSV=purchase_plan,
                 SETTLEMENT_SUMMARY_CSV=summary_csv,
                 REPORT_MD=report_md,
+                PREDICTION_LEDGER_CSV=prediction_ledger,
+                PREDICTION_HISTORY_CSV=prediction_history,
+                HISTORY_HTML=history_html,
+                LATEST_RESULTS_JSON=latest_results,
             ), mock.patch.object(settle_results, "ensure_dirs"), mock.patch.object(
                 settle_results, "fetch_results", return_value=pending
             ):
