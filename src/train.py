@@ -305,80 +305,126 @@ def _adaptive_trifecta_top10_coverage(frame, second_col, third_col):
 
 
 def evaluate_position_models(train_df, test_df, X_train, X_test, baseline_pred):
-    """Train held-out second/third-place specialists and compare to p_win ranking."""
-    models = {}
-    scored = test_df[["race_id", "finish_pos"]].copy()
-    for position, name in [(2, "second"), (3, "third")]:
-        y = pd.to_numeric(train_df["finish_pos"], errors="coerce").eq(position).astype(int)
-        model = HistGradientBoostingClassifier(
-            max_iter=300,
-            learning_rate=0.045,
-            max_leaf_nodes=31,
-            l2_regularization=0.03,
-            random_state=50 + position,
-        )
-        model.fit(X_train, y)
-        raw = model.predict_proba(X_test)[:, 1]
-        scored[f"p_{name}_raw"] = raw
-        scored = normalize_race_prob(scored, f"p_{name}_raw", f"p_{name}")
-        models[name] = model
-
+    """Compare exact-position and cumulative-place specialist variants."""
     base = test_df[["race_id", "car_no", "finish_pos"]].copy()
     base["p_win"] = pd.to_numeric(baseline_pred["p_win"], errors="coerce").values
     base["p_second"] = base["p_win"]
     base["p_third"] = base["p_win"]
 
-    candidate = test_df[["race_id", "car_no", "finish_pos"]].copy()
-    candidate["p_win"] = pd.to_numeric(baseline_pred["p_win"], errors="coerce").values
-    candidate["p_second"] = pd.to_numeric(scored["p_second"], errors="coerce").values
-    candidate["p_third"] = pd.to_numeric(scored["p_third"], errors="coerce").values
-
     baseline_tri_rate, baseline_tri_hits, tri_races = _adaptive_trifecta_top10_coverage(
         base, "p_second", "p_third"
     )
-    candidate_tri_rate, candidate_tri_hits, _ = _adaptive_trifecta_top10_coverage(
-        candidate, "p_second", "p_third"
+    baseline_second = _topk_position_coverage(base, "p_win", 2, 4)
+    baseline_third = _topk_position_coverage(base, "p_win", 3, 6)
+
+    finish_train = pd.to_numeric(train_df["finish_pos"], errors="coerce")
+    variants = {
+        "exact_position": {
+            "second_target": finish_train.eq(2).astype(int),
+            "third_target": finish_train.eq(3).astype(int),
+        },
+        "cumulative_place": {
+            "second_target": finish_train.le(2).astype(int),
+            "third_target": finish_train.le(3).astype(int),
+        },
+    }
+
+    variant_metrics = []
+    variant_models = {}
+    for variant_index, (variant_name, targets) in enumerate(variants.items()):
+        scored = test_df[["race_id", "finish_pos"]].copy()
+        models = {}
+        for offset, name in [(2, "second"), (3, "third")]:
+            model = HistGradientBoostingClassifier(
+                max_iter=300,
+                learning_rate=0.045,
+                max_leaf_nodes=31,
+                l2_regularization=0.03,
+                random_state=60 + variant_index * 10 + offset,
+            )
+            model.fit(X_train, targets[f"{name}_target"])
+            raw = model.predict_proba(X_test)[:, 1]
+            scored[f"p_{name}_raw"] = raw
+            scored = normalize_race_prob(scored, f"p_{name}_raw", f"p_{name}")
+            models[name] = model
+
+        candidate = test_df[["race_id", "car_no", "finish_pos"]].copy()
+        candidate["p_win"] = base["p_win"].values
+        candidate["p_second"] = pd.to_numeric(scored["p_second"], errors="coerce").values
+        candidate["p_third"] = pd.to_numeric(scored["p_third"], errors="coerce").values
+
+        candidate_tri_rate, candidate_tri_hits, _ = _adaptive_trifecta_top10_coverage(
+            candidate, "p_second", "p_third"
+        )
+        second_cov = _topk_position_coverage(candidate, "p_second", 2, 4)
+        third_cov = _topk_position_coverage(candidate, "p_third", 3, 6)
+
+        placement_gains = []
+        if second_cov is not None and baseline_second is not None:
+            placement_gains.append(float(second_cov - baseline_second))
+        if third_cov is not None and baseline_third is not None:
+            placement_gains.append(float(third_cov - baseline_third))
+        tri_gain = (
+            float(candidate_tri_rate - baseline_tri_rate)
+            if candidate_tri_rate is not None and baseline_tri_rate is not None
+            else None
+        )
+
+        passed = bool(
+            placement_gains
+            and all(gain >= -1e-9 for gain in placement_gains)
+            and float(np.mean(placement_gains)) >= 0.005
+            and tri_gain is not None
+            and tri_gain >= 0.005
+        )
+        variant_metrics.append({
+            "variant": variant_name,
+            "second_top4_candidate": second_cov,
+            "third_top6_candidate": third_cov,
+            "average_coverage_gain": float(np.mean(placement_gains)) if placement_gains else None,
+            "trifecta_top10_candidate": candidate_tri_rate,
+            "trifecta_top10_candidate_hits": candidate_tri_hits,
+            "trifecta_top10_gain": tri_gain,
+            "target_passed": passed,
+        })
+        variant_models[variant_name] = models
+
+    eligible = [row for row in variant_metrics if row["target_passed"]]
+    selected = max(
+        eligible,
+        key=lambda row: (
+            row.get("trifecta_top10_candidate") or -1.0,
+            row.get("average_coverage_gain") or -1.0,
+        ),
+        default=None,
     )
 
     metrics = {
-        "second_top4_baseline": _topk_position_coverage(base, "p_win", 2, 4),
-        "second_top4_candidate": _topk_position_coverage(candidate, "p_second", 2, 4),
-        "third_top6_baseline": _topk_position_coverage(base, "p_win", 3, 6),
-        "third_top6_candidate": _topk_position_coverage(candidate, "p_third", 3, 6),
+        "second_top4_baseline": baseline_second,
+        "third_top6_baseline": baseline_third,
         "trifecta_top10_baseline": baseline_tri_rate,
-        "trifecta_top10_candidate": candidate_tri_rate,
         "trifecta_top10_baseline_hits": baseline_tri_hits,
-        "trifecta_top10_candidate_hits": candidate_tri_hits,
         "trifecta_top10_races": tri_races,
+        "variants": variant_metrics,
+        "selected_variant": selected["variant"] if selected else None,
+        "target_passed": bool(selected),
+        "gate_reason": (
+            f"selected {selected['variant']} by held-out trifecta top10 coverage"
+            if selected
+            else "no position specialist variant beat the held-out placement/trifecta gate"
+        ),
     }
-    gains = []
-    for cand_key, base_key in [
-        ("second_top4_candidate", "second_top4_baseline"),
-        ("third_top6_candidate", "third_top6_baseline"),
-    ]:
-        cand = metrics.get(cand_key)
-        base_value = metrics.get(base_key)
-        if cand is not None and base_value is not None:
-            gains.append(cand - base_value)
-
-    metrics["average_coverage_gain"] = float(np.mean(gains)) if gains else None
-    tri_gain = None
-    if candidate_tri_rate is not None and baseline_tri_rate is not None:
-        tri_gain = float(candidate_tri_rate - baseline_tri_rate)
-    metrics["trifecta_top10_gain"] = tri_gain
-    metrics["target_passed"] = bool(
-        gains
-        and all(gain >= -1e-9 for gain in gains)
-        and float(np.mean(gains)) >= 0.005
-        and tri_gain is not None
-        and tri_gain >= 0.005
-    )
-    metrics["gate_reason"] = (
-        "position specialists improved held-out placement and trifecta top10 coverage"
-        if metrics["target_passed"]
-        else "position specialists failed the held-out placement/trifecta coverage gate"
-    )
-    return models, metrics
+    if selected:
+        metrics.update({
+            "second_top4_candidate": selected["second_top4_candidate"],
+            "third_top6_candidate": selected["third_top6_candidate"],
+            "average_coverage_gain": selected["average_coverage_gain"],
+            "trifecta_top10_candidate": selected["trifecta_top10_candidate"],
+            "trifecta_top10_candidate_hits": selected["trifecta_top10_candidate_hits"],
+            "trifecta_top10_gain": selected["trifecta_top10_gain"],
+        })
+        return variant_models[selected["variant"]], metrics
+    return {}, metrics
 
 
 def main():
@@ -530,22 +576,32 @@ def main():
         json.dump(position_metrics, f, ensure_ascii=False, indent=2)
 
     if position_metrics.get("target_passed"):
+        selected_variant = position_metrics.get("selected_variant")
+        finish_full = pd.to_numeric(df["finish_pos"], errors="coerce")
+        if selected_variant == "cumulative_place":
+            second_target = finish_full.le(2).astype(int)
+            third_target = finish_full.le(3).astype(int)
+        else:
+            second_target = finish_full.eq(2).astype(int)
+            third_target = finish_full.eq(3).astype(int)
+
         second_model = HistGradientBoostingClassifier(
             max_iter=300, learning_rate=0.045, max_leaf_nodes=31,
-            l2_regularization=0.03, random_state=52,
+            l2_regularization=0.03, random_state=72,
         )
         third_model = HistGradientBoostingClassifier(
             max_iter=300, learning_rate=0.045, max_leaf_nodes=31,
-            l2_regularization=0.03, random_state=53,
+            l2_regularization=0.03, random_state=73,
         )
-        second_model.fit(X_full, pd.to_numeric(df["finish_pos"], errors="coerce").eq(2).astype(int))
-        third_model.fit(X_full, pd.to_numeric(df["finish_pos"], errors="coerce").eq(3).astype(int))
+        second_model.fit(X_full, second_target)
+        third_model.fit(X_full, third_target)
         joblib.dump(
             {
                 "second_model": second_model,
                 "third_model": third_model,
                 "fill_values": production_fill_values,
                 "features": FEATURE_COLS,
+                "variant": selected_variant,
                 "metrics": position_metrics,
             },
             position_model_path,
