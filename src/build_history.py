@@ -103,7 +103,7 @@ def collect_race_urls_for_cup(cup):
 
 
 RACE_CACHE_DIR = RAW_DIR / "race_cache"
-CACHE_VERSION = 3
+CACHE_VERSION = 4
 ODDS_COLUMNS = [
     "date",
     "venue",
