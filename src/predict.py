@@ -78,8 +78,6 @@ def filter_trifecta_candidates_by_confidence(candidates, race_df):
     """
     if candidates is None or len(candidates) == 0:
         return candidates
-    if not load_v4_validation_gate().get("target_passed", False):
-        return candidates
     if "bet_type" not in candidates.columns or "buy" not in candidates.columns:
         return candidates
 
@@ -981,7 +979,8 @@ def main():
         if pd.isna(seconds_to_close) or seconds_to_close <= 300 or seconds_to_close > max_seconds_to_close:
             continue
         candidates = make_multi_bet_candidates(g, top_k=min(len(g), 9))
-        candidates = filter_trifecta_candidates_by_confidence(candidates, g)
+        if load_v4_validation_gate().get("target_passed", False):
+            candidates = filter_trifecta_candidates_by_confidence(candidates, g)
         race_odds = today_odds[today_odds["race_id"].eq(str(race_id))]
         if len(candidates) == 0 or len(race_odds) == 0:
             continue
