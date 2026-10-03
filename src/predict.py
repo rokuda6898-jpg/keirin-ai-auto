@@ -67,6 +67,62 @@ def get_int_env(name, default):
 
 
 
+def filter_trifecta_candidates_by_confidence(candidates, race_df):
+    """Keep a 10-point trifecta pool aligned with Top1 confidence.
+
+    Validation on the latest settled races showed that using the same
+    first-place breadth for every race wastes tickets.  Clear races keep a
+    single head; ordinary close races use two; near-ties use three.  Second and
+    third position breadth stays wider because most misses occur behind the
+    winner rather than at the winner alone.
+    """
+    if candidates is None or len(candidates) == 0:
+        return candidates
+    if "bet_type" not in candidates.columns or "buy" not in candidates.columns:
+        return candidates
+
+    riders = race_df.sort_values("p_win", ascending=False, kind="mergesort").copy()
+    if len(riders) < 3:
+        return candidates
+
+    probs = pd.to_numeric(riders["p_win"], errors="coerce").fillna(0.0).tolist()
+    margin = float(probs[0] - probs[1]) if len(probs) >= 2 else 1.0
+
+    if margin >= 0.40:
+        head_count = 1
+        mode = "clear_1head"
+    elif margin >= 0.03:
+        head_count = 2
+        mode = "balanced_2head"
+    else:
+        head_count = 3
+        mode = "near_tie_3head"
+
+    head_cars = set(pd.to_numeric(riders.head(head_count)["car_no"], errors="coerce").dropna().astype(int))
+    second_cars = set(pd.to_numeric(riders.head(min(4, len(riders)))["car_no"], errors="coerce").dropna().astype(int))
+    third_cars = set(pd.to_numeric(riders.head(min(6, len(riders)))["car_no"], errors="coerce").dropna().astype(int))
+
+    out = candidates.copy()
+    out["trifecta_portfolio_mode"] = ""
+    tri_mask = out["bet_type"].eq("trifecta")
+    if not tri_mask.any():
+        return out
+
+    def allowed(row):
+        try:
+            first, second, third = (int(x) for x in str(row["buy"]).split("-"))
+        except (TypeError, ValueError):
+            return False
+        return first in head_cars and second in second_cars and third in third_cars
+
+    keep_tri = out.loc[tri_mask].apply(allowed, axis=1)
+    keep = (~tri_mask).copy()
+    keep.loc[tri_mask] = keep_tri.values
+    out = out.loc[keep].copy()
+    out.loc[out["bet_type"].eq("trifecta"), "trifecta_portfolio_mode"] = mode
+    return out
+
+
 def rider_display_name(row):
     value = getattr(row, "player_name", "")
     try:
@@ -792,6 +848,7 @@ def main():
         if pd.isna(seconds_to_close) or seconds_to_close <= 300 or seconds_to_close > max_seconds_to_close:
             continue
         candidates = make_multi_bet_candidates(g, top_k=min(len(g), 9))
+        candidates = filter_trifecta_candidates_by_confidence(candidates, g)
         race_odds = today_odds[today_odds["race_id"].eq(str(race_id))]
         if len(candidates) == 0 or len(race_odds) == 0:
             continue
@@ -814,6 +871,7 @@ def main():
                 "bet_type": cand["bet_type"],
                 "bet_label": BET_LABELS.get(cand["bet_type"], cand["bet_type"]),
                 "candidate_rank": int(cand["candidate_rank"]),
+                "trifecta_portfolio_mode": cand.get("trifecta_portfolio_mode", ""),
                 "buy": cand["buy"],
                 "prob": cand["prob"],
                 "odds_used": cand["odds_used"],
