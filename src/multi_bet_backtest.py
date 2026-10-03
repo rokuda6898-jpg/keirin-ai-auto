@@ -68,15 +68,28 @@ def pl2(a, b):
 
 
 def pl3(a, b, c):
+    """Approximate ordered trifecta probability with position-specific models.
+
+    p_win, p_second and p_third are each normalized within the race.  When
+    position models are unavailable the latter two fall back to p_win, which
+    reproduces the legacy behaviour.
+    """
     p1 = float(a["p_win"])
-    p2 = float(b["p_win"]) / max(1.0 - p1, 1e-9)
-    p3 = float(c["p_win"]) / max(1.0 - p1 - float(b["p_win"]), 1e-9)
+    a_second = float(a.get("p_second", a["p_win"]))
+    b_second = float(b.get("p_second", b["p_win"]))
+    a_third = float(a.get("p_third", a["p_win"]))
+    b_third = float(b.get("p_third", b["p_win"]))
+    c_third = float(c.get("p_third", c["p_win"]))
+
+    p2 = b_second / max(1.0 - a_second, 1e-9)
+    p3 = c_third / max(1.0 - a_third - b_third, 1e-9)
     return max(0.0, min(1.0, p1 * p2 * p3))
 
 
 def make_candidates(race_df, top_k=5):
     riders = race_df.sort_values("p_win", ascending=False).head(top_k)
-    rows = riders[["car_no", "p_win"]].to_dict("records")
+    position_cols = [col for col in ["p_second", "p_third"] if col in riders.columns]
+    rows = riders[["car_no", "p_win", *position_cols]].to_dict("records")
     cars = [int(r["car_no"]) for r in rows]
     by_car = {int(r["car_no"]): r for r in rows}
     out = []
