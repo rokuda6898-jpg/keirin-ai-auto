@@ -39,6 +39,19 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Restore accumulated history cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            data/raw/history.csv
+            data/raw/history_odds.csv
+            data/raw/history_trifecta_odds.csv
+            data/raw/history_metadata.json
+            data/raw/race_cache
+          key: keirin-history-v4-${{ github.run_id }}
+          restore-keys: |
+            keirin-history-v4-
+
       - name: Validate source and tests
         env:
           PYTHONPATH: src
@@ -57,13 +70,16 @@ jobs:
         env:
           KEIRIN_HISTORY_CSV_URL: ${{ secrets.KEIRIN_HISTORY_CSV_URL }}
           HISTORY_MONTHS_BACK: 24
-          HISTORY_MAX_RACES: 5000
-          HISTORY_MIN_RACES: 4500
+          HISTORY_MAX_RACES: 9000
+          HISTORY_MIN_RACES: 7000
+          HISTORY_SAMPLE_MOD: 4
           HISTORY_WORKERS: 8
           WINTICKET_MIN_REQUEST_INTERVAL_SEC: 0.25
         run: |
           if [ -z "$KEIRIN_HISTORY_CSV_URL" ]; then
-            python src/build_history.py --months-back "$HISTORY_MONTHS_BACK" --max-races "$HISTORY_MAX_RACES" --min-races "$HISTORY_MIN_RACES" --workers "$HISTORY_WORKERS" --sleep-sec 0 --progress-every 250
+            HISTORY_SAMPLE_OFFSET=$(( GITHUB_RUN_NUMBER % HISTORY_SAMPLE_MOD ))
+            echo "history shard: ${HISTORY_SAMPLE_OFFSET}/${HISTORY_SAMPLE_MOD}"
+            python src/build_history.py --months-back "$HISTORY_MONTHS_BACK" --max-races "$HISTORY_MAX_RACES" --min-races "$HISTORY_MIN_RACES" --sample-mod "$HISTORY_SAMPLE_MOD" --sample-offset "$HISTORY_SAMPLE_OFFSET" --merge-existing --workers "$HISTORY_WORKERS" --sleep-sec 0 --progress-every 250
           else
             echo "KEIRIN_HISTORY_CSV_URL is configured; skip WINTICKET history build"
           fi
