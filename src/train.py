@@ -640,6 +640,11 @@ def main():
 
     ablations = [
         evaluate_feature_ablation(df, train_df, calib_df, test_df, [], "all_features_calibrated"),
+        # Live-parity checks: the morning production feed currently has these
+        # fields entirely missing, so historical accuracy must also be measured
+        # without them before a candidate can be trusted for live promotion.
+        evaluate_feature_ablation(df, train_df, calib_df, test_df, ["odds_win"], "live_parity_no_win_odds"),
+        evaluate_feature_ablation(df, train_df, calib_df, test_df, ["odds_win","venue_win_rate"], "live_parity_current_feed"),
         evaluate_feature_ablation(df, train_df, calib_df, test_df, ["player_id_code"], "no_player_id"),
         evaluate_feature_ablation(df, train_df, calib_df, test_df, ["car_no","bracket_no"], "no_car_bracket"),
         evaluate_feature_ablation(df, train_df, calib_df, test_df, ["player_id_code","car_no","bracket_no"], "no_identity_or_gate"),
