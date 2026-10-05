@@ -224,22 +224,21 @@ def main():
     )
     net_hits = live_hits - production_hits
 
-    # Fit the shadow artifact on every currently labeled real snapshot. The
-    # held-out metrics above remain untouched and govern eligibility.
-    X_full, full_fills = build_live_matrix_from_snapshot_rows(df)
-    y_full = pd.to_numeric(df["label_finish_pos"], errors="coerce").eq(1).astype(int)
-    final_model = model()
-    final_model.fit(X_full, y_full)
-
+    # Deploy exactly the model that produced the calibration-block raw
+    # probabilities. Re-fitting a different model on calibration/test rows and
+    # attaching the old isotonic map would make its probability calibration
+    # invalid. The newest 15% therefore remains truly untouched.
     joblib.dump(
         {
-            "model": final_model,
+            "model": live_model,
             "calibrator": calibrator,
             "features": LIVE_FEATURES,
-            "fill_values": full_fills,
-            "training_scope": "real_pre_race_model_ready_snapshots",
-            "trained_races": races,
-            "trained_dates": dates,
+            "fill_values": fills,
+            "training_scope": "chronological_70pct_fit_15pct_calibration_15pct_untouched_test",
+            "trained_races": int(fit["race_id"].nunique()),
+            "trained_dates": int(fit["date"].dt.date.nunique()),
+            "calibration_races": int(calib["race_id"].nunique()),
+            "test_races": int(test["race_id"].nunique()),
         },
         MODEL_PATH,
     )
