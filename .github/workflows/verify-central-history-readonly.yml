@@ -27,17 +27,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Restore latest intraday central history read-only
-        id: central_history
-        uses: actions/cache/restore@v4
-        with:
-          path: data/raw/history.csv
-          key: readonly-central-history-${{ github.run_id }}
-          restore-keys: |
-            keirin-central-history-v1-
-
-      - name: Bootstrap from accumulated weekly history cache read-only
-        if: steps.central_history.outputs.cache-matched-key == ''
+      - name: Restore strict validated central baseline
         uses: actions/cache/restore@v4
         with:
           path: |
@@ -46,27 +36,41 @@ jobs:
             data/raw/history_trifecta_odds.csv
             data/raw/history_metadata.json
             data/raw/race_cache
-          key: readonly-weekly-history-${{ github.run_id }}
+          key: central-bootstrap-from-validation-${{ github.run_id }}
           restore-keys: |
-            keirin-history-v4-
+            keirin-v4-validation-
 
-      - name: Verify history exists
+      - name: Verify validated baseline
         run: |
           test -s data/raw/history.csv
           python - <<'PY'
           import pandas as pd
           df = pd.read_csv("data/raw/history.csv", dtype={"race_id": str, "player_id": str})
-          print({"before_rows": len(df), "before_races": int(df["race_id"].nunique())})
+          races = int(df["race_id"].nunique())
+          rows = int(len(df))
+          print({"before_rows": rows, "before_races": races})
+          if races < 45000:
+              raise SystemExit(f"validated baseline too small: {races}")
           PY
 
       - name: Refresh today entries
         run: python src/fetch_today_entries.py
 
-      - name: Append confirmed races in disposable workspace
-        run: python src/append_confirmed_history.py
+      - name: Append confirmed races to validated baseline
+        run: python src/append_confirmed_history.py --min-existing-races 45000
 
-      - name: Print verification summary
-        run: cat outputs/central_history_append_summary.json
+      - name: Verify final central history
+        run: |
+          cat outputs/central_history_append_summary.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d = json.loads(Path("outputs/central_history_append_summary.json").read_text())
+          if int(d["history_races"]) < int(d["history_races_before"]):
+              raise SystemExit("central history regressed")
+          if int(d["history_races_before"]) < 45000:
+              raise SystemExit("baseline guard failed")
+          PY
 
       - name: Persist verified central history
         uses: actions/cache/save@v4
