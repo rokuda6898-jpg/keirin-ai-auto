@@ -283,6 +283,11 @@ jobs:
         run: |
           python src/train_commander_selector.py
 
+      - name: Refresh company after engine lab validation
+        if: steps.history_gate.outputs.ready == 'true'
+        run: |
+          python src/company_knowledge.py --mode weekly
+
       - name: Restore gated production model
         if: steps.history_gate.outputs.ready == 'true'
         run: |
