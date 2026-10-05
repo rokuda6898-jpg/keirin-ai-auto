@@ -87,6 +87,17 @@ def main():
 
     X_train, fills = prepare_x(train)
     y_train = train["target"]
+    if y_train.nunique() < 2:
+        metrics = {
+            "trained_at_jst": datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(timespec="seconds"),
+            "role": "shadow_trifecta_combination_reranker",
+            "status": "insufficient_label_diversity",
+            "training_races": int(train["race_id"].nunique()),
+            "production_auto_promotion": False,
+        }
+        METRICS_JSON.write_text(json.dumps(metrics, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(json.dumps(metrics, ensure_ascii=False, indent=2))
+        return
     model, pos_weight = fit_model(X_train, y_train)
 
     X_test, _ = prepare_x(test, fills)
