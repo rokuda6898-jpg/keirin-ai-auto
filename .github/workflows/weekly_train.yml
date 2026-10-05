@@ -21,7 +21,10 @@ permissions:
   contents: write
 
 concurrency:
-  group: keirin-repo-writer
+  # Keep long model training isolated from the 10-minute site-manager queue.
+  # GitHub keeps only one pending run per concurrency group, so sharing the
+  # writer group caused scheduled manager runs to cancel a waiting retrain.
+  group: keirin-weekly-train
   cancel-in-progress: false
 
 jobs:
