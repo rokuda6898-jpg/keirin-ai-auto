@@ -27,6 +27,9 @@ from common import (
 )
 
 
+LIVE_PARITY_MASK_FEATURES = ("odds_win", "venue_win_rate")
+
+
 def ensure_history():
     if not HISTORY_CSV.exists():
         print("history.csv not found; generating sample data")
@@ -427,7 +430,41 @@ def evaluate_position_models(train_df, test_df, X_train, X_test, baseline_pred):
     return {}, metrics
 
 
-def evaluate_incumbent_on_external_test(test_df):
+def score_top1_model_on_frame(model, calibrator, fill_values, features, frame, masked_features=()):
+    """Score one fixed model on a race frame, optionally masking live-missing fields."""
+    work = frame.copy()
+    for col in masked_features:
+        if col in work.columns:
+            work[col] = np.nan
+
+    X, _ = prepare_features(work, fill_values)
+    for col in features:
+        if col not in X.columns:
+            X[col] = float(fill_values.get(col, 0.0))
+    X = X.reindex(columns=features)
+    raw = model.predict_proba(X)[:, 1]
+    prob = calibrator.predict(raw) if calibrator is not None else raw
+
+    scored = frame[["race_id", "finish_pos"]].copy()
+    scored["p_raw"] = np.clip(prob, 1e-9, 1.0)
+    scored = normalize_race_prob(scored)
+    scored["rank_in_race"] = scored.groupby("race_id")["p_win"].rank(
+        ascending=False, method="first"
+    )
+    winners = scored[pd.to_numeric(scored["finish_pos"], errors="coerce").eq(1)]
+    top = scored[scored["rank_in_race"].eq(1)]
+    return {
+        "external_races": int(scored["race_id"].nunique()),
+        "top1_hit_rate": float(
+            pd.to_numeric(top["finish_pos"], errors="coerce").eq(1).mean()
+        ) if len(top) else None,
+        "race_logloss": float(
+            -np.log(pd.to_numeric(winners["p_win"], errors="coerce").clip(1e-9, 1.0)).mean()
+        ) if len(winners) else None,
+    }
+
+
+def evaluate_incumbent_on_external_test(test_df, masked_features=()):
     """Score the current production bundle only on races after it was trained.
 
     This avoids declaring a new candidate better by comparing against races that
@@ -459,33 +496,15 @@ def evaluate_incumbent_on_external_test(test_df):
         if model is None or not hasattr(model, "predict_proba") or not features:
             return {"available": False, "reason": "production bundle is incomplete"}
 
-        X, _ = prepare_features(external, fills)
-        for col in features:
-            if col not in X.columns:
-                X[col] = float(fills.get(col, 0.0))
-        X = X.reindex(columns=features)
-        raw = model.predict_proba(X)[:, 1]
-        prob = calibrator.predict(raw) if calibrator is not None else raw
-
-        scored = external[["race_id", "finish_pos"]].copy()
-        scored["p_raw"] = np.clip(prob, 1e-9, 1.0)
-        scored = normalize_race_prob(scored)
-        scored["rank_in_race"] = scored.groupby("race_id")["p_win"].rank(
-            ascending=False, method="first"
+        metrics = score_top1_model_on_frame(
+            model, calibrator, fills, features, external, masked_features=masked_features
         )
-        winners = scored[pd.to_numeric(scored["finish_pos"], errors="coerce").eq(1)]
-        top = scored[scored["rank_in_race"].eq(1)]
         return {
             "available": True,
             "cutoff_date": str(cutoff.date()),
-            "external_races": int(scored["race_id"].nunique()),
-            "top1_hit_rate": float(
-                pd.to_numeric(top["finish_pos"], errors="coerce").eq(1).mean()
-            ) if len(top) else None,
-            "race_logloss": float(
-                -np.log(pd.to_numeric(winners["p_win"], errors="coerce").clip(1e-9, 1.0)).mean()
-            ) if len(winners) else None,
-            "race_ids": set(scored["race_id"].astype(str)),
+            **metrics,
+            "masked_features": list(masked_features),
+            "race_ids": set(external["race_id"].astype(str)),
         }
     except Exception as exc:
         return {
@@ -567,13 +586,18 @@ def main():
     )
 
     incumbent_external = evaluate_incumbent_on_external_test(test_df)
+    incumbent_live_parity = evaluate_incumbent_on_external_test(
+        test_df, masked_features=LIVE_PARITY_MASK_FEATURES
+    )
     candidate_external = None
+    candidate_live_parity = None
     promotion_gate = {
         "target_passed": False,
         "reason": "external incumbent comparison unavailable",
     }
-    if incumbent_external.get("available"):
+    if incumbent_external.get("available") and incumbent_live_parity.get("available"):
         external_ids = incumbent_external.pop("race_ids")
+        incumbent_live_parity.pop("race_ids", None)
         cand_ext = pred_df[pred_df["race_id"].astype(str).isin(external_ids)].copy()
         cand_ext["rank_in_race_external"] = cand_ext.groupby("race_id")["p_win"].rank(
             ascending=False, method="first"
@@ -591,6 +615,11 @@ def main():
                 -np.log(pd.to_numeric(cand_winners["p_win"], errors="coerce").clip(1e-9, 1.0)).mean()
             ) if len(cand_winners) else None,
         }
+        external_frame = test_df[test_df["race_id"].astype(str).isin(external_ids)].copy()
+        candidate_live_parity = score_top1_model_on_frame(
+            model, calibrator, fill_values, list(X_train.columns), external_frame,
+            masked_features=LIVE_PARITY_MASK_FEATURES,
+        )
         incumbent_rate = incumbent_external.get("top1_hit_rate")
         candidate_rate = candidate_external.get("top1_hit_rate")
         incumbent_loss = incumbent_external.get("race_logloss")
@@ -605,6 +634,20 @@ def main():
             if candidate_loss is not None and incumbent_loss is not None
             else None
         )
+        live_incumbent_rate = incumbent_live_parity.get("top1_hit_rate")
+        live_candidate_rate = candidate_live_parity.get("top1_hit_rate") if candidate_live_parity else None
+        live_incumbent_loss = incumbent_live_parity.get("race_logloss")
+        live_candidate_loss = candidate_live_parity.get("race_logloss") if candidate_live_parity else None
+        live_top1_gain = (
+            float(live_candidate_rate - live_incumbent_rate)
+            if live_candidate_rate is not None and live_incumbent_rate is not None
+            else None
+        )
+        live_logloss_change = (
+            float(live_candidate_loss - live_incumbent_loss)
+            if live_candidate_loss is not None and live_incumbent_loss is not None
+            else None
+        )
         promotion_gate = {
             "target_passed": bool(
                 candidate_external["external_races"] >= 500
@@ -612,11 +655,18 @@ def main():
                 and top1_gain >= 0.003
                 and logloss_change is not None
                 and logloss_change <= 0.02
+                and live_top1_gain is not None
+                and live_top1_gain >= 0.003
+                and live_logloss_change is not None
+                and live_logloss_change <= 0.02
             ),
             "external_races": candidate_external["external_races"],
             "top1_gain": top1_gain,
             "logloss_change": logloss_change,
-            "rule": ">=500 post-incumbent races, top1 +0.3pp, race logloss no worse than +0.02",
+            "live_parity_masked_features": list(LIVE_PARITY_MASK_FEATURES),
+            "live_parity_top1_gain": live_top1_gain,
+            "live_parity_logloss_change": live_logloss_change,
+            "rule": ">=500 post-incumbent races; normal and live-parity top1 each +0.3pp; race logloss each no worse than +0.02",
         }
         promotion_gate["reason"] = (
             "candidate beat production on post-training races"
@@ -680,6 +730,8 @@ def main():
         "position_models": position_metrics,
         "incumbent_external": incumbent_external,
         "candidate_external": candidate_external,
+        "incumbent_live_parity": incumbent_live_parity,
+        "candidate_live_parity": candidate_live_parity,
         "promotion_gate": promotion_gate,
     }
 
@@ -750,6 +802,8 @@ def main():
             {
                 "incumbent_external": incumbent_external,
                 "candidate_external": candidate_external,
+                "incumbent_live_parity": incumbent_live_parity,
+                "candidate_live_parity": candidate_live_parity,
                 "promotion_gate": promotion_gate,
             },
             f,
