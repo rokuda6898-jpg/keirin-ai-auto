@@ -864,6 +864,52 @@ def build_policy_shadow_variants(pred):
     return pd.DataFrame(rows)
 
 
+def save_trifecta_top10_ledger(pred, now_jst):
+    path = OUTPUT_DIR / "trifecta_top10_prediction_ledger.csv"
+    rows = []
+    current_races = set()
+
+    for race_id, g in pred.groupby("race_id", sort=False):
+        current_races.add(str(race_id))
+        base = g.iloc[0]
+        candidates = make_multi_bet_candidates(g, top_k=min(len(g), 9))
+        if load_v4_validation_gate().get("target_passed", False):
+            candidates = filter_trifecta_candidates_by_confidence(candidates, g)
+        tri = candidates[candidates["bet_type"].eq("trifecta")].copy() if len(candidates) else pd.DataFrame()
+        if tri.empty:
+            continue
+        tri["prob"] = pd.to_numeric(tri["prob"], errors="coerce")
+        tri = tri.sort_values("prob", ascending=False).head(10).reset_index(drop=True)
+        for rank, (_, cand) in enumerate(tri.iterrows(), start=1):
+            rows.append({
+                "date": base.get("date", ""),
+                "venue": base.get("venue", ""),
+                "race_no": base.get("race_no", ""),
+                "race_id": str(race_id),
+                "start_at": base.get("start_at", np.nan),
+                "close_at": base.get("close_at", np.nan),
+                "ticket_rank": rank,
+                "buy": str(cand.get("buy", "")),
+                "prob": cand.get("prob", np.nan),
+                "trifecta_portfolio_mode": cand.get("trifecta_portfolio_mode", ""),
+                "prediction_created_at_jst": now_jst.isoformat(timespec="seconds"),
+            })
+
+    current = pd.DataFrame(rows)
+    try:
+        old = pd.read_csv(path, dtype={"race_id": str, "buy": str})
+    except (FileNotFoundError, pd.errors.EmptyDataError, pd.errors.ParserError):
+        old = pd.DataFrame()
+
+    if len(old) and current_races:
+        old = old[~old["race_id"].astype(str).isin(current_races)]
+    combined = pd.concat([old, current], ignore_index=True, sort=False)
+    if len(combined):
+        combined = combined.drop_duplicates(["race_id", "ticket_rank"], keep="last")
+    combined.to_csv(path, index=False)
+    return current
+
+
 def save_top1_variants(pred, now_jst):
     path = OUTPUT_DIR / "top1_variant_ledger.csv"
     current = build_top1_variants(pred)
@@ -1089,6 +1135,7 @@ def main():
     top1_ledger = top1_ledger.drop_duplicates(["date", "race_id"], keep="last")
     top1_ledger.to_csv(top1_ledger_path, index=False)
     save_top1_variants(pred, now_jst)
+    save_trifecta_top10_ledger(pred, now_jst)
 
     bet_rows = []
     today_odds = load_today_odds()
