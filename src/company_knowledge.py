@@ -25,6 +25,7 @@ PRODUCTION_REPLAY_SUMMARY = OUTPUT_DIR / "production_replay_summary.json"
 LIVE_SNAPSHOT_SUMMARY = OUTPUT_DIR / "live_snapshot_learning_summary.json"
 TRIFECTA_RERANKER_METRICS = MODEL_DIR / "trifecta_reranker_metrics.json"
 COMMANDER_SELECTOR_METRICS = MODEL_DIR / "commander_selector_metrics.json"
+LIVE_SNAPSHOT_MODEL_METRICS = MODEL_DIR / "live_snapshot_model_metrics.json"
 
 
 def now_jst():
@@ -701,11 +702,13 @@ def run(mode):
     trifecta_reranker = read_json(TRIFECTA_RERANKER_METRICS)
     commander_selector = read_json(COMMANDER_SELECTOR_METRICS)
     live_snapshots = read_json(LIVE_SNAPSHOT_SUMMARY)
+    live_snapshot_model = read_json(LIVE_SNAPSHOT_MODEL_METRICS)
     engine_lab = {
         "production_replay": replay,
         "trifecta_reranker": trifecta_reranker,
         "commander_selector": commander_selector,
         "live_snapshot_learning": live_snapshots,
+        "live_snapshot_model": live_snapshot_model,
     }
     strategist["engine_lab"] = engine_lab
 
@@ -737,6 +740,37 @@ def run(mode):
                     "production_hit_rate": commander_selector.get("production_hit_rate"),
                     "commander_hit_rate": commander_selector.get("commander_hit_rate"),
                     "delta_pp": commander_delta,
+                },
+            }
+        )
+
+    live_snapshot_delta = num(live_snapshot_model.get("delta_pp"))
+    if live_snapshot_model.get("status") == "collecting":
+        strategist["recommended_actions"].append(
+            {
+                "priority": 2,
+                "type": "live_snapshot_collection",
+                "action": "continue collecting exact real pre-race model inputs until the 500-race shadow-training floor is reached",
+                "evidence": {
+                    "labeled_model_ready_races": live_snapshot_model.get("labeled_model_ready_races", live_snapshots.get("labeled_model_ready_races")),
+                    "shadow_training_floor_races": live_snapshot_model.get("shadow_training_floor_races", 500),
+                },
+            }
+        )
+    elif live_snapshot_delta is not None:
+        strategist["recommended_actions"].append(
+            {
+                "priority": 1 if live_snapshot_model.get("status") == "eligible_for_prospective_audit" else 2,
+                "type": "live_snapshot_model_shadow",
+                "action": "keep the real-snapshot model in prospective same-race shadow competition; external review only after the 1500-race gate",
+                "evidence": {
+                    "status": live_snapshot_model.get("status"),
+                    "labeled_model_ready_races": live_snapshot_model.get("labeled_model_ready_races"),
+                    "test_contexts": live_snapshot_model.get("test_contexts"),
+                    "production_test_hit_rate": live_snapshot_model.get("production_test_hit_rate"),
+                    "live_snapshot_test_hit_rate": live_snapshot_model.get("live_snapshot_test_hit_rate"),
+                    "delta_pp": live_snapshot_delta,
+                    "net_hits": live_snapshot_model.get("net_hits"),
                 },
             }
         )
@@ -834,6 +868,9 @@ def run(mode):
         "trifecta_reranker_delta_pp": trifecta_reranker.get("delta_pp"),
         "commander_selector_delta_pp": commander_selector.get("delta_pp"),
         "live_snapshot_labeled_races": live_snapshots.get("labeled_races"),
+        "live_snapshot_model_ready_races": live_snapshots.get("labeled_model_ready_races"),
+        "live_snapshot_model_status": live_snapshot_model.get("status"),
+        "live_snapshot_model_delta_pp": live_snapshot_model.get("delta_pp"),
         "model_audit_status": audit_payload.get("drift_status"),
         "best_shadow_challenger": audit_payload.get("best_shadow_challenger"),
         "promotion_candidates": (model_audit.get("promotion_board", {}) or {}).get("eligible_for_external_validation", []),
@@ -865,7 +902,11 @@ def run(mode):
             },
             {
                 "target": "live_snapshot_learning",
-                "instruction": "accumulate real morning/40m/20m/10m pre-race states and attach labels only after official results",
+                "instruction": "accumulate exact model-ready morning/40m/20m/10m pre-race states and attach labels only after official results",
+            },
+            {
+                "target": "live_snapshot_model_department",
+                "instruction": "train from real pre-race states at 500 labeled races; require 1500 races plus retrospective and prospective gates before any promotion review",
             },
             {
                 "target": "model_freshness_department",
@@ -927,6 +968,7 @@ def run(mode):
             "trifecta_combination_lab": "ordered_top10_shadow_reranker",
             "commander_ai": "race_specific_shadow_department_selection",
             "live_snapshot_learning": "real_pre_race_state_training_store",
+            "live_snapshot_model_department": "real_pre_race_shadow_model_with_500_1500_race_gates",
         },
     }
 
@@ -960,6 +1002,9 @@ def run(mode):
         f"- 3連単専用AI純増pp: {trifecta_reranker.get('delta_pp', '未算出')}",
         f"- 司令塔AI純増pp: {commander_selector.get('delta_pp', '未算出')}",
         f"- 実戦スナップショット学習済R: {live_snapshots.get('labeled_races', 0)}",
+        f"- モデル入力完成スナップショットR: {live_snapshots.get('labeled_model_ready_races', 0)}",
+        f"- 実戦専用モデル状態: {live_snapshot_model.get('status', 'collecting')}",
+        f"- 実戦専用モデル純増pp: {live_snapshot_model.get('delta_pp', '未算出')}",
         f"- 昇格候補: {len((model_audit.get('promotion_board', {}) or {}).get('eligible_for_external_validation', []))}",
         f"- 第三者監査: {status}",
         "",
@@ -972,7 +1017,8 @@ def run(mode):
         "- 本番再現室: 簡易バックテストではなく現行処理順の時系列リプレイを基準にする。",
         "- 3連単組合せ班: 1-2-3の順序付き組合せを直接採点し、Production10点と影対決する。",
         "- 司令塔AI: レースごとに専門部署を選ぶが、本番変更権限は持たない。",
-        "- 実戦学習庫: 朝・40分前・20分前・10分前の実入力を蓄積し、確定後のみ教師ラベルを付与する。",
+        "- 実戦学習庫: 朝・40分前・20分前・10分前の本番モデル入力そのものを蓄積し、確定後のみ教師ラベルを付与する。",
+        "- 実戦専用モデル部: 500Rで影学習開始、1,500Rで外部審査候補、さらに300Rの前向き同一レース勝負を必須とする。",
         "- モデル鮮度部: 直近重視チャレンジャーを影運用し、本番モデルの経年劣化を監視する。",
         "- データ品質監査: 学習時との特徴量ドリフトと戦史クロスソース一致率を監視する。",
         "- 券種監査: Top1とは別に3連単10点の実戦的中率を正式KPIとして監視する。",
