@@ -67,7 +67,12 @@ class LiveSnapshotPipelineTests(unittest.TestCase):
             text = Path(path).read_text(encoding="utf-8")
             self.assertIn("Restore central history for live features", text)
             self.assertIn("keirin-central-history-v1-", text)
-            self.assertIn("live feature history too small", text)
+            self.assertIn("keirin-v4-validation-", text)
+            self.assertIn("30000", text)
+            self.assertTrue(
+                "Validate final live feature history" in text
+                or "Validate live feature history" in text
+            )
 
     def test_live_model_keeps_calibration_and_test_blocks_out_of_refit(self):
         text = Path("src/train_live_snapshot_model.py").read_text(encoding="utf-8")
