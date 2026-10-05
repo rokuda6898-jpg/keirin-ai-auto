@@ -895,19 +895,20 @@ def save_trifecta_top10_ledger(pred, now_jst):
     for race_id, g in pred.groupby("race_id", sort=False):
         current_races.add(str(race_id))
         base = g.iloc[0]
-        broad_candidates = make_multi_bet_candidates(g, top_k=min(len(g), 9))
-        broad_tri = (
-            broad_candidates[broad_candidates["bet_type"].eq("trifecta")].copy()
-            if len(broad_candidates) else pd.DataFrame()
+        broad_tri = make_trifecta_candidates(g, top_k_riders=None).rename(
+            columns={"trifecta_prob_approx": "prob"}
         )
         if broad_tri.empty:
             continue
+        broad_tri["bet_type"] = "trifecta"
         broad_tri["prob"] = pd.to_numeric(broad_tri["prob"], errors="coerce")
 
-        production_candidates = broad_candidates
+        production_candidates = make_multi_bet_candidates(
+            g, top_k=min(len(g), 9)
+        )
         if load_v4_validation_gate().get("target_passed", False):
             production_candidates = filter_trifecta_candidates_by_confidence(
-                broad_candidates, g
+                production_candidates, g
             )
         production_tri = (
             production_candidates[production_candidates["bet_type"].eq("trifecta")].copy()
