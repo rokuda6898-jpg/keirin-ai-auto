@@ -8,6 +8,8 @@ on:
       - "src/train.py"
       - "src/train_top1_candidate.py"
       - "src/train_recency_challenger.py"
+      - "src/build_production_feature_baseline.py"
+      - "src/model_drift_audit.py"
       - "src/multi_bet_backtest.py"
       - "src/predict.py"
       - "src/race_features.py"
@@ -187,6 +189,11 @@ jobs:
         run: |
           python src/company_knowledge.py --mode weekly
 
+      - name: Build drift baseline for current production model
+        if: steps.history_gate.outputs.ready == 'true'
+        run: |
+          python src/build_production_feature_baseline.py
+
       - name: Train top1 candidate first
         if: steps.history_gate.outputs.ready == 'true'
         run: |
@@ -255,7 +262,10 @@ jobs:
           then
             cp models/candidate_win_model.joblib models/win_model.joblib
             cp models/candidate_metrics.json models/metrics.json
-            echo "Candidate promoted to production."
+            if [ -f models/candidate_feature_baseline.json ]; then
+              cp models/candidate_feature_baseline.json models/feature_baseline.json
+            fi
+            echo "Candidate promoted to production with matching drift baseline."
           else
             echo "Candidate failed external promotion gate. Production remains unchanged."
           fi
@@ -337,6 +347,7 @@ jobs:
             shadow_rank_model.joblib
             recency_win_model.joblib
             recency_model_metrics.json
+            feature_baseline.json
           )
 
           weekly_output_files=(
