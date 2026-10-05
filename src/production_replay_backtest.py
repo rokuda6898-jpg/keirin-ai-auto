@@ -10,6 +10,7 @@ from sklearn.ensemble import HistGradientBoostingClassifier
 
 from common import (
     HISTORY_CSV,
+    HISTORY_ODDS_CSV,
     MODEL_DIR,
     OUTPUT_DIR,
     add_pair_history_features,
@@ -19,7 +20,7 @@ from common import (
     prepare_features,
 )
 from multi_bet_backtest import make_candidates as make_multi_bet_candidates
-from predict import apply_nexus_race_reading, apply_validated_top1_consensus, filter_trifecta_candidates_by_confidence
+from predict import DEFAULT_BET_CONFIGS, apply_nexus_race_reading, apply_validated_top1_consensus, filter_trifecta_candidates_by_confidence
 from trifecta_reranker import build_candidate_features
 
 SUMMARY_JSON = OUTPUT_DIR / "production_replay_summary.json"
@@ -81,7 +82,7 @@ def fit_fold_models(train_df, position_variant):
     return win, second, third, fills
 
 
-def score_fold(test_df, win, second, third, fills):
+def score_fold(test_df, win, second, third, fills, odds_by_race=None):
     X, _ = prepare_features(test_df, fills)
 
     pred = test_df.copy()
@@ -127,6 +128,41 @@ def score_fold(test_df, win, second, third, fills):
         top10 = tri.head(10)
         hit10 = bool(top10["buy"].astype(str).eq(actual).any())
 
+        final_ticket_hit = np.nan
+        final_ticket_count = 0
+        race_odds = (odds_by_race or {}).get(rid)
+        if race_odds is not None and len(race_odds):
+            odds_tri = race_odds[race_odds["bet_type"].astype(str).eq("trifecta")].copy()
+            odds_tri["odds_used"] = pd.to_numeric(odds_tri["odds_used"], errors="coerce")
+            odds_tri = odds_tri[odds_tri["odds_used"].gt(0)]
+            if len(odds_tri):
+                selected = tri.merge(
+                    odds_tri[["buy", "odds_used"]].drop_duplicates("buy", keep="last"),
+                    on="buy",
+                    how="inner",
+                )
+                if len(selected):
+                    cfg = DEFAULT_BET_CONFIGS["trifecta"]
+                    selected["expected_profit_100yen"] = (
+                        pd.to_numeric(selected["prob"], errors="coerce")
+                        * pd.to_numeric(selected["odds_used"], errors="coerce")
+                        - 1.0
+                    ) * 100.0
+                    selected = selected[
+                        pd.to_numeric(selected["prob"], errors="coerce").ge(cfg["min_prob"])
+                        & pd.to_numeric(selected["expected_profit_100yen"], errors="coerce").ge(cfg["min_ev"])
+                        & pd.to_numeric(selected["odds_used"], errors="coerce").le(cfg["max_odds"])
+                    ]
+                    selected = selected.sort_values(
+                        ["prob", "expected_profit_100yen"],
+                        ascending=[False, False],
+                        kind="mergesort",
+                    ).head(cfg["max_per_race"])
+                    final_ticket_count = int(len(selected))
+                    final_ticket_hit = bool(
+                        selected["buy"].astype(str).eq(actual).any()
+                    ) if len(selected) else False
+
         probs = pd.to_numeric(
             g.sort_values("p_win", ascending=False, kind="mergesort")["p_win"],
             errors="coerce",
@@ -147,6 +183,8 @@ def score_fold(test_df, win, second, third, fills):
             "top1_top2_margin": margin,
             "trifecta_top10_hit": hit10,
             "trifecta_ticket_count": int(len(top10)),
+            "final_ticket_hit": final_ticket_hit,
+            "final_ticket_count": final_ticket_count,
         })
 
         if len(tri):
@@ -190,6 +228,22 @@ def main():
         raise ValueError(f"history.csv missing columns: {sorted(missing)}")
 
     df = enrich_history(df)
+
+    odds_by_race = {}
+    if HISTORY_ODDS_CSV.exists() and HISTORY_ODDS_CSV.stat().st_size:
+        try:
+            odds = pd.read_csv(
+                HISTORY_ODDS_CSV,
+                dtype={"race_id": str, "buy": str, "bet_type": str},
+            )
+            if {"race_id", "bet_type", "buy", "odds_used"}.issubset(odds.columns):
+                odds_by_race = {
+                    str(rid): group.copy()
+                    for rid, group in odds.groupby("race_id", sort=False)
+                }
+        except (OSError, pd.errors.EmptyDataError, pd.errors.ParserError):
+            odds_by_race = {}
+
     race_dates = (
         df.groupby("race_id", as_index=False)["date"].min()
         .sort_values(["date", "race_id"], kind="mergesort")
@@ -220,7 +274,9 @@ def main():
             f"start={start.date()} end={end.date()}"
         )
         win, second, third, fills = fit_fold_models(train_df, position_variant)
-        _, races, candidates = score_fold(test_df, win, second, third, fills)
+        _, races, candidates = score_fold(
+            test_df, win, second, third, fills, odds_by_race=odds_by_race
+        )
         if races.empty:
             continue
         races["fold"] = fold_no
@@ -238,6 +294,11 @@ def main():
             "core_top1_hit_rate": float(races["core_hit"].mean()),
             "production_top1_hit_rate": float(races["production_hit"].mean()),
             "trifecta_top10_hit_rate": float(races["trifecta_top10_hit"].mean()),
+            "final_ticket_evaluated_races": int(races["final_ticket_hit"].notna().sum()),
+            "final_ticket_hit_rate": (
+                float(races.loc[races["final_ticket_hit"].notna(), "final_ticket_hit"].astype(bool).mean())
+                if races["final_ticket_hit"].notna().any() else None
+            ),
             "candidate_rows": int(len(candidates)),
         })
 
@@ -267,6 +328,14 @@ def main():
         "production_top1_hit_rate": float(races["production_hit"].mean()),
         "trifecta_top10_hits": int(races["trifecta_top10_hit"].sum()),
         "trifecta_top10_hit_rate": float(races["trifecta_top10_hit"].mean()),
+        "final_ticket_evaluated_races": int(races["final_ticket_hit"].notna().sum()),
+        "final_ticket_hits": int(
+            races.loc[races["final_ticket_hit"].notna(), "final_ticket_hit"].astype(bool).sum()
+        ),
+        "final_ticket_hit_rate": (
+            float(races.loc[races["final_ticket_hit"].notna(), "final_ticket_hit"].astype(bool).mean())
+            if races["final_ticket_hit"].notna().any() else None
+        ),
         "trifecta_training_candidate_rows": int(len(candidates)),
         "folds": fold_rows,
         "production_auto_change": False,
