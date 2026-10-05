@@ -94,5 +94,69 @@ class SettleResultsTests(unittest.TestCase):
             self.assertEqual(settled.loc[0, "display_status"], "結果取得待ち")
 
 
+    def test_netkeirin_fallback_parses_confirmed_top3_and_trifecta_payout(self):
+        race_entries = pd.DataFrame([{
+            "race_id": "067320261004",
+            "date": "2026-10-04",
+            "venue": "小松島",
+            "race_no": 6,
+            "car_no": 1,
+            "bracket_no": 1,
+            "start_at": 1791122580,
+            "close_at": 1791122280,
+            "source_url": "https://www.winticket.jp/keirin/komatsushima/racecard/2026100373/2/6",
+        }])
+        html = """
+        <html><body>
+        <div>レースが確定しました</div>
+        <table>
+          <tr><td>1着</td><td>1</td><td>1</td><td>橋本智昭</td></tr>
+          <tr><td>2着</td><td>4</td><td>4</td><td>平石浩之</td></tr>
+          <tr><td>3着</td><td>5</td><td>5</td><td>山田義彦</td></tr>
+        </table>
+        <div>３連単 1&gt;4&gt;5 3,070円 8人気</div>
+        </body></html>
+        """
+        result = settle_results.parse_netkeirin_result_html(
+            html,
+            race_entries,
+            "https://keirin.netkeiba.com/race/result/?race_id=202610047306",
+        )
+        self.assertIsNotNone(result)
+        self.assertTrue(result["official_result_available"])
+        self.assertEqual(result["actual_trifecta"], "1-4-5")
+        self.assertEqual(result["actual_trifecta_odds"], 30.7)
+        self.assertEqual(result["result_source"], "netkeirin_fallback")
+
+    def test_netkeirin_fallback_rejects_unconfirmed_result_page(self):
+        race_entries = pd.DataFrame([{
+            "race_id": "078420261005",
+            "date": "2026-10-05",
+            "venue": "武雄",
+            "race_no": 7,
+            "car_no": 1,
+            "bracket_no": 1,
+            "source_url": "https://www.winticket.jp/keirin/takeo/racecard/2026100384/3/7",
+        }])
+        html = "<html><body><div>レース結果決定後に公開されます</div></body></html>"
+        result = settle_results.parse_netkeirin_result_html(
+            html,
+            race_entries,
+            "https://keirin.netkeiba.com/race/result/?race_id=202610058407",
+        )
+        self.assertIsNone(result)
+
+    def test_netkeirin_url_uses_race_date_venue_code_and_race_number(self):
+        entry = pd.Series({
+            "date": "2026-10-05",
+            "race_no": 7,
+            "source_url": "https://www.winticket.jp/keirin/takeo/racecard/2026100384/3/7",
+        })
+        self.assertEqual(
+            settle_results.netkeirin_result_url(entry),
+            "https://keirin.netkeiba.com/race/result/?race_id=202610058407",
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
