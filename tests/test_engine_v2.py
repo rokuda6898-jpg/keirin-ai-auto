@@ -138,5 +138,52 @@ class EngineV2Tests(unittest.TestCase):
             self.assertEqual(by_variant["trifecta_reranker"]["hits"], 1)
 
 
+    def test_final_trifecta_uses_latest_snapshot_only(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            ledger = root / "prediction_ledger.csv"
+            results_csv = root / "final_results.csv"
+            accuracy = root / "final_accuracy.json"
+
+            pd.DataFrame([
+                {
+                    "race_id": "r1", "date": "2026-10-06", "venue": "A", "race_no": 1,
+                    "bet_type": "trifecta", "buy": "9-8-7", "candidate_rank": 1,
+                    "prediction_created_at_jst": "2026-10-06T10:00:00+09:00",
+                    "strategy_version": "old",
+                },
+                {
+                    "race_id": "r1", "date": "2026-10-06", "venue": "A", "race_no": 1,
+                    "bet_type": "trifecta", "buy": "1-2-3", "candidate_rank": 1,
+                    "prediction_created_at_jst": "2026-10-06T10:20:00+09:00",
+                    "strategy_version": "latest",
+                },
+            ]).to_csv(ledger, index=False)
+
+            official = pd.DataFrame([{
+                "race_id": "r1",
+                "actual_trifecta": "9-8-7",
+                "official_result_available": True,
+            }])
+
+            old_ledger = settle_results.PREDICTION_LEDGER_CSV
+            old_results = settle_results.FINAL_TRIFECTA_RESULTS_CSV
+            old_accuracy = settle_results.FINAL_TRIFECTA_ACCURACY_JSON
+            try:
+                settle_results.PREDICTION_LEDGER_CSV = ledger
+                settle_results.FINAL_TRIFECTA_RESULTS_CSV = results_csv
+                settle_results.FINAL_TRIFECTA_ACCURACY_JSON = accuracy
+                settle_results.update_final_trifecta_ticket_accuracy(official)
+            finally:
+                settle_results.PREDICTION_LEDGER_CSV = old_ledger
+                settle_results.FINAL_TRIFECTA_RESULTS_CSV = old_results
+                settle_results.FINAL_TRIFECTA_ACCURACY_JSON = old_accuracy
+
+            payload = json.loads(accuracy.read_text(encoding="utf-8"))
+            self.assertEqual(payload["races"], 1)
+            self.assertEqual(payload["hits"], 0)
+            self.assertEqual(payload["definition"], "latest pre-race selected trifecta ticket set per race")
+
+
 if __name__ == "__main__":
     unittest.main()
