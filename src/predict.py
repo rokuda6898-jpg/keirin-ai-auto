@@ -895,9 +895,9 @@ def save_trifecta_top10_ledger(pred, now_jst):
     for race_id, g in pred.groupby("race_id", sort=False):
         current_races.add(str(race_id))
         base = g.iloc[0]
-        broad_tri = make_trifecta_candidates(g, top_k_riders=None).rename(
-            columns={"trifecta_prob_approx": "prob"}
-        )
+        broad_tri = pd.DataFrame(
+            make_trifecta_candidates(g, top_k_riders=None)
+        ).rename(columns={"trifecta_prob_approx": "prob"})
         if broad_tri.empty:
             continue
         broad_tri["bet_type"] = "trifecta"
