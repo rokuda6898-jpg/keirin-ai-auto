@@ -117,19 +117,41 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
-      - name: Commit validation result
+  publish:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      # Validation may run for hours. Only serialize the short publication
+      # phase with the other workflows that write generated state to main.
+      group: keirin-repo-writer
+      cancel-in-progress: false
+
+    steps:
+      - name: Checkout latest main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download validated artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: keirin-v4-validation
+          path: .
+
+      - name: Publish validation result safely
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add models/v4_validation_summary.json models/position_models.joblib outputs/v4_validation_folds.csv || true
-          git diff --staged --quiet || git commit -m "Update strict v4 validation"
-          # Generated history/cache steps can leave tracked files modified outside the intended commit.
-          # Clean the worktree after committing the intended artifacts so rebase is always allowed.
-          git reset --hard HEAD
-          git clean -fd
+          git diff --staged --quiet && exit 0
+          git commit -m "Update strict v4 validation"
           for attempt in 1 2 3 4; do
-            git pull --rebase && git push && exit 0
+            git fetch origin main
+            if git rebase origin/main && git push origin main; then
+              exit 0
+            fi
             git rebase --abort || true
-            sleep 2
+            sleep $((attempt * 2))
           done
           exit 1
