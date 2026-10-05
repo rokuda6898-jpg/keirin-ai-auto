@@ -1,0 +1,69 @@
+name: quick-keirin-results
+
+on:
+  workflow_dispatch:
+  schedule:
+    # JST 09:00-23:59. Keep the public "確定" label close to the official result.
+    - cron: "*/5 0-14 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: keirin-quick-results-writer
+  cancel-in-progress: true
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Refresh official results only
+        run: |
+          python src/fetch_today_entries.py || true
+          python src/settle_results.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("outputs/latest_results.json")
+          rows=json.loads(p.read_text(encoding="utf-8"))
+          decided=sum(1 for x in rows if x.get("official_result_available") and x.get("actual_trifecta"))
+          print({"result_rows":len(rows),"official_decided":decided})
+          PY
+
+      - name: Publish result JSON immediately
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add outputs/latest_results.json
+          git diff --cached --quiet && exit 0
+          git commit -m "Quick refresh official keirin results"
+
+          for attempt in 1 2 3 4; do
+            git fetch origin main
+            if git rebase origin/main && git push origin main; then
+              exit 0
+            fi
+            git rebase --abort || true
+            git reset --hard origin/main
+            python src/fetch_today_entries.py || true
+            python src/settle_results.py
+            git add outputs/latest_results.json
+            git diff --cached --quiet && exit 0
+            git commit -m "Quick refresh official keirin results"
+            sleep $((attempt * 2))
+          done
+          exit 1
