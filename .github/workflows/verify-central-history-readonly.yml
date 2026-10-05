@@ -1,0 +1,71 @@
+name: verify-central-history-readonly
+
+on:
+  push:
+    paths:
+      - ".github/workflows/verify-central-history-readonly.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Restore latest intraday central history read-only
+        id: central_history
+        uses: actions/cache/restore@v4
+        with:
+          path: data/raw/history.csv
+          key: readonly-central-history-${{ github.run_id }}
+          restore-keys: |
+            keirin-central-history-v1-
+
+      - name: Bootstrap from accumulated weekly history cache read-only
+        if: steps.central_history.outputs.cache-matched-key == ''
+        uses: actions/cache/restore@v4
+        with:
+          path: data/raw/history.csv
+          key: readonly-weekly-history-${{ github.run_id }}
+          restore-keys: |
+            keirin-history-v4-
+
+      - name: Verify history exists
+        run: |
+          test -s data/raw/history.csv
+          python - <<'PY'
+          import pandas as pd
+          df = pd.read_csv("data/raw/history.csv", dtype={"race_id": str, "player_id": str})
+          print({"before_rows": len(df), "before_races": int(df["race_id"].nunique())})
+          PY
+
+      - name: Refresh today entries
+        run: python src/fetch_today_entries.py
+
+      - name: Append confirmed races in disposable workspace
+        run: python src/append_confirmed_history.py
+
+      - name: Print verification summary
+        run: cat outputs/central_history_append_summary.json
+
+      - name: Upload verification summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: central-history-readonly-verification
+          path: outputs/central_history_append_summary.json
+          retention-days: 1
