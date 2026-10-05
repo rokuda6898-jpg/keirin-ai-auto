@@ -27,6 +27,8 @@ TOP1_ACCURACY_JSON = OUTPUT_DIR / "top1_accuracy.json"
 TRIFECTA_TOP10_LEDGER_CSV = OUTPUT_DIR / "trifecta_top10_prediction_ledger.csv"
 TRIFECTA_TOP10_RESULTS_CSV = OUTPUT_DIR / "trifecta_top10_results.csv"
 TRIFECTA_TOP10_ACCURACY_JSON = OUTPUT_DIR / "trifecta_top10_accuracy.json"
+FINAL_TRIFECTA_RESULTS_CSV = OUTPUT_DIR / "final_trifecta_ticket_results.csv"
+FINAL_TRIFECTA_ACCURACY_JSON = OUTPUT_DIR / "final_trifecta_ticket_accuracy.json"
 PAYOUT_SPECS = {
     "trifecta": ("trifecta", True),
     "trio": ("trio", False),
@@ -645,6 +647,110 @@ def update_trifecta_top10_accuracy(results):
         print("Trifecta Top10 shadow variants:\n" + summary.to_string(index=False))
 
 
+def update_final_trifecta_ticket_accuracy(results):
+    if not PREDICTION_LEDGER_CSV.exists() or results.empty:
+        return
+    try:
+        ledger = pd.read_csv(
+            PREDICTION_LEDGER_CSV,
+            dtype={"race_id": str, "buy": str, "bet_type": str},
+        )
+    except (OSError, pd.errors.ParserError, pd.errors.EmptyDataError):
+        return
+    if ledger.empty or "bet_type" not in ledger.columns:
+        return
+    tri = ledger[ledger["bet_type"].astype(str).eq("trifecta")].copy()
+    if tri.empty:
+        return
+
+    # prediction_ledger keeps durable historical snapshots. For product accuracy
+    # use only the latest pre-race snapshot for each race, not the union of old
+    # and new tickets.
+    if "prediction_created_at_jst" in tri.columns:
+        tri["_snapshot_time"] = pd.to_datetime(
+            tri["prediction_created_at_jst"], errors="coerce"
+        )
+        latest = tri.groupby("race_id")["_snapshot_time"].transform("max")
+        tri = tri[tri["_snapshot_time"].eq(latest)].copy()
+    tri["race_id"] = tri["race_id"].astype(str)
+
+    actual = results[["race_id", "actual_trifecta", "official_result_available"]].copy()
+    actual["race_id"] = actual["race_id"].astype(str)
+    actual = actual[
+        actual["official_result_available"].fillna(False).astype(bool)
+        & actual["actual_trifecta"].fillna("").astype(str).str.len().gt(0)
+    ]
+    if actual.empty:
+        return
+
+    merged = tri.merge(actual, on="race_id", how="inner")
+    rows = []
+    for race_id, group in merged.groupby("race_id", sort=False):
+        actual_buy = str(group["actual_trifecta"].iloc[-1])
+        rank_col = "candidate_rank" if "candidate_rank" in group.columns else None
+        tickets = (
+            group.sort_values(rank_col, kind="mergesort")
+            if rank_col else group
+        )
+        hit_rows = tickets[tickets["buy"].astype(str).eq(actual_buy)]
+        base = tickets.iloc[0]
+        rows.append({
+            "date": base.get("date", ""),
+            "venue": base.get("venue", ""),
+            "race_no": base.get("race_no", ""),
+            "race_id": str(race_id),
+            "ticket_count": int(tickets["buy"].astype(str).nunique()),
+            "actual_trifecta": actual_buy,
+            "is_hit": bool(len(hit_rows)),
+            "winning_rank": (
+                int(pd.to_numeric(hit_rows[rank_col], errors="coerce").dropna().iloc[0])
+                if rank_col and len(hit_rows)
+                and len(pd.to_numeric(hit_rows[rank_col], errors="coerce").dropna())
+                else None
+            ),
+            "prediction_created_at_jst": base.get("prediction_created_at_jst", ""),
+            "strategy_version": base.get("strategy_version", ""),
+        })
+
+    current = pd.DataFrame(rows)
+    try:
+        old = pd.read_csv(FINAL_TRIFECTA_RESULTS_CSV, dtype={"race_id": str})
+    except (FileNotFoundError, OSError, pd.errors.EmptyDataError, pd.errors.ParserError):
+        old = pd.DataFrame()
+    combined = pd.concat([old, current], ignore_index=True, sort=False)
+    if len(combined):
+        combined["race_id"] = combined["race_id"].astype(str)
+        combined = combined.drop_duplicates("race_id", keep="last")
+    combined.to_csv(FINAL_TRIFECTA_RESULTS_CSV, index=False)
+    if combined.empty:
+        return
+
+    hit = combined["is_hit"].fillna(False).astype(bool)
+    recent = combined.tail(min(50, len(combined)))
+    recent_hit = recent["is_hit"].fillna(False).astype(bool)
+    payload = {
+        "updated_at_jst": datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(timespec="seconds"),
+        "races": int(len(combined)),
+        "hits": int(hit.sum()),
+        "hit_rate": float(hit.mean()),
+        "recent_50_races": int(len(recent)),
+        "recent_50_hits": int(recent_hit.sum()),
+        "recent_50_hit_rate": float(recent_hit.mean()) if len(recent) else None,
+        "avg_ticket_count": float(
+            pd.to_numeric(combined["ticket_count"], errors="coerce").mean()
+        ),
+        "kpi": "latest_live_selected_trifecta_ticket_hit_rate",
+        "definition": "latest pre-race selected trifecta ticket set per race",
+    }
+    FINAL_TRIFECTA_ACCURACY_JSON.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    print(
+        f"Final trifecta ticket accuracy: {payload['hits']}/{payload['races']} "
+        f"= {payload['hit_rate']:.2%}"
+    )
+
+
 def update_top1_accuracy(results):
     if not TOP1_LEDGER_CSV.exists() or results.empty:
         return
@@ -784,6 +890,7 @@ def run_settlement(args):
         patch_index_with_official_results(public_results)
         update_top1_accuracy(results)
         update_trifecta_top10_accuracy(results)
+        update_final_trifecta_ticket_accuracy(results)
         settled = bets.merge(results, on="race_id", how="left")
         settled["is_selected"] = pd.to_numeric(settled["expected_profit_yen"], errors="coerce").fillna(-10**9) > args.min_expected_profit
         settled["actual_for_bet_type"] = settled.apply(
