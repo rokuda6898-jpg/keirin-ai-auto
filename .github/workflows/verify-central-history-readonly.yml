@@ -63,7 +63,7 @@ jobs:
         run: python src/fetch_today_entries.py
 
       - name: Append confirmed races in disposable workspace
-        run: python src/append_confirmed_history.py --min-existing-races 30000
+        run: python src/append_confirmed_history.py
 
       - name: Print verification summary
         run: cat outputs/central_history_append_summary.json
