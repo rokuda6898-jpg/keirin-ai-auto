@@ -15,11 +15,12 @@ permissions:
   contents: write
 
 concurrency:
-  # Serialize every workflow that writes generated site/data state back to main.
-  # Never cancel another writer: wait for the lock instead of killing a manager
-  # or settlement run halfway through its publication.
-  group: keirin-repo-writer
-  cancel-in-progress: false
+  # Keep rapid result refreshes independent from the shared repository-writer
+  # queue. GitHub retains only one pending run per concurrency group, so sharing
+  # that group can evict a waiting result refresh when settle/manager starts.
+  # Push races are handled safely below by clean-worktree + rebase retries.
+  group: keirin-quick-results-writer
+  cancel-in-progress: true
 
 jobs:
   refresh:
