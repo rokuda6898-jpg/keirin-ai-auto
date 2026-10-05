@@ -59,6 +59,12 @@ jobs:
           git add outputs/latest_results.json outputs/index.html
           git diff --cached --quiet && exit 0
           git commit -m "Quick refresh official keirin results"
+          # fetch_today_entries.py may leave data/raw changes that this
+          # result-only workflow must never publish. Clear them before rebase;
+          # otherwise git rebase refuses a dirty worktree and enters a slow
+          # refetch loop.
+          git reset --hard HEAD
+          git clean -fd
 
           for attempt in 1 2 3 4; do
             git fetch origin main
@@ -72,6 +78,8 @@ jobs:
             git add outputs/latest_results.json outputs/index.html
             git diff --cached --quiet && exit 0
             git commit -m "Quick refresh official keirin results"
+            git reset --hard HEAD
+            git clean -fd
             sleep $((attempt * 2))
           done
           exit 1
