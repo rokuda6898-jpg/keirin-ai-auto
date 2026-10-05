@@ -379,36 +379,62 @@ def audit_results():
         entries = pd.read_csv(TODAY_CSV, dtype={"race_id": str})
     except Exception:
         return problems
+
     now = datetime.now(ZoneInfo("Asia/Tokyo")).timestamp()
+    waiting = set()
     overdue = set()
-    # Judge delayed official results from the scheduled race start, not the
-    # betting close. close_at is normally several minutes before start_at, so
-    # using close_at + 3 minutes falsely marks races as overdue before they have
-    # even finished. Allow 10 minutes after start for the race and official
-    # publication. Fall back to close_at + 15 minutes only for legacy rows that
-    # do not have start_at.
+
+    # Two-stage result timing:
+    #   0-10 min after start: normal race/result processing, no warning.
+    #   10-20 min after start: official publication wait, not a fault.
+    #   20+ min after start: genuine result delay and eligible for escalation.
+    # Legacy rows without start_at fall back to close_at with an extra 5 min
+    # because betting normally closes before the scheduled start.
     if "start_at" in entries.columns:
         start_at = pd.to_numeric(entries["start_at"], errors="coerce")
-        overdue_mask = start_at.notna() & (start_at < now - 10 * 60)
+        waiting_mask = start_at.notna() & (start_at <= now - 10 * 60) & (start_at > now - 20 * 60)
+        overdue_mask = start_at.notna() & (start_at <= now - 20 * 60)
+
         if "close_at" in entries.columns:
             close_at = pd.to_numeric(entries["close_at"], errors="coerce")
-            overdue_mask = overdue_mask | (
-                start_at.isna() & close_at.notna() & (close_at < now - 15 * 60)
+            legacy = start_at.isna() & close_at.notna()
+            waiting_mask = waiting_mask | (
+                legacy & (close_at <= now - 15 * 60) & (close_at > now - 25 * 60)
             )
+            overdue_mask = overdue_mask | (legacy & (close_at <= now - 25 * 60))
+
+        waiting = set(entries.loc[waiting_mask, "race_id"].astype(str))
         overdue = set(entries.loc[overdue_mask, "race_id"].astype(str))
     elif "close_at" in entries.columns:
         close_at = pd.to_numeric(entries["close_at"], errors="coerce")
-        overdue = set(entries.loc[close_at.notna() & (close_at < now - 15 * 60), "race_id"].astype(str))
-    if not overdue:
+        waiting = set(entries.loc[
+            close_at.notna() & (close_at <= now - 15 * 60) & (close_at > now - 25 * 60),
+            "race_id",
+        ].astype(str))
+        overdue = set(entries.loc[
+            close_at.notna() & (close_at <= now - 25 * 60),
+            "race_id",
+        ].astype(str))
+
+    if not waiting and not overdue:
         return problems
+
     if not path.exists() or path.stat().st_size == 0:
-        return [{"type": "results_missing", "overdue_races": sorted(overdue)}]
+        if waiting:
+            problems.append({"type": "results_waiting", "race_ids": sorted(waiting)})
+        if overdue:
+            problems.append({"type": "results_missing", "overdue_races": sorted(overdue)})
+        return problems
+
     try:
         rows = json.loads(path.read_text(encoding="utf-8"))
         decided = {str(x.get("race_id")) for x in rows if x.get("official_result_available")}
-        missing = sorted(overdue - decided)
-        if missing:
-            problems.append({"type": "results_overdue", "race_ids": missing})
+        waiting_missing = sorted(waiting - decided)
+        overdue_missing = sorted(overdue - decided)
+        if waiting_missing:
+            problems.append({"type": "results_waiting", "race_ids": waiting_missing})
+        if overdue_missing:
+            problems.append({"type": "results_overdue", "race_ids": overdue_missing})
     except Exception as exc:
         problems.append({"type": "results_unreadable", "detail": str(exc)})
     return problems
@@ -738,12 +764,18 @@ def main():
             snapshot_last_good()
             status = "healthy" if not repaired else "repaired"
             break
+
+        problem_types = {str(p.get("type")) for p in problems}
+        if problem_types == {"results_waiting"}:
+            # 10-20 minutes after race start is a normal official-publication
+            # window. Do not burn repair attempts or refetch the whole day.
+            status = "waiting_results"
+            break
+
         if attempt >= MAX_REPAIR_ATTEMPTS:
-            # A delayed official result is not a site/data-integrity failure.
-            # Keep the manager alive so the next scheduled cycle can retry it.
-            # True corruption/missing prediction/source faults still fail hard.
-            problem_types = {str(p.get("type")) for p in problems}
-            if problem_types == {"results_overdue"}:
+            # Result-only delays must not take the whole site down. True source,
+            # prediction, site or identity faults still fail hard.
+            if problem_types and problem_types.issubset({"results_waiting", "results_overdue"}):
                 status = "waiting_results"
             else:
                 status = "unhealthy"
