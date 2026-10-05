@@ -22,6 +22,8 @@ LAST_GOOD_ODDS = LAST_GOOD_DIR / "today_odds.csv"
 RACE_SCHEDULE_PATH = OUTPUT_DIR / "latest_race_schedule.csv"
 MAX_REPAIR_ATTEMPTS = 3
 RETRY_SECONDS = 5
+RECURRENCE_WINDOW_MINUTES = 120
+RECURRENCE_RESET_GAP_MINUTES = 30
 
 
 def snapshot_last_good():
@@ -556,32 +558,67 @@ def append_incident_history(problems, action=None):
 
 
 def incident_recurrence_counts(problems, lookback=200):
-    """Count recent recurrences by problem type and race id."""
+    """Count only the current recurrence streak for each problem/race key.
+
+    Old incidents must not permanently poison escalation. A streak resets when
+    the same key has been absent for RECURRENCE_RESET_GAP_MINUTES, and records
+    older than RECURRENCE_WINDOW_MINUTES are ignored entirely.
+    """
     keys = set()
     for p in problems or []:
         kind = str(p.get("type", "unknown"))
         race_ids = p.get("race_ids") or ([p.get("race_id")] if p.get("race_id") else ["*"])
         for race_id in race_ids:
             keys.add((kind, str(race_id)))
+
     counts = {key: 0 for key in keys}
     if not keys or not INCIDENT_HISTORY_PATH.exists():
         return counts
+
+    occurrences = {key: [] for key in keys}
+    now = datetime.now(ZoneInfo("Asia/Tokyo"))
+    window_seconds = RECURRENCE_WINDOW_MINUTES * 60
+    reset_gap_seconds = RECURRENCE_RESET_GAP_MINUTES * 60
+
     try:
         lines = INCIDENT_HISTORY_PATH.read_text(encoding="utf-8").splitlines()[-lookback:]
         for line in lines:
             try:
                 rec = json.loads(line)
+                at = datetime.fromisoformat(str(rec.get("at_jst", "")))
+                if at.tzinfo is None:
+                    at = at.replace(tzinfo=ZoneInfo("Asia/Tokyo"))
             except Exception:
                 continue
+
+            age_seconds = (now - at.astimezone(ZoneInfo("Asia/Tokyo"))).total_seconds()
+            if age_seconds < 0 or age_seconds > window_seconds:
+                continue
+
             for old in rec.get("problems", []) or []:
                 kind = str(old.get("type", "unknown"))
                 race_ids = old.get("race_ids") or ([old.get("race_id")] if old.get("race_id") else ["*"])
                 for race_id in race_ids:
                     key = (kind, str(race_id))
-                    if key in counts:
-                        counts[key] += 1
+                    if key in occurrences:
+                        occurrences[key].append(at)
+
+        for key, times in occurrences.items():
+            if not times:
+                continue
+            times = sorted(times, reverse=True)
+            streak = 1
+            previous = times[0]
+            for at in times[1:]:
+                gap_seconds = (previous - at).total_seconds()
+                if gap_seconds > reset_gap_seconds:
+                    break
+                streak += 1
+                previous = at
+            counts[key] = streak
     except OSError:
         pass
+
     return counts
 
 
