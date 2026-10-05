@@ -12,6 +12,7 @@ from sklearn.ensemble import HistGradientBoostingClassifier, HistGradientBoostin
 from sklearn.isotonic import IsotonicRegression
 from sklearn.metrics import brier_score_loss, roc_auc_score
 
+from model_drift_audit import build_feature_baseline
 from common import (
     ensure_dirs,
     HISTORY_CSV,
@@ -736,6 +737,17 @@ def main():
     }
 
     X_full, production_fill_values = prepare_features(df)
+    build_feature_baseline(
+        X_full,
+        df,
+        metadata={
+            "trained_at_jst": datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(timespec="seconds"),
+            "history_races": int(df["race_id"].nunique()),
+            "history_start": str(pd.Timestamp(df["date"].min()).date()),
+            "history_end": str(pd.Timestamp(df["date"].max()).date()),
+            "feature_count": int(len(X_full.columns)),
+        },
+    )
     production_model = HistGradientBoostingClassifier(
         max_iter=300,
         learning_rate=0.045,
