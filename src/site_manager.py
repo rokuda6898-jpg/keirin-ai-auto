@@ -1,5 +1,6 @@
 import re
 import html as html_lib
+from html.parser import HTMLParser
 import json
 import shutil
 import subprocess
@@ -24,6 +25,30 @@ MAX_REPAIR_ATTEMPTS = 3
 RETRY_SECONDS = 5
 RECURRENCE_WINDOW_MINUTES = 120
 RECURRENCE_RESET_GAP_MINUTES = 30
+
+
+class RiderButtonParser(HTMLParser):
+    """Extract rendered rider identity without depending on HTML attribute order."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.riders = {}
+
+    def handle_starttag(self, tag, attrs):
+        if str(tag).lower() != "button":
+            return
+        values = {
+            str(key).lower(): html_lib.unescape(value or "").strip()
+            for key, value in attrs
+            if key
+        }
+        classes = set(values.get("class", "").split())
+        if "rider" not in classes:
+            return
+        player_id = values.get("data-player-id", "")
+        player_name = values.get("data-name", "")
+        if player_id and player_name:
+            self.riders[player_id] = player_name
 
 
 def snapshot_last_good():
@@ -386,26 +411,9 @@ def audit_site_output():
                 # mismatch whenever another attribute was inserted between
                 # data-player-id and data-name even though the rendered rider
                 # was correct.
-                rider_attrs = {}
-                # Parse every button first, then inspect attributes independently.
-                # This is robust to attribute order, extra attributes, and both
-                # single- and double-quoted HTML emitted by the renderer.
-                for tag in re.findall(r"<button\b[^>]*>", race_html, flags=re.I):
-                    attrs = {
-                        key.lower(): html_lib.unescape(value).strip()
-                        for key, _quote, value in re.findall(
-                            r"""([:\w-]+)\s*=\s*(['"])(.*?)\2""",
-                            tag,
-                            flags=re.S,
-                        )
-                    }
-                    classes = set(attrs.get("class", "").split())
-                    if "rider" not in classes:
-                        continue
-                    parsed_id = attrs.get("data-player-id", "")
-                    parsed_name = attrs.get("data-name", "")
-                    if parsed_id and parsed_name:
-                        rider_attrs[parsed_id] = parsed_name
+                parser = RiderButtonParser()
+                parser.feed(race_html)
+                rider_attrs = parser.riders
 
                 for _, rider in group.iterrows():
                     name = str(rider.get("player_name", "")).strip()
