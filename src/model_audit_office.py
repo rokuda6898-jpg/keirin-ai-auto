@@ -30,6 +30,7 @@ DEPARTMENT_BY_VARIANT = {
     "second_pick_reversal_live": "second_pick_specialist",
     "difficulty_router": "model_audit_office",
     "recency_model": "model_freshness_department",
+    "commander_selector": "commander_ai",
 }
 
 
