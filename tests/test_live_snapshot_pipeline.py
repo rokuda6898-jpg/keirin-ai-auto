@@ -44,6 +44,20 @@ class LiveSnapshotPipelineTests(unittest.TestCase):
         self.assertEqual(set(X.columns), set(live_snapshot_model.LIVE_FEATURES))
         self.assertEqual(set(fills), set(live_snapshot_model.LIVE_FEATURES))
 
+    def test_current_inference_derives_snapshot_bucket_from_clock(self):
+        frame = pd.DataFrame([
+            {"race_id": "r1", "close_at": 10000.0},
+            {"race_id": "r2", "close_at": 8800.0},
+            {"race_id": "r3", "close_at": 8200.0},
+        ])
+        out = live_snapshot_model.add_snapshot_context(frame, now_epoch=7600.0)
+        self.assertEqual(str(out.iloc[0]["snapshot_bucket"]), "40m")
+        self.assertEqual(float(out.iloc[0]["snapshot_bucket_code"]), 1.0)
+        self.assertEqual(str(out.iloc[1]["snapshot_bucket"]), "20m")
+        self.assertEqual(float(out.iloc[1]["snapshot_bucket_code"]), 2.0)
+        self.assertEqual(str(out.iloc[2]["snapshot_bucket"]), "10m")
+        self.assertEqual(float(out.iloc[2]["snapshot_bucket_code"]), 3.0)
+
     def test_live_prediction_workflows_restore_central_history(self):
         for path in [
             ".github/workflows/daily.yml",
