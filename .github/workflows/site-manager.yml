@@ -159,7 +159,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           stage_manager_state() {
-            git add outputs data/raw || true
+            git add outputs data/raw models/feature_baseline.json || true
             git diff --staged --quiet || git commit -m "Manager: repair and audit keirin data"
           }
 
