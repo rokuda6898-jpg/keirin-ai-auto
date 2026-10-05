@@ -380,21 +380,36 @@ def audit_site_output():
                 start = content.find(marker)
                 end = content.find('<article class="race"', start + len(marker)) if start >= 0 else -1
                 race_html = content[start:] if start >= 0 and end < 0 else content[start:end]
+
+                # Parse rider attributes independently of their HTML attribute
+                # order. The old exact-substring audit falsely reported a name
+                # mismatch whenever another attribute was inserted between
+                # data-player-id and data-name even though the rendered rider
+                # was correct.
+                rider_attrs = {}
+                for tag in re.findall(r'<button\\b[^>]*class="[^"]*\\brider\\b[^"]*"[^>]*>', race_html):
+                    id_match = re.search(r'data-player-id="([^"]*)"', tag)
+                    name_match = re.search(r'data-name="([^"]*)"', tag)
+                    if not id_match or not name_match:
+                        continue
+                    parsed_id = html_lib.unescape(id_match.group(1)).strip()
+                    parsed_name = html_lib.unescape(name_match.group(1)).strip()
+                    if parsed_id:
+                        rider_attrs[parsed_id] = parsed_name
+
                 for _, rider in group.iterrows():
                     name = str(rider.get("player_name", "")).strip()
                     player_id = str(rider.get("player_id", "")).strip()
                     if not name or name in {"nan", "None"}:
                         continue
-                    expected = (
-                        f'data-player-id="{html_lib.escape(player_id, quote=True)}" '
-                        f'data-name="{html_lib.escape(name, quote=True)}"'
-                    )
-                    if expected not in race_html:
+                    actual_name = rider_attrs.get(player_id)
+                    if actual_name != name:
                         problems.append({
                             "type": "site_player_name_mismatch",
                             "race_id": race_id,
                             "player_id": player_id,
                             "player_name": name,
+                            "site_player_name": actual_name,
                         })
     except Exception as exc:
         problems.append({"type": "site_output_unreadable", "detail": str(exc)})
