@@ -387,7 +387,7 @@ def audit_site_output():
                 # data-player-id and data-name even though the rendered rider
                 # was correct.
                 rider_attrs = {}
-                for tag in re.findall(r'<button\\b[^>]*class="[^"]*\\brider\\b[^"]*"[^>]*>', race_html):
+                for tag in re.findall(r'<button\b[^>]*class="[^"]*\brider\b[^"]*"[^>]*>', race_html):
                     id_match = re.search(r'data-player-id="([^"]*)"', tag)
                     name_match = re.search(r'data-name="([^"]*)"', tag)
                     if not id_match or not name_match:
