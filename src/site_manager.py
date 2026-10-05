@@ -254,18 +254,45 @@ def audit_entries():
 
 
 def audit_race_coverage():
-    """Detect entire races disappearing from the daily snapshot."""
+    """Detect entire races disappearing from the daily snapshot.
+
+    Coverage must be evaluated against the snapshot's own race date, not the
+    wall-clock date. Around JST midnight, the previous day's final snapshot can
+    remain valid while datetime.now() has already moved to the next day.
+    """
     problems = []
     if not RACE_SCHEDULE_PATH.exists():
         return [{"type": "race_schedule_missing"}]
     try:
         schedule = pd.read_csv(RACE_SCHEDULE_PATH, dtype={"race_id": str})
         entries = pd.read_csv(TODAY_CSV, dtype={"race_id": str, "player_id": str})
-        today = datetime.now(ZoneInfo("Asia/Tokyo")).strftime("%Y-%m-%d")
+
+        audit_date = datetime.now(ZoneInfo("Asia/Tokyo")).strftime("%Y-%m-%d")
+        if "date" in entries.columns:
+            entry_dates = (
+                entries["date"]
+                .dropna()
+                .astype(str)
+                .str.slice(0, 10)
+            )
+            if not entry_dates.empty:
+                modes = entry_dates.mode()
+                audit_date = str(modes.iloc[0] if not modes.empty else entry_dates.iloc[0])
+
         if "date" in schedule.columns:
-            schedule = schedule[schedule["date"].astype(str).eq(today)]
+            schedule_dates = schedule["date"].astype(str).str.slice(0, 10)
+            schedule = schedule[schedule_dates.eq(audit_date)]
+
         expected_ids = set(schedule["race_id"].dropna().astype(str))
         actual_ids = set(entries["race_id"].dropna().astype(str))
+
+        # If the matching schedule slice is unavailable, do not mislabel every
+        # valid race as "unexpected". The dedicated schedule-missing condition
+        # is more accurate and avoids midnight false failures.
+        if actual_ids and not expected_ids:
+            problems.append({"type": "race_schedule_date_missing", "date": audit_date})
+            return problems
+
         missing = sorted(expected_ids - actual_ids)
         extra = sorted(actual_ids - expected_ids)
         if missing:
@@ -669,7 +696,7 @@ def repair(problems=None):
         "entries_unreadable", "entries_empty", "missing_columns",
         "missing_expected_field_size", "missing_riders", "duplicate_riders",
         "implausible_rider_count", "missing_entire_races", "unexpected_races",
-        "race_schedule_missing", "race_coverage_audit_failed",
+        "race_schedule_missing", "race_schedule_date_missing", "race_coverage_audit_failed",
         "duplicate_player_identity", "missing_player_identity",
     }
     prediction_kinds = {
