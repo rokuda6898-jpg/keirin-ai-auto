@@ -78,6 +78,12 @@ jobs:
               raise SystemExit(f"live feature history too small: {races}")
           PY
 
+      - name: Bootstrap production drift baseline if missing
+        run: |
+          if [ ! -s models/feature_baseline.json ]; then
+            python src/build_production_feature_baseline.py
+          fi
+
       - name: Ingest external data if configured
         env:
           KEIRIN_HISTORY_CSV_URL: ${{ secrets.KEIRIN_HISTORY_CSV_URL }}
