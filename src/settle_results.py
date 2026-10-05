@@ -1,4 +1,5 @@
 import argparse
+import html as html_lib
 import json
 import re
 import time
@@ -32,6 +33,88 @@ PAYOUT_SPECS = {
     "bracket_exacta": ("bracketExacta", True),
     "bracket_quinella": ("bracketQuinella", False),
 }
+
+
+def netkeirin_result_url(entry):
+    """Build the independent netkeirin result URL from a WINTICKET entry."""
+    source_url = str(entry.get("source_url", "") or "")
+    m = re.search(r"/racecard/\d{8}(\d{2})/\d+/(\d+)", source_url)
+    date = str(entry.get("date", "") or "").replace("-", "")
+    race_no = pd.to_numeric(entry.get("race_no"), errors="coerce")
+    if not m or len(date) != 8 or pd.isna(race_no):
+        return ""
+    venue_code = m.group(1)
+    return f"https://keirin.netkeiba.com/race/result/?race_id={date}{venue_code}{int(race_no):02d}"
+
+
+def parse_netkeirin_result_html(page_html, race_entries, source_url):
+    """Parse a confirmed netkeirin result as a secondary result source."""
+    text = html_lib.unescape(page_html)
+    text = re.sub(r"<script\b[^>]*>.*?</script>", " ", text, flags=re.I | re.S)
+    text = re.sub(r"<style\b[^>]*>.*?</style>", " ", text, flags=re.I | re.S)
+    text = re.sub(r"<[^>]+>", " ", text)
+    text = re.sub(r"\s+", " ", text).strip()
+
+    if "レースが確定しました" not in text:
+        return None
+
+    top3 = []
+    for rank in (1, 2, 3):
+        m = re.search(rf"{rank}着\s*(\d+)\s+(\d+)\b", text)
+        if not m:
+            return None
+        top3.append(int(m.group(2)))
+
+    race_id = str(race_entries.iloc[0].get("race_id", "") or "")
+    bracket_by_car = {}
+    if "bracket_no" in race_entries.columns:
+        for _, row in race_entries.iterrows():
+            car = pd.to_numeric(row.get("car_no"), errors="coerce")
+            bracket = pd.to_numeric(row.get("bracket_no"), errors="coerce")
+            if pd.notna(car) and pd.notna(bracket):
+                bracket_by_car[int(car)] = int(bracket)
+
+    actual = actual_buy_sets(top3, bracket_by_car)
+    winning_buy = "-".join(str(x) for x in top3)
+    payout_match = re.search(
+        r"３連単\s*([1-9])\s*[>＞]\s*([1-9])\s*[>＞]\s*([1-9])\s*([\d,]+)円",
+        text,
+    )
+    payout_yen = np.nan
+    if payout_match:
+        parsed_buy = "-".join(payout_match.group(i) for i in (1, 2, 3))
+        if parsed_buy == winning_buy:
+            payout_yen = float(payout_match.group(4).replace(",", ""))
+
+    result = {
+        "race_id": race_id,
+        "actual_trifecta": winning_buy,
+        "actual_trifecta_odds": (payout_yen / 100.0 if pd.notna(payout_yen) else np.nan),
+        "race_status": "confirmed_secondary",
+        "start_at": race_entries.iloc[0].get("start_at"),
+        "close_at": race_entries.iloc[0].get("close_at"),
+        "decided_at": None,
+        "official_result_available": True,
+        "source_url": str(race_entries.iloc[0].get("source_url", "") or ""),
+        "result_source": "netkeirin_fallback",
+        "secondary_result_url": source_url,
+    }
+    for bet_type, buy in actual.items():
+        result[f"actual_{bet_type}"] = buy
+
+    for bet_type in PAYOUT_SPECS:
+        payload = {}
+        if bet_type == "trifecta" and pd.notna(payout_yen):
+            payload[winning_buy] = int(payout_yen)
+        result[f"payouts_{bet_type}_json"] = json.dumps(payload, ensure_ascii=False, sort_keys=True)
+    return result
+
+
+def parse_netkeirin_result(race_entries):
+    url = netkeirin_result_url(race_entries.iloc[0])
+    if not url:
+        return None
+    return parse_netkeirin_result_html(http_get(url, attempts=3), race_entries, url)
 
 
 def patch_index_with_official_results(public_results):
@@ -182,6 +265,8 @@ def parse_result_page(url):
         # scheduled time or a provider status string alone.
         "official_result_available": bool(len(top3) == 3),
         "source_url": url,
+        "result_source": "winticket",
+        "secondary_result_url": "",
     }
     for bet_type, buy in actual.items():
         result[f"actual_{bet_type}"] = buy
@@ -221,13 +306,35 @@ def fetch_results(sleep_sec=0.2):
         raise ValueError("today_entries.csv does not have source_url column")
 
     rows = []
-    for i, url in enumerate(entries["source_url"].dropna().drop_duplicates(), start=1):
+    grouped = entries.dropna(subset=["source_url"]).groupby("source_url", sort=False)
+    for i, (url, race_entries) in enumerate(grouped, start=1):
+        primary = None
         try:
-            result = parse_result_page(url)
+            primary = parse_result_page(url)
+        except Exception as exc:
+            print(f"primary result source failed {i}: {url} error={exc}")
+
+        result = primary
+        if not primary or not bool(primary.get("official_result_available")):
+            try:
+                fallback = parse_netkeirin_result(race_entries)
+                if fallback and bool(fallback.get("official_result_available")):
+                    result = fallback
+                    print(
+                        f"secondary result source used {i}: race={fallback['race_id']} "
+                        f"actual={fallback['actual_trifecta']} url={fallback['secondary_result_url']}"
+                    )
+            except Exception as exc:
+                print(f"secondary result source failed {i}: {url} error={exc}")
+
+        if result is not None:
             rows.append(result)
-            print(f"settled source {i}: {url} actual={result['actual_trifecta']}")
-        except Exception as e:
-            print(f"failed source {i}: {url} error={e}")
+            print(
+                f"settled source {i}: source={result.get('result_source', 'unknown')} "
+                f"actual={result.get('actual_trifecta', '')}"
+            )
+        else:
+            print(f"no result row available {i}: {url}")
         time.sleep(sleep_sec)
 
     if not rows:
@@ -541,7 +648,14 @@ def run_settlement(args):
         ]:
             if column not in results.columns:
                 results[column] = default
-        public_results = results[["race_id", "actual_trifecta", "actual_trifecta_odds", "official_result_available"]].copy()
+        public_columns = [
+            "race_id", "actual_trifecta", "actual_trifecta_odds",
+            "official_result_available", "result_source", "secondary_result_url",
+        ]
+        for column in public_columns:
+            if column not in results.columns:
+                results[column] = ""
+        public_results = results[public_columns].copy()
         public_results.to_json(LATEST_RESULTS_JSON, orient="records", force_ascii=False)
         patch_index_with_official_results(public_results)
         update_top1_accuracy(results)
