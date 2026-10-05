@@ -533,6 +533,8 @@ def update_trifecta_top10_accuracy(results):
         return
     if ledger.empty or "race_id" not in ledger.columns or "buy" not in ledger.columns:
         return
+    if "variant" not in ledger.columns:
+        ledger["variant"] = "production_top10"
 
     actual = results[["race_id", "actual_trifecta", "official_result_available"]].copy()
     actual["race_id"] = actual["race_id"].astype(str)
@@ -550,7 +552,7 @@ def update_trifecta_top10_accuracy(results):
 
     merged = current_ledger.merge(actual, on="race_id", how="inner")
     rows = []
-    for race_id, group in merged.groupby("race_id", sort=False):
+    for (race_id, variant), group in merged.groupby(["race_id", "variant"], sort=False):
         actual_buy = str(group["actual_trifecta"].iloc[-1])
         tickets = group.sort_values("ticket_rank") if "ticket_rank" in group.columns else group
         hit_rows = tickets[tickets["buy"].astype(str).eq(actual_buy)]
@@ -560,6 +562,7 @@ def update_trifecta_top10_accuracy(results):
             "venue": base.get("venue", ""),
             "race_no": base.get("race_no", ""),
             "race_id": str(race_id),
+            "variant": str(variant),
             "ticket_count": int(len(tickets)),
             "actual_trifecta": actual_buy,
             "is_hit": bool(len(hit_rows)),
@@ -577,37 +580,69 @@ def update_trifecta_top10_accuracy(results):
         old = pd.read_csv(TRIFECTA_TOP10_RESULTS_CSV, dtype={"race_id": str})
     except (OSError, pd.errors.ParserError, pd.errors.EmptyDataError, FileNotFoundError):
         old = pd.DataFrame()
+    if len(old) and "variant" not in old.columns:
+        old["variant"] = "production_top10"
     combined = pd.concat([old, current], ignore_index=True, sort=False)
     if len(combined):
         combined["race_id"] = combined["race_id"].astype(str)
-        combined = combined.drop_duplicates("race_id", keep="last")
+        if "variant" not in combined.columns:
+            combined["variant"] = "production_top10"
+        combined = combined.drop_duplicates(["race_id", "variant"], keep="last")
     combined.to_csv(TRIFECTA_TOP10_RESULTS_CSV, index=False)
 
     if combined.empty:
         return
-    hit = combined["is_hit"].fillna(False).astype(bool)
-    recent = combined.tail(min(50, len(combined)))
-    recent_hit = recent["is_hit"].fillna(False).astype(bool)
-    winning_rank = pd.to_numeric(combined.get("winning_rank"), errors="coerce")
+
+    summary_rows = []
+    for variant, group in combined.groupby("variant", sort=False):
+        hit = group["is_hit"].fillna(False).astype(bool)
+        recent = group.tail(min(50, len(group)))
+        recent_hit = recent["is_hit"].fillna(False).astype(bool)
+        winning_rank = pd.to_numeric(group.get("winning_rank"), errors="coerce")
+        summary_rows.append({
+            "variant": str(variant),
+            "races": int(len(group)),
+            "hits": int(hit.sum()),
+            "hit_rate": float(hit.mean()),
+            "recent_50_races": int(len(recent)),
+            "recent_50_hits": int(recent_hit.sum()),
+            "recent_50_hit_rate": float(recent_hit.mean()) if len(recent) else None,
+            "avg_ticket_count": float(pd.to_numeric(group["ticket_count"], errors="coerce").mean()),
+            "avg_winning_rank_when_hit": float(winning_rank.dropna().mean()) if winning_rank.notna().any() else None,
+        })
+
+    summary = pd.DataFrame(summary_rows).sort_values(
+        ["hit_rate", "races"], ascending=[False, False], kind="mergesort"
+    )
+    summary.to_csv(OUTPUT_DIR / "trifecta_top10_variant_summary.csv", index=False)
+
+    production = next(
+        (x for x in summary_rows if x["variant"] == "production_top10"),
+        summary_rows[0] if summary_rows else {},
+    )
     payload = {
         "updated_at_jst": datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(timespec="seconds"),
-        "races": int(len(combined)),
-        "hits": int(hit.sum()),
-        "hit_rate": float(hit.mean()),
-        "recent_50_races": int(len(recent)),
-        "recent_50_hits": int(recent_hit.sum()),
-        "recent_50_hit_rate": float(recent_hit.mean()) if len(recent) else None,
-        "avg_ticket_count": float(pd.to_numeric(combined["ticket_count"], errors="coerce").mean()),
-        "avg_winning_rank_when_hit": float(winning_rank.dropna().mean()) if winning_rank.notna().any() else None,
+        "races": production.get("races", 0),
+        "hits": production.get("hits", 0),
+        "hit_rate": production.get("hit_rate"),
+        "recent_50_races": production.get("recent_50_races", 0),
+        "recent_50_hits": production.get("recent_50_hits", 0),
+        "recent_50_hit_rate": production.get("recent_50_hit_rate"),
+        "avg_ticket_count": production.get("avg_ticket_count"),
+        "avg_winning_rank_when_hit": production.get("avg_winning_rank_when_hit"),
         "kpi": "live_trifecta_top10_hit_rate",
+        "variants": summary_rows,
     }
     TRIFECTA_TOP10_ACCURACY_JSON.write_text(
         json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
     )
-    print(
-        f"Live trifecta Top10 accuracy: {payload['hits']}/{payload['races']} "
-        f"= {payload['hit_rate']:.2%}"
-    )
+    if payload["hit_rate"] is not None:
+        print(
+            f"Live trifecta Top10 accuracy: {payload['hits']}/{payload['races']} "
+            f"= {payload['hit_rate']:.2%}"
+        )
+    if len(summary):
+        print("Trifecta Top10 shadow variants:\n" + summary.to_string(index=False))
 
 
 def update_top1_accuracy(results):
