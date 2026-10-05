@@ -274,20 +274,42 @@ jobs:
             outputs/company/
           retention-days: 30
 
-      - name: Commit model and backtest
+  publish:
+    needs: train
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      # Training may take hours. Only serialize the short publication phase
+      # with site/result/data workflows that write back to main.
+      group: keirin-repo-writer
+      cancel-in-progress: false
+
+    steps:
+      - name: Checkout latest main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download trained model and reports
+        uses: actions/download-artifact@v4
+        with:
+          name: keirin-model
+          path: .
+
+      - name: Publish model and backtest safely
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add models outputs || true
-          git diff --staged --quiet || git commit -m "Update keirin model and backtest"
-          # Generated history/cache steps can leave tracked files modified outside the intended commit.
-          # Clean the worktree after committing the intended artifacts so rebase is always allowed.
-          git reset --hard HEAD
-          git clean -fd
+          git diff --staged --quiet && exit 0
+          git commit -m "Update keirin model and backtest"
           for attempt in 1 2 3 4; do
-            git pull --rebase && git push && exit 0
+            git fetch origin main
+            if git rebase origin/main && git push origin main; then
+              exit 0
+            fi
             git rebase --abort || true
-            echo "weekly train push race: retry $attempt/4"
-            sleep 2
+            echo "weekly publish push race: retry $attempt/4"
+            sleep $((attempt * 2))
           done
           exit 1
