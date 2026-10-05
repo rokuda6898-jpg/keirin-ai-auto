@@ -117,12 +117,6 @@ jobs:
               raise SystemExit(f"validated history still too small: {races}")
           PY
 
-      - name: Bootstrap production drift baseline if missing
-        run: |
-          if [ ! -s models/feature_baseline.json ]; then
-            python src/build_production_feature_baseline.py
-          fi
-
       - name: Run manager and self-repair
         run: python src/site_manager.py
       - name: Preserve central history across manager git resets
@@ -138,7 +132,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           stage_manager_state() {
-            git add outputs data/raw models/feature_baseline.json || true
+            git add outputs data/raw || true
             git diff --staged --quiet || git commit -m "Manager: repair and audit keirin data"
           }
 
@@ -152,9 +146,6 @@ jobs:
             if [ -s /tmp/manager_history.csv ]; then
               mkdir -p data/raw
               cp /tmp/manager_history.csv data/raw/history.csv
-            fi
-            if [ ! -s models/feature_baseline.json ] && [ -s data/raw/history.csv ]; then
-              python src/build_production_feature_baseline.py
             fi
             python src/site_manager.py
             stage_manager_state
