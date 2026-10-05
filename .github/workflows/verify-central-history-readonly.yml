@@ -1,4 +1,4 @@
-name: verify-central-history-readonly
+name: persist-central-history-once
 
 on:
   push:
@@ -68,9 +68,15 @@ jobs:
       - name: Print verification summary
         run: cat outputs/central_history_append_summary.json
 
+      - name: Persist verified central history
+        uses: actions/cache/save@v4
+        with:
+          path: data/raw/history.csv
+          key: keirin-central-history-v1-${{ github.run_id }}
+
       - name: Upload verification summary
         uses: actions/upload-artifact@v4
         with:
-          name: central-history-readonly-verification
+          name: central-history-persist-verification
           path: outputs/central_history_append_summary.json
           retention-days: 1
