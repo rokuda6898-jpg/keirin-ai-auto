@@ -741,12 +741,14 @@ def main():
         X_full,
         df,
         metadata={
+            "baseline_for": "new_training_candidate",
             "trained_at_jst": datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(timespec="seconds"),
             "history_races": int(df["race_id"].nunique()),
             "history_start": str(pd.Timestamp(df["date"].min()).date()),
             "history_end": str(pd.Timestamp(df["date"].max()).date()),
             "feature_count": int(len(X_full.columns)),
         },
+        path=MODEL_PATH.parent / "candidate_feature_baseline.json",
     )
     production_model = HistGradientBoostingClassifier(
         max_iter=300,
