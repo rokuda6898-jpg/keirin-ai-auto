@@ -77,12 +77,27 @@ def append_win_odds_history(entries, captured_at):
 def fetch_upcoming(min_minutes=5, max_minutes=40, sleep_sec=0.2, retry_sec=5.0):
     ensure_dirs()
     now = datetime.now(ZoneInfo("Asia/Tokyo"))
-    if not RACE_SCHEDULE_CSV.exists():
-        UPCOMING_COUNT_FILE.write_text("0", encoding="ascii")
-        print(f"schedule not found: {RACE_SCHEDULE_CSV}")
-        return 0
-
-    schedule = pd.read_csv(RACE_SCHEDULE_CSV, dtype={"race_id": str})
+    if RACE_SCHEDULE_CSV.exists():
+        schedule = pd.read_csv(RACE_SCHEDULE_CSV, dtype={"race_id": str})
+    else:
+        # The public schedule is generated into outputs and may not be present
+        # in every checkout. Reconstruct the minimum safe schedule from the
+        # committed full-day entry snapshot so near-close refresh and the
+        # learning snapshot collector can still run.
+        from common import TODAY_CSV
+        if not TODAY_CSV.exists():
+            UPCOMING_COUNT_FILE.write_text("0", encoding="ascii")
+            print(f"schedule and today snapshot not found: {RACE_SCHEDULE_CSV}")
+            return 0
+        base = pd.read_csv(TODAY_CSV, dtype={"race_id": str})
+        needed = ["race_id", "date", "venue", "race_no", "start_at", "close_at", "source_url"]
+        missing = [x for x in needed if x not in base.columns]
+        if missing:
+            UPCOMING_COUNT_FILE.write_text("0", encoding="ascii")
+            print(f"today snapshot cannot reconstruct schedule; missing={missing}")
+            return 0
+        schedule = base[needed].drop_duplicates("race_id", keep="last").copy()
+        print(f"reconstructed near-close schedule from today_entries.csv races={len(schedule)}")
     schedule = schedule[schedule["date"].astype(str).eq(now.strftime("%Y-%m-%d"))]
     upcoming = select_upcoming_races(schedule, now.timestamp(), min_minutes, max_minutes)
     UPCOMING_COUNT_FILE.write_text(str(len(upcoming)), encoding="ascii")
