@@ -205,6 +205,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+          if [ -s data/raw/history.csv ]; then
+            cp data/raw/history.csv /tmp/settle_history.csv
+          fi
+
           stage_and_commit_settlement() {
             git add models outputs data/raw/today_entries.csv data/raw/today_odds.csv || true
             git diff --staged --quiet || git commit -m "Settle keirin predictions"
@@ -214,6 +218,11 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
             git clean -fd
+
+            if [ -s /tmp/settle_history.csv ]; then
+              mkdir -p data/raw
+              cp /tmp/settle_history.csv data/raw/history.csv
+            fi
 
             # Rebuild every published settlement artifact from the newest main.
             # Never rebase an older generated snapshot over newer predictions.
