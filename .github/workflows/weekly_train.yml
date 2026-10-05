@@ -74,6 +74,12 @@ jobs:
           restore-keys: |
             keirin-history-v4-
 
+      - name: Preserve accumulated weekly history candidate
+        run: |
+          if [ -s data/raw/history.csv ]; then
+            cp data/raw/history.csv /tmp/weekly_history_candidate.csv
+          fi
+
       - name: Restore latest intraday central history
         uses: actions/cache/restore@v4
         with:
@@ -81,6 +87,50 @@ jobs:
           key: keirin-central-history-v1-${{ github.run_id }}
           restore-keys: |
             keirin-central-history-v1-
+
+      - name: Merge weekly and central history candidates
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import pandas as pd
+
+          candidates = []
+          for path in [
+              Path("/tmp/weekly_history_candidate.csv"),
+              Path("data/raw/history.csv"),
+          ]:
+              if path.exists() and path.stat().st_size:
+                  try:
+                      frame = pd.read_csv(
+                          path,
+                          dtype={"race_id": str, "player_id": str},
+                      )
+                      if not frame.empty and "race_id" in frame.columns:
+                          candidates.append(frame)
+                          print(
+                              f"history candidate {path}: "
+                              f"rows={len(frame)} races={frame['race_id'].nunique()}"
+                          )
+                  except Exception as exc:
+                      print(f"history candidate read failed {path}: {exc}")
+
+          if not candidates:
+              raise SystemExit("no usable history candidate restored")
+
+          merged = pd.concat(candidates, ignore_index=True, sort=False)
+          key = ["race_id"]
+          if "player_id" in merged.columns:
+              key.append("player_id")
+          elif "car_no" in merged.columns:
+              key.append("car_no")
+          merged = merged.drop_duplicates(key, keep="last")
+          Path("data/raw").mkdir(parents=True, exist_ok=True)
+          merged.to_csv("data/raw/history.csv", index=False)
+          print(
+              f"merged history rows={len(merged)} "
+              f"races={merged['race_id'].nunique()}"
+          )
+          PY
 
       - name: Restore real pre-race learning snapshots
         uses: actions/cache/restore@v4
