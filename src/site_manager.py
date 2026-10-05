@@ -381,9 +381,24 @@ def audit_results():
         return problems
     now = datetime.now(ZoneInfo("Asia/Tokyo")).timestamp()
     overdue = set()
-    if "close_at" in entries.columns:
+    # Judge delayed official results from the scheduled race start, not the
+    # betting close. close_at is normally several minutes before start_at, so
+    # using close_at + 3 minutes falsely marks races as overdue before they have
+    # even finished. Allow 10 minutes after start for the race and official
+    # publication. Fall back to close_at + 15 minutes only for legacy rows that
+    # do not have start_at.
+    if "start_at" in entries.columns:
+        start_at = pd.to_numeric(entries["start_at"], errors="coerce")
+        overdue_mask = start_at.notna() & (start_at < now - 10 * 60)
+        if "close_at" in entries.columns:
+            close_at = pd.to_numeric(entries["close_at"], errors="coerce")
+            overdue_mask = overdue_mask | (
+                start_at.isna() & close_at.notna() & (close_at < now - 15 * 60)
+            )
+        overdue = set(entries.loc[overdue_mask, "race_id"].astype(str))
+    elif "close_at" in entries.columns:
         close_at = pd.to_numeric(entries["close_at"], errors="coerce")
-        overdue = set(entries.loc[close_at.notna() & (close_at < now - 3 * 60), "race_id"].astype(str))
+        overdue = set(entries.loc[close_at.notna() & (close_at < now - 15 * 60), "race_id"].astype(str))
     if not overdue:
         return problems
     if not path.exists() or path.stat().st_size == 0:
