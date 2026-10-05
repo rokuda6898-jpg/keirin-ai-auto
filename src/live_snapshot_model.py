@@ -21,14 +21,41 @@ LIVE_FEATURES = [*FEATURE_COLS, *EXTRA_FEATURES]
 BUCKET_CODE = {"morning": 0.0, "40m": 1.0, "20m": 2.0, "10m": 3.0}
 
 
+def _bucket_from_seconds(seconds):
+    value = pd.to_numeric(seconds, errors="coerce")
+    if pd.isna(value) or float(value) <= 300:
+        return None
+    value = float(value)
+    if value >= 7200:
+        return "morning"
+    if 1800 <= value <= 3000:
+        return "40m"
+    if 900 <= value <= 1500:
+        return "20m"
+    if 420 <= value <= 780:
+        return "10m"
+    return None
+
+
 def add_snapshot_context(frame, now_epoch=None):
     out = frame.copy()
-    if "snapshot_bucket_code" not in out.columns:
-        bucket = out.get("snapshot_bucket", pd.Series("", index=out.index)).astype(str)
-        out["snapshot_bucket_code"] = bucket.map(BUCKET_CODE)
     if "seconds_to_close" not in out.columns and now_epoch is not None:
         close_at = pd.to_numeric(out.get("close_at"), errors="coerce")
         out["seconds_to_close"] = close_at - float(now_epoch)
+
+    if "snapshot_bucket" not in out.columns and "seconds_to_close" in out.columns:
+        out["snapshot_bucket"] = out["seconds_to_close"].map(_bucket_from_seconds)
+
+    if "snapshot_bucket_code" not in out.columns:
+        bucket = out.get("snapshot_bucket", pd.Series("", index=out.index)).astype(str)
+        out["snapshot_bucket_code"] = bucket.map(BUCKET_CODE)
+    else:
+        code = pd.to_numeric(out["snapshot_bucket_code"], errors="coerce")
+        if code.isna().any() and "seconds_to_close" in out.columns:
+            derived_bucket = out["seconds_to_close"].map(_bucket_from_seconds)
+            derived_code = derived_bucket.map(BUCKET_CODE)
+            out["snapshot_bucket_code"] = code.fillna(derived_code)
+
     for col in EXTRA_FEATURES:
         if col not in out.columns:
             out[col] = np.nan
