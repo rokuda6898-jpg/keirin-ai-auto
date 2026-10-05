@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 
 from common import HISTORY_CSV, OUTPUT_DIR, TODAY_CSV, ensure_dirs
+from model_audit_office import build_model_audit
 
 COMPANY_DIR = OUTPUT_DIR / "company"
 ARCHIVE_CSV = COMPANY_DIR / "settled_race_archive.csv"
@@ -403,12 +404,64 @@ def risk_report(archive):
     }
 
 
-def strategist_report(risk, manifest):
+def strategist_report(risk, manifest, model_audit=None):
     actions = []
     races = int(risk.get("evaluated_races", 0) or 0)
     overall = num(risk.get("top1_hit_rate"))
     recent = num(risk.get("recent_50_hit_rate"))
     warnings = []
+
+    model_audit = model_audit or {}
+    audit = model_audit.get("audit", {}) or {}
+    promotion_board = model_audit.get("promotion_board", {}) or {}
+    second_pick = model_audit.get("second_pick_specialist", {}) or {}
+
+    if audit.get("drift_status") == "material_live_gap":
+        actions.append(
+            {
+                "priority": 1,
+                "type": "live_validation_gap",
+                "action": "freeze broad heuristic expansion; diagnose live-vs-validation Top1 gap before promoting new production logic",
+                "evidence": {
+                    "production_hit_rate": audit.get("production_hit_rate"),
+                    "validation_top1_final_rate": audit.get("validation_top1_final_rate"),
+                    "live_vs_validation_final_gap_pp": audit.get("live_vs_validation_final_gap_pp"),
+                },
+            }
+        )
+
+    eligible = promotion_board.get("eligible_for_external_validation", []) or []
+    if eligible:
+        actions.append(
+            {
+                "priority": 1,
+                "type": "challenger_validation",
+                "action": "send the leading shadow challenger to external validation; do not auto-promote",
+                "evidence": eligible[0],
+            }
+        )
+    else:
+        best = audit.get("best_shadow_challenger") or {}
+        if best.get("net_hits", 0) > 0:
+            actions.append(
+                {
+                    "priority": 2,
+                    "type": "shadow_leader_watch",
+                    "action": "keep the current best challenger in shadow until the 300-race promotion floor is reached",
+                    "evidence": best,
+                }
+            )
+
+    second_rule = second_pick.get("best_shadow_rule")
+    if second_rule:
+        actions.append(
+            {
+                "priority": 2,
+                "type": "second_pick_reversal_research",
+                "action": "continue prospective shadow testing of the best second-pick reversal rule; no live switch until promotion criteria pass",
+                "evidence": second_rule,
+            }
+        )
 
     if races < 40:
         warnings.append("insufficient_official_prediction_sample_for_weight_changes")
@@ -465,6 +518,8 @@ def strategist_report(risk, manifest):
         "official_evaluated_races": races,
         "warnings": warnings,
         "recommended_actions": sorted(actions, key=lambda x: x["priority"]),
+        "model_audit_status": audit.get("drift_status"),
+        "promotion_candidates": promotion_board.get("eligible_for_external_validation", []),
         "production_change_authority": "ceo_only_after_validation",
     }
 
@@ -492,6 +547,22 @@ def preserve_or_build_department(filename, role, history_loaded, fresh_payload, 
 def run(mode):
     ensure_dirs()
     COMPANY_DIR.mkdir(parents=True, exist_ok=True)
+
+    try:
+        model_audit = build_model_audit()
+    except Exception as exc:
+        model_audit = {
+            "audit": {
+                "updated_at_jst": now_jst(),
+                "role": "ceo_direct_model_audit_office",
+                "drift_status": "audit_error",
+                "error": str(exc),
+            },
+            "department_league": {"standings": []},
+            "second_pick_specialist": {"best_shadow_rule": None},
+            "promotion_board": {"eligible_for_external_validation": []},
+            "difficulty_routing": {"segments": []},
+        }
 
     archive = update_archive()
     aux_races, aux_meta = load_auxiliary_race_knowledge()
@@ -552,10 +623,26 @@ def run(mode):
     line_dept["top1_hit_rate_by_number_of_lines"] = fresh_line["top1_hit_rate_by_number_of_lines"]
 
     risk = risk_report(archive)
-    strategist = strategist_report(risk, manifest)
+    strategist = strategist_report(risk, manifest, model_audit)
 
     findings = []
     status = "green"
+
+    audit_payload = model_audit.get("audit", {}) or {}
+    if audit_payload.get("drift_status") == "material_live_gap":
+        findings.append(
+            {
+                "severity": "amber",
+                "finding": "live Top1 accuracy is materially below chronological validation",
+                "challenge_to_ceo": "Which production-stage adjustment or live-data shift explains the gap before any new override is promoted?",
+                "evidence": {
+                    "production_hit_rate": audit_payload.get("production_hit_rate"),
+                    "validation_top1_final_rate": audit_payload.get("validation_top1_final_rate"),
+                    "gap_pp": audit_payload.get("live_vs_validation_final_gap_pp"),
+                },
+            }
+        )
+        status = "amber"
     if manifest["multi_source_verified_races"] == 0:
         findings.append(
             {
@@ -604,6 +691,13 @@ def run(mode):
         "historical_races_available": manifest["historical_races"],
         "official_prediction_eval_races": risk["evaluated_races"],
         "official_top1_hit_rate": risk["top1_hit_rate"],
+        "model_audit_status": audit_payload.get("drift_status"),
+        "best_shadow_challenger": audit_payload.get("best_shadow_challenger"),
+        "promotion_candidates": (model_audit.get("promotion_board", {}) or {}).get("eligible_for_external_validation", []),
+        "second_pick_shadow_rule": (model_audit.get("second_pick_specialist", {}) or {}).get("best_shadow_rule"),
+        "department_league_leader": (
+            ((model_audit.get("department_league", {}) or {}).get("standings") or [None])[0]
+        ),
         "strategist_recommendations": strategist["recommended_actions"],
         "third_party_status": status,
         "decision_rule": "production changes require validation evidence; auxiliary history creates hypotheses but cannot promote itself",
@@ -614,6 +708,14 @@ def run(mode):
         "source": "ceo_decision_support",
         "status": "dissemination_package_pending_ceo_or_owner_decision",
         "directives": [
+            {
+                "target": "model_audit_office",
+                "instruction": "compare production and every shadow challenger on identical settled races; block unsupported promotion",
+            },
+            {
+                "target": "second_pick_specialist",
+                "instruction": "measure Top1-to-second reversal opportunities prospectively and remain shadow-only until validation passes",
+            },
             {
                 "target": "risk_department",
                 "instruction": "keep official pre-race validation separate and report deterioration immediately",
@@ -645,6 +747,8 @@ def run(mode):
             "departments": "specialist_analysis",
             "secretary": "briefing_and_coordination",
             "independent_audit": "challenge_and_ceo_coaching_without_override",
+            "model_audit_office": "same_race_model_comparison_and_promotion_control",
+            "second_pick_specialist": "top1_to_second_reversal_shadow_research",
         },
     }
 
@@ -667,6 +771,8 @@ def run(mode):
         f"- 履歴キャッシュ: {manifest['historical_races']:,}レース",
         f"- 正式な発走前予想検証: {risk['evaluated_races']:,}レース",
         f"- Top1的中率: {risk['top1_hit_rate'] if risk['top1_hit_rate'] is not None else '未算出'}",
+        f"- モデル監査: {audit_payload.get('drift_status', '未算出')}",
+        f"- 昇格候補: {len((model_audit.get('promotion_board', {}) or {}).get('eligible_for_external_validation', []))}",
         f"- 第三者監査: {status}",
         "",
         "## 軍師提言",
@@ -675,6 +781,8 @@ def run(mode):
     digest += [
         "",
         "## 専務の周知",
+        "- モデル監査室: 本番と全チャレンジャーを同一確定レースで比較し、純増のない補正を昇格させない。",
+        "- 2番手逆転班: Top1→2番手入替候補を影運用し、300R以上の前向き検証まで本番変更しない。",
         "- データ部: 累積戦史を保持し、新規確定結果を差分追加する。",
         "- 展開部: 全戦史から圧縮した脚質・展開知識を維持する。",
         "- ライン部: 全戦史のライン傾向と本番予想の失敗を分離して評価する。",
