@@ -36,6 +36,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Restore real pre-race learning snapshots
+        uses: actions/cache/restore@v4
+        with:
+          path: data/raw/live_snapshot_history.csv
+          key: keirin-live-snapshots-v1-${{ github.run_id }}
+          restore-keys: |
+            keirin-live-snapshots-v1-
+
       - name: Ingest external data if configured
         env:
           KEIRIN_HISTORY_CSV_URL: ${{ secrets.KEIRIN_HISTORY_CSV_URL }}
@@ -52,6 +60,17 @@ jobs:
           else
             echo "KEIRIN_TODAY_CSV_URL is configured; skip WINTICKET fetch"
           fi
+
+      - name: Capture morning real-feed learning snapshot
+        run: |
+          python src/live_snapshot_store.py --capture
+
+      - name: Save real pre-race learning snapshots
+        if: always() && hashFiles('data/raw/live_snapshot_history.csv') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: data/raw/live_snapshot_history.csv
+          key: keirin-live-snapshots-v1-${{ github.run_id }}
 
       - name: Build fallback model only if missing
         env:
