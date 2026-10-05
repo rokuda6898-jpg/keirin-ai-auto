@@ -387,14 +387,24 @@ def audit_site_output():
                 # data-player-id and data-name even though the rendered rider
                 # was correct.
                 rider_attrs = {}
-                for tag in re.findall(r'<button\b[^>]*class="[^"]*\brider\b[^"]*"[^>]*>', race_html):
-                    id_match = re.search(r'data-player-id="([^"]*)"', tag)
-                    name_match = re.search(r'data-name="([^"]*)"', tag)
-                    if not id_match or not name_match:
+                # Parse every button first, then inspect attributes independently.
+                # This is robust to attribute order, extra attributes, and both
+                # single- and double-quoted HTML emitted by the renderer.
+                for tag in re.findall(r"<button\\b[^>]*>", race_html, flags=re.I):
+                    attrs = {
+                        key.lower(): html_lib.unescape(value).strip()
+                        for key, _quote, value in re.findall(
+                            r"""([:\\w-]+)\\s*=\\s*(['"])(.*?)\\2""",
+                            tag,
+                            flags=re.S,
+                        )
+                    }
+                    classes = set(attrs.get("class", "").split())
+                    if "rider" not in classes:
                         continue
-                    parsed_id = html_lib.unescape(id_match.group(1)).strip()
-                    parsed_name = html_lib.unescape(name_match.group(1)).strip()
-                    if parsed_id:
+                    parsed_id = attrs.get("data-player-id", "")
+                    parsed_name = attrs.get("data-name", "")
+                    if parsed_id and parsed_name:
                         rider_attrs[parsed_id] = parsed_name
 
                 for _, rider in group.iterrows():
