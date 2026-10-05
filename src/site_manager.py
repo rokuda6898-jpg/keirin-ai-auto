@@ -649,10 +649,39 @@ def repair(problems=None):
             return False, "predict_regeneration_failed"
         actions.append("prediction_regeneration")
 
-    if kinds & (data_kinds | result_kinds):
-        if run([sys.executable, "src/settle_results.py"]) != 0:
-            return False, "settlement_refresh_failed"
-        actions.append("settlement_refresh")
+    # Result failures use a separate escalation ladder. Repeating the same
+    # settlement fetch forever is wasteful and can turn a provider publication
+    # delay into a false system failure.
+    result_fault = bool(kinds & result_kinds)
+    result_overdue_only = kinds == {"results_overdue"}
+
+    if result_overdue_only and level >= 3:
+        # Circuit breaker: after repeated confirmed retries, stop hammering the
+        # provider. The manager remains alive and the next scheduled cycle (and
+        # quick-results workflow) will try again with fresh upstream state.
+        actions.append("results_deferred_until_next_cycle")
+    else:
+        if result_fault and not (kinds & data_kinds) and level >= 2:
+            # Escalation path: refresh race/source metadata first, validate it,
+            # then retry settlement. This is deliberately stronger than simply
+            # replaying settle_results.py against a stale source snapshot.
+            pre_ok, _, _ = validate_source_gate()
+            if pre_ok:
+                snapshot_last_good()
+            if run([sys.executable, "src/fetch_today_entries.py"]) != 0:
+                return False, "results_source_refresh_failed"
+            gate_ok, gate_problems, _ = validate_source_gate()
+            if not gate_ok:
+                rolled_back = rollback_last_good()
+                append_incident_history(gate_problems, "results_source_gate_rejected")
+                return False, "results_source_gate_rejected_rolled_back" if rolled_back else "results_source_gate_rejected_no_backup"
+            snapshot_last_good()
+            actions.append("results_source_refresh_gated")
+
+        if kinds & (data_kinds | result_kinds):
+            if run([sys.executable, "src/settle_results.py"]) != 0:
+                return False, "settlement_refresh_failed"
+            actions.append("settlement_refresh")
 
     if not actions:
         # Unknown failures get a conservative full integrity rebuild rather than
