@@ -31,6 +31,7 @@ from multi_bet_backtest import BET_LABELS, make_candidates as make_multi_bet_can
 from model_drift_audit import audit_live_drift
 from trifecta_reranker import score_candidates as score_trifecta_reranker
 from commander_selector import choose_variant as choose_commander_variant
+from live_snapshot_model import score_current as score_live_snapshot_model
 
 TRIFECTA_ODDS_CSV = RAW_DIR / "today_trifecta_odds.csv"
 PROFIT_GATE_PATH = OUTPUT_DIR / "external_holdout_overall.json"
@@ -749,6 +750,10 @@ def build_top1_variants(pred):
     }
     if "p_core" in base.columns:
         variants["core_model"] = pd.to_numeric(base["p_core"], errors="coerce").clip(lower=1e-9)
+    if "p_live_snapshot" in base.columns:
+        live_score = pd.to_numeric(base["p_live_snapshot"], errors="coerce")
+        if live_score.notna().any():
+            variants["live_snapshot_model"] = live_score.clip(lower=1e-9)
     recency_score = _recency_challenger_scores(base)
     if recency_score is not None:
         variants["recency_model"] = pd.to_numeric(recency_score, errors="coerce").clip(lower=1e-9)
@@ -1087,6 +1092,10 @@ def main():
     df = add_today_prior_features(df)
     df = add_live_odds_movement(df)
 
+    live_snapshot_score = score_live_snapshot_model(
+        df, now_epoch=prediction_epoch
+    )
+
     X, _ = prepare_features(df, fill_values)
 
     # Production models can temporarily lag behind newly introduced shadow
@@ -1144,6 +1153,10 @@ def main():
     # V4 chronological validation shows this core Top1 is stronger than the
     # adjusted Top1, so audit it live without changing ticket generation yet.
     pred = normalize_race_prob(pred, "p_raw", "p_core")
+    if live_snapshot_score is not None:
+        pred["p_live_snapshot"] = pd.to_numeric(
+            live_snapshot_score, errors="coerce"
+        )
     pred = apply_nexus_race_reading(pred)
     pred = apply_validated_top1_consensus(pred)
     pred = apply_position_models(pred)
