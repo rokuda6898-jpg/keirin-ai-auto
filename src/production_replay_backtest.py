@@ -148,8 +148,8 @@ def score_fold(test_df, win, second, third, fills, calibrator=None, odds_by_race
         production_pick = int(production_top["car_no"])
         core_pick_car = int(core_map.get(rid)) if pd.notna(core_map.get(rid)) else None
 
-        broad_tri = make_trifecta_candidates(
-            g, top_k_riders=None
+        broad_tri = pd.DataFrame(
+            make_trifecta_candidates(g, top_k_riders=None)
         ).rename(columns={"trifecta_prob_approx": "prob"})
         broad_tri["bet_type"] = "trifecta"
         broad_tri["prob"] = pd.to_numeric(
