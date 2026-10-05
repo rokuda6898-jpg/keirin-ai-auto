@@ -29,6 +29,7 @@ from common import (
 )
 from multi_bet_backtest import BET_LABELS, make_candidates as make_multi_bet_candidates
 from model_drift_audit import audit_live_drift
+from trifecta_reranker import score_candidates as score_trifecta_reranker
 
 TRIFECTA_ODDS_CSV = RAW_DIR / "today_trifecta_odds.csv"
 PROFIT_GATE_PATH = OUTPUT_DIR / "external_holdout_overall.json"
@@ -869,6 +870,27 @@ def save_trifecta_top10_ledger(pred, now_jst):
     rows = []
     current_races = set()
 
+    def append_variant(base, race_id, frame, variant, score_col):
+        if frame is None or len(frame) == 0:
+            return
+        ranked = frame.sort_values(score_col, ascending=False, kind="mergesort").head(10).reset_index(drop=True)
+        for rank, (_, cand) in enumerate(ranked.iterrows(), start=1):
+            rows.append({
+                "date": base.get("date", ""),
+                "venue": base.get("venue", ""),
+                "race_no": base.get("race_no", ""),
+                "race_id": str(race_id),
+                "start_at": base.get("start_at", np.nan),
+                "close_at": base.get("close_at", np.nan),
+                "variant": variant,
+                "ticket_rank": rank,
+                "buy": str(cand.get("buy", "")),
+                "prob": cand.get("prob", cand.get("base_prob", np.nan)),
+                "variant_score": cand.get(score_col, np.nan),
+                "trifecta_portfolio_mode": cand.get("trifecta_portfolio_mode", ""),
+                "prediction_created_at_jst": now_jst.isoformat(timespec="seconds"),
+            })
+
     for race_id, g in pred.groupby("race_id", sort=False):
         current_races.add(str(race_id))
         base = g.iloc[0]
@@ -879,21 +901,16 @@ def save_trifecta_top10_ledger(pred, now_jst):
         if tri.empty:
             continue
         tri["prob"] = pd.to_numeric(tri["prob"], errors="coerce")
-        tri = tri.sort_values("prob", ascending=False).head(10).reset_index(drop=True)
-        for rank, (_, cand) in enumerate(tri.iterrows(), start=1):
-            rows.append({
-                "date": base.get("date", ""),
-                "venue": base.get("venue", ""),
-                "race_no": base.get("race_no", ""),
-                "race_id": str(race_id),
-                "start_at": base.get("start_at", np.nan),
-                "close_at": base.get("close_at", np.nan),
-                "ticket_rank": rank,
-                "buy": str(cand.get("buy", "")),
-                "prob": cand.get("prob", np.nan),
-                "trifecta_portfolio_mode": cand.get("trifecta_portfolio_mode", ""),
-                "prediction_created_at_jst": now_jst.isoformat(timespec="seconds"),
-            })
+        append_variant(base, race_id, tri, "production_top10", "prob")
+
+        reranked = score_trifecta_reranker(g, tri)
+        if reranked is not None and len(reranked):
+            reranked = reranked.merge(
+                tri[["buy", "prob", "trifecta_portfolio_mode"]].drop_duplicates("buy"),
+                on="buy",
+                how="left",
+            )
+            append_variant(base, race_id, reranked, "trifecta_reranker", "reranker_score")
 
     current = pd.DataFrame(rows)
     try:
@@ -901,11 +918,16 @@ def save_trifecta_top10_ledger(pred, now_jst):
     except (FileNotFoundError, pd.errors.EmptyDataError, pd.errors.ParserError):
         old = pd.DataFrame()
 
-    if len(old) and current_races:
-        old = old[~old["race_id"].astype(str).isin(current_races)]
+    if len(old):
+        if "variant" not in old.columns:
+            old["variant"] = "production_top10"
+        if current_races:
+            old = old[~old["race_id"].astype(str).isin(current_races)]
     combined = pd.concat([old, current], ignore_index=True, sort=False)
     if len(combined):
-        combined = combined.drop_duplicates(["race_id", "ticket_rank"], keep="last")
+        if "variant" not in combined.columns:
+            combined["variant"] = "production_top10"
+        combined = combined.drop_duplicates(["race_id", "variant", "ticket_rank"], keep="last")
     combined.to_csv(path, index=False)
     return current
 
