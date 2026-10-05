@@ -72,7 +72,7 @@ jobs:
 
       - name: Append officially confirmed races to central history
         run: |
-          python src/append_confirmed_history.py
+          python src/append_confirmed_history.py --min-existing-races 30000
 
       - name: Save latest intraday central history
         if: always() && hashFiles('data/raw/history.csv') != ''
