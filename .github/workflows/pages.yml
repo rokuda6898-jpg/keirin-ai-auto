@@ -33,6 +33,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Stamp deployment fingerprint
+        run: |
+          printf '%s\n' "$(git rev-parse HEAD)" > outputs/deploy_fingerprint.txt
+          echo "deployment fingerprint: $(cat outputs/deploy_fingerprint.txt)"
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
@@ -55,6 +60,12 @@ jobs:
           from pathlib import Path
 
           page_url = os.environ["PAGE_URL"].rstrip("/") + "/"
+          fingerprint_path = Path("outputs/deploy_fingerprint.txt")
+          expected_fingerprint = fingerprint_path.read_text(encoding="utf-8").strip()
+          if not expected_fingerprint:
+              print("Deployment fingerprint is empty; refusing to certify published site.")
+              sys.exit(2)
+
           expected = set()
           schedule = Path("outputs/latest_race_schedule.csv")
           if schedule.exists():
@@ -65,19 +76,48 @@ jobs:
               sys.exit(2)
 
           last_missing = expected
+          last_fingerprint = ""
           for attempt in range(6):
-              req = urllib.request.Request(page_url + f"?verify={int(time.time())}", headers={"Cache-Control":"no-cache","User-Agent":"keirin-site-verifier/1.0"})
+              nonce = int(time.time())
+              req = urllib.request.Request(
+                  page_url + f"?verify={nonce}",
+                  headers={"Cache-Control":"no-cache","User-Agent":"keirin-site-verifier/2.0"},
+              )
               with urllib.request.urlopen(req, timeout=30) as res:
                   html = res.read().decode("utf-8", errors="replace")
+
+              fp_req = urllib.request.Request(
+                  page_url + f"deploy_fingerprint.txt?verify={nonce}",
+                  headers={"Cache-Control":"no-cache","User-Agent":"keirin-site-verifier/2.0"},
+              )
+              with urllib.request.urlopen(fp_req, timeout=30) as res:
+                  published_fingerprint = res.read().decode("utf-8", errors="replace").strip()
+
               missing = {race_id for race_id in expected if race_id not in html}
-              if not missing:
-                  print(f"published-site verified: races={len(expected)}")
+              fingerprint_ok = published_fingerprint == expected_fingerprint
+              if not missing and fingerprint_ok:
+                  print(
+                      f"published-site verified: races={len(expected)} "
+                      f"fingerprint={expected_fingerprint[:12]}"
+                  )
                   sys.exit(0)
+
               last_missing = missing
-              print(f"published-site mismatch attempt={attempt+1}/6 missing={len(missing)} sample={sorted(missing)[:10]}")
+              last_fingerprint = published_fingerprint
+              print(
+                  f"published-site mismatch attempt={attempt+1}/6 "
+                  f"missing={len(missing)} "
+                  f"fingerprint_ok={fingerprint_ok} "
+                  f"expected_fp={expected_fingerprint[:12]} "
+                  f"published_fp={published_fingerprint[:12]} "
+                  f"sample={sorted(missing)[:10]}"
+              )
               time.sleep(10)
 
-          print(f"published-site verification FAILED missing={len(last_missing)}")
+          print(
+              f"published-site verification FAILED missing={len(last_missing)} "
+              f"expected_fp={expected_fingerprint} published_fp={last_fingerprint}"
+          )
           sys.exit(2)
           PY
 
