@@ -895,23 +895,51 @@ def save_trifecta_top10_ledger(pred, now_jst):
     for race_id, g in pred.groupby("race_id", sort=False):
         current_races.add(str(race_id))
         base = g.iloc[0]
-        candidates = make_multi_bet_candidates(g, top_k=min(len(g), 9))
-        if load_v4_validation_gate().get("target_passed", False):
-            candidates = filter_trifecta_candidates_by_confidence(candidates, g)
-        tri = candidates[candidates["bet_type"].eq("trifecta")].copy() if len(candidates) else pd.DataFrame()
-        if tri.empty:
+        broad_candidates = make_multi_bet_candidates(g, top_k=min(len(g), 9))
+        broad_tri = (
+            broad_candidates[broad_candidates["bet_type"].eq("trifecta")].copy()
+            if len(broad_candidates) else pd.DataFrame()
+        )
+        if broad_tri.empty:
             continue
-        tri["prob"] = pd.to_numeric(tri["prob"], errors="coerce")
-        append_variant(base, race_id, tri, "production_top10", "prob")
+        broad_tri["prob"] = pd.to_numeric(broad_tri["prob"], errors="coerce")
 
-        reranked = score_trifecta_reranker(g, tri)
+        production_candidates = broad_candidates
+        if load_v4_validation_gate().get("target_passed", False):
+            production_candidates = filter_trifecta_candidates_by_confidence(
+                broad_candidates, g
+            )
+        production_tri = (
+            production_candidates[production_candidates["bet_type"].eq("trifecta")].copy()
+            if len(production_candidates) else pd.DataFrame()
+        )
+        if len(production_tri):
+            production_tri["prob"] = pd.to_numeric(
+                production_tri["prob"], errors="coerce"
+            )
+            append_variant(
+                base, race_id, production_tri, "production_top10", "prob"
+            )
+
+        # The combination AI must see the broad ordered field, not only tickets
+        # that survived the production head/position filter. Otherwise it can
+        # never recover the actual trifecta once production filtered it out.
+        reranked = score_trifecta_reranker(g, broad_tri)
         if reranked is not None and len(reranked):
             reranked = reranked.merge(
-                tri[["buy", "prob", "trifecta_portfolio_mode"]].drop_duplicates("buy"),
+                broad_tri[["buy", "prob"]].drop_duplicates("buy"),
                 on="buy",
                 how="left",
+                suffixes=("", "_source"),
             )
-            append_variant(base, race_id, reranked, "trifecta_reranker", "reranker_score")
+            if "prob_source" in reranked.columns:
+                reranked["prob"] = pd.to_numeric(
+                    reranked["prob_source"], errors="coerce"
+                ).fillna(pd.to_numeric(reranked.get("base_prob"), errors="coerce"))
+            reranked["trifecta_portfolio_mode"] = "reranker_broad_all"
+            append_variant(
+                base, race_id, reranked, "trifecta_reranker", "reranker_score"
+            )
 
     current = pd.DataFrame(rows)
     try:
