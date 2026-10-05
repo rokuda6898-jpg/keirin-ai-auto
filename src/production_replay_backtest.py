@@ -7,6 +7,7 @@ from zoneinfo import ZoneInfo
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.isotonic import IsotonicRegression
 
 from common import (
     HISTORY_CSV,
@@ -63,6 +64,30 @@ def enrich_history(df):
 
 
 def fit_fold_models(train_df, position_variant):
+    # Match production training semantics: fit a chronology-safe calibrator on
+    # the latest held-out slice of the pre-fold history, then fit the final win
+    # model on all history available before this replay fold.
+    dates = sorted(pd.to_datetime(train_df["date"]).dropna().unique())
+    calib_start = dates[max(1, int(len(dates) * 0.85))] if len(dates) >= 8 else None
+
+    calibrator = None
+    if calib_start is not None:
+        inner_train = train_df[pd.to_datetime(train_df["date"]) < calib_start].copy()
+        inner_calib = train_df[pd.to_datetime(train_df["date"]) >= calib_start].copy()
+        if (
+            inner_train["race_id"].nunique() >= 1000
+            and inner_calib["race_id"].nunique() >= 200
+        ):
+            X_inner, inner_fills = prepare_features(inner_train)
+            inner_model = _model(142, 0.02)
+            inner_model.fit(X_inner, inner_train["target_win"].astype(int))
+            X_calib, _ = prepare_features(inner_calib, inner_fills)
+            y_calib = inner_calib["target_win"].astype(int)
+            raw_calib = inner_model.predict_proba(X_calib)[:, 1]
+            if len(raw_calib) > 20 and y_calib.nunique() == 2:
+                calibrator = IsotonicRegression(out_of_bounds="clip")
+                calibrator.fit(raw_calib, y_calib)
+
     X_train, fills = prepare_features(train_df)
     win = _model(42, 0.02)
     win.fit(X_train, train_df["target_win"].astype(int))
@@ -79,14 +104,17 @@ def fit_fold_models(train_df, position_variant):
     third = _model(73, 0.03)
     second.fit(X_train, y2)
     third.fit(X_train, y3)
-    return win, second, third, fills
+    return win, second, third, fills, calibrator
 
 
-def score_fold(test_df, win, second, third, fills, odds_by_race=None):
+def score_fold(test_df, win, second, third, fills, calibrator=None, odds_by_race=None):
     X, _ = prepare_features(test_df, fills)
 
     pred = test_df.copy()
-    pred["p_raw"] = np.clip(win.predict_proba(X)[:, 1], 1e-9, 1.0)
+    win_raw = np.clip(win.predict_proba(X)[:, 1], 1e-9, 1.0)
+    if calibrator is not None:
+        win_raw = np.clip(calibrator.predict(win_raw), 1e-9, 1.0)
+    pred["p_raw"] = win_raw
     pred = normalize_race_prob(pred, "p_raw", "p_core")
 
     core_idx = pred.groupby("race_id")["p_core"].idxmax()
@@ -298,9 +326,17 @@ def main():
             f"production replay fold={fold_no} train={train_races} test={test_races} "
             f"start={start.date()} end={end.date()}"
         )
-        win, second, third, fills = fit_fold_models(train_df, position_variant)
+        win, second, third, fills, calibrator = fit_fold_models(
+            train_df, position_variant
+        )
         _, races, candidates = score_fold(
-            test_df, win, second, third, fills, odds_by_race=odds_by_race
+            test_df,
+            win,
+            second,
+            third,
+            fills,
+            calibrator=calibrator,
+            odds_by_race=odds_by_race,
         )
         if races.empty:
             continue
@@ -318,6 +354,7 @@ def main():
             "test_end": str(end.date()),
             "core_top1_hit_rate": float(races["core_hit"].mean()),
             "production_top1_hit_rate": float(races["production_hit"].mean()),
+            "probability_calibration_active": calibrator is not None,
             "trifecta_top10_hit_rate": float(races["trifecta_top10_hit"].mean()),
             "final_ticket_evaluated_races": int(races["final_ticket_hit"].notna().sum()),
             "final_ticket_hit_rate": (
