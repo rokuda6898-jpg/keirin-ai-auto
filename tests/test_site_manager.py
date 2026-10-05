@@ -138,6 +138,43 @@ class SiteManagerTests(unittest.TestCase):
 
             self.assertEqual(counts[("results_overdue", "078420261005")], 2)
 
+    def test_site_player_name_audit_ignores_attribute_order(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            output_dir = root / "outputs"
+            output_dir.mkdir()
+            today_csv = root / "today_entries.csv"
+
+            pd.DataFrame([
+                {
+                    "race_id": "race1",
+                    "player_id": "p100",
+                    "car_no": 1,
+                    "player_name": "選手A",
+                }
+            ]).to_csv(today_csv, index=False)
+
+            html = (
+                '<html><body>'
+                '<article class="race" id="race-race1">'
+                '<button class="rider selected" data-name="選手A" '
+                'data-car="1" data-extra="x" data-player-id="p100">'
+                '<span>選手A</span></button>'
+                '</article>'
+                '</body></html>'
+            )
+            html += " " * 1500
+            (output_dir / "index.html").write_text(html, encoding="utf-8")
+
+            with mock.patch.multiple(
+                site_manager,
+                TODAY_CSV=today_csv,
+                OUTPUT_DIR=output_dir,
+            ):
+                problems = site_manager.audit_site_output()
+
+            self.assertEqual(problems, [])
+
     def test_results_waiting_does_not_enter_repair_loop(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             status_path = Path(temp_dir) / "manager_status.json"
