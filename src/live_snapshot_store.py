@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 import numpy as np
 import pandas as pd
 
-from common import HISTORY_CSV, OUTPUT_DIR, RAW_DIR, TODAY_CSV, ensure_dirs
+from common import FEATURE_COLS, HISTORY_CSV, OUTPUT_DIR, RAW_DIR, TODAY_CSV, ensure_dirs, prepare_features
 
 SNAPSHOT_CSV = RAW_DIR / "live_snapshot_history.csv"
 SUMMARY_JSON = OUTPUT_DIR / "live_snapshot_learning_summary.json"
@@ -52,36 +52,63 @@ def _distance_to_target(row):
     return abs(float(seconds) - float(target))
 
 
-def capture():
+def capture_frame(frame, prepared_features=None, captured_at=None):
+    """Persist the exact pre-race feature state used by prediction.
+
+    prepared_features should be the numeric matrix returned by prepare_features
+    before it is narrowed to an older production model schema. These values are
+    preferred over legacy raw snapshots so future live-only training sees the
+    same feature state that production inference saw.
+    """
     ensure_dirs()
-    if not TODAY_CSV.exists():
-        return 0
-    today = pd.read_csv(TODAY_CSV, dtype={"race_id": str, "player_id": str})
-    if today.empty or "race_id" not in today.columns:
+    if frame is None or len(frame) == 0 or "race_id" not in frame.columns:
         return 0
 
-    now = datetime.now(ZoneInfo("Asia/Tokyo"))
-    close_at = pd.to_numeric(today.get("close_at"), errors="coerce")
-    today["seconds_to_close"] = close_at - now.timestamp()
-    today["snapshot_bucket"] = today["seconds_to_close"].map(snapshot_bucket)
-    snap = today[today["snapshot_bucket"].notna()].copy()
+    now = captured_at or datetime.now(ZoneInfo("Asia/Tokyo"))
+    snap = frame.copy()
+    close_at = pd.to_numeric(snap.get("close_at"), errors="coerce")
+    snap["seconds_to_close"] = close_at - now.timestamp()
+    snap["snapshot_bucket"] = snap["seconds_to_close"].map(snapshot_bucket)
+    snap = snap[snap["snapshot_bucket"].notna()].copy()
     if snap.empty:
         print("no races in live learning snapshot windows")
         return 0
 
+    if prepared_features is not None and len(prepared_features) == len(frame):
+        prepared = prepared_features.copy()
+        prepared = prepared.reindex(frame.index)
+        prepared = prepared.loc[snap.index]
+        for col in FEATURE_COLS:
+            if col in prepared.columns:
+                snap[col] = pd.to_numeric(prepared[col], errors="coerce")
+        snap["model_input_ready"] = True
+        snap["model_feature_version"] = "prepared_feature_cols_v1"
+    else:
+        snap["model_input_ready"] = False
+        snap["model_feature_version"] = "raw_feed_only"
+
+    snap["snapshot_bucket_code"] = snap["snapshot_bucket"].map(
+        {"morning": 0.0, "40m": 1.0, "20m": 2.0, "10m": 3.0}
+    )
     snap["captured_at_jst"] = now.isoformat(timespec="seconds")
     snap["captured_at_epoch"] = now.timestamp()
     snap["snapshot_source"] = "real_pre_race_feed"
     if "finish_pos" in snap.columns:
         snap = snap.drop(columns=["finish_pos"])
+    if "official_finish_pos" in snap.columns:
+        snap = snap.drop(columns=["official_finish_pos"])
     snap["label_finish_pos"] = np.nan
     snap["label_available"] = False
     snap["_distance"] = snap.apply(_distance_to_target, axis=1)
+    snap["_feature_priority"] = snap["model_input_ready"].fillna(False).astype(bool).astype(int)
 
     old = _read_snapshots()
     if len(old):
         if "_distance" not in old.columns:
             old["_distance"] = old.apply(_distance_to_target, axis=1)
+        if "model_input_ready" not in old.columns:
+            old["model_input_ready"] = False
+        old["_feature_priority"] = old["model_input_ready"].fillna(False).astype(bool).astype(int)
         combined = pd.concat([old, snap], ignore_index=True, sort=False)
     else:
         combined = snap
@@ -90,18 +117,43 @@ def capture():
     combined["race_id"] = combined["race_id"].astype(str)
     combined["player_id"] = combined["player_id"].astype(str)
     combined = combined.sort_values(
-        ["race_id", "player_id", "snapshot_bucket", "_distance", "captured_at_epoch"],
-        ascending=[True, True, True, True, False],
+        ["race_id", "player_id", "snapshot_bucket", "_feature_priority", "_distance", "captured_at_epoch"],
+        ascending=[True, True, True, False, True, False],
         kind="mergesort",
     )
     combined = combined.drop_duplicates(keys, keep="first")
-    combined = combined.drop(columns=["_distance"], errors="ignore")
+    combined = combined.drop(columns=["_distance", "_feature_priority"], errors="ignore")
     combined.to_csv(SNAPSHOT_CSV, index=False)
+    ready = combined.get("model_input_ready", pd.Series(False, index=combined.index))
     print(
         f"captured live training snapshots rows={len(snap)} "
-        f"stored_rows={len(combined)} stored_races={combined['race_id'].nunique()}"
+        f"stored_rows={len(combined)} stored_races={combined['race_id'].nunique()} "
+        f"model_ready_rows={int(ready.fillna(False).astype(bool).sum())}"
     )
     return int(len(snap))
+
+
+def capture():
+    """Legacy-compatible capture; enrich to the production input state when possible."""
+    ensure_dirs()
+    if not TODAY_CSV.exists():
+        return 0
+    today = pd.read_csv(TODAY_CSV, dtype={"race_id": str, "player_id": str})
+    if today.empty or "race_id" not in today.columns:
+        return 0
+
+    try:
+        # Lazy import avoids a module cycle: predict does not need this module
+        # for ordinary inference, while snapshot collection reuses the exact
+        # same live enrichment functions.
+        from predict import add_live_odds_movement, add_today_prior_features
+        enriched = add_today_prior_features(today)
+        enriched = add_live_odds_movement(enriched)
+        X, _ = prepare_features(enriched)
+        return capture_frame(enriched, X)
+    except Exception as exc:
+        print(f"enriched live snapshot capture unavailable; raw fallback: {exc}")
+        return capture_frame(today, None)
 
 
 def label_from_history():
@@ -158,17 +210,50 @@ def write_summary(frame=None):
             if "label_available" in frame.columns
             else pd.Series(False, index=frame.index)
         )
+        ready = (
+            frame["model_input_ready"].fillna(False).astype(bool)
+            if "model_input_ready" in frame.columns
+            else pd.Series(False, index=frame.index)
+        )
+        labeled_ready = available & ready
+        bucket_races = (
+            frame.groupby(frame["snapshot_bucket"].fillna("unknown"))["race_id"]
+            .nunique()
+            .to_dict()
+            if "snapshot_bucket" in frame.columns else {}
+        )
+        labeled_dates = pd.to_datetime(
+            frame.loc[labeled_ready, "date"], errors="coerce"
+        ).dropna()
+        labeled_ready_races = int(
+            frame.loc[labeled_ready, "race_id"].astype(str).nunique()
+        )
+        if labeled_ready_races >= 1500 and labeled_dates.dt.date.nunique() >= 45:
+            readiness = "external_validation_ready"
+        elif labeled_ready_races >= 500 and labeled_dates.dt.date.nunique() >= 20:
+            readiness = "shadow_training_ready"
+        else:
+            readiness = "collecting"
         payload = {
             "updated_at_jst": datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(timespec="seconds"),
             "rows": int(len(frame)),
             "races": int(frame["race_id"].astype(str).nunique()),
+            "model_input_ready_rows": int(ready.sum()),
+            "model_input_ready_races": int(frame.loc[ready, "race_id"].astype(str).nunique()),
             "labeled_rows": int(available.sum()),
             "labeled_races": int(frame.loc[available, "race_id"].astype(str).nunique()),
+            "labeled_model_ready_rows": int(labeled_ready.sum()),
+            "labeled_model_ready_races": labeled_ready_races,
+            "labeled_model_ready_dates": int(labeled_dates.dt.date.nunique()),
+            "readiness": readiness,
+            "shadow_training_floor_races": 500,
+            "external_validation_floor_races": 1500,
             "snapshot_buckets": {
                 str(k): int(v)
                 for k, v in frame["snapshot_bucket"].fillna("unknown").astype(str).value_counts().items()
             },
-            "policy": "one closest real pre-race snapshot per race/player/time bucket; labels joined only after official history is available",
+            "snapshot_bucket_races": {str(k): int(v) for k, v in bucket_races.items()},
+            "policy": "one closest model-ready real pre-race snapshot per race/player/time bucket; labels joined only after official history is available",
         }
     SUMMARY_JSON.parent.mkdir(parents=True, exist_ok=True)
     SUMMARY_JSON.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
