@@ -55,7 +55,7 @@ jobs:
           restore-keys: |
             keirin-central-history-v1-
 
-      - name: Validate central live-history candidate
+      - name: Validate restored central history
         id: live_central_gate
         run: |
           python - <<'PY' >> "$GITHUB_OUTPUT"
@@ -64,21 +64,23 @@ jobs:
 
           p = Path("data/raw/history.csv")
           races = 0
+          usable = False
           if p.exists() and p.stat().st_size:
               try:
                   df = pd.read_csv(p, usecols=["race_id"], dtype={"race_id": str})
                   races = int(df["race_id"].nunique())
+                  usable = races >= 30000
               except Exception as exc:
-                  print(f"central live-history validation failed: {exc}")
-          usable = races >= 30000
+                  print(f"central history validation failed: {exc}")
+          print(f"races={races}")
+          print(f"usable={'true' if usable else 'false'}")
           if not usable and p.exists():
               p.unlink()
-              print(f"removed undersized central live-history cache: races={races}")
-          print(f"usable={'true' if usable else 'false'}")
-          print(f"races={races}")
+              print(f"removed undersized central history races={races}")
           PY
+          echo "restored central races: ${{ steps.live_central_gate.outputs.races }}"
 
-      - name: Restore strict-validation history fallback
+      - name: Restore strict validation history fallback
         id: live_strict_history
         if: steps.live_central_gate.outputs.usable != 'true'
         uses: actions/cache/restore@v4
@@ -93,31 +95,8 @@ jobs:
           restore-keys: |
             keirin-v4-validation-
 
-      - name: Validate strict live-history candidate
-        id: live_strict_gate
-        run: |
-          python - <<'PY' >> "$GITHUB_OUTPUT"
-          from pathlib import Path
-          import pandas as pd
-
-          p = Path("data/raw/history.csv")
-          races = 0
-          if p.exists() and p.stat().st_size:
-              try:
-                  df = pd.read_csv(p, usecols=["race_id"], dtype={"race_id": str})
-                  races = int(df["race_id"].nunique())
-              except Exception as exc:
-                  print(f"strict live-history validation failed: {exc}")
-          usable = races >= 30000
-          if not usable and p.exists():
-              p.unlink()
-              print(f"removed undersized strict live-history cache: races={races}")
-          print(f"usable={'true' if usable else 'false'}")
-          print(f"races={races}")
-          PY
-
-      - name: Restore weekly history fallback for live features
-        if: steps.live_strict_gate.outputs.usable != 'true'
+      - name: Restore weekly history fallback
+        if: steps.live_central_gate.outputs.usable != 'true' && steps.live_strict_history.outputs.cache-matched-key == ''
         uses: actions/cache/restore@v4
         with:
           path: |
@@ -130,7 +109,7 @@ jobs:
           restore-keys: |
             keirin-history-v4-
 
-      - name: Validate live feature history
+      - name: Validate final live feature history
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -138,12 +117,12 @@ jobs:
 
           p = Path("data/raw/history.csv")
           if not p.exists() or not p.stat().st_size:
-              raise SystemExit("live feature history missing after all fallbacks")
+              raise SystemExit("validated history fallback missing")
           df = pd.read_csv(p, usecols=["race_id"], dtype={"race_id": str})
           races = int(df["race_id"].nunique())
-          print(f"live feature history races={races}")
+          print(f"validated live feature history races={races}")
           if races < 30000:
-              raise SystemExit(f"live feature history too small after all fallbacks: {races}")
+              raise SystemExit(f"validated history still too small: {races}")
           PY
 
       - name: Bootstrap production drift baseline if missing
