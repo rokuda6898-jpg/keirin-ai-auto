@@ -69,7 +69,6 @@ jobs:
       - name: Settle predictions
         run: |
           python src/settle_results.py
-          python src/company_knowledge.py --mode settle
 
       - name: Append officially confirmed races to central history
         run: |
@@ -81,6 +80,10 @@ jobs:
         with:
           path: data/raw/history.csv
           key: keirin-central-history-v1-${{ github.run_id }}
+
+      - name: Update company knowledge after central history is persisted
+        run: |
+          python src/company_knowledge.py --mode settle
 
       - name: Rebuild historical prediction history on manual run
         if: github.event_name == 'workflow_dispatch'
