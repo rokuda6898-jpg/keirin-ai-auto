@@ -9,6 +9,7 @@ on:
       - "src/predict.py"
       - "src/race_features.py"
       - "src/settle_results.py"
+      - "src/company_knowledge.py"
       - "tests/**"
       - ".github/workflows/weekly_train.yml"
   schedule:
@@ -111,6 +112,10 @@ jobs:
           PY
           echo "Accumulated history races: ${{ steps.history_gate.outputs.races }}"
 
+      - name: Update company knowledge
+        run: |
+          python src/company_knowledge.py --mode weekly
+
       - name: Train
         if: steps.history_gate.outputs.ready == 'true'
         run: |
@@ -181,6 +186,7 @@ jobs:
             outputs/multi_bet_period_summary.csv
             outputs/multi_bet_threshold_sweep.csv
             outputs/multi_bet_recommended_conditions_periods.csv
+            outputs/company/
           retention-days: 30
 
       - name: Commit model and backtest
