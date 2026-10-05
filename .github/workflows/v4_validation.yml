@@ -122,9 +122,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     concurrency:
-      # Validation may run for hours. Only serialize the short publication
-      # phase with the other workflows that write generated state to main.
-      group: keirin-repo-writer
+      # Keep V4 publication in its own queue. Staleness is guarded explicitly
+      # below, so unrelated repository writers cannot evict this pending job.
+      group: keirin-v4-publish
       cancel-in-progress: false
 
     steps:
@@ -143,15 +143,49 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          guarded_paths=(
+            src/validate_v4.py
+            src/train_position_from_validation.py
+            src/build_history.py
+            src/predict.py
+            src/race_features.py
+            src/settle_results.py
+            tests
+            .github/workflows/v4_validation.yml
+            models/v4_validation_summary.json
+            models/position_models.joblib
+            outputs/v4_validation_folds.csv
+          )
+
+          is_stale_against_main() {
+            git fetch origin main
+            if ! git diff --quiet "$GITHUB_SHA" origin/main -- "${guarded_paths[@]}"; then
+              echo "V4 validation became stale while it was running; skip publication."
+              git diff --name-only "$GITHUB_SHA" origin/main -- "${guarded_paths[@]}" || true
+              return 0
+            fi
+            return 1
+          }
+
+          if is_stale_against_main; then
+            exit 0
+          fi
+
           git add models/v4_validation_summary.json models/position_models.joblib outputs/v4_validation_folds.csv || true
           git diff --staged --quiet && exit 0
           git commit -m "Update strict v4 validation"
+
           for attempt in 1 2 3 4; do
-            git fetch origin main
+            if is_stale_against_main; then
+              echo "A newer relevant revision landed before push; refusing stale V4 overwrite."
+              exit 0
+            fi
             if git rebase origin/main && git push origin main; then
               exit 0
             fi
             git rebase --abort || true
+            echo "V4 publish race: retry $attempt/4"
             sleep $((attempt * 2))
           done
           exit 1
