@@ -7,6 +7,7 @@ on:
     paths:
       - "src/train.py"
       - "src/train_top1_candidate.py"
+      - "src/train_recency_challenger.py"
       - "src/multi_bet_backtest.py"
       - "src/predict.py"
       - "src/race_features.py"
@@ -191,6 +192,11 @@ jobs:
         run: |
           python src/train_top1_candidate.py
 
+      - name: Train recency-weighted Top1 challenger
+        if: steps.history_gate.outputs.ready == 'true'
+        run: |
+          python src/train_recency_challenger.py --half-life-days 120
+
       - name: Preserve fast top1 candidate
         if: steps.history_gate.outputs.ready == 'true'
         uses: actions/upload-artifact@v4
@@ -329,6 +335,8 @@ jobs:
             position_models.joblib
             position_metrics.json
             shadow_rank_model.joblib
+            recency_win_model.joblib
+            recency_model_metrics.json
           )
 
           weekly_output_files=(
