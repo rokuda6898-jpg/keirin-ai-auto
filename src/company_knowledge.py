@@ -20,6 +20,7 @@ HISTORY_INTEGRITY = OUTPUT_DIR / "history_integrity_report.json"
 CROSS_SOURCE_SUMMARY = OUTPUT_DIR / "cross_source_audit_summary.json"
 LIVE_DRIFT_AUDIT = OUTPUT_DIR / "live_drift_audit.json"
 TRIFECTA_TOP10_ACCURACY = OUTPUT_DIR / "trifecta_top10_accuracy.json"
+FINAL_TRIFECTA_ACCURACY = OUTPUT_DIR / "final_trifecta_ticket_accuracy.json"
 PRODUCTION_REPLAY_SUMMARY = OUTPUT_DIR / "production_replay_summary.json"
 LIVE_SNAPSHOT_SUMMARY = OUTPUT_DIR / "live_snapshot_learning_summary.json"
 TRIFECTA_RERANKER_METRICS = MODEL_DIR / "trifecta_reranker_metrics.json"
@@ -401,6 +402,7 @@ def risk_report(archive):
             "hit_rate_by_predicted_line_position": [],
             "miss_reason_distribution": [],
             "trifecta_top10": read_json(TRIFECTA_TOP10_ACCURACY),
+            "final_trifecta_tickets": read_json(FINAL_TRIFECTA_ACCURACY),
             "live_drift": read_json(LIVE_DRIFT_AUDIT),
         }
 
@@ -422,6 +424,7 @@ def risk_report(archive):
         "hit_rate_by_predicted_line_position": grouped_hit_rate(scored, "line_position"),
         "miss_reason_distribution": distribution(misses, "miss_reason"),
         "trifecta_top10": read_json(TRIFECTA_TOP10_ACCURACY),
+        "final_trifecta_tickets": read_json(FINAL_TRIFECTA_ACCURACY),
         "live_drift": read_json(LIVE_DRIFT_AUDIT),
     }
 
@@ -439,6 +442,22 @@ def strategist_report(risk, manifest, model_audit=None):
     second_pick = model_audit.get("second_pick_specialist", {}) or {}
     live_drift = risk.get("live_drift", {}) or {}
     trifecta_top10 = risk.get("trifecta_top10", {}) or {}
+    final_trifecta = risk.get("final_trifecta_tickets", {}) or {}
+
+    if int(final_trifecta.get("races", 0) or 0) >= 50:
+        actions.append(
+            {
+                "priority": 1,
+                "type": "final_trifecta_product_kpi",
+                "action": "treat latest selected trifecta tickets as the primary product KPI; keep model Top10 coverage as a diagnostic KPI",
+                "evidence": {
+                    "races": final_trifecta.get("races"),
+                    "hit_rate": final_trifecta.get("hit_rate"),
+                    "recent_50_hit_rate": final_trifecta.get("recent_50_hit_rate"),
+                    "avg_ticket_count": final_trifecta.get("avg_ticket_count"),
+                },
+            }
+        )
 
     if live_drift.get("status") in {"amber", "red"}:
         actions.append(
@@ -805,11 +824,13 @@ def run(mode):
         "official_prediction_eval_races": risk["evaluated_races"],
         "official_top1_hit_rate": risk["top1_hit_rate"],
         "trifecta_top10_kpi": risk.get("trifecta_top10"),
+        "final_trifecta_product_kpi": risk.get("final_trifecta_tickets"),
         "live_feature_drift": risk.get("live_drift"),
         "cross_source_audit": manifest.get("cross_source_audit"),
         "engine_lab": engine_lab,
         "production_replay_top1_hit_rate": replay.get("production_top1_hit_rate"),
         "production_replay_trifecta_top10_hit_rate": replay.get("trifecta_top10_hit_rate"),
+        "production_replay_final_ticket_hit_rate": replay.get("final_ticket_hit_rate"),
         "trifecta_reranker_delta_pp": trifecta_reranker.get("delta_pp"),
         "commander_selector_delta_pp": commander_selector.get("delta_pp"),
         "live_snapshot_labeled_races": live_snapshots.get("labeled_races"),
@@ -930,10 +951,12 @@ def run(mode):
         f"- Top1的中率: {risk['top1_hit_rate'] if risk['top1_hit_rate'] is not None else '未算出'}",
         f"- モデル監査: {audit_payload.get('drift_status', '未算出')}",
         f"- ライブ入力ドリフト: {(risk.get('live_drift') or {}).get('status', '未算出')}",
-        f"- 3連単10点的中率: {(risk.get('trifecta_top10') or {}).get('hit_rate', '未算出')}",
+        f"- モデル3連単Top10的中率: {(risk.get('trifecta_top10') or {}).get('hit_rate', '未算出')}",
+        f"- 実商品3連単的中率: {(risk.get('final_trifecta_tickets') or {}).get('hit_rate', '未算出')}",
         f"- 戦史クロスソース一致: {(manifest.get('cross_source_audit') or {}).get('agreement_rate', '未算出')}",
         f"- 本番再現Top1: {replay.get('production_top1_hit_rate', '未算出')}",
-        f"- 本番再現3連単10点: {replay.get('trifecta_top10_hit_rate', '未算出')}",
+        f"- 本番再現3連単Top10: {replay.get('trifecta_top10_hit_rate', '未算出')}",
+        f"- 本番再現最終券: {replay.get('final_ticket_hit_rate', '未算出')}",
         f"- 3連単専用AI純増pp: {trifecta_reranker.get('delta_pp', '未算出')}",
         f"- 司令塔AI純増pp: {commander_selector.get('delta_pp', '未算出')}",
         f"- 実戦スナップショット学習済R: {live_snapshots.get('labeled_races', 0)}",
