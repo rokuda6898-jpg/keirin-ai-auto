@@ -43,7 +43,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Restore strict-validation history cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: |
             data/raw/history.csv
@@ -83,6 +83,36 @@ jobs:
       - name: Audit history
         run: |
           python src/audit_history.py --fail-on-leakage
+
+      - name: Validate strict history before cache publish
+        id: strict_cache_gate
+        run: |
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          from pathlib import Path
+          import pandas as pd
+
+          p = Path("data/raw/history.csv")
+          races = 0
+          if p.exists() and p.stat().st_size:
+              df = pd.read_csv(p, usecols=["race_id"], dtype={"race_id": str})
+              races = int(df["race_id"].nunique())
+          ready = races >= 45000
+          print(f"races={races}")
+          print(f"ready={'true' if ready else 'false'}")
+          PY
+          echo "strict history races: ${{ steps.strict_cache_gate.outputs.races }}"
+
+      - name: Save validated strict history cache
+        if: steps.strict_cache_gate.outputs.ready == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            data/raw/history.csv
+            data/raw/history_odds.csv
+            data/raw/history_trifecta_odds.csv
+            data/raw/history_metadata.json
+            data/raw/race_cache
+          key: keirin-v4-validation-${{ github.run_id }}
 
       - name: Run strict walk-forward validation
         env:
