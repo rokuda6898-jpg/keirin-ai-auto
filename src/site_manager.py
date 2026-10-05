@@ -383,7 +383,7 @@ def audit_results():
     overdue = set()
     if "close_at" in entries.columns:
         close_at = pd.to_numeric(entries["close_at"], errors="coerce")
-        overdue = set(entries.loc[close_at.notna() & (close_at < now - 30 * 60), "race_id"].astype(str))
+        overdue = set(entries.loc[close_at.notna() & (close_at < now - 3 * 60), "race_id"].astype(str))
     if not overdue:
         return problems
     if not path.exists() or path.stat().st_size == 0:
