@@ -155,8 +155,29 @@ jobs:
           echo "central history incomplete; rebuilding shard ${HISTORY_SAMPLE_OFFSET}/${HISTORY_SAMPLE_MOD}"
           python src/build_history.py --months-back "$HISTORY_MONTHS_BACK" --max-races "$HISTORY_MAX_RACES" --min-races "$HISTORY_MIN_RACES" --sample-mod "$HISTORY_SAMPLE_MOD" --sample-offset "$HISTORY_SAMPLE_OFFSET" --merge-existing --workers "$HISTORY_WORKERS" --sleep-sec 0 --progress-every 250
 
+      - name: Validate central history before cache publish
+        id: central_cache_gate
+        run: |
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          from pathlib import Path
+          import pandas as pd
+
+          p = Path("data/raw/history.csv")
+          races = 0
+          if p.exists() and p.stat().st_size:
+              try:
+                  df = pd.read_csv(p, usecols=["race_id"], dtype={"race_id": str})
+                  races = int(df["race_id"].nunique())
+              except Exception as exc:
+                  print(f"central cache validation failed: {exc}")
+          ready = races >= 30000
+          print(f"races={races}")
+          print(f"ready={'true' if ready else 'false'}")
+          PY
+          echo "central cache candidate races: ${{ steps.central_cache_gate.outputs.races }}"
+
       - name: Save merged central history for intraday settlement
-        if: always() && hashFiles('data/raw/history.csv') != ''
+        if: steps.central_cache_gate.outputs.ready == 'true'
         uses: actions/cache/save@v4
         with:
           path: data/raw/history.csv
