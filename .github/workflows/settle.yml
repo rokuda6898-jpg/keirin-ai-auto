@@ -176,33 +176,44 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add models outputs data/raw/today_entries.csv data/raw/today_odds.csv || true
-          git diff --staged --quiet || git commit -m "Settle keirin predictions"
-          # Another writer can finish after this run checked out main. Rebase
-          # generated outputs is conflict-prone, so refresh and regenerate once
-          # against the newest main before pushing.
-          if ! git pull --rebase; then
-            git rebase --abort || true
-            git reset --hard origin/main
+
+          stage_and_commit_settlement() {
+            git add models outputs data/raw/today_entries.csv data/raw/today_odds.csv || true
+            git diff --staged --quiet || git commit -m "Settle keirin predictions"
+          }
+
+          regenerate_settlement() {
+            # Rebuild the full settlement state from the newest main after a
+            # rebase conflict. Never publish only a partial subset of reports.
             python src/fetch_today_entries.py || true
             python src/settle_results.py
-          python src/company_knowledge.py --mode settle
+            python src/company_knowledge.py --mode settle
             python src/update_growth_log.py --kind settle
             python src/settle_shadow.py
             python src/report_growth.py --days 31 --start-date 2026-07-01
-            git add models outputs data/raw/today_entries.csv data/raw/today_odds.csv || true
-            git diff --staged --quiet || git commit -m "Settle keirin predictions"
+            stage_and_commit_settlement
+          }
+
+          stage_and_commit_settlement
+
+          # Another writer can finish after this run checked out main. If that
+          # makes the generated settlement conflict-prone, rebuild everything
+          # once from the newest main rather than carrying a partial snapshot.
+          if ! git pull --rebase; then
+            git rebase --abort || true
+            git reset --hard origin/main
+            regenerate_settlement
           fi
+
           for attempt in 1 2 3 4; do
             git push && exit 0
             echo "settlement push race: retry $attempt/4"
             git fetch origin main
-            git rebase origin/main && continue
+            if git rebase origin/main; then
+              continue
+            fi
             git rebase --abort || true
             git reset --hard origin/main
-            python src/settle_results.py
-          python src/company_knowledge.py --mode settle
-            git add models outputs data/raw/today_entries.csv data/raw/today_odds.csv || true
-            git diff --staged --quiet || git commit -m "Settle keirin predictions"
+            regenerate_settlement
           done
           exit 1
