@@ -62,7 +62,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Restore accumulated history cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: |
             data/raw/history.csv
@@ -293,6 +293,18 @@ jobs:
           PY
           echo "Accumulated history races: ${{ steps.history_gate.outputs.races }}"
           echo "Required history floor: ${{ steps.history_gate.outputs.minimum_races }}"
+
+      - name: Save validated accumulated weekly history cache
+        if: steps.history_gate.outputs.ready == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            data/raw/history.csv
+            data/raw/history_odds.csv
+            data/raw/history_trifecta_odds.csv
+            data/raw/history_metadata.json
+            data/raw/race_cache
+          key: keirin-history-v4-${{ github.run_id }}
 
       - name: Label real pre-race learning snapshots
         if: steps.history_gate.outputs.ready == 'true'
