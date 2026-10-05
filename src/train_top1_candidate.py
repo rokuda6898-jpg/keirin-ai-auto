@@ -4,8 +4,10 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import joblib
+import numpy as np
 import pandas as pd
 from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.isotonic import IsotonicRegression
 
 from common import (
     HISTORY_CSV,
@@ -42,8 +44,23 @@ def main():
     df = add_player_elo_features(df)
     df = add_pair_history_features(df)
 
-    X_full, fill_values = prepare_features(df)
-    y_full = df["target_win"].astype(int)
+    dates = sorted(df["date"].dropna().unique())
+    if len(dates) < 20:
+        raise ValueError("not enough chronological dates for candidate calibration")
+    split_idx = max(1, min(len(dates) - 1, int(len(dates) * 0.85)))
+    calibration_start = pd.Timestamp(dates[split_idx])
+
+    fit_df = df[df["date"] < calibration_start].copy()
+    calibration_df = df[df["date"] >= calibration_start].copy()
+    if fit_df["race_id"].nunique() < 1000 or calibration_df["race_id"].nunique() < 200:
+        raise ValueError(
+            "insufficient chronological races for leakage-safe candidate calibration"
+        )
+
+    X_fit, fill_values = prepare_features(fit_df)
+    y_fit = fit_df["target_win"].astype(int)
+    X_calibration, _ = prepare_features(calibration_df, fill_values)
+    y_calibration = calibration_df["target_win"].astype(int)
 
     model = HistGradientBoostingClassifier(
         max_iter=300,
@@ -52,20 +69,36 @@ def main():
         l2_regularization=0.02,
         random_state=42,
     )
-    model.fit(X_full, y_full)
+    model.fit(X_fit, y_fit)
+
+    calibration_raw = model.predict_proba(X_calibration)[:, 1]
+    calibrator = None
+    if y_calibration.nunique() >= 2 and np.isfinite(calibration_raw).all():
+        calibrator = IsotonicRegression(out_of_bounds="clip")
+        calibrator.fit(calibration_raw, y_calibration)
 
     metrics = {
         "trained_at_jst": datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(timespec="seconds"),
-        "training_scope": "full_history_top1_candidate_fast",
+        "training_scope": "chronological_fit_plus_holdout_calibration_top1_candidate",
         "n_rows": int(len(df)),
         "n_races": int(df["race_id"].nunique()),
+        "fit_rows": int(len(fit_df)),
+        "fit_races": int(fit_df["race_id"].nunique()),
+        "calibration_rows": int(len(calibration_df)),
+        "calibration_races": int(calibration_df["race_id"].nunique()),
+        "calibration_start": str(calibration_start.date()),
+        "probability_calibration": {
+            "active": calibrator is not None,
+            "method": "isotonic_regression" if calibrator is not None else "none",
+            "fit_scope": "latest_15pct_chronological_dates",
+        },
         "features": FEATURE_COLS,
-        "note": "Fast full-history winner candidate. Promotion still requires the later external/live-parity gate.",
+        "note": "Fast winner candidate with chronology-safe held-out probability calibration. Promotion still requires the later external/live-parity gate.",
     }
 
     bundle = {
         "model": model,
-        "calibrator": None,
+        "calibrator": calibrator,
         "fill_values": fill_values,
         "features": FEATURE_COLS,
         "metrics": metrics,
