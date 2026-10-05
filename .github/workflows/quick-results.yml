@@ -15,8 +15,11 @@ permissions:
   contents: write
 
 concurrency:
-  group: keirin-quick-results-writer
-  cancel-in-progress: true
+  # Serialize every workflow that writes generated site/data state back to main.
+  # Never cancel another writer: wait for the lock instead of killing a manager
+  # or settlement run halfway through its publication.
+  group: keirin-repo-writer
+  cancel-in-progress: false
 
 jobs:
   refresh:
