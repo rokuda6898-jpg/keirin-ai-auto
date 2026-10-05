@@ -47,9 +47,39 @@ jobs:
           restore-keys: |
             keirin-central-history-v1-
 
+      - name: Validate restored central history baseline
+        id: central_gate
+        shell: bash
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          import pandas as pd
+
+          p = Path("data/raw/history.csv")
+          usable = False
+          races = 0
+          if p.exists() and p.stat().st_size:
+              try:
+                  df = pd.read_csv(p, usecols=["race_id"], dtype={"race_id": str})
+                  races = int(df["race_id"].nunique())
+                  usable = races >= 30000
+              except Exception as exc:
+                  print(f"central baseline validation failed: {exc}")
+
+          print({"restored_central_races": races, "usable": usable})
+          if not usable and p.exists():
+              p.unlink()
+              print("removed undersized central history so validated fallback can restore cleanly")
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
+              fh.write(f"usable={'true' if usable else 'false'}\n")
+              fh.write(f"races={races}\n")
+          PY
+
       - name: Bootstrap central history from strict validation cache
         id: strict_history
-        if: steps.central_history.outputs.cache-matched-key == ''
+        if: steps.central_gate.outputs.usable != 'true'
         uses: actions/cache/restore@v4
         with:
           path: |
@@ -63,7 +93,7 @@ jobs:
             keirin-v4-validation-
 
       - name: Bootstrap central history from accumulated weekly cache
-        if: steps.central_history.outputs.cache-matched-key == '' && steps.strict_history.outputs.cache-matched-key == ''
+        if: steps.central_gate.outputs.usable != 'true' && steps.strict_history.outputs.cache-matched-key == ''
         uses: actions/cache/restore@v4
         with:
           path: |
@@ -86,11 +116,12 @@ jobs:
           python src/settle_results.py
 
       - name: Append officially confirmed races to central history
+        id: append_history
         run: |
           python src/append_confirmed_history.py --min-existing-races 30000
 
       - name: Save latest intraday central history
-        if: always() && hashFiles('data/raw/history.csv') != ''
+        if: steps.append_history.outcome == 'success' && hashFiles('data/raw/history.csv') != ''
         uses: actions/cache/save@v4
         with:
           path: data/raw/history.csv
