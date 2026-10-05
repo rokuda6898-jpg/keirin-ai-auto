@@ -80,6 +80,12 @@ jobs:
               raise SystemExit(f"live feature history too small: {races}")
           PY
 
+      - name: Bootstrap production drift baseline if missing
+        run: |
+          if [ ! -s models/feature_baseline.json ]; then
+            python src/build_production_feature_baseline.py
+          fi
+
       - name: Fetch races near close
         id: upcoming
         run: |
