@@ -6,6 +6,7 @@ on:
   push:
     paths:
       - "src/train.py"
+      - "src/train_top1_candidate.py"
       - "src/multi_bet_backtest.py"
       - "src/predict.py"
       - "src/race_features.py"
@@ -184,6 +185,21 @@ jobs:
       - name: Update company knowledge
         run: |
           python src/company_knowledge.py --mode weekly
+
+      - name: Train top1 candidate first
+        if: steps.history_gate.outputs.ready == 'true'
+        run: |
+          python src/train_top1_candidate.py
+
+      - name: Preserve fast top1 candidate
+        if: steps.history_gate.outputs.ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: keirin-top1-candidate-${{ github.run_id }}
+          path: |
+            models/candidate_win_model.joblib
+            models/candidate_fast_metrics.json
+          retention-days: 30
 
       - name: Train
         if: steps.history_gate.outputs.ready == 'true'
