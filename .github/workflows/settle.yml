@@ -13,7 +13,10 @@ permissions:
   contents: write
 
 concurrency:
-  group: keirin-repo-writer
+  # Settlement keeps its own queue. GitHub only retains one pending run per
+  # concurrency group, so sharing the generic writer queue could evict a
+  # scheduled settlement before it ever starts.
+  group: keirin-settle-results
   cancel-in-progress: false
 
 jobs:
@@ -182,11 +185,16 @@ jobs:
             git diff --staged --quiet || git commit -m "Settle keirin predictions"
           }
 
-          regenerate_settlement() {
-            # Rebuild the full settlement state from the newest main after a
-            # rebase conflict. Never publish only a partial subset of reports.
+          regenerate_settlement_on_latest_main() {
+            git fetch origin main
+            git reset --hard origin/main
+            git clean -fd
+
+            # Rebuild every published settlement artifact from the newest main.
+            # Never rebase an older generated snapshot over newer predictions.
             python src/fetch_today_entries.py || true
             python src/settle_results.py
+            python src/append_confirmed_history.py --min-existing-races 30000 || true
             python src/company_knowledge.py --mode settle
             python src/update_growth_log.py --kind settle
             python src/settle_shadow.py
@@ -196,24 +204,18 @@ jobs:
 
           stage_and_commit_settlement
 
-          # Another writer can finish after this run checked out main. If that
-          # makes the generated settlement conflict-prone, rebuild everything
-          # once from the newest main rather than carrying a partial snapshot.
-          if ! git pull --rebase; then
-            git rebase --abort || true
-            git reset --hard origin/main
-            regenerate_settlement
+          # If another workflow advanced main after this run checked out, throw
+          # away the generated snapshot and rebuild it on that newer state.
+          git fetch origin main
+          if [ "$(git rev-parse origin/main)" != "$GITHUB_SHA" ]; then
+            echo "main advanced since settlement checkout; regenerating on latest main"
+            regenerate_settlement_on_latest_main
           fi
 
           for attempt in 1 2 3 4; do
-            git push && exit 0
-            echo "settlement push race: retry $attempt/4"
-            git fetch origin main
-            if git rebase origin/main; then
-              continue
-            fi
-            git rebase --abort || true
-            git reset --hard origin/main
-            regenerate_settlement
+            git push origin HEAD:main && exit 0
+            echo "settlement push race: regenerate from latest main retry $attempt/4"
+            regenerate_settlement_on_latest_main
+            sleep $((attempt * 2))
           done
           exit 1
