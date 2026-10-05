@@ -69,6 +69,7 @@ jobs:
       - name: Settle predictions
         run: |
           python src/settle_results.py
+          python src/company_knowledge.py --mode settle
 
       - name: Append officially confirmed races to central history
         run: |
@@ -111,6 +112,7 @@ jobs:
             outputs/history.html
             outputs/growth_log.csv
             outputs/trial_report.md
+            outputs/company/
             outputs/shadow_race_results.csv
             outputs/shadow_settled_bets.csv
             outputs/shadow_daily_summary.csv
@@ -135,6 +137,7 @@ jobs:
             git reset --hard origin/main
             python src/fetch_today_entries.py || true
             python src/settle_results.py
+          python src/company_knowledge.py --mode settle
             python src/update_growth_log.py --kind settle
             python src/settle_shadow.py
             python src/report_growth.py --days 31 --start-date 2026-07-01
@@ -149,6 +152,7 @@ jobs:
             git rebase --abort || true
             git reset --hard origin/main
             python src/settle_results.py
+          python src/company_knowledge.py --mode settle
             git add models outputs data/raw/today_entries.csv data/raw/today_odds.csv || true
             git diff --staged --quiet || git commit -m "Settle keirin predictions"
           done
