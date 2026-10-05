@@ -82,6 +82,33 @@ class SiteManagerTests(unittest.TestCase):
             self.assertEqual(by_type["results_waiting"]["race_ids"], ["waiting"])
             self.assertEqual(by_type["results_overdue"]["race_ids"], ["overdue"])
 
+    def test_race_coverage_uses_snapshot_date_across_midnight(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            today_csv = root / "today_entries.csv"
+            schedule_csv = root / "latest_race_schedule.csv"
+
+            pd.DataFrame([
+                {"race_id": "r1", "date": "2026-10-05", "player_id": "p1"},
+                {"race_id": "r2", "date": "2026-10-05", "player_id": "p2"},
+            ]).to_csv(today_csv, index=False)
+            pd.DataFrame([
+                {"race_id": "r1", "date": "2026-10-05"},
+                {"race_id": "r2", "date": "2026-10-05"},
+                {"race_id": "next-day", "date": "2026-10-06"},
+            ]).to_csv(schedule_csv, index=False)
+
+            FrozenDateTime.current = datetime(2026, 10, 6, 0, 5, tzinfo=JST)
+            with mock.patch.multiple(
+                site_manager,
+                TODAY_CSV=today_csv,
+                RACE_SCHEDULE_PATH=schedule_csv,
+                datetime=FrozenDateTime,
+            ):
+                problems = site_manager.audit_race_coverage()
+
+            self.assertEqual(problems, [])
+
     def test_recurrence_streak_resets_after_thirty_minute_gap(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             history_path = Path(temp_dir) / "manager_incident_history.jsonl"
