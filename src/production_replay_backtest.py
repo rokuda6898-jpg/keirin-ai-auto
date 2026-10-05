@@ -120,9 +120,23 @@ def score_fold(test_df, win, second, third, fills, odds_by_race=None):
         production_pick = int(production_top["car_no"])
         core_pick_car = int(core_map.get(rid)) if pd.notna(core_map.get(rid)) else None
 
-        candidates = make_multi_bet_candidates(g, top_k=min(len(g), 9))
-        candidates = filter_trifecta_candidates_by_confidence(candidates, g)
-        tri = candidates[candidates["bet_type"].eq("trifecta")].copy()
+        broad_candidates = make_multi_bet_candidates(g, top_k=min(len(g), 9))
+        broad_tri = broad_candidates[
+            broad_candidates["bet_type"].eq("trifecta")
+        ].copy()
+        broad_tri["prob"] = pd.to_numeric(
+            broad_tri["prob"], errors="coerce"
+        )
+        broad_tri = broad_tri.sort_values(
+            "prob", ascending=False, kind="mergesort"
+        )
+
+        production_candidates = filter_trifecta_candidates_by_confidence(
+            broad_candidates, g
+        )
+        tri = production_candidates[
+            production_candidates["bet_type"].eq("trifecta")
+        ].copy()
         tri["prob"] = pd.to_numeric(tri["prob"], errors="coerce")
         tri = tri.sort_values("prob", ascending=False, kind="mergesort")
         top10 = tri.head(10)
@@ -187,14 +201,25 @@ def score_fold(test_df, win, second, third, fills, odds_by_race=None):
             "final_ticket_count": final_ticket_count,
         })
 
-        if len(tri):
-            train_pool = tri.head(80).copy()
+        if len(broad_tri):
+            # Train from a much wider ordered field than production uses.
+            # Keep computation bounded, while always retaining the actual
+            # combination so the positive class is not dropped by base rank.
+            train_pool = broad_tri.head(180).copy()
+            actual_rows = broad_tri[
+                broad_tri["buy"].astype(str).eq(actual)
+            ].copy()
+            if len(actual_rows):
+                train_pool = pd.concat(
+                    [train_pool, actual_rows], ignore_index=True, sort=False
+                ).drop_duplicates("buy", keep="first")
             feat = build_candidate_features(g, train_pool)
             if not feat.empty:
                 feat["date"] = str(pd.Timestamp(g["date"].iloc[0]).date())
                 feat["race_id"] = rid
                 feat["actual_trifecta"] = actual
                 feat["target"] = feat["buy"].astype(str).eq(actual).astype(int)
+                feat["candidate_scope"] = "broad_top180_plus_actual"
                 candidate_rows.append(feat)
 
     return pred, pd.DataFrame(race_rows), (
