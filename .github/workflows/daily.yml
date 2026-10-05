@@ -82,15 +82,61 @@ jobs:
           retention-days: 30
 
       - name: Commit outputs
+        env:
+          KEIRIN_HISTORY_CSV_URL: ${{ secrets.KEIRIN_HISTORY_CSV_URL }}
+          KEIRIN_TODAY_CSV_URL: ${{ secrets.KEIRIN_TODAY_CSV_URL }}
+          BET_BASE_STAKE_YEN: 100
+          BET_MAX_STAKE_YEN: 2000
+          BET_DAILY_BUDGET_YEN: 10000
+          BET_MAX_SECONDS_TO_CLOSE: 3600
+          PREDICTION_STRATEGY_VERSION: near_close_v4_position_20261004
+          ODDS_SNAPSHOT_LABEL: near-close snapshot
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add outputs models data/raw/today_entries.csv data/raw/today_odds.csv || true
-          git diff --staged --quiet || git commit -m "Update keirin predictions"
+
+          stage_daily_state() {
+            git add outputs models data/raw/today_entries.csv data/raw/today_odds.csv || true
+            git diff --staged --quiet || git commit -m "Update keirin predictions"
+          }
+
+          regenerate_daily_on_latest_main() {
+            git fetch origin main
+            git reset --hard origin/main
+            git clean -fd
+
+            # Recreate the same source state used by the normal daily path.
+            python src/ingest.py
+            if [ -z "$KEIRIN_TODAY_CSV_URL" ]; then
+              python src/fetch_today_entries.py
+            fi
+
+            if [ -z "$KEIRIN_HISTORY_CSV_URL" ] && [ ! -f models/win_model.joblib ]; then
+              python src/build_history.py --months-back 1 --max-races 300 --workers 4
+              python src/audit_history.py --fail-on-leakage
+              python src/train.py
+              python src/update_growth_log.py --kind train
+            fi
+
+            python src/predict.py
+            stage_daily_state
+          }
+
+          stage_daily_state
+
+          # Never rebase a generated prediction snapshot over newer main.
+          # If manager/results advanced main after checkout, rebuild the
+          # prediction from that newest state before publishing.
+          git fetch origin main
+          if [ "$(git rev-parse origin/main)" != "$GITHUB_SHA" ]; then
+            echo "main advanced since daily checkout; regenerating on latest main"
+            regenerate_daily_on_latest_main
+          fi
+
           for attempt in 1 2 3 4; do
-            git pull --rebase && git push && exit 0
-            git rebase --abort || true
-            echo "daily push race: retry $attempt/4"
-            sleep 2
+            git push origin HEAD:main && exit 0
+            echo "daily push race: regenerate from latest main retry $attempt/4"
+            regenerate_daily_on_latest_main
+            sleep $((attempt * 2))
           done
           exit 1
