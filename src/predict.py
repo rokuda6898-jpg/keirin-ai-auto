@@ -28,6 +28,7 @@ from common import (
     normalize_race_prob,
 )
 from multi_bet_backtest import BET_LABELS, make_candidates as make_multi_bet_candidates
+from model_drift_audit import audit_live_drift
 
 TRIFECTA_ODDS_CSV = RAW_DIR / "today_trifecta_odds.csv"
 PROFIT_GATE_PATH = OUTPUT_DIR / "external_holdout_overall.json"
@@ -985,6 +986,14 @@ def main():
             model_source = "last_good"
         else:
             raise
+
+    # Compare the exact model input used for this prediction against the
+    # distribution captured at training time. This is diagnostic only and
+    # never changes the live ranking.
+    try:
+        audit_live_drift(X, df)
+    except Exception as exc:
+        print(f"live drift audit skipped: {exc}", flush=True)
 
     pred = df.copy()
     pred["p_raw"] = np.clip(calibrated, 1e-6, 1.0)
