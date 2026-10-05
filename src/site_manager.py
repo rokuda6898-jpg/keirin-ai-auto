@@ -390,11 +390,11 @@ def audit_site_output():
                 # Parse every button first, then inspect attributes independently.
                 # This is robust to attribute order, extra attributes, and both
                 # single- and double-quoted HTML emitted by the renderer.
-                for tag in re.findall(r"<button\\b[^>]*>", race_html, flags=re.I):
+                for tag in re.findall(r"<button\b[^>]*>", race_html, flags=re.I):
                     attrs = {
                         key.lower(): html_lib.unescape(value).strip()
                         for key, _quote, value in re.findall(
-                            r"""([:\\w-]+)\\s*=\\s*(['"])(.*?)\\2""",
+                            r"""([:\w-]+)\s*=\s*(['"])(.*?)\2""",
                             tag,
                             flags=re.S,
                         )
