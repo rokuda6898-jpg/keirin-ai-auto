@@ -695,7 +695,14 @@ def main():
             status = "healthy" if not repaired else "repaired"
             break
         if attempt >= MAX_REPAIR_ATTEMPTS:
-            status = "unhealthy"
+            # A delayed official result is not a site/data-integrity failure.
+            # Keep the manager alive so the next scheduled cycle can retry it.
+            # True corruption/missing prediction/source faults still fail hard.
+            problem_types = {str(p.get("type")) for p in problems}
+            if problem_types == {"results_overdue"}:
+                status = "waiting_results"
+            else:
+                status = "unhealthy"
             break
         ok, action = repair(problems)
         append_incident_history(problems, action)
