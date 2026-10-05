@@ -47,8 +47,23 @@ jobs:
           restore-keys: |
             keirin-central-history-v1-
 
-      - name: Bootstrap central history from accumulated weekly cache
+      - name: Bootstrap central history from strict validation cache
+        id: strict_history
         if: steps.central_history.outputs.cache-matched-key == ''
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            data/raw/history.csv
+            data/raw/history_odds.csv
+            data/raw/history_trifecta_odds.csv
+            data/raw/history_metadata.json
+            data/raw/race_cache
+          key: keirin-v4-validation-${{ github.run_id }}
+          restore-keys: |
+            keirin-v4-validation-
+
+      - name: Bootstrap central history from accumulated weekly cache
+        if: steps.central_history.outputs.cache-matched-key == '' && steps.strict_history.outputs.cache-matched-key == ''
         uses: actions/cache/restore@v4
         with:
           path: |
@@ -72,7 +87,7 @@ jobs:
 
       - name: Append officially confirmed races to central history
         run: |
-          python src/append_confirmed_history.py
+          python src/append_confirmed_history.py --min-existing-races 30000
 
       - name: Save latest intraday central history
         if: always() && hashFiles('data/raw/history.csv') != ''
