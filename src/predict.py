@@ -30,6 +30,7 @@ from common import (
 from multi_bet_backtest import BET_LABELS, make_candidates as make_multi_bet_candidates
 from model_drift_audit import audit_live_drift
 from trifecta_reranker import score_candidates as score_trifecta_reranker
+from commander_selector import choose_variant as choose_commander_variant
 
 TRIFECTA_ODDS_CSV = RAW_DIR / "today_trifecta_odds.csv"
 PROFIT_GATE_PATH = OUTPUT_DIR / "external_holdout_overall.json"
@@ -947,12 +948,56 @@ def save_top1_variants(pred, now_jst):
     combined = combined.drop_duplicates(["date","race_id","variant"], keep="last")
     combined.to_csv(path, index=False)
 
+    commander_rows = []
+    for race_id, race_pred in pred.groupby("race_id", sort=False):
+        race_variants = current[current["race_id"].astype(str).eq(str(race_id))].copy()
+        if race_variants.empty:
+            continue
+        ordered = race_pred.sort_values("p_win", ascending=False, kind="mergesort")
+        if ordered.empty:
+            continue
+        top = ordered.iloc[0]
+        second = ordered.iloc[1] if len(ordered) > 1 else pd.Series(dtype=object)
+        base_row = pd.Series({
+            "predicted_win_prob": top.get("p_win", np.nan),
+            "top1_top2_margin": (
+                float(pd.to_numeric(top.get("p_win"), errors="coerce") - pd.to_numeric(second.get("p_win"), errors="coerce"))
+                if len(ordered) > 1 else 1.0
+            ),
+            "second_pick_prob": second.get("p_win", np.nan),
+            "second_pick_car_no": second.get("car_no", np.nan),
+            "line_position": top.get("line_position", np.nan),
+            "line_size": top.get("line_size", np.nan),
+            "second_pick_line_position": second.get("line_position", np.nan),
+            "race_attack_pressure": top.get("race_attack_pressure", np.nan),
+            "other_line_attack_pressure": top.get("other_line_attack_pressure", np.nan),
+        })
+        choice = choose_commander_variant(base_row, race_variants)
+        if not choice:
+            continue
+        chosen_variant = str(choice.get("variant", ""))
+        chosen_pick = pd.to_numeric(choice.get("predicted_winner_car_no"), errors="coerce")
+        source = race_variants[
+            race_variants["variant"].astype(str).eq(chosen_variant)
+            & pd.to_numeric(race_variants["predicted_winner_car_no"], errors="coerce").eq(chosen_pick)
+        ]
+        if source.empty:
+            continue
+        row = source.iloc[-1].copy()
+        row["variant"] = "commander_selector"
+        row["commander_source_variant"] = chosen_variant
+        row["commander_score"] = choice.get("commander_score", np.nan)
+        commander_rows.append(row)
+
+    if commander_rows:
+        current = pd.concat([current, pd.DataFrame(commander_rows)], ignore_index=True, sort=False)
+
     # Shadow consensus: measure whether agreement between independent race-reading
     # variants is more reliable than treating every Top1 prediction equally.
     # Keep the historical five-variant consensus definition stable; core_model
     # is audited independently so adding it does not move the consensus baseline.
     vote = current[
-        ~current["variant"].isin({"core_model", "second_pick_reversal_live", "difficulty_router"})
+        ~current["variant"].isin({"core_model", "second_pick_reversal_live", "difficulty_router", "commander_selector"})
     ].copy()
     vote["predicted_winner_car_no"] = pd.to_numeric(vote["predicted_winner_car_no"], errors="coerce")
     rows = []
