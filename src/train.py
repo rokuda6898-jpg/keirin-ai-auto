@@ -720,6 +720,14 @@ def main():
         "production_n_train": int(len(df)),
         "features": FEATURE_COLS,
         "brier_score_binary": float(brier_score_loss(y_test, test_prob)) if len(test_df) else None,
+        "brier_score_binary_uncalibrated": float(brier_score_loss(y_test, test_raw)) if len(test_df) else None,
+        "probability_calibration": {
+            "active": calibrator is not None,
+            "method": "isotonic_regression" if calibrator is not None else "none",
+            "fit_scope": "chronological_calibration_block_70_to_85pct",
+            "fit_rows": int(len(calib_df)),
+            "evaluated_only_on_later_test_block": True,
+        },
         "auc_binary": safe_auc(y_test, test_prob),
         "race_logloss": race_logloss,
         "top1_hit_rate": top1_hit_rate,
@@ -761,10 +769,15 @@ def main():
 
     bundle = {
         "model": production_model,
-        "calibrator": None,
+        # Keep the chronology-safe calibrator that was fit on the middle
+        # calibration block and evaluated only on the later test block.
+        # The previous bundle silently dropped it here, so live EV calculations
+        # used uncalibrated probabilities despite calibrated validation metrics.
+        "calibrator": calibrator,
         "fill_values": production_fill_values,
         "features": FEATURE_COLS,
         "metrics": metrics,
+        "calibration": metrics["probability_calibration"],
     }
 
     joblib.dump(bundle, MODEL_PATH)
