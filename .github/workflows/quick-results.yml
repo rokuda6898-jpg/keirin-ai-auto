@@ -41,7 +41,37 @@ jobs:
 
       - name: Refresh official results only
         run: |
-          python src/fetch_today_entries.py || true
+          refresh_today_if_needed() {
+            if python - <<'PY'
+          from datetime import datetime
+          from pathlib import Path
+          from zoneinfo import ZoneInfo
+          import pandas as pd
+
+          p = Path("data/raw/today_entries.csv")
+          if not p.exists() or not p.stat().st_size:
+              raise SystemExit(1)
+          try:
+              df = pd.read_csv(p, dtype={"race_id": str})
+          except Exception:
+              raise SystemExit(1)
+          if df.empty or not {"date", "source_url", "race_id"}.issubset(df.columns):
+              raise SystemExit(1)
+          today = datetime.now(ZoneInfo("Asia/Tokyo")).strftime("%Y-%m-%d")
+          if not df["date"].astype(str).eq(today).all():
+              raise SystemExit(1)
+          if df["source_url"].fillna("").astype(str).str.len().eq(0).any():
+              raise SystemExit(1)
+          print({"today_entries_races": int(df["race_id"].nunique()), "refresh_needed": False})
+          PY
+            then
+              return 0
+            fi
+            echo "today_entries missing/stale; rebuilding once"
+            python src/fetch_today_entries.py
+          }
+
+          refresh_today_if_needed
           python src/settle_results.py
           python - <<'PY'
           import json
@@ -74,7 +104,30 @@ jobs:
             fi
             git rebase --abort || true
             git reset --hard origin/main
-            python src/fetch_today_entries.py || true
+            # The committed daily snapshot already carries stable result URLs.
+            # Only rebuild it when the retry landed on a stale/missing day.
+            if ! python - <<'PY'
+          from datetime import datetime
+          from pathlib import Path
+          from zoneinfo import ZoneInfo
+          import pandas as pd
+
+          p = Path("data/raw/today_entries.csv")
+          if not p.exists() or not p.stat().st_size:
+              raise SystemExit(1)
+          df = pd.read_csv(p, dtype={"race_id": str})
+          today = datetime.now(ZoneInfo("Asia/Tokyo")).strftime("%Y-%m-%d")
+          ok = (
+              len(df)
+              and {"date", "source_url"}.issubset(df.columns)
+              and df["date"].astype(str).eq(today).all()
+              and ~df["source_url"].fillna("").astype(str).str.len().eq(0).any()
+          )
+          raise SystemExit(0 if ok else 1)
+          PY
+            then
+              python src/fetch_today_entries.py || true
+            fi
             python src/settle_results.py
             git add outputs/latest_results.json outputs/index.html
             git diff --cached --quiet && exit 0
