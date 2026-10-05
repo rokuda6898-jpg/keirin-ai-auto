@@ -6,7 +6,7 @@ from pathlib import Path
 import pandas as pd
 
 from build_history import parse_history_race
-from common import HISTORY_CSV, RAW_DIR, ensure_dirs
+from common import HISTORY_CSV, OUTPUT_DIR, RAW_DIR, ensure_dirs
 
 
 TODAY_CSV = RAW_DIR / "today_entries.csv"
@@ -128,6 +128,12 @@ def append_confirmed_today(history_path=HISTORY_CSV, today_path=TODAY_CSV, sleep
         "pending_race_ids": pending,
         "failures": failed,
     }
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    summary_path = OUTPUT_DIR / "central_history_append_summary.json"
+    summary_path.write_text(
+        json.dumps(summary, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
     print(json.dumps(summary, ensure_ascii=False, indent=2))
     return summary
 
