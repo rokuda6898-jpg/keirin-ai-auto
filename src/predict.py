@@ -940,13 +940,6 @@ def save_top1_variants(pred, now_jst):
     if not policy_current.empty:
         current = pd.concat([current, policy_current], ignore_index=True, sort=False)
     current["prediction_created_at_jst"] = now_jst.isoformat(timespec="seconds")
-    try:
-        old = pd.read_csv(path, dtype={"race_id": str})
-    except (FileNotFoundError, pd.errors.EmptyDataError, pd.errors.ParserError):
-        old = pd.DataFrame()
-    combined = pd.concat([old, current], ignore_index=True, sort=False)
-    combined = combined.drop_duplicates(["date","race_id","variant"], keep="last")
-    combined.to_csv(path, index=False)
 
     commander_rows = []
     for race_id, race_pred in pred.groupby("race_id", sort=False):
@@ -991,6 +984,14 @@ def save_top1_variants(pred, now_jst):
 
     if commander_rows:
         current = pd.concat([current, pd.DataFrame(commander_rows)], ignore_index=True, sort=False)
+
+    try:
+        old = pd.read_csv(path, dtype={"race_id": str})
+    except (FileNotFoundError, pd.errors.EmptyDataError, pd.errors.ParserError):
+        old = pd.DataFrame()
+    combined = pd.concat([old, current], ignore_index=True, sort=False)
+    combined = combined.drop_duplicates(["date", "race_id", "variant"], keep="last")
+    combined.to_csv(path, index=False)
 
     # Shadow consensus: measure whether agreement between independent race-reading
     # variants is more reliable than treating every Top1 prediction equally.
