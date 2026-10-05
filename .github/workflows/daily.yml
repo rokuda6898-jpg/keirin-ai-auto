@@ -44,6 +44,40 @@ jobs:
           restore-keys: |
             keirin-live-snapshots-v1-
 
+      - name: Restore central history for live features
+        id: live_central_history
+        uses: actions/cache/restore@v4
+        with:
+          path: data/raw/history.csv
+          key: keirin-central-history-v1-${{ github.run_id }}
+          restore-keys: |
+            keirin-central-history-v1-
+
+      - name: Restore weekly history fallback for live features
+        if: steps.live_central_history.outputs.cache-matched-key == ''
+        uses: actions/cache/restore@v4
+        with:
+          path: data/raw/history.csv
+          key: keirin-history-v4-${{ github.run_id }}
+          restore-keys: |
+            keirin-history-v4-
+
+      - name: Validate live feature history
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import pandas as pd
+
+          p = Path("data/raw/history.csv")
+          if not p.exists() or not p.stat().st_size:
+              raise SystemExit("live feature history missing")
+          df = pd.read_csv(p, usecols=["race_id"], dtype={"race_id": str})
+          races = int(df["race_id"].nunique())
+          print(f"live feature history races={races}")
+          if races < 30000:
+              raise SystemExit(f"live feature history too small: {races}")
+          PY
+
       - name: Ingest external data if configured
         env:
           KEIRIN_HISTORY_CSV_URL: ${{ secrets.KEIRIN_HISTORY_CSV_URL }}
