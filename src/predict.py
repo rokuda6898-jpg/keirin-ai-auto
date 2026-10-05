@@ -765,9 +765,81 @@ def build_top1_variants(pred):
     return pd.concat(rows, ignore_index=True)
 
 
+def _load_second_pick_shadow_threshold():
+    path = OUTPUT_DIR / "company" / "second_pick_specialist.json"
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        rule = payload.get("best_shadow_rule") or {}
+        threshold = pd.to_numeric(rule.get("margin_threshold"), errors="coerce")
+        if pd.notna(threshold) and 0 < float(threshold) <= 0.25:
+            return float(threshold)
+    except (FileNotFoundError, OSError, json.JSONDecodeError, TypeError, ValueError):
+        pass
+    return None
+
+
+def build_policy_shadow_variants(pred):
+    """Prospective company-policy challengers; never alter live production."""
+    base_cols = [
+        "date", "venue", "race_no", "race_id", "start_at", "close_at",
+        "car_no", "player_id",
+    ]
+    rows = []
+    second_threshold = _load_second_pick_shadow_threshold()
+
+    for race_id, g in pred.groupby("race_id", sort=False):
+        work = g.copy()
+        pwin = pd.to_numeric(work["p_win"], errors="coerce")
+        if pwin.notna().sum() < 2:
+            continue
+
+        ordered = pwin.sort_values(ascending=False)
+        top_idx = ordered.index[0]
+        second_idx = ordered.index[1]
+        margin = float(ordered.iloc[0] - ordered.iloc[1])
+
+        if second_threshold is not None:
+            chosen_idx = second_idx if margin <= second_threshold else top_idx
+            chosen = work.loc[chosen_idx]
+            row = {col: chosen.get(col, "") for col in base_cols}
+            row.update({
+                "variant": "second_pick_reversal_live",
+                "variant_score": float(pwin.loc[chosen_idx]),
+                "shadow_policy": f"switch_to_second_when_margin<={second_threshold:.2f}",
+                "policy_threshold": second_threshold,
+            })
+            rows.append(row)
+
+        # Test the hypothesis that obvious races should preserve the pure core
+        # model while ambiguous races keep the current production ranking.
+        chosen_idx = top_idx
+        score = float(pwin.loc[top_idx])
+        policy = "production_for_ambiguous"
+        if margin >= 0.25 and "p_core" in work.columns:
+            pcore = pd.to_numeric(work["p_core"], errors="coerce")
+            if pcore.notna().any():
+                chosen_idx = pcore.idxmax()
+                score = float(pcore.loc[chosen_idx])
+                policy = "core_for_clear_margin>=0.25"
+        chosen = work.loc[chosen_idx]
+        row = {col: chosen.get(col, "") for col in base_cols}
+        row.update({
+            "variant": "difficulty_router",
+            "variant_score": score,
+            "shadow_policy": policy,
+            "policy_threshold": 0.25,
+        })
+        rows.append(row)
+
+    return pd.DataFrame(rows)
+
+
 def save_top1_variants(pred, now_jst):
     path = OUTPUT_DIR / "top1_variant_ledger.csv"
     current = build_top1_variants(pred)
+    policy_current = build_policy_shadow_variants(pred)
+    if not policy_current.empty:
+        current = pd.concat([current, policy_current], ignore_index=True, sort=False)
     current["prediction_created_at_jst"] = now_jst.isoformat(timespec="seconds")
     try:
         old = pd.read_csv(path, dtype={"race_id": str})
@@ -781,7 +853,9 @@ def save_top1_variants(pred, now_jst):
     # variants is more reliable than treating every Top1 prediction equally.
     # Keep the historical five-variant consensus definition stable; core_model
     # is audited independently so adding it does not move the consensus baseline.
-    vote = current[current["variant"].ne("core_model")].copy()
+    vote = current[
+        ~current["variant"].isin({"core_model", "second_pick_reversal_live", "difficulty_router"})
+    ].copy()
     vote["predicted_winner_car_no"] = pd.to_numeric(vote["predicted_winner_car_no"], errors="coerce")
     rows = []
     for race_id, g in vote.groupby("race_id", sort=False):
