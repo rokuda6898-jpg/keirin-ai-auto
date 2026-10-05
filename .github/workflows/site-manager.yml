@@ -47,8 +47,28 @@ jobs:
           restore-keys: |
             keirin-central-history-v1-
 
+      - name: Check central history size for manager repairs
+        id: manager_history_gate
+        run: |
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          from pathlib import Path
+          import pandas as pd
+
+          p = Path("data/raw/history.csv")
+          races = 0
+          if p.exists() and p.stat().st_size:
+              try:
+                  df = pd.read_csv(p, usecols=["race_id"], dtype={"race_id": str})
+                  races = int(df["race_id"].nunique())
+              except Exception:
+                  races = 0
+          print(f"races={races}")
+          print(f"ready={'true' if races >= 30000 else 'false'}")
+          PY
+          echo "central manager history races=${{ steps.manager_history_gate.outputs.races }}"
+
       - name: Restore weekly history fallback for manager repairs
-        if: steps.manager_central_history.outputs.cache-matched-key == ''
+        if: steps.manager_history_gate.outputs.ready != 'true'
         uses: actions/cache/restore@v4
         with:
           path: data/raw/history.csv
@@ -69,7 +89,7 @@ jobs:
           races = int(df["race_id"].nunique())
           print(f"manager repair history races={races}")
           if races < 30000:
-              raise SystemExit(f"manager repair history too small: {races}")
+              raise SystemExit(f"manager repair history too small after weekly fallback: {races}")
           PY
 
       - name: Bootstrap production drift baseline if missing
