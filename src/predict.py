@@ -703,6 +703,32 @@ def apply_validated_top1_consensus(pred):
     return out
 
 
+def _recency_challenger_scores(pred):
+    path = MODEL_PATH.parent / "recency_win_model.joblib"
+    if not path.exists():
+        return None
+    try:
+        bundle = joblib.load(path)
+        model = bundle.get("model")
+        features = list(bundle.get("features") or [])
+        fill_values = bundle.get("fill_values") or {}
+        if model is None or not features:
+            return None
+        X, _ = prepare_features(pred.copy(), fill_values)
+        for col in features:
+            if col not in X.columns:
+                X[col] = float(fill_values.get(col, 0.0))
+        X = X.reindex(columns=features)
+        raw = model.predict_proba(X)[:, 1]
+        work = pred[["race_id"]].copy()
+        work["p_raw_recency"] = np.clip(raw, 1e-9, 1.0)
+        work = normalize_race_prob(work, "p_raw_recency", "p_recency")
+        return pd.Series(work["p_recency"].to_numpy(), index=pred.index)
+    except Exception as exc:
+        print(f"recency challenger shadow scoring skipped: {exc}", flush=True)
+        return None
+
+
 def build_top1_variants(pred):
     """Create leakage-safe shadow Top1 variants without changing production ranking."""
     base = add_shadow_race_scenario(pred.copy())
@@ -720,6 +746,9 @@ def build_top1_variants(pred):
     }
     if "p_core" in base.columns:
         variants["core_model"] = pd.to_numeric(base["p_core"], errors="coerce").clip(lower=1e-9)
+    recency_score = _recency_challenger_scores(base)
+    if recency_score is not None:
+        variants["recency_model"] = pd.to_numeric(recency_score, errors="coerce").clip(lower=1e-9)
     # More line influence in simple two-line races; less when the race is fragmented.
     variable_line_factor = np.where(number_of_lines.le(2), 1.20, np.where(number_of_lines.ge(4), 0.72, 0.92))
     variants["variable_line"] = variants["production"] * np.exp(
