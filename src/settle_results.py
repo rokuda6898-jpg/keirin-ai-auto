@@ -34,6 +34,64 @@ PAYOUT_SPECS = {
 }
 
 
+def patch_index_with_official_results(public_results):
+    """Stamp confirmed results into the published HTML as well as JSON.
+
+    The page still refreshes latest_results.json in JavaScript, but writing the
+    confirmed state into index.html removes any dependence on a client-side
+    fetch/cache succeeding before the user sees "確定".
+    """
+    index_path = OUTPUT_DIR / "index.html"
+    if not index_path.exists() or index_path.stat().st_size == 0:
+        return 0
+
+    html = index_path.read_text(encoding="utf-8")
+    changed = 0
+    for row in public_results.itertuples(index=False):
+        if not bool(getattr(row, "official_result_available", False)):
+            continue
+        trifecta = str(getattr(row, "actual_trifecta", "") or "").strip()
+        if not trifecta:
+            continue
+        race_id = str(getattr(row, "race_id", "") or "").strip()
+        if not race_id:
+            continue
+
+        odds = pd.to_numeric(getattr(row, "actual_trifecta_odds", np.nan), errors="coerce")
+        label = f"確定 {trifecta}"
+        if pd.notna(odds) and float(odds) > 0:
+            label += f" ｜ 3連単 {float(odds):.1f}倍"
+
+        result_pattern = re.compile(
+            r'(<div class="race-result(?: decided)?" data-result-for="' + re.escape(race_id) + r'">).*?(</div>)',
+            re.S,
+        )
+        html, n1 = result_pattern.subn(r"\1" + label + r"\2", html, count=1)
+
+        header_pattern = re.compile(
+            r'(<article class="race" id="race-' + re.escape(race_id)
+            + r'"[^>]*><button class="race-select"[^>]*><span><b>.*?</b><small>).*?(</small>)',
+            re.S,
+        )
+        html, n2 = header_pattern.subn(r"\1確定\2", html, count=1)
+
+        class_pattern = re.compile(
+            r'<div class="race-result" data-result-for="' + re.escape(race_id) + r'">'
+        )
+        html, n3 = class_pattern.subn(
+            f'<div class="race-result decided" data-result-for="{race_id}">',
+            html,
+            count=1,
+        )
+        if n1 or n2 or n3:
+            changed += 1
+
+    if changed:
+        index_path.write_text(html, encoding="utf-8")
+    print(f"index confirmed-result stamps: {changed}")
+    return changed
+
+
 def key_to_buy(values, ordered=True):
     values = [int(x) for x in values]
     if not ordered:
@@ -485,6 +543,7 @@ def run_settlement(args):
                 results[column] = default
         public_results = results[["race_id", "actual_trifecta", "actual_trifecta_odds", "official_result_available"]].copy()
         public_results.to_json(LATEST_RESULTS_JSON, orient="records", force_ascii=False)
+        patch_index_with_official_results(public_results)
         update_top1_accuracy(results)
         settled = bets.merge(results, on="race_id", how="left")
         settled["is_selected"] = pd.to_numeric(settled["expected_profit_yen"], errors="coerce").fillna(-10**9) > args.min_expected_profit
