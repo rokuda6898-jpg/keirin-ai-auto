@@ -21,7 +21,7 @@ from common import (
     prepare_features,
 )
 from multi_bet_backtest import make_candidates as make_multi_bet_candidates
-from predict import DEFAULT_BET_CONFIGS, apply_nexus_race_reading, apply_validated_top1_consensus, filter_trifecta_candidates_by_confidence
+from predict import DEFAULT_BET_CONFIGS, apply_nexus_race_reading, apply_validated_top1_consensus, filter_trifecta_candidates_by_confidence, make_trifecta_candidates
 from trifecta_reranker import build_candidate_features
 
 SUMMARY_JSON = OUTPUT_DIR / "production_replay_summary.json"
@@ -148,10 +148,10 @@ def score_fold(test_df, win, second, third, fills, calibrator=None, odds_by_race
         production_pick = int(production_top["car_no"])
         core_pick_car = int(core_map.get(rid)) if pd.notna(core_map.get(rid)) else None
 
-        broad_candidates = make_multi_bet_candidates(g, top_k=min(len(g), 9))
-        broad_tri = broad_candidates[
-            broad_candidates["bet_type"].eq("trifecta")
-        ].copy()
+        broad_tri = make_trifecta_candidates(
+            g, top_k_riders=None
+        ).rename(columns={"trifecta_prob_approx": "prob"})
+        broad_tri["bet_type"] = "trifecta"
         broad_tri["prob"] = pd.to_numeric(
             broad_tri["prob"], errors="coerce"
         )
@@ -159,8 +159,11 @@ def score_fold(test_df, win, second, third, fills, calibrator=None, odds_by_race
             "prob", ascending=False, kind="mergesort"
         )
 
+        production_candidates = make_multi_bet_candidates(
+            g, top_k=min(len(g), 9)
+        )
         production_candidates = filter_trifecta_candidates_by_confidence(
-            broad_candidates, g
+            production_candidates, g
         )
         tri = production_candidates[
             production_candidates["bet_type"].eq("trifecta")
