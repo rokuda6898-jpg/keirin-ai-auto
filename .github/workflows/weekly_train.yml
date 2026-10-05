@@ -88,7 +88,27 @@ jobs:
           restore-keys: |
             keirin-central-history-v1-
 
-      - name: Merge weekly and central history candidates
+      - name: Preserve intraday central history candidate
+        run: |
+          if [ -s data/raw/history.csv ]; then
+            cp data/raw/history.csv /tmp/central_history_candidate.csv
+          fi
+          rm -f data/raw/history.csv
+
+      - name: Restore strict-validation history candidate
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            data/raw/history.csv
+            data/raw/history_odds.csv
+            data/raw/history_trifecta_odds.csv
+            data/raw/history_metadata.json
+            data/raw/race_cache
+          key: keirin-v4-validation-${{ github.run_id }}
+          restore-keys: |
+            keirin-v4-validation-
+
+      - name: Merge weekly central and strict history candidates
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -97,6 +117,7 @@ jobs:
           candidates = []
           for path in [
               Path("/tmp/weekly_history_candidate.csv"),
+              Path("/tmp/central_history_candidate.csv"),
               Path("data/raw/history.csv"),
           ]:
               if path.exists() and path.stat().st_size:
