@@ -6,6 +6,7 @@ on:
   push:
     paths:
       - "src/train.py"
+      - "src/common.py"
       - "src/train_top1_candidate.py"
       - "src/train_recency_challenger.py"
       - "src/build_production_feature_baseline.py"
@@ -321,7 +322,11 @@ jobs:
 
           guarded_paths=(
             src/train.py
+            src/common.py
             src/train_top1_candidate.py
+            src/train_recency_challenger.py
+            src/model_drift_audit.py
+            src/build_production_feature_baseline.py
             src/multi_bet_backtest.py
             src/predict.py
             src/race_features.py
