@@ -31,6 +31,7 @@ DEPARTMENT_BY_VARIANT = {
     "difficulty_router": "model_audit_office",
     "recency_model": "model_freshness_department",
     "commander_selector": "commander_ai",
+    "live_snapshot_model": "live_snapshot_model_department",
 }
 
 
