@@ -4,7 +4,7 @@ import joblib
 import numpy as np
 import pandas as pd
 
-from common import FEATURE_COLS, MODEL_DIR, normalize_race_prob, prepare_features
+from common import FEATURE_COLS, MODEL_DIR, MODEL_PATH as PRODUCTION_MODEL_PATH, normalize_race_prob, prepare_features
 
 MODEL_PATH = MODEL_DIR / "live_snapshot_win_model.joblib"
 METRICS_PATH = MODEL_DIR / "live_snapshot_model_metrics.json"
@@ -48,9 +48,9 @@ def build_live_matrix_from_snapshot_rows(frame, fills=None):
     return X, fills
 
 
-def build_live_matrix_from_current(frame, now_epoch, fills=None):
+def build_live_matrix_from_current(frame, now_epoch, fills=None, source_fill_values=None):
     work = frame.copy()
-    X_base, _ = prepare_features(work)
+    X_base, _ = prepare_features(work, source_fill_values)
     enriched = pd.DataFrame(index=work.index)
     for col in FEATURE_COLS:
         enriched[col] = pd.to_numeric(X_base[col], errors="coerce") if col in X_base.columns else np.nan
@@ -80,7 +80,17 @@ def score_current(frame, now_epoch, model_path=MODEL_PATH):
         fills = bundle.get("fill_values") or {}
         if model is None:
             return None
-        X, _ = build_live_matrix_from_current(frame, now_epoch, fills)
+        source_fill_values = None
+        if PRODUCTION_MODEL_PATH.exists():
+            try:
+                production_bundle = joblib.load(PRODUCTION_MODEL_PATH)
+                if isinstance(production_bundle, dict):
+                    source_fill_values = production_bundle.get("fill_values") or None
+            except Exception:
+                source_fill_values = None
+        X, _ = build_live_matrix_from_current(
+            frame, now_epoch, fills, source_fill_values=source_fill_values
+        )
         X = X.reindex(columns=features)
         raw = model.predict_proba(X)[:, 1]
         prob = calibrator.predict(raw) if calibrator is not None else raw
