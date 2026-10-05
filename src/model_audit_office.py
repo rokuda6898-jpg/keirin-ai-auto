@@ -29,6 +29,7 @@ DEPARTMENT_BY_VARIANT = {
     "chaser_guard": "risk_department",
     "second_pick_reversal_live": "second_pick_specialist",
     "difficulty_router": "model_audit_office",
+    "recency_model": "model_freshness_department",
 }
 
 
