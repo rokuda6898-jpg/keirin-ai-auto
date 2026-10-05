@@ -47,8 +47,8 @@ jobs:
           restore-keys: |
             keirin-central-history-v1-
 
-      - name: Check central history size for manager repairs
-        id: manager_history_gate
+      - name: Validate central manager-history candidate
+        id: manager_central_gate
         run: |
           python - <<'PY' >> "$GITHUB_OUTPUT"
           from pathlib import Path
@@ -60,18 +60,64 @@ jobs:
               try:
                   df = pd.read_csv(p, usecols=["race_id"], dtype={"race_id": str})
                   races = int(df["race_id"].nunique())
-              except Exception:
-                  races = 0
+              except Exception as exc:
+                  print(f"central manager-history validation failed: {exc}")
+          usable = races >= 30000
+          if not usable and p.exists():
+              p.unlink()
+              print(f"removed undersized manager central cache: races={races}")
+          print(f"usable={'true' if usable else 'false'}")
           print(f"races={races}")
-          print(f"ready={'true' if races >= 30000 else 'false'}")
           PY
-          echo "central manager history races=${{ steps.manager_history_gate.outputs.races }}"
 
-      - name: Restore weekly history fallback for manager repairs
-        if: steps.manager_history_gate.outputs.ready != 'true'
+      - name: Restore strict-validation history for manager repairs
+        id: manager_strict_history
+        if: steps.manager_central_gate.outputs.usable != 'true'
         uses: actions/cache/restore@v4
         with:
-          path: data/raw/history.csv
+          path: |
+            data/raw/history.csv
+            data/raw/history_odds.csv
+            data/raw/history_trifecta_odds.csv
+            data/raw/history_metadata.json
+            data/raw/race_cache
+          key: keirin-v4-validation-${{ github.run_id }}
+          restore-keys: |
+            keirin-v4-validation-
+
+      - name: Validate strict manager-history candidate
+        id: manager_strict_gate
+        run: |
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          from pathlib import Path
+          import pandas as pd
+
+          p = Path("data/raw/history.csv")
+          races = 0
+          if p.exists() and p.stat().st_size:
+              try:
+                  df = pd.read_csv(p, usecols=["race_id"], dtype={"race_id": str})
+                  races = int(df["race_id"].nunique())
+              except Exception as exc:
+                  print(f"strict manager-history validation failed: {exc}")
+          usable = races >= 30000
+          if not usable and p.exists():
+              p.unlink()
+              print(f"removed undersized manager strict cache: races={races}")
+          print(f"usable={'true' if usable else 'false'}")
+          print(f"races={races}")
+          PY
+
+      - name: Restore weekly history fallback for manager repairs
+        if: steps.manager_strict_gate.outputs.usable != 'true'
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            data/raw/history.csv
+            data/raw/history_odds.csv
+            data/raw/history_trifecta_odds.csv
+            data/raw/history_metadata.json
+            data/raw/race_cache
           key: keirin-history-v4-${{ github.run_id }}
           restore-keys: |
             keirin-history-v4-
@@ -84,12 +130,12 @@ jobs:
 
           p = Path("data/raw/history.csv")
           if not p.exists() or not p.stat().st_size:
-              raise SystemExit("manager repair history missing")
+              raise SystemExit("manager repair history missing after all fallbacks")
           df = pd.read_csv(p, usecols=["race_id"], dtype={"race_id": str})
           races = int(df["race_id"].nunique())
           print(f"manager repair history races={races}")
           if races < 30000:
-              raise SystemExit(f"manager repair history too small after weekly fallback: {races}")
+              raise SystemExit(f"manager repair history too small after all fallbacks: {races}")
           PY
 
       - name: Bootstrap production drift baseline if missing
