@@ -47,9 +47,11 @@ jobs:
             core.info(`latest manager run=${latest.id} status=${latest.status} conclusion=${latest.conclusion} age=${ageMinutes.toFixed(1)}m updated=${updatedAgeMinutes.toFixed(1)}m`);
 
             if (latest.status === "completed" && latest.conclusion !== "success") {
-              core.warning("Manager failed; rerunning failed jobs.");
-              await github.rest.actions.reRunWorkflowFailedJobs({
-                owner, repo, run_id: latest.id
+              core.warning(
+                `Manager failed on run=${latest.id} sha=${latest.head_sha}; dispatching a fresh run from latest main instead of replaying stale failed jobs.`
+              );
+              await github.rest.actions.createWorkflowDispatch({
+                owner, repo, workflow_id, ref: "main"
               });
               return;
             }
