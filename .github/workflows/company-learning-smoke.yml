@@ -1,0 +1,59 @@
+name: company-learning-smoke
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/company-learning-loop
+    paths:
+      - "src/company_knowledge.py"
+      - ".github/workflows/company-learning-smoke.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Compile company learning layer
+        env:
+          PYTHONPATH: src
+        run: |
+          python -m py_compile src/company_knowledge.py
+
+      - name: Run company learning layer against repository snapshot
+        env:
+          PYTHONPATH: src
+        run: |
+          python src/company_knowledge.py --mode manual
+          test -s outputs/company/central_history_manifest.json
+          test -s outputs/company/data_department.json
+          test -s outputs/company/pace_department.json
+          test -s outputs/company/line_department.json
+          test -s outputs/company/risk_department.json
+          test -s outputs/company/strategist_brief.json
+          test -s outputs/company/third_party_audit.json
+          test -s outputs/company/ceo_decision_support.json
+          test -s outputs/company/executive_directive.json
+          test -s outputs/company/secretary_digest.md
+
+      - name: Show company state
+        run: |
+          cat outputs/company/central_history_manifest.json
+          cat outputs/company/ceo_decision_support.json
