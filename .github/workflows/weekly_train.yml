@@ -9,6 +9,12 @@ on:
       - "src/common.py"
       - "src/train_top1_candidate.py"
       - "src/train_recency_challenger.py"
+      - "src/production_replay_backtest.py"
+      - "src/trifecta_reranker.py"
+      - "src/train_trifecta_reranker.py"
+      - "src/commander_selector.py"
+      - "src/train_commander_selector.py"
+      - "src/live_snapshot_store.py"
       - "src/build_production_feature_baseline.py"
       - "src/model_drift_audit.py"
       - "src/multi_bet_backtest.py"
@@ -73,6 +79,14 @@ jobs:
           key: keirin-central-history-v1-${{ github.run_id }}
           restore-keys: |
             keirin-central-history-v1-
+
+      - name: Restore real pre-race learning snapshots
+        uses: actions/cache/restore@v4
+        with:
+          path: data/raw/live_snapshot_history.csv
+          key: keirin-live-snapshots-v1-${{ github.run_id }}
+          restore-keys: |
+            keirin-live-snapshots-v1-
 
       - name: Validate source and tests
         env:
@@ -186,6 +200,18 @@ jobs:
           echo "Accumulated history races: ${{ steps.history_gate.outputs.races }}"
           echo "Required history floor: ${{ steps.history_gate.outputs.minimum_races }}"
 
+      - name: Label real pre-race learning snapshots
+        if: steps.history_gate.outputs.ready == 'true'
+        run: |
+          python src/live_snapshot_store.py --label
+
+      - name: Save labeled real pre-race learning snapshots
+        if: steps.history_gate.outputs.ready == 'true' && hashFiles('data/raw/live_snapshot_history.csv') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: data/raw/live_snapshot_history.csv
+          key: keirin-live-snapshots-v1-labeled-${{ github.run_id }}
+
       - name: Update company knowledge
         run: |
           python src/company_knowledge.py --mode weekly
@@ -242,6 +268,21 @@ jobs:
           python src/multi_bet_backtest.py --min-train-dates 30 --retrain-every-days 7 --top-k 5 --min-prob 0.02 --min-expected-profit 100 --max-odds 300 --max-bets-per-race-type 2 --max-bets-per-day-type 40 --base-stake 100 --max-stake 500
           python src/update_growth_log.py --kind multi_bet_backtest
 
+      - name: Run production-logic chronological replay
+        if: steps.history_gate.outputs.ready == 'true'
+        run: |
+          python src/production_replay_backtest.py --eval-races 8000 --folds 3 --min-train-races 15000
+
+      - name: Train shadow trifecta combination reranker
+        if: steps.history_gate.outputs.ready == 'true'
+        run: |
+          python src/train_trifecta_reranker.py --min-races 1500
+
+      - name: Train shadow commander selector
+        if: steps.history_gate.outputs.ready == 'true'
+        run: |
+          python src/train_commander_selector.py
+
       - name: Restore gated production model
         if: steps.history_gate.outputs.ready == 'true'
         run: |
@@ -288,6 +329,10 @@ jobs:
             outputs/multi_bet_period_summary.csv
             outputs/multi_bet_threshold_sweep.csv
             outputs/multi_bet_recommended_conditions_periods.csv
+            outputs/production_replay_summary.json
+            outputs/production_replay_folds.csv
+            outputs/production_replay_races.csv
+            outputs/live_snapshot_learning_summary.json
             outputs/company/
           retention-days: 30
 
@@ -325,6 +370,12 @@ jobs:
             src/common.py
             src/train_top1_candidate.py
             src/train_recency_challenger.py
+            src/production_replay_backtest.py
+            src/trifecta_reranker.py
+            src/train_trifecta_reranker.py
+            src/commander_selector.py
+            src/train_commander_selector.py
+            src/live_snapshot_store.py
             src/model_drift_audit.py
             src/build_production_feature_baseline.py
             src/multi_bet_backtest.py
@@ -353,6 +404,10 @@ jobs:
             recency_win_model.joblib
             recency_model_metrics.json
             feature_baseline.json
+            trifecta_reranker.joblib
+            trifecta_reranker_metrics.json
+            commander_selector.joblib
+            commander_selector_metrics.json
           )
 
           weekly_output_files=(
@@ -366,6 +421,10 @@ jobs:
             multi_bet_period_summary.csv
             multi_bet_threshold_sweep.csv
             multi_bet_recommended_conditions_periods.csv
+            production_replay_summary.json
+            production_replay_folds.csv
+            production_replay_races.csv
+            live_snapshot_learning_summary.json
           )
 
           weekly_source_is_stale() {
