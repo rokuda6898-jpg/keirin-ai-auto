@@ -17,6 +17,9 @@ TOP1_SETTLED = OUTPUT_DIR / "top1_settled_results.csv"
 TOP1_MISS = OUTPUT_DIR / "top1_miss_analysis.csv"
 TOP1_ACCURACY = OUTPUT_DIR / "top1_accuracy.json"
 HISTORY_INTEGRITY = OUTPUT_DIR / "history_integrity_report.json"
+CROSS_SOURCE_SUMMARY = OUTPUT_DIR / "cross_source_audit_summary.json"
+LIVE_DRIFT_AUDIT = OUTPUT_DIR / "live_drift_audit.json"
+TRIFECTA_TOP10_ACCURACY = OUTPUT_DIR / "trifecta_top10_accuracy.json"
 
 
 def now_jst():
@@ -318,7 +321,11 @@ def history_manifest(archive, aux_meta, aux_races):
         pending_archive = newly_seen_archive
 
     top1 = read_json(TOP1_ACCURACY)
-    multi_source_verified = int(previous.get("multi_source_verified_races", 0) or 0)
+    cross_source = read_json(CROSS_SOURCE_SUMMARY)
+    multi_source_verified = max(
+        int(previous.get("multi_source_verified_races", 0) or 0),
+        int(cross_source.get("matched_races", 0) or 0),
+    )
     return {
         "updated_at_jst": now_jst(),
         "history_rows": history_rows,
@@ -332,6 +339,13 @@ def history_manifest(archive, aux_meta, aux_races):
         "official_prediction_eval_races": int(top1.get("races", 0) or 0),
         "known_source_providers": sorted(x for x in providers if x),
         "multi_source_verified_races": multi_source_verified,
+        "cross_source_audit": {
+            "audited_races": int(cross_source.get("audited_races", 0) or 0),
+            "matched_races": int(cross_source.get("matched_races", 0) or 0),
+            "mismatched_races": int(cross_source.get("mismatched_races", 0) or 0),
+            "agreement_rate": num(cross_source.get("agreement_rate")),
+            "secondary_source": cross_source.get("secondary_source"),
+        },
         "history_integrity": {
             "complete_races": max(
                 int(integrity.get("complete_races", 0) or 0),
@@ -382,6 +396,8 @@ def risk_report(archive):
             "hit_rate_by_confidence_class": [],
             "hit_rate_by_predicted_line_position": [],
             "miss_reason_distribution": [],
+            "trifecta_top10": read_json(TRIFECTA_TOP10_ACCURACY),
+            "live_drift": read_json(LIVE_DRIFT_AUDIT),
         }
 
     margin = scored["top1_top2_margin"] if "top1_top2_margin" in scored.columns else pd.Series(np.nan, index=scored.index)
@@ -401,6 +417,8 @@ def risk_report(archive):
         "hit_rate_by_confidence_class": grouped_hit_rate(scored, "top1_confidence_class"),
         "hit_rate_by_predicted_line_position": grouped_hit_rate(scored, "line_position"),
         "miss_reason_distribution": distribution(misses, "miss_reason"),
+        "trifecta_top10": read_json(TRIFECTA_TOP10_ACCURACY),
+        "live_drift": read_json(LIVE_DRIFT_AUDIT),
     }
 
 
@@ -415,6 +433,37 @@ def strategist_report(risk, manifest, model_audit=None):
     audit = model_audit.get("audit", {}) or {}
     promotion_board = model_audit.get("promotion_board", {}) or {}
     second_pick = model_audit.get("second_pick_specialist", {}) or {}
+    live_drift = risk.get("live_drift", {}) or {}
+    trifecta_top10 = risk.get("trifecta_top10", {}) or {}
+
+    if live_drift.get("status") in {"amber", "red"}:
+        actions.append(
+            {
+                "priority": 1,
+                "type": "live_feature_drift",
+                "action": "freeze automatic model promotion and investigate shifted/missing live features before changing production",
+                "evidence": {
+                    "status": live_drift.get("status"),
+                    "flagged_features": live_drift.get("flagged_features"),
+                    "features_checked": live_drift.get("features_checked"),
+                    "top_flags": (live_drift.get("top_flags") or [])[:5],
+                },
+            }
+        )
+
+    if int(trifecta_top10.get("races", 0) or 0) >= 50:
+        actions.append(
+            {
+                "priority": 2,
+                "type": "trifecta_top10_kpi",
+                "action": "optimize ticket logic against live 10-point hit rate as a separate KPI from Top1 accuracy",
+                "evidence": {
+                    "races": trifecta_top10.get("races"),
+                    "hit_rate": trifecta_top10.get("hit_rate"),
+                    "recent_50_hit_rate": trifecta_top10.get("recent_50_hit_rate"),
+                },
+            }
+        )
 
     if audit.get("drift_status") == "material_live_gap":
         actions.append(
@@ -643,6 +692,18 @@ def run(mode):
             }
         )
         status = "amber"
+    cross = manifest.get("cross_source_audit", {}) or {}
+    if int(cross.get("mismatched_races", 0) or 0) > 0:
+        findings.append(
+            {
+                "severity": "red",
+                "finding": "cross-source historical result mismatch detected",
+                "challenge_to_ceo": "Which races differ across providers, and should those races be quarantined before retraining?",
+                "evidence": cross,
+            }
+        )
+        status = "red"
+
     if manifest["multi_source_verified_races"] == 0:
         findings.append(
             {
@@ -691,6 +752,9 @@ def run(mode):
         "historical_races_available": manifest["historical_races"],
         "official_prediction_eval_races": risk["evaluated_races"],
         "official_top1_hit_rate": risk["top1_hit_rate"],
+        "trifecta_top10_kpi": risk.get("trifecta_top10"),
+        "live_feature_drift": risk.get("live_drift"),
+        "cross_source_audit": manifest.get("cross_source_audit"),
         "model_audit_status": audit_payload.get("drift_status"),
         "best_shadow_challenger": audit_payload.get("best_shadow_challenger"),
         "promotion_candidates": (model_audit.get("promotion_board", {}) or {}).get("eligible_for_external_validation", []),
@@ -708,6 +772,18 @@ def run(mode):
         "source": "ceo_decision_support",
         "status": "dissemination_package_pending_ceo_or_owner_decision",
         "directives": [
+            {
+                "target": "model_freshness_department",
+                "instruction": "run the recency-weighted challenger in shadow and report same-race gains without automatic promotion",
+            },
+            {
+                "target": "data_quality_audit",
+                "instruction": "track live feature drift and cross-source history agreement; quarantine mismatches before retraining",
+            },
+            {
+                "target": "ticket_audit",
+                "instruction": "track live 3連単10点 hit rate independently from Top1 accuracy",
+            },
             {
                 "target": "model_audit_office",
                 "instruction": "compare production and every shadow challenger on identical settled races; block unsupported promotion",
@@ -749,6 +825,9 @@ def run(mode):
             "independent_audit": "challenge_and_ceo_coaching_without_override",
             "model_audit_office": "same_race_model_comparison_and_promotion_control",
             "second_pick_specialist": "top1_to_second_reversal_shadow_research",
+            "model_freshness_department": "recency_weighted_shadow_model_competition",
+            "data_quality_audit": "live_feature_drift_and_cross_source_validation",
+            "ticket_audit": "live_trifecta_top10_product_kpi",
         },
     }
 
@@ -772,6 +851,9 @@ def run(mode):
         f"- 正式な発走前予想検証: {risk['evaluated_races']:,}レース",
         f"- Top1的中率: {risk['top1_hit_rate'] if risk['top1_hit_rate'] is not None else '未算出'}",
         f"- モデル監査: {audit_payload.get('drift_status', '未算出')}",
+        f"- ライブ入力ドリフト: {(risk.get('live_drift') or {}).get('status', '未算出')}",
+        f"- 3連単10点的中率: {(risk.get('trifecta_top10') or {}).get('hit_rate', '未算出')}",
+        f"- 戦史クロスソース一致: {(manifest.get('cross_source_audit') or {}).get('agreement_rate', '未算出')}",
         f"- 昇格候補: {len((model_audit.get('promotion_board', {}) or {}).get('eligible_for_external_validation', []))}",
         f"- 第三者監査: {status}",
         "",
@@ -781,6 +863,9 @@ def run(mode):
     digest += [
         "",
         "## 専務の周知",
+        "- モデル鮮度部: 直近重視チャレンジャーを影運用し、本番モデルの経年劣化を監視する。",
+        "- データ品質監査: 学習時との特徴量ドリフトと戦史クロスソース一致率を監視する。",
+        "- 券種監査: Top1とは別に3連単10点の実戦的中率を正式KPIとして監視する。",
         "- モデル監査室: 本番と全チャレンジャーを同一確定レースで比較し、純増のない補正を昇格させない。",
         "- 2番手逆転班: Top1→2番手入替候補を影運用し、300R以上の前向き検証まで本番変更しない。",
         "- データ部: 累積戦史を保持し、新規確定結果を差分追加する。",
