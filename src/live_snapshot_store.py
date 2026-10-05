@@ -4,10 +4,11 @@ from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+import joblib
 import numpy as np
 import pandas as pd
 
-from common import FEATURE_COLS, HISTORY_CSV, OUTPUT_DIR, RAW_DIR, TODAY_CSV, ensure_dirs, prepare_features
+from common import FEATURE_COLS, HISTORY_CSV, MODEL_PATH, OUTPUT_DIR, RAW_DIR, TODAY_CSV, ensure_dirs, prepare_features
 
 SNAPSHOT_CSV = RAW_DIR / "live_snapshot_history.csv"
 SUMMARY_JSON = OUTPUT_DIR / "live_snapshot_learning_summary.json"
@@ -149,7 +150,12 @@ def capture():
         from predict import add_live_odds_movement, add_today_prior_features
         enriched = add_today_prior_features(today)
         enriched = add_live_odds_movement(enriched)
-        X, _ = prepare_features(enriched)
+        fill_values = None
+        if MODEL_PATH.exists():
+            bundle = joblib.load(MODEL_PATH)
+            if isinstance(bundle, dict):
+                fill_values = bundle.get("fill_values") or None
+        X, _ = prepare_features(enriched, fill_values)
         return capture_frame(enriched, X)
     except Exception as exc:
         print(f"enriched live snapshot capture unavailable; raw fallback: {exc}")
