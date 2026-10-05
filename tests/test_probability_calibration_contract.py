@@ -8,8 +8,10 @@ class ProbabilityCalibrationContractTests(unittest.TestCase):
         candidate = Path("src/train_top1_candidate.py").read_text(encoding="utf-8")
 
         self.assertIn("IsotonicRegression", production)
-        self.assertIn('"calibrator": calibrator', production)
-        self.assertIn("chronological_calibration_block_70_to_85pct", production)
+        self.assertIn('"calibrator": production_calibrator', production)
+        self.assertIn("recent_tail_from_same_deployed_model", production)
+        self.assertIn("production_model.predict_proba(X_production_calib)", production)
+        self.assertNotIn('"calibrator": calibrator,\n        "fill_values": production_fill_values', production)
 
         self.assertIn("IsotonicRegression", candidate)
         self.assertIn('"calibrator": calibrator', candidate)
