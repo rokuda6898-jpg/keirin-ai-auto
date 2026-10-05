@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 import numpy as np
 import pandas as pd
 
-from common import HISTORY_CSV, OUTPUT_DIR, TODAY_CSV, ensure_dirs
+from common import HISTORY_CSV, MODEL_DIR, OUTPUT_DIR, TODAY_CSV, ensure_dirs
 from model_audit_office import build_model_audit
 
 COMPANY_DIR = OUTPUT_DIR / "company"
@@ -20,6 +20,10 @@ HISTORY_INTEGRITY = OUTPUT_DIR / "history_integrity_report.json"
 CROSS_SOURCE_SUMMARY = OUTPUT_DIR / "cross_source_audit_summary.json"
 LIVE_DRIFT_AUDIT = OUTPUT_DIR / "live_drift_audit.json"
 TRIFECTA_TOP10_ACCURACY = OUTPUT_DIR / "trifecta_top10_accuracy.json"
+PRODUCTION_REPLAY_SUMMARY = OUTPUT_DIR / "production_replay_summary.json"
+LIVE_SNAPSHOT_SUMMARY = OUTPUT_DIR / "live_snapshot_learning_summary.json"
+TRIFECTA_RERANKER_METRICS = MODEL_DIR / "trifecta_reranker_metrics.json"
+COMMANDER_SELECTOR_METRICS = MODEL_DIR / "commander_selector_metrics.json"
 
 
 def now_jst():
@@ -674,6 +678,54 @@ def run(mode):
     risk = risk_report(archive)
     strategist = strategist_report(risk, manifest, model_audit)
 
+    replay = read_json(PRODUCTION_REPLAY_SUMMARY)
+    trifecta_reranker = read_json(TRIFECTA_RERANKER_METRICS)
+    commander_selector = read_json(COMMANDER_SELECTOR_METRICS)
+    live_snapshots = read_json(LIVE_SNAPSHOT_SUMMARY)
+    engine_lab = {
+        "production_replay": replay,
+        "trifecta_reranker": trifecta_reranker,
+        "commander_selector": commander_selector,
+        "live_snapshot_learning": live_snapshots,
+    }
+    strategist["engine_lab"] = engine_lab
+
+    reranker_delta = num(trifecta_reranker.get("delta_pp"))
+    if reranker_delta is not None and reranker_delta > 0:
+        strategist["recommended_actions"].append(
+            {
+                "priority": 2,
+                "type": "trifecta_reranker_shadow",
+                "action": "continue live shadow comparison of the combination reranker; require prospective Top10 gain before promotion",
+                "evidence": {
+                    "test_races": trifecta_reranker.get("test_races"),
+                    "base_top10_hit_rate": trifecta_reranker.get("base_top10_hit_rate"),
+                    "reranker_top10_hit_rate": trifecta_reranker.get("reranker_top10_hit_rate"),
+                    "delta_pp": reranker_delta,
+                },
+            }
+        )
+
+    commander_delta = num(commander_selector.get("delta_pp"))
+    if commander_delta is not None and commander_delta > 0:
+        strategist["recommended_actions"].append(
+            {
+                "priority": 2,
+                "type": "commander_shadow",
+                "action": "continue race-level commander shadow selection; do not grant production authority before prospective audit",
+                "evidence": {
+                    "test_races": commander_selector.get("test_races"),
+                    "production_hit_rate": commander_selector.get("production_hit_rate"),
+                    "commander_hit_rate": commander_selector.get("commander_hit_rate"),
+                    "delta_pp": commander_delta,
+                },
+            }
+        )
+
+    strategist["recommended_actions"] = sorted(
+        strategist["recommended_actions"], key=lambda x: x["priority"]
+    )
+
     findings = []
     status = "green"
 
@@ -755,6 +807,12 @@ def run(mode):
         "trifecta_top10_kpi": risk.get("trifecta_top10"),
         "live_feature_drift": risk.get("live_drift"),
         "cross_source_audit": manifest.get("cross_source_audit"),
+        "engine_lab": engine_lab,
+        "production_replay_top1_hit_rate": replay.get("production_top1_hit_rate"),
+        "production_replay_trifecta_top10_hit_rate": replay.get("trifecta_top10_hit_rate"),
+        "trifecta_reranker_delta_pp": trifecta_reranker.get("delta_pp"),
+        "commander_selector_delta_pp": commander_selector.get("delta_pp"),
+        "live_snapshot_labeled_races": live_snapshots.get("labeled_races"),
         "model_audit_status": audit_payload.get("drift_status"),
         "best_shadow_challenger": audit_payload.get("best_shadow_challenger"),
         "promotion_candidates": (model_audit.get("promotion_board", {}) or {}).get("eligible_for_external_validation", []),
@@ -772,6 +830,22 @@ def run(mode):
         "source": "ceo_decision_support",
         "status": "dissemination_package_pending_ceo_or_owner_decision",
         "directives": [
+            {
+                "target": "production_replay_lab",
+                "instruction": "replay current production post-processing chronologically and reject improvements that exist only in simplified backtests",
+            },
+            {
+                "target": "trifecta_combination_lab",
+                "instruction": "optimize exact ordered trifecta Top10 in shadow and report prospective gain over production tickets",
+            },
+            {
+                "target": "commander_ai",
+                "instruction": "select among specialist shadow departments per race but never change production without the normal promotion gate",
+            },
+            {
+                "target": "live_snapshot_learning",
+                "instruction": "accumulate real morning/40m/20m/10m pre-race states and attach labels only after official results",
+            },
             {
                 "target": "model_freshness_department",
                 "instruction": "run the recency-weighted challenger in shadow and report same-race gains without automatic promotion",
@@ -828,6 +902,10 @@ def run(mode):
             "model_freshness_department": "recency_weighted_shadow_model_competition",
             "data_quality_audit": "live_feature_drift_and_cross_source_validation",
             "ticket_audit": "live_trifecta_top10_product_kpi",
+            "production_replay_lab": "chronological_current_logic_replay",
+            "trifecta_combination_lab": "ordered_top10_shadow_reranker",
+            "commander_ai": "race_specific_shadow_department_selection",
+            "live_snapshot_learning": "real_pre_race_state_training_store",
         },
     }
 
@@ -854,6 +932,11 @@ def run(mode):
         f"- ライブ入力ドリフト: {(risk.get('live_drift') or {}).get('status', '未算出')}",
         f"- 3連単10点的中率: {(risk.get('trifecta_top10') or {}).get('hit_rate', '未算出')}",
         f"- 戦史クロスソース一致: {(manifest.get('cross_source_audit') or {}).get('agreement_rate', '未算出')}",
+        f"- 本番再現Top1: {replay.get('production_top1_hit_rate', '未算出')}",
+        f"- 本番再現3連単10点: {replay.get('trifecta_top10_hit_rate', '未算出')}",
+        f"- 3連単専用AI純増pp: {trifecta_reranker.get('delta_pp', '未算出')}",
+        f"- 司令塔AI純増pp: {commander_selector.get('delta_pp', '未算出')}",
+        f"- 実戦スナップショット学習済R: {live_snapshots.get('labeled_races', 0)}",
         f"- 昇格候補: {len((model_audit.get('promotion_board', {}) or {}).get('eligible_for_external_validation', []))}",
         f"- 第三者監査: {status}",
         "",
@@ -863,6 +946,10 @@ def run(mode):
     digest += [
         "",
         "## 専務の周知",
+        "- 本番再現室: 簡易バックテストではなく現行処理順の時系列リプレイを基準にする。",
+        "- 3連単組合せ班: 1-2-3の順序付き組合せを直接採点し、Production10点と影対決する。",
+        "- 司令塔AI: レースごとに専門部署を選ぶが、本番変更権限は持たない。",
+        "- 実戦学習庫: 朝・40分前・20分前・10分前の実入力を蓄積し、確定後のみ教師ラベルを付与する。",
         "- モデル鮮度部: 直近重視チャレンジャーを影運用し、本番モデルの経年劣化を監視する。",
         "- データ品質監査: 学習時との特徴量ドリフトと戦史クロスソース一致率を監視する。",
         "- 券種監査: Top1とは別に3連単10点の実戦的中率を正式KPIとして監視する。",
