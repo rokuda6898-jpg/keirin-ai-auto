@@ -718,6 +718,8 @@ def build_top1_variants(pred):
         "production": pd.to_numeric(base["p_win"], errors="coerce").clip(lower=1e-9),
         "race_scenario": pd.to_numeric(base["scenario_score"], errors="coerce").clip(lower=1e-9),
     }
+    if "p_core" in base.columns:
+        variants["core_model"] = pd.to_numeric(base["p_core"], errors="coerce").clip(lower=1e-9)
     # More line influence in simple two-line races; less when the race is fragmented.
     variable_line_factor = np.where(number_of_lines.le(2), 1.20, np.where(number_of_lines.ge(4), 0.72, 0.92))
     variants["variable_line"] = variants["production"] * np.exp(
@@ -777,7 +779,9 @@ def save_top1_variants(pred, now_jst):
 
     # Shadow consensus: measure whether agreement between independent race-reading
     # variants is more reliable than treating every Top1 prediction equally.
-    vote = current.copy()
+    # Keep the historical five-variant consensus definition stable; core_model
+    # is audited independently so adding it does not move the consensus baseline.
+    vote = current[current["variant"].ne("core_model")].copy()
     vote["predicted_winner_car_no"] = pd.to_numeric(vote["predicted_winner_car_no"], errors="coerce")
     rows = []
     for race_id, g in vote.groupby("race_id", sort=False):
@@ -881,6 +885,10 @@ def main():
 
     pred = df.copy()
     pred["p_raw"] = np.clip(calibrated, 1e-6, 1.0)
+    # Preserve the pure model ranking before NEXUS/consensus adjustments.
+    # V4 chronological validation shows this core Top1 is stronger than the
+    # adjusted Top1, so audit it live without changing ticket generation yet.
+    pred = normalize_race_prob(pred, "p_raw", "p_core")
     pred = apply_nexus_race_reading(pred)
     pred = apply_validated_top1_consensus(pred)
     pred = apply_position_models(pred)
@@ -930,7 +938,7 @@ def main():
     cols = [
         "date", "venue", "race_no", "race_id", "start_at", "close_at", "rank_in_race",
         "car_no", "player_id", "player_name", "style", "score", "odds_win", "odds_move_pct", "odds_move_last_pct", "odds_snapshot_count",
-        "p_win", "p_second", "p_third", "position_model_source", "p_win_pre_override", "top1_override_applied", "top1_override_reason", "top1_top2_margin", "top1_confidence_class", "place2_rate", "place3_rate", "line_role_place2_rate", "line_role_place3_rate", "nexus_form_adj", "nexus_line_adj", "nexus_style_adj", "nexus_condition_adj", "nexus_uncertainty", "expected_value_win", "stake_yen", "win_return_yen",
+        "p_core", "p_win", "p_second", "p_third", "position_model_source", "p_win_pre_override", "top1_override_applied", "top1_override_reason", "top1_top2_margin", "top1_confidence_class", "place2_rate", "place3_rate", "line_role_place2_rate", "line_role_place3_rate", "nexus_form_adj", "nexus_line_adj", "nexus_style_adj", "nexus_condition_adj", "nexus_uncertainty", "expected_value_win", "stake_yen", "win_return_yen",
         "win_profit_yen", "loss_amount_yen", "expected_profit_yen",
     ]
     for c in cols:
