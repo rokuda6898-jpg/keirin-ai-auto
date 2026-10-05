@@ -40,7 +40,12 @@ jobs:
         if: steps.central_history.outputs.cache-matched-key == ''
         uses: actions/cache/restore@v4
         with:
-          path: data/raw/history.csv
+          path: |
+            data/raw/history.csv
+            data/raw/history_odds.csv
+            data/raw/history_trifecta_odds.csv
+            data/raw/history_metadata.json
+            data/raw/race_cache
           key: readonly-weekly-history-${{ github.run_id }}
           restore-keys: |
             keirin-history-v4-
