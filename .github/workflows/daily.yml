@@ -10,7 +10,10 @@ permissions:
   contents: write
 
 concurrency:
-  group: keirin-repo-writer
+  # Keep the morning prediction in its own queue. Sharing the generic writer
+  # queue can cause GitHub to evict a pending daily run when another workflow
+  # enters the same concurrency group.
+  group: keirin-daily-predict
   cancel-in-progress: false
 
 jobs:
