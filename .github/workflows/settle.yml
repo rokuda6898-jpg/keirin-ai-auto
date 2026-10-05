@@ -38,6 +38,29 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Restore latest intraday central history
+        id: central_history
+        uses: actions/cache/restore@v4
+        with:
+          path: data/raw/history.csv
+          key: keirin-central-history-v1-${{ github.run_id }}
+          restore-keys: |
+            keirin-central-history-v1-
+
+      - name: Bootstrap central history from accumulated weekly cache
+        if: steps.central_history.outputs.cache-matched-key == ''
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            data/raw/history.csv
+            data/raw/history_odds.csv
+            data/raw/history_trifecta_odds.csv
+            data/raw/history_metadata.json
+            data/raw/race_cache
+          key: keirin-history-v4-${{ github.run_id }}
+          restore-keys: |
+            keirin-history-v4-
+
       - name: Refresh today entries for result URLs
         continue-on-error: true
         run: |
@@ -46,6 +69,17 @@ jobs:
       - name: Settle predictions
         run: |
           python src/settle_results.py
+
+      - name: Append officially confirmed races to central history
+        run: |
+          python src/append_confirmed_history.py
+
+      - name: Save latest intraday central history
+        if: always() && hashFiles('data/raw/history.csv') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: data/raw/history.csv
+          key: keirin-central-history-v1-${{ github.run_id }}
 
       - name: Rebuild historical prediction history on manual run
         if: github.event_name == 'workflow_dispatch'
