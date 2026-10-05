@@ -55,6 +55,14 @@ jobs:
           restore-keys: |
             keirin-history-v4-
 
+      - name: Restore latest intraday central history
+        uses: actions/cache/restore@v4
+        with:
+          path: data/raw/history.csv
+          key: keirin-central-history-v1-${{ github.run_id }}
+          restore-keys: |
+            keirin-central-history-v1-
+
       - name: Validate source and tests
         env:
           PYTHONPATH: src
@@ -86,6 +94,13 @@ jobs:
           else
             echo "KEIRIN_HISTORY_CSV_URL is configured; skip WINTICKET history build"
           fi
+
+      - name: Save merged central history for intraday settlement
+        if: always() && hashFiles('data/raw/history.csv') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: data/raw/history.csv
+          key: keirin-central-history-v1-${{ github.run_id }}
 
       - name: Verify history integrity
         run: |
