@@ -115,17 +115,33 @@ jobs:
         id: history_gate
         run: |
           python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
           import pandas as pd
           from pathlib import Path
+
           p = Path("data/raw/history.csv")
           races = 0
           if p.exists() and p.stat().st_size:
               df = pd.read_csv(p, usecols=["race_id"], dtype={"race_id": str})
               races = int(df["race_id"].nunique())
+
+          # Never retrain on a shrunken cache. The strict V4 validation summary
+          # is our last audited large-history reference; require at least 95%
+          # of that race count, with an absolute floor of 30,000 races.
+          audited_races = 0
+          summary = Path("models/v4_validation_summary.json")
+          if summary.exists():
+              try:
+                  audited_races = int(json.loads(summary.read_text(encoding="utf-8")).get("total_history_races") or 0)
+              except Exception:
+                  audited_races = 0
+          minimum_races = max(30000, int(audited_races * 0.95))
           print(f"races={races}")
-          print(f"ready={'true' if races >= 30000 else 'false'}")
+          print(f"minimum_races={minimum_races}")
+          print(f"ready={'true' if races >= minimum_races else 'false'}")
           PY
           echo "Accumulated history races: ${{ steps.history_gate.outputs.races }}"
+          echo "Required history floor: ${{ steps.history_gate.outputs.minimum_races }}"
 
       - name: Update company knowledge
         run: |
