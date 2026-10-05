@@ -10,6 +10,7 @@ from common import HISTORY_CSV, OUTPUT_DIR, RAW_DIR, ensure_dirs
 
 
 TODAY_CSV = RAW_DIR / "today_entries.csv"
+INTEGRITY_REPORT = OUTPUT_DIR / "history_integrity_report.json"
 
 
 def complete_race_ids(history):
@@ -40,6 +41,20 @@ def complete_race_ids(history):
 
         complete.add(str(race_id))
     return complete
+
+
+def audited_history_floor(report_path=INTEGRITY_REPORT):
+    report_path = Path(report_path)
+    if not report_path.exists():
+        return 0
+    try:
+        payload = json.loads(report_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return 0
+    try:
+        return max(int(payload.get("history_races", 0) or 0), 0)
+    except (TypeError, ValueError):
+        return 0
 
 
 def append_confirmed_today(
@@ -85,10 +100,13 @@ def append_confirmed_today(
 
     history_races_before = int(history["race_id"].astype(str).nunique())
     history_rows_before = int(len(history))
-    if history_races_before < int(min_existing_races):
+    audited_floor = audited_history_floor()
+    safety_floor = max(int(min_existing_races), audited_floor)
+    if history_races_before < safety_floor:
         raise ValueError(
             "central history safety guard failed: "
-            f"existing_races={history_races_before} minimum={int(min_existing_races)}"
+            f"existing_races={history_races_before} minimum={safety_floor} "
+            f"audited_floor={audited_floor}"
         )
 
     already_complete = complete_race_ids(history)
@@ -186,6 +204,8 @@ def append_confirmed_today(
         "history_path": str(history_path),
         "history_races_before": history_races_before,
         "history_rows_before": history_rows_before,
+        "audited_history_floor": audited_floor,
+        "safety_floor": safety_floor,
         "today_races": int(len(races)),
         "already_complete": int(len(already_complete.intersection(set(races["race_id"])))),
         "checked": int(len(candidates)),
