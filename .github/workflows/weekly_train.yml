@@ -279,9 +279,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     concurrency:
-      # Training may take hours. Only serialize the short publication phase
-      # with site/result/data workflows that write back to main.
-      group: keirin-repo-writer
+      # Keep weekly publication in its own queue. Publication safety is handled
+      # by explicit staleness checks and latest-main reapplication below.
+      group: keirin-weekly-publish
       cancel-in-progress: false
 
     steps:
@@ -294,22 +294,149 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: keirin-model
-          path: .
+          path: /tmp/weekly-artifact
 
       - name: Publish model and backtest safely
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add models outputs || true
-          git diff --staged --quiet && exit 0
-          git commit -m "Update keirin model and backtest"
-          for attempt in 1 2 3 4; do
+
+          artifact=/tmp/weekly-artifact
+
+          guarded_paths=(
+            src/train.py
+            src/train_top1_candidate.py
+            src/multi_bet_backtest.py
+            src/predict.py
+            src/race_features.py
+            src/settle_results.py
+            src/company_knowledge.py
+            src/update_growth_log.py
+            src/build_history.py
+            src/audit_history.py
+            tests
+            .github/workflows/weekly_train.yml
+            models
+          )
+
+          weekly_model_files=(
+            win_model.joblib
+            metrics.json
+            candidate_win_model.joblib
+            candidate_metrics.json
+            candidate_fast_metrics.json
+            candidate_promotion.json
+            position_models.joblib
+            position_metrics.json
+            shadow_rank_model.joblib
+          )
+
+          weekly_output_files=(
+            backtest_summary.csv
+            backtest_summary.json
+            latest_backtest.csv
+            multi_bet_backtest_bets.csv
+            multi_bet_backtest_summary.csv
+            multi_bet_backtest_overall.json
+            multi_bet_backtest_report.md
+            multi_bet_period_summary.csv
+            multi_bet_threshold_sweep.csv
+            multi_bet_recommended_conditions_periods.csv
+          )
+
+          weekly_source_is_stale() {
             git fetch origin main
-            if git rebase origin/main && git push origin main; then
-              exit 0
+            if ! git diff --quiet "$GITHUB_SHA" origin/main -- "${guarded_paths[@]}"; then
+              echo "Weekly training became stale while running; refusing model/backtest publication."
+              git diff --name-only "$GITHUB_SHA" origin/main -- "${guarded_paths[@]}" || true
+              return 0
             fi
-            git rebase --abort || true
-            echo "weekly publish push race: retry $attempt/4"
+            return 1
+          }
+
+          apply_weekly_artifact_on_latest_main() {
+            git fetch origin main
+
+            if weekly_source_is_stale; then
+              return 10
+            fi
+
+            company_changed=false
+            if ! git diff --quiet "$GITHUB_SHA" origin/main -- outputs/company; then
+              company_changed=true
+              echo "Company knowledge advanced during training; preserve latest main company state."
+            fi
+
+            git reset --hard origin/main
+            git clean -fd
+
+            mkdir -p models outputs
+            for name in "${weekly_model_files[@]}"; do
+              if [ -f "$artifact/models/$name" ]; then
+                cp -f "$artifact/models/$name" "models/$name"
+              fi
+            done
+
+            for name in "${weekly_output_files[@]}"; do
+              if [ -f "$artifact/outputs/$name" ]; then
+                cp -f "$artifact/outputs/$name" "outputs/$name"
+              fi
+            done
+
+            # growth_log.csv is append-only and is also updated by settlement.
+            # Merge both versions so weekly publication never deletes newer
+            # settlement rows.
+            if [ -f "$artifact/outputs/growth_log.csv" ]; then
+              python - <<'PY'
+          from pathlib import Path
+          import pandas as pd
+
+          current = Path("outputs/growth_log.csv")
+          weekly = Path("/tmp/weekly-artifact/outputs/growth_log.csv")
+          frames = []
+          for path in (current, weekly):
+              if path.exists() and path.stat().st_size:
+                  try:
+                      frames.append(pd.read_csv(path))
+                  except Exception as exc:
+                      print(f"growth log read warning: {path}: {exc}")
+          if frames:
+              merged = pd.concat(frames, ignore_index=True, sort=False).drop_duplicates(keep="last")
+              merged.to_csv(current, index=False)
+              print(f"merged growth log rows={len(merged)}")
+          PY
+            fi
+
+            # Company knowledge is shared with settlement. Only copy the weekly
+            # snapshot when no newer company state landed during training.
+            if [ "$company_changed" = "false" ] && [ -d "$artifact/outputs/company" ]; then
+              mkdir -p outputs/company
+              cp -R "$artifact/outputs/company/." outputs/company/
+            fi
+
+            git add models outputs || true
+            git diff --staged --quiet || git commit -m "Update keirin model and backtest"
+            return 0
+          }
+
+          if apply_weekly_artifact_on_latest_main; then
+            :
+          else
+            rc=$?
+            [ "$rc" -eq 10 ] && exit 0
+            exit "$rc"
+          fi
+
+          for attempt in 1 2 3 4; do
+            git push origin HEAD:main && exit 0
+            echo "weekly publish push race: reapply artifact on latest main retry $attempt/4"
+            if apply_weekly_artifact_on_latest_main; then
+              :
+            else
+              rc=$?
+              [ "$rc" -eq 10 ] && exit 0
+              exit "$rc"
+            fi
             sleep $((attempt * 2))
           done
           exit 1
