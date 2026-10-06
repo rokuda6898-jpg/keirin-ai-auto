@@ -38,8 +38,9 @@ concurrency:
   # GitHub keeps only one pending run per concurrency group, so sharing the
   # writer group caused scheduled manager runs to cancel a waiting retrain.
   group: keirin-weekly-train
-  # A newer training definition/model change must supersede an older run.
-  cancel-in-progress: true
+  # Finish the active evaluation; retain the newest request in the waiting slot.
+  # Frequent source/test updates must not repeatedly discard hours of training.
+  cancel-in-progress: false
 
 jobs:
   train:
