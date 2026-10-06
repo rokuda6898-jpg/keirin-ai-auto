@@ -1,8 +1,7 @@
 {
-  "checked_at_jst": "2026-10-06T21:42:20+09:00",
-  "status": "unhealthy",
-  "repaired": false,
-  "check_source": "post_settlement_read_only_audit",
+  "checked_at_jst": "2026-10-06T21:48:15+09:00",
+  "status": "repaired",
+  "repaired": true,
   "attempts": [
     {
       "attempt": 0,
@@ -3384,6 +3383,19 @@
         "expected_riders": 502,
         "actual_riders": 502,
         "rider_integrity_ok": true
+      },
+      "repair_action": "prediction_regeneration"
+    },
+    {
+      "attempt": 1,
+      "problems": [],
+      "health": {
+        "severity": "ok",
+        "problem_types": [],
+        "race_count": 72,
+        "expected_riders": 502,
+        "actual_riders": 502,
+        "rider_integrity_ok": true
       }
     }
   ],
@@ -4468,13 +4480,15 @@
     }
   },
   "health": {
-    "severity": "warning",
-    "problem_types": [
-      "site_player_name_mismatch"
-    ],
+    "severity": "ok",
+    "problem_types": [],
     "race_count": 72,
     "expected_riders": 502,
     "actual_riders": 502,
     "rider_integrity_ok": true
+  },
+  "recurrence": {
+    "level": 0,
+    "counts": {}
   }
 }
