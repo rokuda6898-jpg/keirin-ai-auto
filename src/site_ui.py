@@ -42,9 +42,10 @@ def nav(active="today"):
     return '<nav class="mobile-nav" aria-label="メインメニュー">'+''.join(f'<a class="{"active" if key==active else ""}" href="{url}">{label}<small>{en}</small></a>' for key,url,label,en in links)+'</nav>'
 
 def saved_race_tickets(race_id, now_epoch=None):
-    """Restore a saved pre-close snapshot for finished races only."""
+    """Restore only current-strategy pre-close snapshots for finished races."""
     import pandas as pd
     import time
+    from betting_logic import STRATEGY_VERSION
     now_epoch=time.time() if now_epoch is None else now_epoch
     rid=str(race_id)
     if not re.fullmatch(r"\d{12}",rid):return []
@@ -53,7 +54,12 @@ def saved_race_tickets(race_id, now_epoch=None):
     for path in OUTPUT_DIR.glob(f"shadow_bets_{day}_*.csv"):
         try:
             frame=pd.read_csv(path,dtype={"race_id":str,"buy":str})
-            frame=frame[frame["race_id"].eq(rid)].copy()
+            if "strategy_version" not in frame.columns:
+                continue
+            frame=frame[
+                frame["race_id"].eq(rid)
+                & frame["strategy_version"].eq(STRATEGY_VERSION)
+            ].copy()
             if frame.empty:continue
             close=pd.to_numeric(frame["close_at"],errors="coerce")
             created=pd.to_datetime(frame["prediction_created_at_jst"],errors="coerce",utc=True)
@@ -74,8 +80,10 @@ def reference_candidates(race_id, path=None):
     frame["prob"]=pd.to_numeric(frame["prob"],errors="coerce")
     frame=frame[frame["prob"].notna() & frame["prob"].gt(0) & frame["buy"].str.fullmatch(r"[1-9]-[1-9]-[1-9]")].sort_values("prob",ascending=False)
     truth=lambda col:frame[col].fillna(False).astype(str).str.lower().isin(["true","1"])
-    main=frame[truth("main_formation")].head(6)
     price=pd.to_numeric(frame.get("odds_used"),errors="coerce")
+    # Keep reference labels consistent with the actual betting groups:
+    # known 100x+ prices are never shown as 本線参考.
+    main=frame[truth("main_formation") & (price.isna() | price.lt(100))].head(6)
     holes=frame[truth("hole_formation") & ~frame["buy"].isin(main["buy"]) & (price.isna() | price.ge(100))].head(6)
     rows=[]
     for label,part in [("本線参考",main),("穴狙い参考",holes)]:
