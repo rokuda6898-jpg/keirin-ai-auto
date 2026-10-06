@@ -519,6 +519,11 @@ def audit_prediction_outputs():
             "p_win_pre_override",
             "top1_override_applied",
             "top1_override_reason",
+            "score_first",
+            "score_second",
+            "score_third",
+            "position_score_source",
+            "popularity_source",
         }
         missing_strategy_columns = sorted(required_strategy_columns - set(pred.columns))
         if missing_strategy_columns:

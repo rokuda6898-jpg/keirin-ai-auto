@@ -28,6 +28,7 @@ from common import (
     normalize_race_prob,
 )
 from multi_bet_backtest import BET_LABELS, make_candidates as make_multi_bet_candidates
+from betting_logic import STRATEGY_VERSION, MAIN_EV, HOLE_EV, score_riders, select_race
 from model_drift_audit import audit_live_drift
 from trifecta_reranker import score_candidates as score_trifecta_reranker
 from commander_selector import choose_variant as choose_commander_variant
@@ -40,7 +41,6 @@ DEFAULT_BET_CONFIGS = {
     "quinella": {"min_prob": 0.05, "min_ev": 1200, "max_odds": 300, "max_per_race": 2},
     "quinella_place": {"min_prob": 0.10, "min_ev": 300, "max_odds": 100, "max_per_race": 2},
     "trio": {"min_prob": 0.07, "min_ev": 800, "max_odds": 300, "max_per_race": 2},
-    "trifecta": {"min_prob": 0.01, "min_ev": 100, "max_odds": 9999, "max_per_race": 10},
 }
 
 
@@ -154,7 +154,7 @@ def file_sha256(path):
     return digest.hexdigest()
 
 
-def load_profit_gate():
+def load_profit_gate(strategy_version=STRATEGY_VERSION):
     if not PROFIT_GATE_PATH.exists():
         return {"target_passed": False, "reason": "external holdout has not been completed"}
     try:
@@ -168,7 +168,12 @@ def load_profit_gate():
             "roi": result.get("roi"),
             "bets": result.get("bets"),
         }
-    return {"target_passed": True, "reason": "external holdout gate passed", **result}
+    if result.get("strategy_version") != strategy_version or result.get("model_sha256") != file_sha256(MODEL_PATH):
+        return {"target_passed": False, "reason": "strategy/model requires its own external holdout"}
+    roi = pd.to_numeric(result.get("roi"), errors="coerce")
+    if pd.isna(roi) or not np.isfinite(roi) or roi < 0.20:
+        return {"target_passed": False, "reason": "120% return rate target was not met"}
+    return {**result, "target_passed": True, "reason": "external holdout gate passed"}
 
 
 def stake_from_edge(expected_profit_100yen, base_stake=100, max_stake=500):
@@ -924,7 +929,7 @@ def save_trifecta_top10_ledger(pred, now_jst):
                 production_tri["prob"], errors="coerce"
             )
             append_variant(
-                base, race_id, production_tri, "production_top10", "prob"
+                base, race_id, production_tri, "legacy_top10_comparison", "prob"
             )
 
         # The combination AI must see the broad ordered field, not only tickets
@@ -1068,6 +1073,72 @@ def save_top1_variants(pred, now_jst):
     consensus.to_csv(consensus_path, index=False)
 
 
+def build_strategy_outputs(pred, today_odds, epoch, max_seconds, version=STRATEGY_VERSION,
+                           main_ev=MAIN_EV, hole_ev=HOLE_EV):
+    scored_parts, candidate_parts, plans = [], [], []
+    for race_id, race in pred.groupby("race_id", sort=False):
+        odds = today_odds[today_odds.race_id.eq(str(race_id))].copy()
+        riders = score_riders(race, odds)
+        scored_parts.append(riders)
+        trifecta, plan = select_race(riders, odds, main_ev, hole_ev)
+        base = race.iloc[0]
+        close = pd.to_numeric(base.get("close_at", np.nan), errors="coerce")
+        seconds = close - epoch
+        eligible = pd.notna(seconds) and 300 < seconds <= max_seconds
+        plan.update(race_id=str(race_id), venue=str(base.get("venue", "")),
+                    race_no=int(base.get("race_no", 0)), timing_eligible=bool(eligible))
+        if not eligible:
+            trifecta["is_selected"] = False
+            plan.update(main_count=0, hole_count=0, skip_reason="締切時刻未取得・締切5分以内・対象時間外")
+        plans.append(plan)
+        # Other ticket types keep their existing generation and filters.
+        other = make_multi_bet_candidates(race, top_k=min(len(race), 9))
+        if not other.empty:
+            other = other[~other.bet_type.eq("trifecta")].merge(
+                odds.groupby(["bet_type", "buy"], as_index=False).odds_used.min(),
+                on=["bet_type", "buy"], how="inner", validate="one_to_one")
+        if not other.empty:
+            other["expected_profit_100yen"] = 100 * (other.prob * other.odds_used - 1)
+            other["ev"] = other.prob * other.odds_used
+            other["candidate_rank"] = other.groupby("bet_type").prob.rank(ascending=False, method="first").astype(int)
+            other["is_selected"] = False
+            other["ticket_group"] = "他券種"
+            for bet_type, config in DEFAULT_BET_CONFIGS.items():
+                valid = other[other.bet_type.eq(bet_type) & other.prob.ge(config["min_prob"])
+                              & other.expected_profit_100yen.ge(config["min_ev"])
+                              & other.odds_used.le(config["max_odds"])
+                              & np.isfinite(other.odds_used) & other.odds_used.ge(1)]
+                if eligible:
+                    chosen = valid.sort_values("ev", ascending=False).head(config["max_per_race"])
+                    other.loc[chosen.index, "is_selected"] = True
+        combined = pd.concat([trifecta, other], ignore_index=True, sort=False)
+        for col in ["date", "venue", "race_no", "start_at"]:
+            combined[col] = base.get(col, "")
+        combined["race_id"] = str(race_id)
+        combined["close_at"] = close
+        combined["seconds_to_close_at_prediction"] = seconds
+        combined["strategy_version"] = version
+        combined["bet_label"] = combined.bet_type.map(BET_LABELS)
+        candidate_parts.append(combined)
+    candidates = pd.concat(candidate_parts, ignore_index=True) if candidate_parts else pd.DataFrame(
+        columns=["race_id", "bet_type", "buy", "is_selected", "ticket_group"])
+    scored = pd.concat(scored_parts, ignore_index=True).sort_values(
+        [c for c in ["date", "venue", "race_no", "rank_first"] if c in pred or c == "rank_first"],
+        kind="mergesort")
+    return scored, candidates, plans
+
+
+def render_strategy_summary(plan, purchase_authorized):
+    fixed = f"{plan['fixed_car']}番で1着固定" if plan['first_fixed'] else "1着候補を複数評価"
+    state = "購入対象" if purchase_authorized else "検証用候補・購入停止中"
+    reason = html_lib.escape(plan.get("skip_reason") or "条件を満たす点数のみ表示")
+    return (f'<div class="strategy-summary"><b>{state}</b><p>荒れ指数 {plan["chaos_index"]:.1f}/100 '
+            f'｜ {plan["chaos_label"]} ｜ {fixed}</p>'
+            f'<p>本線 {plan["main_count"]}/{plan["main_limit"]}点・穴 {plan["hole_count"]}/{plan["hole_limit"]}点'
+            f' ｜ 本線EV≥{plan["main_ev"]:.2f}・穴EV≥{plan["hole_ev"]:.2f}</p>'
+            f'<small>{reason}。確率・EVは推定値、回収率120%は未達成の目標です。</small></div>')
+
+
 def main():
     ensure_dirs()
     ensure_ready()
@@ -1077,9 +1148,9 @@ def main():
     max_stake_yen = get_int_env("BET_MAX_STAKE_YEN", 500)
     max_seconds_to_close = get_int_env("BET_MAX_SECONDS_TO_CLOSE", 3600)
     snapshot_mode = os.getenv("PREDICTION_SNAPSHOT_MODE", "false").strip().lower() in {"1", "true", "yes"}
-    strategy_version = os.getenv("PREDICTION_STRATEGY_VERSION", "near_close_v4_position_20261004").strip()
+    strategy_version = os.getenv("PREDICTION_STRATEGY_VERSION", STRATEGY_VERSION).strip()
     odds_snapshot_label = os.getenv("ODDS_SNAPSHOT_LABEL", "near-close snapshot").strip()
-    profit_gate = load_profit_gate()
+    profit_gate = load_profit_gate(strategy_version)
 
     bundle, model_source = load_validated_model_bundle()
     model = bundle["model"]
@@ -1213,6 +1284,18 @@ def main():
         if c not in pred.columns:
             pred[c] = ""
 
+    today_odds = load_today_odds()
+    pred, candidates, strategy_plans = build_strategy_outputs(
+        pred, today_odds, prediction_epoch, max_seconds_to_close, strategy_version,
+        get_float_env("BET_MAIN_MIN_EV", MAIN_EV), get_float_env("BET_HOLE_MIN_EV", HOLE_EV),
+    )
+    pred = pred.sort_values(sort_cols, kind="mergesort")
+    cols += ["score_first", "score_second", "score_third", "rank_first", "rank_second", "rank_third",
+             "position_score_source", "popularity_rank", "popularity_source", "rank_divergence",
+             "undervalued_points", "overpopular_points"]
+    (OUTPUT_DIR / "latest_race_strategy.json").write_text(
+        json.dumps(strategy_plans, ensure_ascii=False, indent=2, allow_nan=False), encoding="utf-8")
+    strategy_plan_map = {p["race_id"]: p for p in strategy_plans}
     pred[cols].to_csv(pred_path, index=False)
     pred[cols].to_csv(latest_path, index=False)
 
@@ -1247,62 +1330,8 @@ def main():
     save_top1_variants(pred, now_jst)
     save_trifecta_top10_ledger(pred, now_jst)
 
-    bet_rows = []
-    today_odds = load_today_odds()
-    for race_id, g in pred.groupby("race_id", sort=False):
-        base = g.iloc[0]
-        close_at = pd.to_numeric(base.get("close_at", np.nan), errors="coerce")
-        seconds_to_close = close_at - prediction_epoch if pd.notna(close_at) else np.nan
-        if pd.isna(seconds_to_close) or seconds_to_close <= 300 or seconds_to_close > max_seconds_to_close:
-            continue
-        candidates = make_multi_bet_candidates(g, top_k=min(len(g), 9))
-        if load_v4_validation_gate().get("target_passed", False):
-            candidates = filter_trifecta_candidates_by_confidence(candidates, g)
-        race_odds = today_odds[today_odds["race_id"].eq(str(race_id))]
-        if len(candidates) == 0 or len(race_odds) == 0:
-            continue
-        merged = candidates.merge(race_odds, on=["bet_type", "buy"], how="inner")
-        if len(merged) == 0:
-            continue
-        merged = merged.sort_values(["bet_type", "prob"], ascending=[True, False])
-        merged["candidate_rank"] = merged.groupby("bet_type")["prob"].rank(ascending=False, method="first").astype(int)
-        for _, cand in merged.iterrows():
-            expected_value = cand["prob"] * cand["odds_used"] - 1 if pd.notna(cand["odds_used"]) else np.nan
-            bet_rows.append({
-                "date": base.get("date", ""),
-                "venue": base.get("venue", ""),
-                "race_no": base.get("race_no", ""),
-                "race_id": race_id,
-                "start_at": base.get("start_at", np.nan),
-                "close_at": close_at,
-                "seconds_to_close_at_prediction": round(float(seconds_to_close)),
-                "strategy_version": strategy_version,
-                "bet_type": cand["bet_type"],
-                "bet_label": BET_LABELS.get(cand["bet_type"], cand["bet_type"]),
-                "candidate_rank": int(cand["candidate_rank"]),
-                "trifecta_portfolio_mode": cand.get("trifecta_portfolio_mode", ""),
-                "buy": cand["buy"],
-                "prob": cand["prob"],
-                "odds_used": cand["odds_used"],
-                "expected_profit_100yen": round(100 * expected_value) if pd.notna(expected_value) else np.nan,
-            })
-
-    candidates = pd.DataFrame(bet_rows)
     if len(candidates):
-        candidates["is_selected"] = False
-        for bet_type, config in DEFAULT_BET_CONFIGS.items():
-            mask = candidates["bet_type"].eq(bet_type)
-            candidates.loc[mask, "is_selected"] = (
-                (pd.to_numeric(candidates.loc[mask, "prob"], errors="coerce") >= config["min_prob"])
-                & (pd.to_numeric(candidates.loc[mask, "expected_profit_100yen"], errors="coerce") >= config["min_ev"])
-                & (pd.to_numeric(candidates.loc[mask, "odds_used"], errors="coerce") <= config["max_odds"])
-            )
-        selected_parts = []
-        for (_, bet_type), g in candidates[candidates["is_selected"]].groupby(["race_id", "bet_type"], sort=False):
-            max_per_race = DEFAULT_BET_CONFIGS.get(bet_type, {}).get("max_per_race", 1)
-            rank_cols = ["prob", "expected_profit_100yen"] if bet_type == "trifecta" else ["expected_profit_100yen", "prob"]
-            selected_parts.append(g.sort_values(rank_cols, ascending=False).head(max_per_race))
-        bets = pd.concat(selected_parts, ignore_index=True) if selected_parts else candidates.head(0).copy()
+        bets = candidates[candidates["is_selected"]].copy()
         if len(bets):
             race_budget_yen = get_int_env("BET_RACE_BUDGET_YEN", 10000)
             allocated = []
@@ -1407,13 +1436,15 @@ def main():
         race_bets = shadow_bets[shadow_bets["race_id"].astype(str).eq(str(race_id))] if len(shadow_bets) else shadow_bets
         if len(race_bets):
             bet_html = "".join(
-                f'<div class="bet"><b>{row.get("bet_label", row.get("bet_type", ""))}</b>'
+                f'<div class="bet"><b>{row.get("ticket_group", "")} {row.get("bet_label", row.get("bet_type", ""))}</b>'
                 f'<strong>{row["buy"]}</strong><span>{int(row["stake_yen"]):,}円</span>'
-                f'<small>オッズ {float(row["odds_used"]):.1f}</small></div>'
+                f'<small>オッズ {float(row["odds_used"]):.1f} ｜ EV {float(row["ev"]):.2f}</small></div>'
                 for _, row in race_bets.iterrows()
             )
         else:
             bet_html = '<div class="waiting">買い目候補は締切前オッズ取得後に表示</div>'
+        plan = strategy_plan_map[str(race_id)]
+        bet_html = render_strategy_summary(plan, bool(profit_gate["target_passed"])) + bet_html
         riders_html = "".join(
             f'<button class="rider" type="button" data-car="{int(row.car_no)}" data-player-id="{html_lib.escape(str(row.player_id), quote=True)}" data-name="{rider_display_name(row)}" data-score="{float(row.score) if pd.notna(row.score) else 0:.1f}" data-win="{float(row.p_win)*100:.1f}" onclick="compareRider(this)"><i class="car car-{int(row.car_no)}">{int(row.car_no)}</i><span>{rider_display_name(row)}</span></button>'
             for row in group.sort_values("car_no").itertuples()
@@ -1442,7 +1473,7 @@ main{{max-width:920px;margin:auto;padding:22px 15px 90px}}nav{{display:grid;grid
 footer{{text-align:center;padding:24px;color:#7b899b;font-size:11px}}@media(max-width:520px){{main{{padding:12px 12px 90px}}.race-head{{align-items:flex-start;flex-direction:column}}.brand{{font-size:22px;min-width:220px}}.hero{{align-items:flex-start;flex-direction:column}}.trust{{width:100%}}}}
 </style></head><body><header><div class="brand">NEXUS</div><div class="tag">KEIRIN PREDICTION SYSTEM</div></header><main>
 <nav><a href="index.html">今日の予想</a><a href="history.html">予想履歴</a></nav>
-<section class="hero"><div><span class="eyebrow">TODAY’S KEIRIN</span><h1>今日のレース</h1><p>更新 {generated} JST ｜ 1日予算 10,000円を基準にAIが配分</p></div><div class="trust"><b>予想は事前保存</b><small>的中・不的中を結果確定後に記録</small></div></section>
+<section class="hero"><div><span class="eyebrow">TODAY’S KEIRIN</span><h1>今日のレース</h1><p>更新 {generated} JST ｜ 本線6〜12点・穴0〜12点を期待値で選定</p></div><div class="trust"><b>予想は事前保存</b><small>的中・不的中を結果確定後に記録</small></div></section>
 <section class="venue-jump"><b>開催場を選択</b><div id="venueJump"></div></section>
 {"".join(race_cards) if race_cards else '<div class="race">本日の予想データを取得中です。</div>'}
 </main><script>
@@ -1477,6 +1508,7 @@ function compareRider(btn){{var p=btn.closest(".compare-panel"),v=parseFloat(btn
         "profit_gate": profit_gate,
         "bet_filter": {
             "configs": DEFAULT_BET_CONFIGS,
+            "trifecta": {"main_min_ev": MAIN_EV, "hole_min_ev": HOLE_EV, "max_main": 12, "max_hole": 12},
         },
     }
     print(json.dumps(summary, ensure_ascii=False, indent=2))
