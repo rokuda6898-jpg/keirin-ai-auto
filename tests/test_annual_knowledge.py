@@ -35,6 +35,17 @@ class AnnualKnowledgeTests(unittest.TestCase):
         self.assertEqual(len(pd.read_csv(self.history)), 15)
         self.assertEqual(report["fingerprint"], build_annual_profiles("2026-10-06", self.history, self.root)["fingerprint"])
 
+    def test_partial_supplement_does_not_inflate_archive_count(self):
+        folder = self.root / "company"
+        folder.mkdir()
+        pd.DataFrame([{"race_id": "supplement", "player_id": "1", "date": "2026-10-04",
+                       "finish_pos": 1}]).to_csv(folder / "rider_official_observations.csv", index=False)
+        report = build_annual_profiles("2026-10-06", self.history, self.root)
+        self.assertEqual(report["total_archive_races"], 5)
+        self.assertEqual(report["supplemental_result_races"], 1)
+        self.assertEqual(report["annual_archive_races"], 2)
+        self.assertEqual(report["annual_races"], 3)
+
     def test_history_change_invalidates_profile_cache(self):
         before = build_annual_profiles("2026-10-06", self.history, self.root)
         frame = pd.read_csv(self.history); frame.loc[frame.race_id.eq("recent"), "finish_pos"] = [3, 2, 1]

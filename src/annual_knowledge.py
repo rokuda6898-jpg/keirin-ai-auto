@@ -132,7 +132,12 @@ def build_annual_profiles(asof=None, history_path=HISTORY_CSV, output_dir=OUTPUT
         if previous.get("fingerprint") == fingerprint:
             return previous
     history = frame_read(history_path)
+    total_races = int(history.race_id.nunique()) if "race_id" in history else 0
+    primary_ids = set(history.race_id.astype(str)) if "race_id" in history else set()
+    primary_dates = pd.to_datetime(history.get("date", pd.Series(dtype=str)), errors="coerce")
+    annual_archive_races = int(history.loc[primary_dates.ge(start) & primary_dates.lt(asof), "race_id"].nunique()) if "race_id" in history else 0
     extra = frame_read(observations)
+    supplemental_races = len(set(extra.race_id.astype(str)) - primary_ids) if "race_id" in extra else 0
     if not history.empty and not extra.empty:
         # Missing fields from a supplemental observation cannot erase old values.
         history = history.set_index(["race_id", "player_id"])
@@ -140,7 +145,7 @@ def build_annual_profiles(asof=None, history_path=HISTORY_CSV, output_dir=OUTPUT
         history = extra.combine_first(history).reset_index()
     elif not extra.empty:
         history = extra
-    total_races = int(history.race_id.nunique()) if "race_id" in history else 0
+    reference_races = int(history.race_id.nunique()) if "race_id" in history else 0
     profiles = {}
     annual_races = 0
     coverage = {}
@@ -187,7 +192,9 @@ def build_annual_profiles(asof=None, history_path=HISTORY_CSV, output_dir=OUTPUT
     report = {"updated_at_jst": datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(timespec="seconds"),
               "fingerprint": fingerprint, "asof_date": str(asof.date()), "window_start": str(start.date()),
               "window_end_exclusive": str(asof.date()), "total_archive_races": total_races,
-              "annual_races": annual_races, "players": len(profiles), "profiles": profiles,
+              "annual_races": annual_races, "annual_archive_races": annual_archive_races,
+              "supplemental_result_races": supplemental_races, "reference_races_including_supplemental": reference_races,
+              "players": len(profiles), "profiles": profiles,
               "observation_coverage": coverage, "status": "ready" if profiles else "history_unavailable",
               "policy": "full archive retained; previous calendar year used for specialist proposals; same-day/future results excluded",
               "limitations": ["脚質と決まり手を区別。決まり手・行動の未取得分は推測しない。",
@@ -322,7 +329,9 @@ def audit_department_predictions(output_dir=OUTPUT_DIR):
             'table{width:100%;border-collapse:collapse}td,th{padding:10px;border-bottom:1px solid #ddd}p{line-height:1.8}</style>'
             '<main><a href="../index.html">レース一覧へ戻る</a><h1>直近1年の部署予想</h1>'
             f'<p>保持している全履歴 {knowledge.get("total_archive_races", 0):,}レース<br>'
-            f'直近1年の参考記録 {knowledge.get("annual_races", 0):,}レース ／ {knowledge.get("players", 0):,}選手<br>'
+            f'選手別の補足結果 {knowledge.get("supplemental_result_races", 0):,}レース（一部選手の記録）<br>'
+            f'直近1年の全体履歴 {knowledge.get("annual_archive_races", 0):,}レース<br>'
+            f'補足込みの直近1年の参考記録 {knowledge.get("annual_races", 0):,}レース ／ {knowledge.get("players", 0):,}選手<br>'
             f'集計期間 {knowledge.get("window_start", "未取得")} ～ {knowledge.get("window_end_exclusive", "未取得")}の前日</p>'
             f'<p>従来集計 {verified_live["legacy_settled_rows"]}件のうち、締切前時刻を確認できる記録は {verified_live["timestamp_verified_races"]}件です。未確認分を新しい実戦検証に混ぜません。</p>'
             '<p>各部署が年間成績・最近の調子・ライン位置・出走数を使って独立した検証用予想を作ります。'
