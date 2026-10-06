@@ -1,10 +1,31 @@
 {
-  "checked_at_jst": "2026-10-06T20:21:45+09:00",
-  "status": "healthy",
-  "repaired": false,
+  "checked_at_jst": "2026-10-06T20:25:23+09:00",
+  "status": "repaired",
+  "repaired": true,
   "attempts": [
     {
       "attempt": 0,
+      "problems": [
+        {
+          "type": "prediction_strategy_schema_stale",
+          "reason": "strategy_version_changed",
+          "expected_strategy": "position_ev_v6_20261006"
+        }
+      ],
+      "health": {
+        "severity": "warning",
+        "problem_types": [
+          "prediction_strategy_schema_stale"
+        ],
+        "race_count": 72,
+        "expected_riders": 502,
+        "actual_riders": 502,
+        "rider_integrity_ok": true
+      },
+      "repair_action": "prediction_regeneration"
+    },
+    {
+      "attempt": 1,
       "problems": [],
       "health": {
         "severity": "ok",
