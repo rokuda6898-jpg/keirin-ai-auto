@@ -847,6 +847,23 @@ def repair(problems=None):
     return True, "+".join(actions)
 
 
+def refresh_monitor_after_results():
+    """Recheck current artifacts after settlement, without fetching or repairing."""
+    entry_problems, stats = audit_entries()
+    problems = entry_problems
+    for audit in [audit_race_coverage, audit_prediction_outputs, audit_identity_and_prediction_quality,
+                  audit_freshness, audit_budget, audit_live_bets, audit_site_output, audit_results]:
+        problems += audit()
+    kinds = {p["type"] for p in problems}
+    status = "healthy" if not problems else "waiting_results" if kinds.issubset({"results_waiting", "results_overdue"}) else "unhealthy"
+    payload = {"checked_at_jst": datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(timespec="seconds"),
+               "status": status, "repaired": False, "check_source": "post_settlement_read_only_audit",
+               "attempts": [{"attempt": 0, "problems": problems, "health": summarize_health(problems, stats)}],
+               "race_stats": stats, "health": summarize_health(problems, stats)}
+    STATUS_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    return payload
+
+
 def main():
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     history = []

@@ -953,7 +953,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--min-expected-profit", type=float, default=0.0)
     args = parser.parse_args()
-    return run_settlement(args)
+    result = run_settlement(args)
+    from site_manager import refresh_monitor_after_results
+    refresh_monitor_after_results()
+    return result
 
 
 if __name__ == "__main__":

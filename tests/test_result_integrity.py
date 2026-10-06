@@ -19,6 +19,27 @@ class ResultIntegrityTests(unittest.TestCase):
                 path.write_text(json.dumps([{'strategy_version':STRATEGY_VERSION}]))
                 self.assertEqual(site_manager.audit_strategy_version(),[])
 
+    def test_post_settlement_rechecks_warning_without_hiding_other_faults(self):
+        import tempfile, json
+        from pathlib import Path
+        from unittest.mock import patch
+        from contextlib import ExitStack
+        import site_manager
+        audits=['audit_race_coverage','audit_prediction_outputs','audit_identity_and_prediction_quality','audit_freshness','audit_budget','audit_live_bets','audit_site_output','audit_results']
+        with tempfile.TemporaryDirectory() as tmp, ExitStack() as stack:
+            path=Path(tmp)/'manager_status.json'
+            path.write_text(json.dumps({'status':'waiting_results'}))
+            stack.enter_context(patch.object(site_manager,'STATUS_PATH',path))
+            stack.enter_context(patch.object(site_manager,'audit_entries',return_value=([],{})))
+            mocks={name:stack.enter_context(patch.object(site_manager,name,return_value=[])) for name in audits}
+            self.assertEqual(site_manager.refresh_monitor_after_results()['status'],'healthy')
+            mocks['audit_results'].return_value=[{'type':'results_waiting','race_ids':['new']}]
+            self.assertEqual(site_manager.refresh_monitor_after_results()['status'],'waiting_results')
+            mocks['audit_prediction_outputs'].return_value=[{'type':'prediction_missing'}]
+            result=site_manager.refresh_monitor_after_results()
+            self.assertEqual(result['status'],'unhealthy')
+            self.assertEqual(result['health']['severity'],'critical')
+
     def test_invalid_ranks(self):
         data=pd.DataFrame({'finish_pos':[0,-1,99,1.5,float('inf'),None,1,3,4], 'entries_number':[3]*9})
         self.assertEqual(valid_finish_mask(data).tolist(),[False]*6+[True,True,False])

@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - "src/settle_results.py"
+      - "src/site_manager.py"
       - ".github/workflows/quick-results.yml"
   schedule:
     # JST 09:00-23:59. Keep the public "確定" label close to the official result.
@@ -87,7 +88,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add outputs/latest_results.json outputs/index.html
+          git add outputs/latest_results.json outputs/index.html outputs/manager_status.json
           if [ -f outputs/company/rider_official_observations.csv ]; then
             git add outputs/company/rider_official_observations.csv
           fi
@@ -132,7 +133,7 @@ jobs:
               python src/fetch_today_entries.py || true
             fi
             python src/settle_results.py
-            git add outputs/latest_results.json outputs/index.html
+            git add outputs/latest_results.json outputs/index.html outputs/manager_status.json
           if [ -f outputs/company/rider_official_observations.csv ]; then
             git add outputs/company/rider_official_observations.csv
           fi

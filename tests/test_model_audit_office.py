@@ -70,6 +70,7 @@ class ModelAuditOfficeTests(unittest.TestCase):
                 validation_summary_path=validation,
             )
 
+            self.assertFalse(payload["audit"]["comparison_context"]["accuracy_decline_established"])
             eligible = payload["promotion_board"]["eligible_for_external_validation"]
             self.assertEqual(len(eligible), 1)
             self.assertEqual(eligible[0]["variant"], "second_wheel")

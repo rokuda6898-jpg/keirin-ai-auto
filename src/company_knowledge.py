@@ -801,12 +801,12 @@ def run(mode):
     status = "green"
 
     audit_payload = model_audit.get("audit", {}) or {}
-    if audit_payload.get("drift_status") == "material_live_gap":
+    if audit_payload.get("drift_status") in {"material_live_gap", "unmatched_cohort_gap"}:
         findings.append(
             {
                 "severity": "amber",
-                "finding": "live Top1 accuracy is materially below chronological validation",
-                "challenge_to_ceo": "Which production-stage adjustment or live-data shift explains the gap before any new override is promoted?",
+                "finding": "実戦集計と過去検証に差があります。期間・対象・締切前保存の確認条件が異なるため、精度低下の確定判定ではありません。",
+                "challenge_to_ceo": "新条件の締切前保存記録で検証を続け、条件をそろえた比較ができるまで新モデルの昇格を保留する。",
                 "evidence": {
                     "production_hit_rate": audit_payload.get("production_hit_rate"),
                     "validation_top1_final_rate": audit_payload.get("validation_top1_final_rate"),

@@ -360,7 +360,7 @@ def build_model_audit(
         else None
     )
     drift_status = (
-        "material_live_gap"
+        "unmatched_cohort_gap"
         if live_gap_pp is not None and live_gap_pp <= -5.0
         else "watch"
         if live_gap_pp is not None and live_gap_pp <= -2.0
@@ -388,6 +388,13 @@ def build_model_audit(
         "validation_top1_core_rate": validation_core_rate,
         "live_vs_validation_final_gap_pp": live_gap_pp,
         "drift_status": drift_status,
+        "comparison_context": {
+            "same_period_and_population_verified": False,
+            "accuracy_decline_established": False,
+            "legacy_live_rows_timestamp_verified": False,
+            "interpretation": "異なる期間・対象の参考比較。旧実戦記録には締切前時刻未確認分があり、差だけで精度低下とは断定しない。",
+            "requires": "締切前保存を確認した新条件の予想を蓄積し、同じ対象条件で検証する。"
+        },
         "comparisons": comparisons,
         "best_shadow_challenger": best,
         "policy": {
