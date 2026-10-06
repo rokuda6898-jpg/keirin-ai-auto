@@ -42,6 +42,7 @@ def collect_prior_record_events(race_data, url, output_dir=OUTPUT_DIR):
     today = datetime.now(ZoneInfo("Asia/Tokyo")).date()
     start = (pd.Timestamp(today) - pd.DateOffset(years=1)).date()
     rows = []
+    names = {str(player.get("id")): str(player.get("name", "")) for player in race_data.get("players", [])}
     for record in race_data.get("records", []):
         for result in prior_results(record, today.isoformat(), limit=100):
             date = _race_date_from_id(result.get("raceId"))
@@ -50,6 +51,7 @@ def collect_prior_record_events(race_data, url, output_dir=OUTPUT_DIR):
             row = {"race_id": str(result["raceId"]), "player_id": str(result.get("playerId", record.get("playerId"))),
                    "date": date.isoformat(), "finish_pos": result.get("order"), "result_factor": result.get("factor"),
                    "observation_source_url": url, "observation_kind": "official_prior_result_record"}
+            row["player_name"] = names.get(row["player_id"], "")
             for key in ["back", "spurtSucceeded", "thrustSucceeded", "leftBehind", "splitLine", "snatchSucceeded", "competeSucceeded", "hasAccident"]:
                 row[f"result_event_{key}"] = result.get(key)
             rows.append(row)
@@ -179,6 +181,8 @@ def build_annual_profiles(asof=None, history_path=HISTORY_CSV, output_dir=OUTPUT
                     observed = group[column].dropna().astype(str).str.lower()
                     profile["events"][column.removeprefix("result_event_")] = {
                         "observed": len(observed), "true": int(observed.isin(["true", "1", "1.0"]).sum())}
+            names = group.get("player_name", pd.Series(dtype=str)).dropna().astype(str).loc[lambda value: value.ne("")]
+            profile["name"] = str(names.iloc[-1]) if len(names) else ""
             profiles[str(player_id)] = profile
     report = {"updated_at_jst": datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(timespec="seconds"),
               "fingerprint": fingerprint, "asof_date": str(asof.date()), "window_start": str(start.date()),
@@ -327,6 +331,30 @@ def audit_department_predictions(output_dir=OUTPUT_DIR):
             '<p>発走前に固定した予想のみ検証します。本番モデルの自動置換・購入許可は行いません。'
             '回収率120%は未検証です。</p><a href="annual_department_predictions.json">最新の部署別予想</a>'
             ' ／ <a href="annual_rider_knowledge.json">選手の年間成績と取得状況</a></main></html>')
+    player_view = """<h2>選手の直近1年</h2><label for="player-search">選手名・選手IDで検索</label>
+<input id="player-search" placeholder="選手名またはID" style="width:90%;padding:12px;margin:12px 0">
+<p>出走数が少ない選手の率は参考値です。脚質から決まり手を推測せず、実際に取得できた記録だけを表示します。</p>
+<div id="player-list">成績を読み込み中</div><script>
+let riderKnowledge = {};
+const percent = x => x == null ? '未取得' : (100*x).toFixed(1)+'%';
+function renderPlayers() {
+ const query = document.getElementById('player-search').value.trim().toLowerCase();
+ const target = document.getElementById('player-list'); target.replaceChildren();
+ const matched = Object.entries(riderKnowledge).filter(([id,p]) => (id+' '+(p.name||'')).toLowerCase().includes(query));
+ for (const [id,p] of matched.slice(0,20)) {
+  const article = document.createElement('article'); article.style.borderBottom='1px solid #ddd';
+  const title = document.createElement('h3'); title.textContent=(p.name||'名前未取得')+' / ID '+id;
+  const rates = document.createElement('p'); rates.textContent=p.races+'レース：1着 '+percent(p.rates[0])+' / 2着 '+percent(p.rates[1])+' / 3着 '+percent(p.rates[2]);
+  const line = document.createElement('p'); line.textContent='ライン位置別：'+Object.entries(p.line_positions||{}).map(([pos,v])=>pos+'番手 '+v.races+'R・1着 '+percent(v.rates[0])).join(' ／ ');
+  const tactics = document.createElement('p'); const records=Object.entries(p.winning_tactics||{}); tactics.textContent='取得済みの勝利時の決まり手：'+(records.length?records.map(([name,count])=>name+' '+count+'回').join(' ／ '):'未取得');
+  article.append(title,rates,line,tactics); target.append(article);
+ }
+ const count = document.createElement('p'); count.textContent=matched.length+'人中、最大20人を表示'; target.append(count);
+}
+document.getElementById('player-search').addEventListener('input',renderPlayers);
+fetch('annual_rider_knowledge.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('load');return r.json()}).then(d=>{riderKnowledge=d.profiles||{};renderPlayers()}).catch(()=>{document.getElementById('player-list').textContent='成績を読み込めませんでした。ページを更新してください。'});
+</script>"""
+    page = page.replace('</main></html>', player_view + '</main></html>')
     (folder / "annual_department_report.html").write_text(page, encoding="utf-8")
     return report
 
