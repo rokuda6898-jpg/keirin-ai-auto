@@ -487,7 +487,7 @@ def build_public_history_html(settled):
                 f'<span class="status {cls}">{row["status"]}</span></div>'
                 f'<div class="buy"><span>{row.get("bet_label", row.get("bet_type", ""))}</span><strong>{row["buy"]}</strong>'
                 f'<span class="result {cls}">{row["result_label"]}</span></div>'
-                f'<div class="money"><span>購入 {row["stake_display"]}</span><span>払戻 {row["return_display"]}</span>'
+                f'<div class="money"><span>試算額 {row["stake_display"]}</span><span>払戻 {row["return_display"]}</span>'
                 f'<span>損益 {row["profit_display"]}</span></div></article>'
             )
         rows_html = "".join(cards)
@@ -495,11 +495,11 @@ def build_public_history_html(settled):
         stake = pd.to_numeric(decided.get("stake_yen", 0), errors="coerce").fillna(0).sum()
         ret = pd.to_numeric(decided.get("actual_return_yen", 0), errors="coerce").fillna(0).sum()
         hits = int(decided.get("is_hit", False).sum()) if len(decided) else 0
-        rate = (ret / stake * 100) if stake else 0
+        rate = f"{ret / stake * 100:.1f}%" if stake else "未集計"
         summary_html = (
             f'<section class="stats"><div><small>確定</small><b>{len(decided)}点</b></div>'
             f'<div><small>的中</small><b>{hits}点</b></div>'
-            f'<div><small>回収率</small><b>{rate:.1f}%</b></div></section>'
+            f'<div><small>回収率・配分額の試算</small><b>{rate}</b></div></section>'
         )
     generated = datetime.now(ZoneInfo("Asia/Tokyo")).strftime("%Y/%m/%d %H:%M")
     return f"""<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -511,7 +511,7 @@ h1{{font-size:21px;margin:12px 0}}.stats{{display:grid;grid-template-columns:rep
 .card{{background:white;border-radius:15px;padding:14px;margin:10px 0;box-shadow:0 4px 18px #173d7012}}.top,.buy,.money{{display:flex;align-items:center;gap:10px}}.top{{justify-content:space-between}}.buy{{margin:13px 0}}.buy strong{{font-size:21px;letter-spacing:.04em}}.result{{margin-left:auto;font-weight:800}}.status{{font-size:12px;border-radius:999px;padding:5px 9px;background:#edf3fb}}.hit{{color:#087c46}}.miss{{color:#b52b37}}.pending{{color:#6d7e95}}.money{{font-size:13px;color:#52657e;justify-content:space-between;border-top:1px solid #edf2f8;padding-top:10px}}.empty{{background:white;padding:30px;border-radius:15px;text-align:center}}
 footer{{padding:24px;text-align:center;color:#7b899b;font-size:11px}}@media(max-width:520px){{main{{padding:12px}}.brand{{font-size:27px}}.money{{font-size:12px}}}}
 </style></head><body><header><div class="brand">NEXUS</div><div class="sub">KEIRIN PREDICTION SYSTEM</div></header><main>
-<div class="nav"><a href="index.html">今日の予想</a><a href="history.html">予想履歴</a></div><h1>予想履歴</h1>{summary_html}{rows_html}
+<div class="nav"><a href="index.html">今日の予想</a><a href="history.html">予想履歴</a></div><h1>検証用の買い目履歴</h1><p>予想時の配分額で買ったと仮定した試算です。実購入の成績ではありません。「点」は買い目の数で、レース数とは異なります。</p><p><a href="performance.html">成績と数字の見方（各点100円の統一集計）</a></p>{summary_html}{rows_html}
 </main><footer>更新 {generated} JST ｜ 予想は締切前に記録し、結果確定後に公式払戻で精算</footer></body></html>"""
 
 

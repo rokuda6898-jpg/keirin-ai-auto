@@ -369,14 +369,14 @@ def audit_department_predictions(output_dir=OUTPUT_DIR):
     knowledge = json.loads(knowledge_path.read_text(encoding="utf-8")) if knowledge_path.exists() else {}
     labels = {"data_department": "データ部", "pace_department": "展開部", "line_department": "ライン部", "risk_department": "リスク部"}
     def percent(value):
-        return "未算出" if value is None else f"{value * 100:.1f}%"
+        return "未集計" if value is None else f"{value * 100:.1f}%"
     cells = "".join(f'<tr><td>{labels[r["department"]]}</td><td>{r["races"]}</td>'
-                    f'<td>{percent(r["top1_hit_rate"])}</td><td>{percent(r["flat_return_rate"])}</td></tr>' for r in comparisons)
+                    f'<td>{percent(r["top1_hit_rate"])}</td><td>{r["portfolio_payout_races"]}</td><td>{percent(r["flat_return_rate"])}</td></tr>' for r in comparisons)
     page = ('<!doctype html><html lang="ja"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
             '<title>選手別1〜3年の部署予想</title><style>body{font-family:system-ui;background:#f4f7fb;padding:20px;color:#172b45}'
             'main{max-width:900px;margin:auto;background:white;padding:24px;border-radius:16px}'
             'table{width:100%;border-collapse:collapse}td,th{padding:10px;border-bottom:1px solid #ddd}p{line-height:1.8}</style>'
-            '<main><a href="../index.html">レース一覧へ戻る</a><h1>選手別1〜3年の部署予想</h1>'
+            '<main><a href="../index.html">レース一覧へ戻る</a> ／ <a href="../performance.html">成績と数字の見方</a><h1>選手別1〜3年の部署予想</h1>'
             f'<p>保持している全履歴 {knowledge.get("total_archive_races", 0):,}レース<br>'
             f'選手別の補足結果 {knowledge.get("supplemental_result_races", 0):,}レース（一部選手の記録）<br>'
             f'直近1年の全体履歴 {knowledge.get("annual_archive_races", 0):,}レース<br>'
@@ -385,7 +385,8 @@ def audit_department_predictions(output_dir=OUTPUT_DIR):
             f'<p>従来集計 {verified_live["legacy_settled_rows"]}件のうち、締切前時刻を確認できる記録は {verified_live["timestamp_verified_races"]}件です。未確認分を新しい実戦検証に混ぜません。</p>'
             '<p>全選手に共通で、直近1年30走以上は1年、15〜29走は2年、14走以下は3年を参照。重みは直近1年100%、1〜2年前50%、2〜3年前25%です。各部署が成績・最近の調子・ライン位置・出走数を使って独立した検証用予想を作ります。'
             '全履歴は保持します。決まり手と行動記録は、取得できた実測分だけを集計します。</p>'
-            '<table><tr><th>部署</th><th>実戦検証R</th><th>1着的中率</th><th>100円均等回収率</th></tr>' + cells + '</table>'
+            '<p>1着候補の的中率は、選んだ選手が勝った割合。3連単買い目の回収率は、各点100円で買ったと仮定した試算です。対象が異なります。実購入の成績ではありません。</p>'
+            '<table><tr><th>部署</th><th>1着候補の検証レース</th><th>1着候補の的中率</th><th>買い目の検証レース</th><th>3連単買い目の回収率（各点100円）</th></tr>' + cells + '</table>'
             '<p>発走前に固定した予想のみ検証します。本番モデルの自動置換・購入許可は行いません。'
             '回収率120%は未検証です。</p><a href="annual_department_predictions.json">最新の部署別予想</a>'
             ' ／ <a href="annual_rider_knowledge.json">選手の年間成績と取得状況</a></main></html>')

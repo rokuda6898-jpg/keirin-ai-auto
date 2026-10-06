@@ -193,10 +193,10 @@ def build_ticket_return_department(output_dir=OUTPUT_DIR):
              f"戦略: {STRATEGY_VERSION}",
              f"保存済み {report['frozen_races']}レース / 公式払戻で検証済み {len(rows)}レース", "",
              "発走前に固定した本線・穴の全点数を対象とする検証用成績。実購入とは分離。", "",
-             "|対象|購入対象R|的中R|的中率|100円均等回収率|配分額回収率|見送り率|",
+             "|対象|買い目がある確定レース|的中レース|買い目の的中率|回収率・各点100円の試算|回収率・配分額の試算|見送り率|",
              "|---|---:|---:|---:|---:|---:|---:|"]
     def percent(value):
-        return "未算出" if value is None else f"{value * 100:.1f}%"
+        return "未集計" if value is None else f"{value * 100:.1f}%"
     for label, values in [("合計", report["shadow"]["total"]),
                           ("本線", report["shadow"]["main"]), ("穴", report["shadow"]["hole"])]:
         lines.append(f"|{label}|{values['bet_races']}|{values['hits']}|{percent(values['hit_rate'])}|"
@@ -210,6 +210,10 @@ def build_ticket_return_department(output_dir=OUTPUT_DIR):
         for index, cells in enumerate(table_rows) if index != 1
         for tag in ["th" if index == 0 else "td"]
     ) + "</table>"
+    simple_rows = []
+    for label, values in [("本線＋穴", report["shadow"]["total"]), ("本線", report["shadow"]["main"]), ("穴", report["shadow"]["hole"])]:
+        simple_rows.append(f'<tr><td>{label}</td><td>{values["hits"]} / {values["bet_races"]}レース</td><td>{percent(values["hit_rate"])}</td><td>{percent(values["flat_100yen"]["return_rate"])}</td></tr>')
+    simple_table = '<table><tr><th>対象</th><th>的中 / 検証レース</th><th>買い目の的中率</th><th>回収率・各点100円</th></tr>' + ''.join(simple_rows) + '</table>'
     page = ('<!doctype html><html lang="ja"><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width,initial-scale=1">'
             '<title>買い目・回収率検証部</title><style>'
@@ -217,13 +221,19 @@ def build_ticket_return_department(output_dir=OUTPUT_DIR):
             'main{max-width:900px;margin:auto;background:white;padding:24px;border-radius:16px}'
             'table{border-collapse:collapse;width:100%;font-size:14px}td,th{padding:10px;border-bottom:1px solid #ddd}'
             '.scroll{overflow:auto}p{line-height:1.7}</style><main>'
-            '<a href="../index.html">レース一覧へ戻る</a><h1>買い目・回収率検証部</h1>'
+            '<a href="../index.html">レース一覧へ戻る</a> ／ <a href="../performance.html">成績と数字の見方</a><h1>買い目・回収率検証部</h1>'
             f'<p>更新 {html.escape(report["updated_at_jst"])}<br>'
             f'保存済み {report["frozen_races"]}レース ／ 公式払戻で検証済み {len(rows)}レース</p>'
             '<p>本線・穴の全買い目を対象とした検証用成績です。実購入とは分けて集計しています。'
             '100円均等と予想時の配分額で比較します。見送り率は対象となった確定レースに対する割合です。</p>'
-            f'<div class="scroll">{table}</div>'
+            '<h2>3連単の買い目成績（各点100円の試算）</h2>'
+            f'<div class="scroll">{simple_table}</div>'
+            '<p>的中率は「1点でも当たったレース ÷ 買い目がある確定レース」。回収率は「全点の払戻 ÷ 全点の購入額」です。実購入の成績ではありません。</p>'
+            '<details><summary>配分額・見送り率も見る</summary>'
+            f'<div class="scroll">{table}</div></details>'
             '<p>回収率120%は未検証です。部署追加後の発走前予想から蓄積します。'
             '未確定・払戻未取得は成績に含めません。</p></main></html>')
     (folder / "ticket_return_department.html").write_text(page, encoding="utf-8")
+    from public_performance import build_performance_page
+    build_performance_page(output_dir)
     return report

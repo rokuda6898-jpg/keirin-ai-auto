@@ -456,7 +456,7 @@ body{font-family:system-ui,sans-serif;margin:24px;background:#f5f8fc;color:#1023
 h1{color:#073b7a}table{border-collapse:collapse;width:100%;background:white}
 th,td{border-bottom:1px solid #dbe4ef;padding:10px;text-align:center}
 th{background:#073b7a;color:white}tr:hover{background:#f1f6fc}
-</style></head><body><h1>NEXUS 予想履歴</h1>"""
+</style></head><body><h1>検証用の買い目履歴</h1><p>予想時の配分額で買ったと仮定した試算です。実購入の成績ではありません。</p><a href="performance.html">成績と数字の見方</a>"""
     html += view.to_html(index=False, escape=True, na_rep="未取得")
     html += "</body></html>"
     return html
