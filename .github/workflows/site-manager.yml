@@ -15,6 +15,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   # Keep the manager independent from the shared writer pending queue.
@@ -199,3 +200,13 @@ jobs:
             sleep $((attempt * 2))
           done
           exit 1
+
+      - name: Publish repaired site directly
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # A recovery started by deployment verification may exceed the
+          # workflow_run chaining limit. Explicit dispatch publishes its repair.
+          if python -c "import json,sys; sys.exit(0 if json.load(open('outputs/manager_status.json')).get('repaired') else 1)"; then
+            gh workflow run pages.yml --ref main
+          fi
