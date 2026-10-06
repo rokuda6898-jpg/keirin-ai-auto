@@ -9,7 +9,7 @@ from zoneinfo import ZoneInfo
 import numpy as np
 import pandas as pd
 
-from common import HISTORY_CSV, OUTPUT_DIR
+from common import HISTORY_CSV, OUTPUT_DIR, valid_finish_mask
 from betting_logic import score_riders, select_race
 
 
@@ -158,7 +158,7 @@ def build_annual_profiles(asof=None, history_path=HISTORY_CSV, output_dir=OUTPUT
         annual["_date"] = pd.to_datetime(annual.date, errors="coerce")
         finish = pd.to_numeric(annual.finish_pos, errors="coerce")
         field = pd.to_numeric(annual.get("entries_number", pd.Series(9, index=annual.index)), errors="coerce").fillna(9)
-        annual["_valid"] = finish.between(1, field)
+        annual["_valid"] = valid_finish_mask(annual)
         for position in [1, 2, 3]:
             annual[f"_p{position}"] = finish.eq(position).astype(int)
         annual["_weight"] = np.where(annual._date.ge(start), 1.0, np.where(annual._date.ge(start2), .5, .25))

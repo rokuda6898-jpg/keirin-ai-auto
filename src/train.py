@@ -25,6 +25,7 @@ from common import (
     add_pair_history_features,
     prepare_features,
     normalize_race_prob,
+    valid_finish_mask,
 )
 
 
@@ -328,8 +329,8 @@ def evaluate_position_models(train_df, test_df, X_train, X_test, baseline_pred):
             "third_target": finish_train.eq(3).astype(int),
         },
         "cumulative_place": {
-            "second_target": finish_train.le(2).astype(int),
-            "third_target": finish_train.le(3).astype(int),
+            "second_target": finish_train.between(1, 2).astype(int),
+            "third_target": finish_train.between(1, 3).astype(int),
         },
     }
 
@@ -514,6 +515,18 @@ def evaluate_incumbent_on_external_test(test_df, masked_features=()):
         }
 
 
+def clean_training_history(df):
+    """Exclude unreliable whole-race labels without deleting the raw archive."""
+    valid = valid_finish_mask(df)
+    invalid_races = set(df.loc[~valid, "race_id"].astype(str))
+    winners = pd.to_numeric(df.finish_pos, errors="coerce").eq(1).groupby(df.race_id.astype(str)).sum()
+    unreliable = invalid_races | set(winners[winners.ne(1)].index)
+    cleaned = df[~df.race_id.astype(str).isin(unreliable)].copy()
+    return cleaned, {"input_rows": len(df), "invalid_finish_rows": int((~valid).sum()),
+                     "excluded_races": len(unreliable), "excluded_rows": len(df) - len(cleaned),
+                     "retained_races": int(cleaned.race_id.nunique()), "raw_archive_modified": False}
+
+
 def main():
     ensure_dirs()
     ensure_history()
@@ -525,6 +538,8 @@ def main():
     if missing:
         raise ValueError(f"history.csv missing columns: {missing}")
 
+    df, training_quality = clean_training_history(df)
+    (OUTPUT_DIR / "training_data_quality.json").write_text(json.dumps(training_quality, ensure_ascii=False, indent=2), encoding="utf-8")
     df["date"] = pd.to_datetime(df["date"])
     df["target_win"] = (pd.to_numeric(df["finish_pos"], errors="coerce") == 1).astype(int)
     df = df.sort_values(["date", "race_id", "car_no"])
@@ -846,8 +861,8 @@ def main():
         selected_variant = position_metrics.get("selected_variant")
         finish_full = pd.to_numeric(df["finish_pos"], errors="coerce")
         if selected_variant == "cumulative_place":
-            second_target = finish_full.le(2).astype(int)
-            third_target = finish_full.le(3).astype(int)
+            second_target = finish_full.between(1, 2).astype(int)
+            third_target = finish_full.between(1, 3).astype(int)
         else:
             second_target = finish_full.eq(2).astype(int)
             third_target = finish_full.eq(3).astype(int)

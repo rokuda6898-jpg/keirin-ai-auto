@@ -18,7 +18,7 @@ def fixture(strong=False):
     return pd.DataFrame({
         "car_no": range(1, 8), "race_id": ["fixture"] * 7,
         "date": ["2026-10-06"] * 7, "venue": ["テスト"] * 7, "race_no": [1] * 7,
-        "p_win": [.55, .15, .10, .08, .05, .04, .03] if strong else [.18, .17, .16, .15, .13, .11, .10],
+        "p_win": [.65, .10, .08, .06, .05, .04, .02] if strong else [.18, .17, .16, .15, .13, .11, .10],
         "place2_rate": [.12, .14, .16, .18, .20, .22, .55],
         "place3_rate": [.15, .17, .19, .21, .23, .50, .25],
         "line_id": [1, 1, 2, 2, 3, 3, 4],
@@ -87,10 +87,19 @@ class BettingLogicTests(unittest.TestCase):
         riders = score_riders(fixture(True))
         tickets = generate_formations(riders, race_plan(riders))
         self.assertEqual(set(tickets["head"]), {1})
-        self.assertAlmostEqual(tickets.prob.sum(), .55)
+        self.assertAlmostEqual(tickets.prob.sum(), .65)
         selected, plan = select_race(riders, fair_odds(riders))
         self.assertTrue(plan["first_fixed"])
         self.assertEqual(set(selected.loc[selected.is_selected, "head"]), {1})
+
+    def test_axis_requires_absolute_probability_in_addition_to_gap(self):
+        race = pd.DataFrame({"car_no": [1, 2, 3, 4, 5], "p_win": [.4, .3, .15, .1, .05]})
+        plan = race_plan(score_riders(race))
+        self.assertEqual(plan["first_gap"], 10)
+        self.assertFalse(plan["first_fixed"])
+        for top, expected in [(.59, False), (.6, True)]:
+            race["p_win"] = [top, (1-top)/2, (1-top)/4, (1-top)/8, (1-top)/8]
+            self.assertEqual(race_plan(score_riders(race))["first_fixed"], expected)
 
     def test_ev_compression_disjoint_and_chaos_gate(self):
         riders = score_riders(fixture())

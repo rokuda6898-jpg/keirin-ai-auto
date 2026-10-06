@@ -262,7 +262,7 @@ def build_ticket_return_department(output_dir=OUTPUT_DIR):
             '未確定・払戻未取得は成績に含めません。</p></main></html>')
     (folder / "ticket_return_department.html").write_text(page, encoding="utf-8")
     from prediction_quality import build_prediction_quality
-    build_prediction_quality(rows, output_dir)
+    build_prediction_quality(list(settled.values()), output_dir)
     from public_performance import build_performance_page
     build_performance_page(output_dir)
     return report

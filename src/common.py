@@ -222,6 +222,14 @@ def add_categorical_codes(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def valid_finish_mask(df: pd.DataFrame) -> pd.Series:
+    """Only integer official places within a known field (otherwise 1..9)."""
+    finish = pd.to_numeric(df.get("finish_pos", pd.Series(np.nan, index=df.index)), errors="coerce")
+    field = pd.to_numeric(df.get("entries_number", pd.Series(9, index=df.index)), errors="coerce")
+    field = field.where(field.between(3, 9)).fillna(9)
+    return pd.Series(np.isfinite(finish), index=df.index) & finish.ge(1) & finish.le(field) & finish.mod(1).eq(0)
+
+
 def add_player_prior_features(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     required = {"player_id", "date", "finish_pos"}
@@ -236,7 +244,7 @@ def add_player_prior_features(df: pd.DataFrame) -> pd.DataFrame:
     work = work.sort_values(sort_cols, kind="mergesort")
 
     player = work["player_id"].astype(str)
-    finish = pd.to_numeric(work["finish_pos"], errors="coerce")
+    finish = pd.to_numeric(work["finish_pos"], errors="coerce").where(valid_finish_mask(work))
     observed = finish.notna().astype(float)
     prior_races = observed.groupby(player, dropna=False).cumsum() - observed
 
@@ -324,6 +332,7 @@ def add_player_elo_features(df: pd.DataFrame, k_factor=20.0, base_rating=1500.0)
     if not {"race_id", "player_id", "date"}.issubset(df.columns):
         return df
     work = df.copy()
+    work["finish_pos"] = pd.to_numeric(work.get("finish_pos", pd.Series(np.nan, index=work.index)), errors="coerce").where(valid_finish_mask(work))
     work["_orig"] = np.arange(len(work))
     work["_date"] = pd.to_datetime(work["date"], errors="coerce")
     sort_cols = [x for x in ["_date", "race_id", "race_no", "car_no", "_orig"] if x in work.columns]
@@ -388,6 +397,7 @@ def add_pair_history_features(df: pd.DataFrame) -> pd.DataFrame:
     if not {"race_id", "player_id", "date"}.issubset(out.columns):
         return out
     work = out.copy()
+    work["finish_pos"] = pd.to_numeric(work.get("finish_pos", pd.Series(np.nan, index=work.index)), errors="coerce").where(valid_finish_mask(work))
     work["_orig"] = np.arange(len(work))
     work["_date"] = pd.to_datetime(work["date"], errors="coerce")
     work = work.sort_values([x for x in ["_date", "race_id", "race_no", "car_no", "_orig"]
@@ -436,6 +446,8 @@ def add_pair_history_features(df: pd.DataFrame) -> pd.DataFrame:
                 if winner is not None:
                     stat["wins"][winner] = stat["wins"].get(winner, 0.0) + 1.0
         for key, si in partnerships:
+            if not all(pd.notna(pos_by_player.get(pid)) for pid in key):
+                continue
             stat = line_stats.setdefault(key, {"races": 0.0, "second_wins": 0.0})
             stat["races"] += 1.0
             if finish[si] == 1:

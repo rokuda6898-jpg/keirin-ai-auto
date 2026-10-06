@@ -8,9 +8,11 @@ from itertools import permutations
 import numpy as np
 import pandas as pd
 
-STRATEGY_VERSION = "position_ev_v5_20261006"
+STRATEGY_VERSION = "position_ev_v6_20261006"
 MAIN_EV = 1.10
 HOLE_EV = 1.25
+FIXED_MIN_WIN_PROBABILITY = 0.60
+FIXED_MIN_GAP = 10.0
 
 
 def numbers(frame, column, default=np.nan):
@@ -136,10 +138,13 @@ def race_plan(riders):
         "market_divergence": int(max(riders.undervalued_points.max(), riders.overpopular_points.max())),
     }
     chaos = round(sum(components.values()), 2)
-    fixed = first >= 10
+    top_probability = float(riders.p_win.max())
+    fixed = first >= FIXED_MIN_GAP and top_probability >= FIXED_MIN_WIN_PROBABILITY
     return {
         "first_gap": first, "third_boundary_gap": third if np.isfinite(third) else None,
         "main_limit": main_limit(first, third), "first_fixed": fixed,
+        "top_win_probability": top_probability, "fixed_min_probability": FIXED_MIN_WIN_PROBABILITY,
+        "fixed_min_gap": FIXED_MIN_GAP, "fixed_policy_status": "provisional",
         "fixed_car": int(riders.loc[riders.rank_first.eq(1), "car_no"].iloc[0]) if fixed else None,
         "chaos_index": chaos,
         "chaos_label": "固め" if chaos < 30 else "やや荒れ" if chaos < 50 else "荒れ" if chaos < 70 else "大荒れ警戒",
