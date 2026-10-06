@@ -73,6 +73,7 @@ def save_snapshots(plans, shadow_bets, now_jst, output_dir=OUTPUT_DIR, position_
         candidate_evidence = None
         challenger = None
         lower_challenger = None
+        axis_challenger = None
         if candidate_rows is not None and not candidate_rows.empty:
             matching = candidate_rows[candidate_rows.race_id.astype(str).eq(race_id) & candidate_rows.bet_type.eq("trifecta")]
             from selection_research import probability_first, lower_position_coverage
@@ -83,6 +84,18 @@ def save_snapshots(plans, shadow_bets, now_jst, output_dir=OUTPUT_DIR, position_
                                   sum(t["group"] == "穴" for t in tickets))}
                 lower_challenger = {"version":"lower_coverage_v1","snapshot_at":key[2],
                                     "tickets":lower_position_coverage(matching,plan,tickets)}
+                if plan.get("first_fixed") and position_rows is not None and not position_rows.empty:
+                    from betting_logic import score_riders, select_race
+                    race=position_rows[position_rows.race_id.astype(str).eq(race_id)]
+                    quotes=matching[['buy','bet_type','odds_used']].drop_duplicates('buy')
+                    spread,_=select_race(score_riders(race,quotes),quotes,
+                                        plan.get('main_ev',1.10),plan.get('hole_ev',1.25),force_no_fixed=True)
+                    ranked=spread.sort_values(['ev','prob','buy'],ascending=[False,False,True])
+                    main=ranked[ranked.main_formation & ranked.ev.ge(plan.get('main_ev',1.10))].head(sum(t['group']=='本線' for t in tickets))
+                    holes=ranked[ranked.hole_formation & ranked.ev.ge(plan.get('hole_ev',1.25)) & ~ranked.buy.isin(main.buy)].head(sum(t['group']=='穴' for t in tickets))
+                    axis_challenger={'version':'axis_spread_v1','snapshot_at':key[2],
+                                     'tickets':[{'buy':t.buy,'group':group,'prob':float(t.prob),'ev':float(t.ev),'purchase_authorized':False}
+                                                for group,part in [('本線',main),('穴',holes)] for t in part.itertuples()]}
             def finite(value):
                 number = pd.to_numeric(value, errors="coerce")
                 return float(number) if pd.notna(number) and math.isfinite(float(number)) else None
@@ -113,6 +126,7 @@ def save_snapshots(plans, shadow_bets, now_jst, output_dir=OUTPUT_DIR, position_
             "candidate_evidence": candidate_evidence,
             "selection_challenger": challenger,
             "lower_challenger": lower_challenger,
+            "axis_challenger": axis_challenger,
         })
     if rows:
         with path.open("a", encoding="utf-8") as handle:
@@ -286,6 +300,8 @@ def build_ticket_return_department(output_dir=OUTPUT_DIR):
     build_selection_research(list(settled.values()), output_dir)
     from validation_coverage import build_validation_coverage
     build_validation_coverage(output_dir)
+    from company_operations import build_company_operations
+    build_company_operations(output_dir)
     from public_performance import build_performance_page
     build_performance_page(output_dir)
     return report

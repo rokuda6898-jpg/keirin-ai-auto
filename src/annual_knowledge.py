@@ -243,6 +243,9 @@ def forecast_departments(pred, odds, report, now, output_dir=OUTPUT_DIR):
         if not any(profiles):
             continue
         market = odds[odds.race_id.astype(str).eq(str(race_id))] if not odds.empty else odds
+        from quote_quality import validate_quotes
+        if not market.empty:
+            market=validate_quotes(market,now.timestamp(),float(close))
         for department in ["data_department", "pace_department", "line_department", "risk_department"]:
             values = []
             for (_, rider), profile in zip(race.iterrows(), profiles):

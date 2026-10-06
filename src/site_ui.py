@@ -38,7 +38,7 @@ def numbers(ticket):
     return '<span class="ticket-numbers">'+('<span class="ticket-dash">−</span>'.join(f'<span class="car-box n{n}">{n}</span>' for n in text.split('-')))+'</span>'
 
 def nav(active="today"):
-    links=[("today","index.html","今日","RACE"),("picks","index.html#picks","買い目","PICKS"),("company","company/annual_department_report.html","会社","COMPANY"),("history","history.html","履歴","HISTORY")]
+    links=[("today","index.html","今日","RACE"),("picks","index.html#picks","買い目","PICKS"),("company","company/operations.html","会社","COMPANY"),("history","history.html","履歴","HISTORY")]
     return '<nav class="mobile-nav" aria-label="メインメニュー">'+''.join(f'<a class="{"active" if key==active else ""}" href="{url}">{label}<small>{en}</small></a>' for key,url,label,en in links)+'</nav>'
 
 def saved_race_tickets(race_id, now_epoch=None):
@@ -86,7 +86,7 @@ def continuous_section(relative=""):
     return '<section class="continuous-results" data-report="'+relative+'company/ticket_return_department.json"><h2>買い目の継続成績</h2><label>集計期間 <select class="result-window"><option value="today">今日1日</option><option value="all">全期間・現行戦略</option><option value="last50">直近50レース</option><option value="last100">直近100レース</option></select></label><p class="result-asof"></p><div class="result-table"><p>成績を取得中です。</p></div><small>締切前に保存した購入条件を満たす候補の検証です。実購入ではありません。回収率は各点100円の試算。参考候補・見送り・結果未確定は的中率と回収率の分母に含めません。</small></section>'
 
 CONTINUOUS_JS="""
-document.querySelectorAll('.continuous-results').forEach(async box=>{try{const response=await fetch(box.dataset.report+'?t='+Date.now(),{cache:'no-store'});if(!response.ok)throw Error('取得失敗');const report=await response.json();function show(){const period=box.querySelector('.result-window').value,window=report.continuous&&report.continuous[period];const pct=value=>value===null||value===undefined?'未集計':(Number(value)*100).toFixed(1)+'%';const rows=window||(period==='all'&&report.shadow?{total:report.shadow.total,main:report.shadow.main,hole:report.shadow.hole}:{});box.querySelector('.result-asof').textContent=(period==='today'?'対象日 '+report.today_date+' · ':'')+'更新 '+report.updated_at_jst+' · 現行戦略';const table=document.createElement('table');table.innerHTML='<thead><tr><th>対象</th><th>的中率</th><th>回収率</th><th>的中／確定</th></tr></thead>';const body=document.createElement('tbody');[['total','本線＋穴'],['main','本線'],['hole','穴']].forEach(([key,label])=>{const data=rows[key]||{};const tr=document.createElement('tr');[label,pct(data.hit_rate),pct(data.flat_100yen&&data.flat_100yen.return_rate),(data.hits||0)+'／'+(data.bet_races||0)+'R'].forEach(value=>{const td=document.createElement('td');td.textContent=value;tr.append(td)});body.append(tr)});table.append(body);box.querySelector('.result-table').replaceChildren(table)}box.querySelector('.result-window').addEventListener('change',show);show()}catch(error){box.querySelector('.result-table').textContent='成績を取得できません。再読み込みしてください。'}});
+document.querySelectorAll('.continuous-results').forEach(async box=>{try{const response=await fetch(box.dataset.report+'?t='+Date.now(),{cache:'no-store'});if(!response.ok)throw Error('取得失敗');const report=await response.json();function show(){const period=box.querySelector('.result-window').value,window=report.continuous&&report.continuous[period];const pct=value=>value===null||value===undefined?'未集計':(Number(value)*100).toFixed(1)+'%';const currentDate=new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Tokyo'}).format(new Date()),isTodayStale=period==='today'&&report.today_date!==currentDate;const rows=isTodayStale?{}:window||(period==='all'&&report.shadow?{total:report.shadow.total,main:report.shadow.main,hole:report.shadow.hole}:{});box.querySelector('.result-asof').textContent=(period==='today'?'対象日 '+currentDate+(isTodayStale?' · 今日の集計待ち':'')+' · ':'')+'更新 '+report.updated_at_jst+' · 現行戦略';const table=document.createElement('table');table.innerHTML='<thead><tr><th>対象</th><th>的中率</th><th>回収率</th><th>的中／確定</th></tr></thead>';const body=document.createElement('tbody');[['total','本線＋穴'],['main','本線'],['hole','穴']].forEach(([key,label])=>{const data=rows[key]||{};const tr=document.createElement('tr');[label,pct(data.hit_rate),pct(data.flat_100yen&&data.flat_100yen.return_rate),(data.hits||0)+'／'+(data.bet_races||0)+'R'].forEach(value=>{const td=document.createElement('td');td.textContent=value;tr.append(td)});body.append(tr)});table.append(body);box.querySelector('.result-table').replaceChildren(table)}box.querySelector('.result-window').addEventListener('change',show);show()}catch(error){box.querySelector('.result-table').textContent='成績を取得できません。再読み込みしてください。'}});
 """
 
 def enhance_today(document):
@@ -146,7 +146,9 @@ def enhance_today(document):
             value=ticket.get_text(strip=True);ticket.clear();ticket.append(BeautifulSoup(numbers(value),'html.parser'))
         amount=card.find('span',recursive=False)
         if amount:amount['class']=['ticket-amount']
-    if not soup.select_one('.mobile-nav'):soup.body.append(BeautifulSoup(nav(),'html.parser'))
+    old_navigation=soup.select_one('.mobile-nav')
+    if old_navigation:old_navigation.decompose()
+    soup.body.append(BeautifulSoup(nav(),'html.parser'))
     for race in soup.select('article.race'):
         previous=race.select_one('.odds-audit')
         if previous:previous.decompose()

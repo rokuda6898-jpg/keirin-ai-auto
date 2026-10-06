@@ -168,7 +168,7 @@ def generate_formations(riders, plan):
     seconds = expanded_pool(riders, "second", 4) | expanded_pool(riders, "first", 3)
     thirds = expanded_pool(riders, "third", 5) | expanded_pool(riders, "second", 4)
     # Strong axis: spread all lower positions before EV compression.
-    if plan["first_fixed"]:
+    if plan["first_fixed"] or plan.get("expand_lower_pool", False):
         seconds = thirds = set(cars)
     plan["formation"] = {"first": sorted(heads), "second": sorted(seconds), "third": sorted(thirds)}
     rows = []
@@ -204,10 +204,12 @@ def hole_limit(eligible, plan, riders):
     return 6
 
 
-def select_race(riders, odds, main_ev=MAIN_EV, hole_ev=HOLE_EV):
+def select_race(riders, odds, main_ev=MAIN_EV, hole_ev=HOLE_EV, force_no_fixed=False):
     if not np.isfinite(main_ev) or not np.isfinite(hole_ev) or main_ev < 1 or hole_ev < main_ev:
         raise ValueError("EV thresholds must be finite and 1 <= main <= hole")
     plan = race_plan(riders)
+    if force_no_fixed and plan["first_fixed"]:
+        plan.update(first_fixed=False,fixed_car=None,expand_lower_pool=True)
     candidates = generate_formations(riders, plan).merge(clean_odds(odds), on="buy", how="left", validate="one_to_one")
     candidates["ev"] = candidates.prob * candidates.odds_used
     candidates["expected_profit_100yen"] = 100 * (candidates.ev - 1)

@@ -32,16 +32,25 @@ def fair_odds(riders, ev=1.4):
 
 
 class BettingLogicTests(unittest.TestCase):
+    def test_fixed_axis_challenger_keeps_lower_pool_and_allows_other_heads(self):
+        riders=score_riders(fixture(True))
+        baseline,_=select_race(riders,fair_odds(riders))
+        spread,plan=select_race(riders,fair_odds(riders),force_no_fixed=True)
+        self.assertEqual(baseline['head'].nunique(),1)
+        self.assertGreater(spread['head'].nunique(),1)
+        self.assertFalse(plan['first_fixed'])
+        self.assertEqual(len(plan['formation']['second']),len(riders))
+        self.assertEqual(len(plan['formation']['third']),len(riders))
     def test_quote_metadata_survives_into_candidate_portfolio(self):
         race=fixture().assign(close_at=1000)
         odds=fair_odds(score_riders(race)).assign(race_id='fixture',odds_sources='winticket',
-                                               odds_captured_at_jst='2026-10-06T10:00:00+09:00',
+                                               odds_captured_at_jst='1970-01-01T00:08:20+00:00',
                                                odds_verification_status='verified')
         _,candidates,_=predict.build_strategy_outputs(race,odds,600,3600)
         chosen=candidates[candidates.is_selected]
         self.assertFalse(chosen.empty)
         self.assertTrue(chosen.odds_sources.eq('winticket').all())
-        self.assertTrue(chosen.odds_captured_at_jst.eq('2026-10-06T10:00:00+09:00').all())
+        self.assertTrue(chosen.odds_captured_at_jst.eq('1970-01-01T00:08:20+00:00').all())
     def test_validated_position_models_take_priority_over_fallback_rates(self):
         race = fixture().assign(position_model_source="position_specialists",
                                 p_second=[.05, .1, .15, .2, .25, .2, .05],

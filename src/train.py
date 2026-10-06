@@ -541,6 +541,10 @@ def main():
     df, training_quality = clean_training_history(df)
     (OUTPUT_DIR / "training_data_quality.json").write_text(json.dumps(training_quality, ensure_ascii=False, indent=2), encoding="utf-8")
     df["date"] = pd.to_datetime(df["date"])
+    reference_cutoff=pd.Timestamp(datetime.now(ZoneInfo('Asia/Tokyo')).date())
+    before_time_filter=len(df)
+    df=df[df['date'].notna() & df['date'].lt(reference_cutoff)].copy()
+    excluded_nonprior_rows=before_time_filter-len(df)
     df["target_win"] = (pd.to_numeric(df["finish_pos"], errors="coerce") == 1).astype(int)
     df = df.sort_values(["date", "race_id", "car_no"])
     # Compute all stateful pre-race history features once on the full
@@ -726,6 +730,9 @@ def main():
 
     metrics = {
         "trained_at_jst": datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(timespec="seconds"),
+        "history_cutoff_exclusive": str(reference_cutoff.date()),
+        "labels_latest_date": str(df['date'].max().date()),
+        "same_day_or_future_rows_excluded": excluded_nonprior_rows,
         "model": "HistGradientBoostingClassifier + race probability normalization",
         "n_rows": int(len(df)),
         "n_train": int(len(train_df)),

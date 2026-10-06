@@ -997,6 +997,9 @@ def run(mode):
             "commander_ai": "race_specific_shadow_department_selection",
             "live_snapshot_learning": "real_pre_race_state_training_store",
             "live_snapshot_model_department": "real_pre_race_shadow_model_with_500_1500_race_gates",
+            "validation_coverage_office": "recorded_schedule_coverage_and_missing_evidence",
+            "quote_quality_office": "reject_stale_future_or_excluded_observed_quotes",
+            "release_review_office": "same_race_challenger_review_without_automatic_promotion",
         },
     }
 
@@ -1011,6 +1014,8 @@ def run(mode):
     write_json("third_party_audit.json", third_party)
     write_json("ceo_decision_support.json", ceo)
     write_json("executive_directive.json", executive)
+    from company_operations import build_company_operations
+    state["operations"] = build_company_operations()
     write_json("company_state.json", state)
 
     digest = [

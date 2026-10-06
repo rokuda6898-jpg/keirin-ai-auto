@@ -133,11 +133,15 @@ def build_selection_research(rows, output_dir=OUTPUT_DIR):
     calibration=chronological_calibration(rows)
     lower_paired=[r for r in rows if (r.get('lower_challenger') or {}).get('version')=='lower_coverage_v1'
                   and r['lower_challenger'].get('snapshot_at')==r['snapshot_at']]
+    axis_paired=[r for r in rows if (r.get('axis_challenger') or {}).get('version')=='axis_spread_v1'
+                 and r['axis_challenger'].get('snapshot_at')==r['snapshot_at']]
     report={'updated_at_jst':datetime.now(ZoneInfo('Asia/Tokyo')).isoformat(timespec='seconds'),
             'strategy_version':STRATEGY_VERSION,'paired_races':len(paired),'probability_first':totals(True),
             'current_ev_first':totals(False),'calibration':calibration,'auto_promotion':False,
             'lower_miss_audit':lower_miss_audit(rows),'lower_comparison':{'paired_races':len(lower_paired),
-            'coverage':totals(True,lower_paired,'lower_challenger'),'baseline':totals(False,lower_paired)}}
+            'coverage':totals(True,lower_paired,'lower_challenger'),'baseline':totals(False,lower_paired)},
+            'axis_comparison':{'paired_races':len(axis_paired),'spread':totals(True,axis_paired,'axis_challenger'),
+                               'baseline':totals(False,axis_paired)}}
     folder=output_dir/'company';folder.mkdir(parents=True,exist_ok=True)
     (folder/'selection_research.json').write_text(json.dumps(report,ensure_ascii=False,indent=2,allow_nan=False),encoding='utf-8')
     pct=lambda v:'未集計' if v is None else f'{v*100:.1f}%'
@@ -154,6 +158,9 @@ def build_selection_research(rows, output_dir=OUTPUT_DIR):
     page+='</ul><h2>2・3着を広げる比較案</h2><p>現行と同じ1着候補・期待値基準・点数予算で、2・3着の推定確率を使い、同じ下位選手への偏りを抑えて選びます。締切前に保存した比較案だけを検証します。</p><p>比較可能な確定レース：'+str(len(lower_paired))+'件。</p><table><tr><th>案</th><th>的中／購入対象</th><th>回収率</th><th>投資額</th></tr>'
     for key,label in [('baseline','現行案'),('coverage','2・3着分散案')]:
         r=report['lower_comparison'][key];page+=f'<tr><td>{label}</td><td>{r["hits"]}／{r["bet_races"]}R</td><td>{pct(r["return_rate"])}</td><td>{r["stake_yen"]:,}円</td></tr>'
+    page+='</table><h2>1着固定を外す比較案</h2><p>現行が1着固定するレースだけを対象に、同じ点数予算・期待値基準で1着候補を広げます。2・3着の候補範囲は狭めません。検証用で、現行へ自動採用しません。</p><p>比較可能な確定レース：'+str(len(axis_paired))+'件。</p><table><tr><th>案</th><th>的中／購入対象</th><th>回収率</th></tr>'
+    for key,label in [('baseline','現行・1着固定'),('spread','1着を広げる案')]:
+        r=report['axis_comparison'][key];page+=f'<tr><td>{label}</td><td>{r["hits"]}／{r["bet_races"]}R</td><td>{pct(r["return_rate"])}</td></tr>'
     page+='</table><p>'+html.escape(calibration['scope'])+'</p><p>現行予想の確率・買い目を自動変更する段階ではありません。時系列の再計算は実戦検証と区別します。</p><a href="validation_coverage.html">検証の抜け・条件別成績・データ時刻の確認</a><br><a href="prediction_quality.html">着順別の確率と外れ原因</a> ／ <a href="../index.html">今日の予想</a></main></html>'
     (folder/'selection_research.html').write_text(page,encoding='utf-8')
     return report

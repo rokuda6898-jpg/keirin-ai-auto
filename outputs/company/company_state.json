@@ -1,5 +1,5 @@
 {
-  "updated_at_jst": "2026-10-06T23:54:11+09:00",
+  "updated_at_jst": "2026-10-07T00:06:59+09:00",
   "mode": "settle",
   "governance": {
     "owner": "final_decision",
@@ -20,6 +20,82 @@
     "trifecta_combination_lab": "ordered_top10_shadow_reranker",
     "commander_ai": "race_specific_shadow_department_selection",
     "live_snapshot_learning": "real_pre_race_state_training_store",
-    "live_snapshot_model_department": "real_pre_race_shadow_model_with_500_1500_race_gates"
+    "live_snapshot_model_department": "real_pre_race_shadow_model_with_500_1500_race_gates",
+    "validation_coverage_office": "recorded_schedule_coverage_and_missing_evidence",
+    "quote_quality_office": "reject_stale_future_or_excluded_observed_quotes",
+    "release_review_office": "same_race_challenger_review_without_automatic_promotion"
+  },
+  "operations": {
+    "updated_at_jst": "2026-10-07T00:06:59+09:00",
+    "implementation": "自動集計・ルールによる担当機能。独立した人間や会話AIを雇ったものではない。",
+    "site_status": "healthy",
+    "roles": [
+      {
+        "role": "データ品質担当",
+        "status": "検証中",
+        "task": "オッズの鮮度・時刻・不一致を確認。未来時刻や5分を超えた価格を候補生成から除外。",
+        "evidence": {
+          "invalid_snapshot_rows": 0,
+          "selected_tickets_without_quote_time": 208,
+          "quote_after_snapshot_or_close": 0,
+          "annual_cutoff": "2026-10-06",
+          "annual_cutoff_confirmed": true,
+          "model_training_and_full_feature_cutoffs": "未確認・この検査だけでは未来情報の混入なしと断定できない"
+        },
+        "report": "validation_coverage.html"
+      },
+      {
+        "role": "検証監査担当",
+        "status": "記録を蓄積中",
+        "task": "開催予定に対する保存・公式結果・成績照合の抜けを確認。",
+        "evidence": {
+          "scheduled_races": 0,
+          "saved_preclose": 0,
+          "saved_with_tickets": 0,
+          "saved_skip": 0,
+          "verified_odds_record": 0,
+          "official_result": 0,
+          "settled_current_strategy": 0
+        },
+        "report": "validation_coverage.html"
+      },
+      {
+        "role": "着順分析担当",
+        "status": "比較検証中",
+        "task": "1着固定、期待値順、2・3着分散案を別々に検証。",
+        "evidence": {
+          "ev_filter_skip": 8,
+          "fixed_axis_miss": 7,
+          "ev_compression_miss": 1,
+          "odds_missing": 2
+        },
+        "report": "selection_research.html"
+      },
+      {
+        "role": "回収率審査担当",
+        "status": "自動採用停止・検証不足",
+        "task": "同じレース・同じ100円単位で現行案と比較。少数の好成績を本番採用しない。",
+        "evidence": {
+          "probability_first_paired_races": 0,
+          "lower_paired_races": 0,
+          "axis_paired_races": 0
+        },
+        "report": "selection_research.html"
+      }
+    ],
+    "release_policy": {
+      "minimum_same_race_comparisons": 300,
+      "chronological_holdout_required": true,
+      "profit_gate_required": true,
+      "automatic_promotion": false
+    },
+    "target_return_rate": 1.2,
+    "target_validated": false,
+    "unresolved": [
+      "現行買い目の実戦検証は少数。回収率120%の達成は未確認。",
+      "全特徴量とモデル学習の利用可能時刻は未確認。",
+      "全国の全レース取得と全オッズ取得を保証できる状況ではない。",
+      "自動更新の実行時刻はGitHub側の待ち時間によって遅れる場合がある。"
+    ]
   }
 }

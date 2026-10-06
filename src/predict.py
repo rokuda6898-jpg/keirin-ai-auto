@@ -32,6 +32,7 @@ from common import (
 from multi_bet_backtest import BET_LABELS, make_candidates as make_multi_bet_candidates
 from betting_logic import STRATEGY_VERSION, MAIN_EV, HOLE_EV, score_riders, select_race
 from site_ui import odds_provenance
+from quote_quality import validate_quotes
 from model_drift_audit import audit_live_drift
 from trifecta_reranker import score_candidates as score_trifecta_reranker
 from commander_selector import choose_variant as choose_commander_variant
@@ -264,6 +265,13 @@ def validate_model_bundle(bundle):
         raise ValueError("production model feature schema is unavailable")
     if len(set(map(str, trained))) != len(trained):
         raise ValueError("production model feature schema contains duplicates")
+    metrics=bundle.get('metrics',{})
+    if isinstance(metrics,dict) and metrics.get('history_cutoff_exclusive'):
+        cutoff=pd.to_datetime(metrics['history_cutoff_exclusive'],errors='coerce')
+        labels=pd.to_datetime(metrics.get('labels_latest_date'),errors='coerce')
+        today=datetime.now(ZoneInfo('Asia/Tokyo')).date()
+        if pd.isna(cutoff) or pd.isna(labels) or cutoff.date()>today or labels.date()>=cutoff.date():
+            raise ValueError('model label history cutoff is invalid or in the future')
     return list(trained)
 
 
@@ -506,6 +514,8 @@ def add_live_odds_movement(df):
 
 
 def add_today_prior_features(df):
+    df=df.copy()
+    df['finish_pos']=np.nan
     if not HISTORY_CSV.exists():
         return df
     from live_snapshot_store import _load_feature_base, _apply_feature_base, _save_feature_base
@@ -514,6 +524,13 @@ def add_today_prior_features(df):
         print("using verified historical feature cache", flush=True)
         return _apply_feature_base(df, cached)
     hist = pd.read_csv(HISTORY_CSV, dtype={"race_id": str, "player_id": str})
+    prediction_dates=pd.to_datetime(df.get('date'),errors='coerce')
+    cutoff=prediction_dates.min() if isinstance(prediction_dates,pd.Series) else pd.NaT
+    if pd.isna(cutoff):
+        raise ValueError('Prediction date is required for historical features')
+    historical_dates=pd.to_datetime(hist['date'],errors='coerce')
+    hist=hist[historical_dates.notna() & historical_dates.lt(cutoff.normalize())].copy()
+    hist=hist[~hist.race_id.astype(str).isin(df.race_id.astype(str))]
     df = df.copy()
     hist["_today_row_id"] = np.nan
     df["_today_row_id"] = np.arange(len(df))
@@ -1100,6 +1117,8 @@ def build_strategy_outputs(pred, today_odds, epoch, max_seconds, version=STRATEG
     scored_parts, candidate_parts, plans = [], [], []
     for race_id, race in pred.groupby("race_id", sort=False):
         odds = today_odds[today_odds.race_id.eq(str(race_id))].copy()
+        close_value=pd.to_numeric(race.iloc[0].get('close_at'),errors='coerce')
+        odds=validate_quotes(odds,epoch,close_value)
         riders = score_riders(race, odds)
         scored_parts.append(riders)
         trifecta, plan = select_race(riders, odds, main_ev, hole_ev)

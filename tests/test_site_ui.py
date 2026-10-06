@@ -34,7 +34,7 @@ class SiteUITests(unittest.TestCase):
         soup=BeautifulSoup(enhance_today(document),"html.parser")
         self.assertEqual(len(soup.select('.car-box')),3)
         self.assertEqual(soup.select_one('.ticket-amount').get_text(),'200円')
-        self.assertTrue(soup.select_one('a[href="company/annual_department_report.html"]'))
+        self.assertTrue(soup.select_one('a[href="company/operations.html"]'))
 
     def test_history_uses_latest_preclose_snapshot(self):
         base={"date":"2026-10-06","venue":"大垣","race_no":1,"race_id":"r1","bet_type":"trifecta","is_prospective":True,"is_decided":True,"is_hit":False,"stake_yen":100,"actual_return_yen":0}

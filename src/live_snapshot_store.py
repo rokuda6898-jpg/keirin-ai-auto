@@ -90,7 +90,7 @@ def _feature_fingerprint(frame):
         normalized[col] = pd.to_numeric(normalized[col], errors="coerce").astype(float)
     normalized = normalized.sort_values(["race_id", "car_no", "player_id"], kind="mergesort")
     digest = hashlib.sha256(pd.util.hash_pandas_object(normalized, index=False).values.tobytes())
-    for path in [HISTORY_CSV, Path(__file__).with_name("common.py")]:
+    for path in [HISTORY_CSV, Path(__file__).with_name("common.py"), Path(__file__).with_name("predict.py")]:
         if not path.exists():
             return None
         with path.open("rb") as handle:
@@ -149,7 +149,11 @@ def _save_feature_base(enriched):
     enriched[cols].drop_duplicates(
         ["race_id", "player_id", "car_no"], keep="last"
     ).to_csv(FEATURE_BASE_CSV, index=False)
-    FEATURE_BASE_META.write_text(json.dumps({"fingerprint": _feature_fingerprint(enriched)}), encoding="utf-8")
+    dates=pd.to_datetime(enriched.get('date'),errors='coerce')
+    cutoff=dates.min() if isinstance(dates,pd.Series) else pd.NaT
+    FEATURE_BASE_META.write_text(json.dumps({"fingerprint": _feature_fingerprint(enriched),
+        "history_policy":"strictly_before_earliest_prediction_date",
+        "history_cutoff_exclusive":str(cutoff.date()) if pd.notna(cutoff) else None}), encoding="utf-8")
 
 
 def _read_snapshots():
