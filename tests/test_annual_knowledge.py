@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 
 import pandas as pd
 
-from annual_knowledge import build_annual_profiles, forecast_departments, audit_department_predictions
+from annual_knowledge import build_annual_profiles, forecast_departments, audit_department_predictions, collect_prior_record_events
 
 
 class AnnualKnowledgeTests(unittest.TestCase):
@@ -60,3 +60,18 @@ class AnnualKnowledgeTests(unittest.TestCase):
         (self.root / "latest_results.json").write_text("[]")
         self.assertTrue(all(d["races"] == 1 for d in audit_department_predictions(self.root)["departments"]))
         self.assertEqual(forecast_departments(race, odds, report, now + timedelta(hours=1), self.root), [])
+
+    def test_observed_past_events_exclude_today_and_preserve_missing_fields(self):
+        from unittest.mock import patch
+        data = {"records": [{"playerId": "1", "latestCupResults": [{"raceResults": [
+            {"raceId": "011320261005", "playerId": "1", "order": 1, "factor": "逃", "splitLine": True},
+            {"raceId": "011320261006", "playerId": "1", "order": 1, "factor": "差"}]}]}]}
+        fixed = datetime(2026, 10, 6, 12, tzinfo=ZoneInfo("Asia/Tokyo"))
+        with patch("annual_knowledge.datetime") as clock:
+            clock.now.return_value = fixed
+            count = collect_prior_record_events(data, "https://www.winticket.jp/test", self.root)
+        self.assertEqual(count, 1)
+        observed = pd.read_csv(self.root / "company/rider_official_observations.csv")
+        self.assertEqual(observed.result_factor.iloc[0], "逃")
+        self.assertTrue(observed.result_event_splitLine.iloc[0])
+        self.assertTrue(observed.result_event_spurtSucceeded.isna().all())

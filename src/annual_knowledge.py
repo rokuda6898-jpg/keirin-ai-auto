@@ -36,40 +36,73 @@ def collect_observations(race_data, url, output_dir=OUTPUT_DIR):
     combined.drop_duplicates(["race_id", "player_id"], keep="last").to_csv(path, index=False)
 
 
+def collect_prior_record_events(race_data, url, output_dir=OUTPUT_DIR):
+    """Observed past-result records embedded in a current official race card."""
+    from race_features import prior_results, _race_date_from_id
+    today = datetime.now(ZoneInfo("Asia/Tokyo")).date()
+    start = (pd.Timestamp(today) - pd.DateOffset(years=1)).date()
+    rows = []
+    for record in race_data.get("records", []):
+        for result in prior_results(record, today.isoformat(), limit=100):
+            date = _race_date_from_id(result.get("raceId"))
+            if date is None or date < start:
+                continue
+            row = {"race_id": str(result["raceId"]), "player_id": str(result.get("playerId", record.get("playerId"))),
+                   "date": date.isoformat(), "finish_pos": result.get("order"), "result_factor": result.get("factor"),
+                   "observation_source_url": url, "observation_kind": "official_prior_result_record"}
+            for key in ["back", "spurtSucceeded", "thrustSucceeded", "leftBehind", "splitLine", "snatchSucceeded", "competeSucceeded", "hasAccident"]:
+                row[f"result_event_{key}"] = result.get(key)
+            rows.append(row)
+    if rows:
+        folder = output_dir / "company"; folder.mkdir(parents=True, exist_ok=True)
+        path = folder / "rider_official_observations.csv"
+        previous = frame_read(path)
+        fresh = pd.DataFrame(rows).drop_duplicates(["race_id", "player_id"], keep="last")
+        if not previous.empty:
+            fresh = fresh.set_index(["race_id", "player_id"]).combine_first(previous.set_index(["race_id", "player_id"])).reset_index()
+        fresh.to_csv(path, index=False)
+    return len(rows)
+
+
 def backfill_observations(entries, limit=40, history_path=HISTORY_CSV, output_dir=OUTPUT_DIR):
-    """Bounded, incremental official-event fetch for current riders' past year."""
+    """Bounded official-result enrichment, including current-card past records."""
     history = frame_read(history_path)
-    if history.empty or not {"date", "source_url", "race_id", "player_id"}.issubset(history):
-        return {"requested": 0, "fetched": 0}
     today = pd.Timestamp(datetime.now(ZoneInfo("Asia/Tokyo")).date())
-    dates = pd.to_datetime(history.date, errors="coerce")
-    candidates = history[dates.ge(today - pd.DateOffset(years=1)) & dates.lt(today)].copy()
-    existing = frame_read(output_dir / "company/rider_official_observations.csv")
-    known = set(existing.race_id.astype(str)) if "race_id" in existing else set()
-    candidates = candidates[~candidates.race_id.astype(str).isin(known)]
-    active = set(entries.player_id.astype(str)) if "player_id" in entries else set()
-    candidates["_active"] = candidates.player_id.astype(str).isin(active)
-    races = candidates.sort_values(["_active", "date"], ascending=False).drop_duplicates("race_id")
-    races = races[races.source_url.notna() & races.source_url.astype(str).str.startswith("https://www.winticket.jp/")].head(limit)
+    urls = []
+    if not history.empty and {"date", "source_url", "race_id", "player_id"}.issubset(history):
+        dates = pd.to_datetime(history.date, errors="coerce")
+        candidates = history[dates.ge(today - pd.DateOffset(years=1)) & dates.lt(today)].copy()
+        existing = frame_read(output_dir / "company/rider_official_observations.csv")
+        known = set(existing.race_id.astype(str)) if "race_id" in existing else set()
+        candidates = candidates[~candidates.race_id.astype(str).isin(known)]
+        active = set(entries.player_id.astype(str)) if "player_id" in entries else set()
+        candidates["_active"] = candidates.player_id.astype(str).isin(active)
+        races = candidates.sort_values(["_active", "date"], ascending=False).drop_duplicates("race_id")
+        urls = races.source_url.dropna().astype(str).tolist()
+    # Current race cards carry actual past factor/event records even when the
+    # legacy archive omitted source URLs; these are never fabricated by style.
+    current = entries.source_url.dropna().astype(str).unique().tolist() if "source_url" in entries else []
+    urls = list(dict.fromkeys(current + urls))
+    urls = [url for url in urls if url.startswith("https://www.winticket.jp/")][:limit]
     from fetch_today_entries import http_get, extract_preloaded_state, find_query_data
     def fetch(url):
         return url, find_query_data(extract_preloaded_state(http_get(url)), "FETCH_KEIRIN_RACE")
-    fetched = failures = 0
+    fetched = failures = observed_rows = 0
     with ThreadPoolExecutor(max_workers=3) as pool:
-        futures = [pool.submit(fetch, url) for url in races.source_url]
+        futures = [pool.submit(fetch, url) for url in urls]
         for future in as_completed(futures):
             try:
                 url, data = future.result()
-                if data and data.get("results"):
+                if data:
                     collect_observations(data, url, output_dir)
+                    observed_rows += collect_prior_record_events(data, url, output_dir)
                     fetched += 1
             except Exception as exc:
                 failures += 1
                 print(f"annual official-event backfill unavailable: {exc}")
-    report = {"requested": len(futures), "fetched": fetched, "failures": failures,
-              "limit_per_run": limit, "scope": "past year, current riders prioritized"}
-    folder = output_dir / "company"
-    folder.mkdir(parents=True, exist_ok=True)
+    report = {"requested": len(futures), "fetched": fetched, "failures": failures, "prior_result_rows_seen": observed_rows,
+              "limit_per_run": limit, "scope": "actual past-year events; current riders prioritized"}
+    folder = output_dir / "company"; folder.mkdir(parents=True, exist_ok=True)
     (folder / "annual_event_backfill.json").write_text(json.dumps(report, ensure_ascii=False), encoding="utf-8")
     return report
 
