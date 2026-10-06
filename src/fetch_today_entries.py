@@ -203,6 +203,11 @@ def build_odds_rows(odds_data, race_date, venue, race_no, race_id, url):
             key = item.get("key", [])
             if len(key) != spec["key_len"] or item.get("absent"):
                 continue
+            if bet_type == "trifecta":
+                if str(item.get("raceId", "")) != str(race_id):
+                    continue
+                if any(not isinstance(x, int) or not 1 <= x <= 9 for x in key) or len(set(key)) != 3:
+                    continue
             odds = pd.to_numeric(item.get("odds"), errors="coerce")
             min_odds = pd.to_numeric(item.get("minOdds"), errors="coerce")
             max_odds = pd.to_numeric(item.get("maxOdds"), errors="coerce")
@@ -298,6 +303,8 @@ def parse_race_page(url, completeness_attempts=5, completeness_retry_sec=5.0):
         if complete:
             odds_data = find_query_data(state, "FETCH_KEIRIN_RACE_ODDS")
             odds_rows = build_odds_rows(odds_data, race_date, venue, race_no, race_id, url)
+            from market_odds_sources import verify_market
+            odds_rows = verify_market(entry_rows, odds_rows)
             return entry_rows, odds_rows
 
         last_incomplete = (

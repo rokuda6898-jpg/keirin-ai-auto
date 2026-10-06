@@ -1516,7 +1516,8 @@ function showPanel(btn,type){{var r=btn.closest(".race");r.querySelectorAll(".ra
 function compareRider(btn){{var p=btn.closest(".compare-panel"),v=parseFloat(btn.dataset.win)||0;p.querySelector(".donut").style.setProperty("--v",v);p.querySelector(".donut span").textContent=v.toFixed(1)+"%";p.querySelector(".compare-name").textContent=btn.dataset.car+"番 "+btn.dataset.name;p.querySelector(".compare-win").textContent=v.toFixed(1)+"%";p.querySelector(".compare-score").textContent=btn.dataset.score}}
 </script><footer>NEXUS ｜ オッズ取得状況により買い目は締切前に更新されます</footer></body></html>
 """
-    html_path.write_text(html, encoding="utf-8")
+    from site_ui import enhance_today
+    html_path.write_text(enhance_today(html), encoding="utf-8")
 
     summary = {
         "created": str(latest_path),

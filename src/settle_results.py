@@ -432,34 +432,13 @@ def build_report(selected, summary):
 
 
 def build_history_html(settled):
+    from site_ui import history_document
     view = settled.copy()
-    wanted = ["date", "venue", "race_no", "bet_label", "buy", "display_status", "is_hit",
-              "stake_yen", "actual_return_yen", "actual_profit_yen"]
-    for column in wanted:
-        if column not in view.columns:
-            view[column] = ""
-    view["result"] = np.where(
-        view["display_status"].eq("確定"),
-        np.where(view["is_hit"].fillna(False), "的中", "ハズレ"),
-        "結果取得待ち",
-    )
-    view = view[["date", "venue", "race_no", "bet_label", "buy", "display_status", "result",
-                 "stake_yen", "actual_return_yen", "actual_profit_yen"]]
-    view = view.rename(columns={
-        "date": "日付", "venue": "開催", "race_no": "R", "bet_label": "券種",
-        "buy": "買い目", "display_status": "状態", "result": "結果",
-        "stake_yen": "購入額", "actual_return_yen": "払戻", "actual_profit_yen": "損益",
-    })
-    html = """<!doctype html><html lang="ja"><head><meta charset="utf-8">
-<title>NEXUS 予想履歴</title><style>
-body{font-family:system-ui,sans-serif;margin:24px;background:#f5f8fc;color:#10233f}
-h1{color:#073b7a}table{border-collapse:collapse;width:100%;background:white}
-th,td{border-bottom:1px solid #dbe4ef;padding:10px;text-align:center}
-th{background:#073b7a;color:white}tr:hover{background:#f1f6fc}
-</style></head><body><h1>検証用の買い目履歴</h1><p>予想時の配分額で買ったと仮定した試算です。実購入の成績ではありません。</p><a href="performance.html">成績と数字の見方</a>"""
-    html += view.to_html(index=False, escape=True, na_rep="未取得")
-    html += "</body></html>"
-    return html
+    if "is_prospective" not in view:
+        view["is_prospective"] = True
+    if "is_decided" not in view:
+        view["is_decided"] = view.get("display_status", pd.Series("",index=view.index)).eq("確定")
+    return history_document(view)
 
 
 def normalize_bets_for_settlement(bets):
