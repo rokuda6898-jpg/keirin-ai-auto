@@ -412,6 +412,8 @@ if __name__ == "__main__":
     backfill_observations(entries)
     knowledge = build_annual_profiles(now.date())
     market = frame_read(TODAY_ODDS_CSV)
+    # Stamp after preparation; network enrichment must not backdate predictions.
+    now = datetime.now(ZoneInfo("Asia/Tokyo"))
     if not entries.empty:
         entries["p_win"] = 1 / entries.groupby("race_id")["car_no"].transform("size")
         forecast_departments(entries, market, knowledge, now)
