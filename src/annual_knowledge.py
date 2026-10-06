@@ -1,6 +1,7 @@
 """Rolling-year observed rider knowledge and independent department shadow forecasts."""
 import hashlib
 import json
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -33,6 +34,44 @@ def collect_observations(race_data, url, output_dir=OUTPUT_DIR):
     path = folder / "rider_official_observations.csv"
     combined = pd.concat([frame_read(path), pd.DataFrame(rows)], ignore_index=True, sort=False)
     combined.drop_duplicates(["race_id", "player_id"], keep="last").to_csv(path, index=False)
+
+
+def backfill_observations(entries, limit=40, history_path=HISTORY_CSV, output_dir=OUTPUT_DIR):
+    """Bounded, incremental official-event fetch for current riders' past year."""
+    history = frame_read(history_path)
+    if history.empty or not {"date", "source_url", "race_id", "player_id"}.issubset(history):
+        return {"requested": 0, "fetched": 0}
+    today = pd.Timestamp(datetime.now(ZoneInfo("Asia/Tokyo")).date())
+    dates = pd.to_datetime(history.date, errors="coerce")
+    candidates = history[dates.ge(today - pd.DateOffset(years=1)) & dates.lt(today)].copy()
+    existing = frame_read(output_dir / "company/rider_official_observations.csv")
+    known = set(existing.race_id.astype(str)) if "race_id" in existing else set()
+    candidates = candidates[~candidates.race_id.astype(str).isin(known)]
+    active = set(entries.player_id.astype(str)) if "player_id" in entries else set()
+    candidates["_active"] = candidates.player_id.astype(str).isin(active)
+    races = candidates.sort_values(["_active", "date"], ascending=False).drop_duplicates("race_id")
+    races = races[races.source_url.notna() & races.source_url.astype(str).str.startswith("https://www.winticket.jp/")].head(limit)
+    from fetch_today_entries import http_get, extract_preloaded_state, find_query_data
+    def fetch(url):
+        return url, find_query_data(extract_preloaded_state(http_get(url)), "FETCH_KEIRIN_RACE")
+    fetched = failures = 0
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        futures = [pool.submit(fetch, url) for url in races.source_url]
+        for future in as_completed(futures):
+            try:
+                url, data = future.result()
+                if data and data.get("results"):
+                    collect_observations(data, url, output_dir)
+                    fetched += 1
+            except Exception as exc:
+                failures += 1
+                print(f"annual official-event backfill unavailable: {exc}")
+    report = {"requested": len(futures), "fetched": fetched, "failures": failures,
+              "limit_per_run": limit, "scope": "past year, current riders prioritized"}
+    folder = output_dir / "company"
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / "annual_event_backfill.json").write_text(json.dumps(report, ensure_ascii=False), encoding="utf-8")
+    return report
 
 
 def build_annual_profiles(asof=None, history_path=HISTORY_CSV, output_dir=OUTPUT_DIR):
@@ -259,8 +298,9 @@ def audit_department_predictions(output_dir=OUTPUT_DIR):
 if __name__ == "__main__":
     from common import TODAY_CSV, TODAY_ODDS_CSV
     now = datetime.now(ZoneInfo("Asia/Tokyo"))
-    knowledge = build_annual_profiles(now.date())
     entries = frame_read(TODAY_CSV)
+    backfill_observations(entries)
+    knowledge = build_annual_profiles(now.date())
     market = frame_read(TODAY_ODDS_CSV)
     if not entries.empty:
         entries["p_win"] = 1 / entries.groupby("race_id")["car_no"].transform("size")

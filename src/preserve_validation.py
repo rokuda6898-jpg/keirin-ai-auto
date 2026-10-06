@@ -8,13 +8,14 @@ from common import ROOT
 
 LEDGERS = ["outputs/company/ticket_return_snapshots.jsonl",
            "outputs/company/annual_department_prediction_ledger.jsonl"]
+OBSERVATIONS = "outputs/company/rider_official_observations.csv"
 CACHES = ["data/raw/live_feature_base.csv", "data/raw/live_feature_base.meta.json",
           "outputs/company/annual_rider_knowledge.json"]
 
 
 def save(directory, root=ROOT):
     directory = Path(directory)
-    for name in LEDGERS + CACHES:
+    for name in LEDGERS + CACHES + [OBSERVATIONS]:
         path = root / name
         if path.exists():
             target = directory / name
@@ -38,6 +39,16 @@ def restore(directory, root=ROOT):
                 existing.append(line)
                 seen.add(key)
         target.write_text("\n".join(existing) + "\n", encoding="utf-8")
+    observations = directory / OBSERVATIONS
+    if observations.exists():
+        import pandas as pd
+        target = root / OBSERVATIONS
+        saved = pd.read_csv(observations, dtype={"race_id": str, "player_id": str}).set_index(["race_id", "player_id"])
+        if target.exists():
+            current = pd.read_csv(target, dtype={"race_id": str, "player_id": str}).set_index(["race_id", "player_id"])
+            saved = current.combine_first(saved)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        saved.reset_index().to_csv(target, index=False)
     for name in CACHES:
         source = directory / name
         if source.exists():

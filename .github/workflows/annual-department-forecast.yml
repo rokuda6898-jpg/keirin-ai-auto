@@ -62,6 +62,9 @@ jobs:
           cp outputs/company/annual_department_predictions.json /tmp/annual_predictions.json
           publish_reports() {
             git add outputs/company/annual_*
+            if [ -f outputs/company/rider_official_observations.csv ]; then
+              git add outputs/company/rider_official_observations.csv
+            fi
             git diff --staged --quiet || git commit -m "Update rolling-year specialist forecasts and validation"
           }
           publish_reports
