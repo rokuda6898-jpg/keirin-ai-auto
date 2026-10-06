@@ -1,14 +1,14 @@
 # 競輪AI 会社運用ダイジェスト
 
-- 更新: 2026-10-06T21:04:33+09:00
-- 中央戦史: 59,927レース
-- 履歴キャッシュ: 59,927レース
-- 正式な発走前予想検証: 395レース
-- Top1的中率: 0.420253
+- 更新: 2026-10-06T21:30:10+09:00
+- 中央戦史: 59,936レース
+- 履歴キャッシュ: 59,936レース
+- 正式な発走前予想検証: 404レース
+- Top1的中率: 0.425743
 - モデル監査: unmatched_cohort_gap
 - ライブ入力ドリフト: baseline_unavailable
-- モデル3連単Top10的中率: 0.3333333333333333
-- 実商品3連単的中率: 0.041666666666666664
+- モデル3連単Top10的中率: 0.28846153846153844
+- 実商品3連単的中率: 0.06060606060606061
 - 戦史クロスソース一致: 1.0
 - 本番再現Top1: 未算出
 - 本番再現3連単Top10: 未算出
@@ -20,12 +20,13 @@
 - 実戦専用モデル状態: collecting
 - 実戦専用モデル純増pp: 未算出
 - 昇格候補: 0
-- 全買い目回収率検証部: 保存 6R / 確定 1R（120%未検証）
+- 全買い目回収率検証部: 保存 9R / 確定 4R（120%未検証）
 - 直近1年の部署知識: 16441R / 2644選手（全履歴保持・部署別の影予想）
-- 締切前時刻確認: 15R ／ 従来集計 395R（未確認分は実戦証拠に含めない）
+- 締切前時刻確認: 24R ／ 従来集計 404R（未確認分は実戦証拠に含めない）
 - 第三者監査: amber
 
 ## 軍師提言
+- P2: optimize ticket logic against live 10-point hit rate as a separate KPI from Top1 accuracy
 - P2: keep the current best challenger in shadow until the 300-race promotion floor is reached
 - P2: continue prospective shadow testing of the best second-pick reversal rule; no live switch until promotion criteria pass
 - P2: keep multi-head coverage for near-tie races; do not collapse to a single head

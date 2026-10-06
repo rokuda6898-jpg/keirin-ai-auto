@@ -1,5 +1,5 @@
 {
-  "updated_at_jst": "2026-10-06T19:44:06+09:00",
+  "updated_at_jst": "2026-10-06T21:30:10+09:00",
   "role": "executive_officer",
   "source": "ceo_decision_support",
   "status": "dissemination_package_pending_ceo_or_owner_decision",
@@ -67,13 +67,13 @@
   ],
   "strategist_actions_to_disseminate_after_approval": [
     {
-      "priority": 1,
-      "type": "live_validation_gap",
-      "action": "freeze broad heuristic expansion; diagnose live-vs-validation Top1 gap before promoting new production logic",
+      "priority": 2,
+      "type": "trifecta_top10_kpi",
+      "action": "optimize ticket logic against live 10-point hit rate as a separate KPI from Top1 accuracy",
       "evidence": {
-        "production_hit_rate": 0.42025316455696204,
-        "validation_top1_final_rate": 0.5546259280411193,
-        "live_vs_validation_final_gap_pp": -13.437276348415727
+        "races": 52,
+        "hit_rate": 0.28846153846153844,
+        "recent_50_hit_rate": 0.3
       }
     },
     {
@@ -83,16 +83,16 @@
       "evidence": {
         "variant": "core_model",
         "department": "model_audit_office",
-        "races": 119,
-        "production_hits": 51,
-        "challenger_hits": 57,
-        "production_hit_rate": 0.42857142857142855,
-        "challenger_hit_rate": 0.4789915966386555,
-        "delta_hit_rate": 0.050420168067226934,
-        "delta_pp": 5.042016806722693,
-        "changed_races": 21,
-        "flip_gains": 10,
-        "flip_losses": 4,
+        "races": 128,
+        "production_hits": 57,
+        "challenger_hits": 63,
+        "production_hit_rate": 0.4453125,
+        "challenger_hit_rate": 0.4921875,
+        "delta_hit_rate": 0.046875,
+        "delta_pp": 4.6875,
+        "changed_races": 24,
+        "flip_gains": 11,
+        "flip_losses": 5,
         "net_hits": 6,
         "promotion_status": "insufficient_sample"
       }
@@ -104,15 +104,15 @@
       "evidence": {
         "rule": "switch_to_second_when_margin<=0.05",
         "margin_threshold": 0.05,
-        "switched_races": 51,
-        "production_hits_in_switched_races": 15,
+        "switched_races": 53,
+        "production_hits_in_switched_races": 16,
         "second_pick_hits_in_switched_races": 19,
-        "net_hits": 4,
-        "baseline_total_hits": 166,
-        "hypothetical_total_hits": 170,
-        "baseline_hit_rate": 0.42025316455696204,
-        "hypothetical_hit_rate": 0.43037974683544306,
-        "global_delta_pp": 1.0126582278481013,
+        "net_hits": 3,
+        "baseline_total_hits": 172,
+        "hypothetical_total_hits": 175,
+        "baseline_hit_rate": 0.42574257425742573,
+        "hypothetical_hit_rate": 0.43316831683168316,
+        "global_delta_pp": 0.7425742574257426,
         "status": "shadow_candidate_only",
         "promotion_requirement": "must beat production prospectively on >=300 settled races and pass external validation"
       }
@@ -123,9 +123,9 @@
       "action": "keep multi-head coverage for near-tie races; do not collapse to a single head",
       "evidence": {
         "segment": "near_tie_<=0.03",
-        "races": 33,
-        "hits": 9,
-        "hit_rate": 0.272727
+        "races": 34,
+        "hits": 10,
+        "hit_rate": 0.294118
       }
     }
   ],

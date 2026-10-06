@@ -1,78 +1,78 @@
 {
-  "updated_at_jst": "2026-10-06T20:19:55+09:00",
+  "updated_at_jst": "2026-10-06T21:30:06+09:00",
   "role": "ticket_return_department",
   "strategy_version": "position_ev_v6_20261006",
-  "status": "collecting",
-  "frozen_races": 0,
-  "settled_races": 0,
+  "status": "prospective_audit",
+  "frozen_races": 9,
+  "settled_races": 4,
   "target_return_rate": 1.2,
   "target_validated": false,
   "production_auto_promotion": false,
   "scope": "latest eligible pre-close frozen portfolio; full main and hole tickets",
   "shadow": {
     "total": {
-      "eligible_settled_races": 0,
-      "bet_races": 0,
+      "eligible_settled_races": 4,
+      "bet_races": 4,
       "skip_races": 0,
-      "skip_rate": null,
+      "skip_rate": 0.0,
       "hits": 0,
-      "hit_rate": null,
+      "hit_rate": 0.0,
       "flat_100yen": {
-        "stake_yen": 0,
+        "stake_yen": 5400,
         "return_yen": 0,
-        "return_rate": null
+        "return_rate": 0.0
       },
       "allocated": {
-        "stake_yen": 0,
+        "stake_yen": 40000,
         "return_yen": 0,
-        "profit_yen": 0,
-        "return_rate": null
+        "profit_yen": -40000,
+        "return_rate": 0.0
       }
     },
     "main": {
-      "eligible_settled_races": 0,
-      "bet_races": 0,
+      "eligible_settled_races": 4,
+      "bet_races": 4,
       "skip_races": 0,
-      "skip_rate": null,
+      "skip_rate": 0.0,
       "hits": 0,
-      "hit_rate": null,
+      "hit_rate": 0.0,
       "flat_100yen": {
-        "stake_yen": 0,
+        "stake_yen": 3200,
         "return_yen": 0,
-        "return_rate": null
+        "return_rate": 0.0
       },
       "allocated": {
-        "stake_yen": 0,
+        "stake_yen": 33000,
         "return_yen": 0,
-        "profit_yen": 0,
-        "return_rate": null
+        "profit_yen": -33000,
+        "return_rate": 0.0
       }
     },
     "hole": {
-      "eligible_settled_races": 0,
-      "bet_races": 0,
-      "skip_races": 0,
-      "skip_rate": null,
+      "eligible_settled_races": 4,
+      "bet_races": 2,
+      "skip_races": 2,
+      "skip_rate": 0.5,
       "hits": 0,
-      "hit_rate": null,
+      "hit_rate": 0.0,
       "flat_100yen": {
-        "stake_yen": 0,
+        "stake_yen": 2200,
         "return_yen": 0,
-        "return_rate": null
+        "return_rate": 0.0
       },
       "allocated": {
-        "stake_yen": 0,
+        "stake_yen": 7000,
         "return_yen": 0,
-        "profit_yen": 0,
-        "return_rate": null
+        "profit_yen": -7000,
+        "return_rate": 0.0
       }
     }
   },
   "authorized_purchase": {
-    "eligible_settled_races": 0,
+    "eligible_settled_races": 4,
     "bet_races": 0,
-    "skip_races": 0,
-    "skip_rate": null,
+    "skip_races": 4,
+    "skip_rate": 1.0,
     "hits": 0,
     "hit_rate": null,
     "flat_100yen": {
@@ -91,35 +91,55 @@
     "positions": [
       {
         "position": 1,
-        "races": 0,
-        "mean_top_probability": null,
-        "actual_top_hit_rate": null,
-        "multiclass_brier": null
+        "races": 4,
+        "mean_top_probability": 0.669269200182576,
+        "actual_top_hit_rate": 0.75,
+        "multiclass_brier": 0.5611409705966499
       },
       {
         "position": 2,
-        "races": 0,
-        "mean_top_probability": null,
-        "actual_top_hit_rate": null,
-        "multiclass_brier": null
+        "races": 4,
+        "mean_top_probability": 0.4102703947911799,
+        "actual_top_hit_rate": 0.5,
+        "multiclass_brier": 0.7893764725686419
       },
       {
         "position": 3,
-        "races": 0,
-        "mean_top_probability": null,
-        "actual_top_hit_rate": null,
-        "multiclass_brier": null
+        "races": 4,
+        "mean_top_probability": 0.32373142630509627,
+        "actual_top_hit_rate": 0.0,
+        "multiclass_brier": 0.965476806795549
       }
     ],
     "same_race_core_vs_final": {
-      "races": 0,
-      "core_hits": 0,
-      "final_hits": 0,
-      "net_final_hits": 0
+      "races": 4,
+      "core_hits": 2,
+      "final_hits": 3,
+      "net_final_hits": 1
     },
     "automatically_recalibrated": false
   },
-  "monthly": {},
+  "monthly": {
+    "2026-10": {
+      "eligible_settled_races": 4,
+      "bet_races": 4,
+      "skip_races": 0,
+      "skip_rate": 0.0,
+      "hits": 0,
+      "hit_rate": 0.0,
+      "flat_100yen": {
+        "stake_yen": 5400,
+        "return_yen": 0,
+        "return_rate": 0.0
+      },
+      "allocated": {
+        "stake_yen": 40000,
+        "return_yen": 0,
+        "profit_yen": -40000,
+        "return_rate": 0.0
+      }
+    }
+  },
   "limitations": [
     "旧戦略と混合しない。部署追加前の予想を事後生成しない。",
     "回収率120%の単純超過だけで購入許可しない。外部検証が必要。",
