@@ -30,10 +30,46 @@ class AnnualKnowledgeTests(unittest.TestCase):
         self.assertEqual(report["total_archive_races"], 5)
         self.assertEqual(report["annual_races"], 2)
         self.assertEqual(report["profiles"]["1"]["races"], 2)
-        self.assertEqual(report["profiles"]["1"]["winning_tactics"], {"逃": 2})
+        self.assertEqual(report["profiles"]["1"]["winning_tactics"], {"逃": 3})
         self.assertEqual(report["profiles"]["2"]["tactics"], {})
         self.assertEqual(len(pd.read_csv(self.history)), 15)
         self.assertEqual(report["fingerprint"], build_annual_profiles("2026-10-06", self.history, self.root)["fingerprint"])
+
+    def test_adaptive_period_boundaries_weights_and_historical_only_rider(self):
+        rows = []
+        for player, count in [("30", 30), ("29", 29), ("15", 15), ("14", 14), ("0", 0)]:
+            for i in range(count):
+                rows.append({"race_id": f"new{i}", "player_id": player, "date": "2026-10-05", "finish_pos": 1})
+            rows.extend([
+                {"race_id": "year2", "player_id": player, "date": "2024-10-06", "finish_pos": 2},
+                {"race_id": "year3", "player_id": player, "date": "2023-10-06", "finish_pos": 3},
+                {"race_id": "outside", "player_id": player, "date": "2023-10-05", "finish_pos": 1},
+                {"race_id": "today", "player_id": player, "date": "2026-10-06", "finish_pos": 1},
+                {"race_id": "future", "player_id": player, "date": "2027-10-05", "finish_pos": 1},
+            ])
+        pd.DataFrame(rows).to_csv(self.history, index=False)
+        profiles = build_annual_profiles("2026-10-06", self.history, self.root)["profiles"]
+        for player, years in [("30", 1), ("29", 2), ("15", 2), ("14", 3), ("0", 3)]:
+            self.assertEqual(profiles[player]["reference_years"], years)
+        score = profiles["14"]["evaluation"]
+        self.assertEqual(score["races"], 16)
+        self.assertEqual(score["effective_races"], 14.75)
+        self.assertAlmostEqual(score["rates"][0], 14 / 14.75)
+        self.assertAlmostEqual(score["rates"][1], .5 / 14.75)
+        self.assertAlmostEqual(score["rates"][2], .25 / 14.75)
+        self.assertEqual(profiles["0"]["races"], 0)
+        self.assertEqual(profiles["0"]["evaluation"]["races"], 2)
+        self.assertEqual(profiles["30"]["evaluation"]["races"], 30)
+        self.assertEqual(profiles["29"]["evaluation"]["races"], 30)
+
+    def test_invalid_finishes_do_not_trigger_shorter_window(self):
+        rows = [{"race_id": f"invalid{i}", "player_id": "1", "date": "2026-10-05", "finish_pos": 99} for i in range(40)]
+        rows.append({"race_id": "oldvalid", "player_id": "1", "date": "2024-10-06", "finish_pos": 1})
+        pd.DataFrame(rows).to_csv(self.history, index=False)
+        profile = build_annual_profiles("2026-10-06", self.history, self.root)["profiles"]["1"]
+        self.assertEqual(profile["reference_years"], 3)
+        self.assertEqual(profile["evaluation"]["effective_races"], .5)
+        self.assertEqual(profile["evaluation"]["rates"], [1, 0, 0])
 
     def test_partial_supplement_does_not_inflate_archive_count(self):
         folder = self.root / "company"
@@ -75,6 +111,8 @@ class AnnualKnowledgeTests(unittest.TestCase):
         odds = pd.DataFrame([{"race_id": "target", "bet_type": "trifecta", "buy": "1-2-3", "odds_used": 100}])
         forecasts = forecast_departments(race, odds, report, now, self.root)
         self.assertEqual(len(forecasts), 4)
+        self.assertTrue(all(f["rider_reference"]["1"]["years"] == 3 for f in forecasts))
+        self.assertTrue(all(f["rider_reference"]["1"]["effective_races"] == 2.5 for f in forecasts))
         self.assertTrue(all(not f["purchase_authorized"] for f in forecasts))
         (self.root / "latest_results.json").write_text(json.dumps([{"race_id": "target",
             "official_result_available": True, "actual_trifecta": "1-2-3", "actual_trifecta_odds": 10}]))

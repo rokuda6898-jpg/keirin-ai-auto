@@ -40,7 +40,7 @@ def collect_prior_record_events(race_data, url, output_dir=OUTPUT_DIR):
     """Observed past-result records embedded in a current official race card."""
     from race_features import prior_results, _race_date_from_id
     today = datetime.now(ZoneInfo("Asia/Tokyo")).date()
-    start = (pd.Timestamp(today) - pd.DateOffset(years=1)).date()
+    start = (pd.Timestamp(today) - pd.DateOffset(years=3)).date()
     rows = []
     names = {str(player.get("id")): str(player.get("name", "")) for player in race_data.get("players", [])}
     for record in race_data.get("records", []):
@@ -73,7 +73,7 @@ def backfill_observations(entries, limit=40, history_path=HISTORY_CSV, output_di
     urls = []
     if not history.empty and {"date", "source_url", "race_id", "player_id"}.issubset(history):
         dates = pd.to_datetime(history.date, errors="coerce")
-        candidates = history[dates.ge(today - pd.DateOffset(years=1)) & dates.lt(today)].copy()
+        candidates = history[dates.ge(today - pd.DateOffset(years=3)) & dates.lt(today)].copy()
         existing = frame_read(output_dir / "company/rider_official_observations.csv")
         known = set(existing.race_id.astype(str)) if "race_id" in existing else set()
         candidates = candidates[~candidates.race_id.astype(str).isin(known)]
@@ -112,6 +112,8 @@ def backfill_observations(entries, limit=40, history_path=HISTORY_CSV, output_di
 def build_annual_profiles(asof=None, history_path=HISTORY_CSV, output_dir=OUTPUT_DIR):
     asof = pd.Timestamp(asof or datetime.now(ZoneInfo("Asia/Tokyo")).date()).normalize().tz_localize(None)
     start = asof - pd.DateOffset(years=1)
+    start2 = asof - pd.DateOffset(years=2)
+    start3 = asof - pd.DateOffset(years=3)
     folder = output_dir / "company"
     folder.mkdir(parents=True, exist_ok=True)
     observations = folder / "rider_official_observations.csv"
@@ -151,7 +153,7 @@ def build_annual_profiles(asof=None, history_path=HISTORY_CSV, output_dir=OUTPUT
     coverage = {}
     if not history.empty and {"date", "player_id", "race_id", "finish_pos"}.issubset(history):
         dates = pd.to_datetime(history.date, errors="coerce")
-        annual = history[dates.ge(start) & dates.lt(asof)].copy()
+        annual = history[dates.ge(start3) & dates.lt(asof)].copy()
         annual = annual.drop_duplicates(["race_id", "player_id"], keep="last")
         annual["_date"] = pd.to_datetime(annual.date, errors="coerce")
         finish = pd.to_numeric(annual.finish_pos, errors="coerce")
@@ -159,21 +161,36 @@ def build_annual_profiles(asof=None, history_path=HISTORY_CSV, output_dir=OUTPUT
         annual["_valid"] = finish.between(1, field)
         for position in [1, 2, 3]:
             annual[f"_p{position}"] = finish.eq(position).astype(int)
-        annual_races = int(annual.race_id.nunique())
-        coverage = {name: int(annual[name].notna().sum()) for name in annual.columns
+        annual["_weight"] = np.where(annual._date.ge(start), 1.0, np.where(annual._date.ge(start2), .5, .25))
+        latest_year = annual[annual._date.ge(start)]
+        annual_races = int(latest_year.race_id.nunique())
+        coverage = {name: int(latest_year[name].notna().sum()) for name in annual.columns
                     if name.startswith("result_event_") or name == "result_factor"}
         for player_id, group in annual.groupby("player_id", sort=False):
-            n = int(group._valid.sum())
-            if not n:
+            recent_year = group[group._date.ge(start)]
+            year_count = int(recent_year._valid.sum())
+            years = 1 if year_count >= 30 else 2 if year_count >= 15 else 3
+            reference_start = [start, start2, start3][years - 1]
+            reference = group[group._date.ge(reference_start)].copy()
+            if not int(reference._valid.sum()):
                 continue
             def stats(rows):
                 count = int(rows._valid.sum())
-                return {"races": count, "rates": [float(rows[f"_p{p}"].sum() / count)
-                        if count else None for p in [1, 2, 3]]}
-            profile = {**stats(group), "entries": len(group), "unplaced_rows": int((~group._valid).sum()),
+                mass = float(rows.loc[rows._valid, "_weight"].sum())
+                return {"races": count, "effective_races": mass,
+                        "rates": [float((rows.loc[rows._valid, f"_p{p}"] * rows.loc[rows._valid, "_weight"]).sum() / mass)
+                                  if mass else None for p in [1, 2, 3]]}
+            evaluation = {**stats(reference), "entries": len(reference),
+                          "unplaced_rows": int((~reference._valid).sum()),
+                          "effective_entries": float(reference._weight.sum()),
+                          "effective_unplaced": float(reference.loc[~reference._valid, "_weight"].sum())}
+            profile = {**stats(recent_year), "entries": len(recent_year), "unplaced_rows": int((~recent_year._valid).sum()),
+                       "evaluation": evaluation, "reference_years": years, "reference_start": str(reference_start.date()),
+                       "year_weights": [1.0, .5, .25][:years], "annual_races": year_count,
                        "recent90": stats(group[group._date.ge(asof - pd.Timedelta(days=90))]),
                        "line_positions": {}, "tactics": {}, "events": {},
-                       "style_counts": group.get("style", pd.Series(dtype=str)).dropna().astype(str).value_counts().to_dict()}
+                       "style_counts": reference.get("style", pd.Series(dtype=str)).dropna().astype(str).value_counts().to_dict()}
+            group = reference
             if "line_position" in group:
                 for position, rows in group.groupby("line_position"):
                     if pd.notna(position):
@@ -186,18 +203,22 @@ def build_annual_profiles(asof=None, history_path=HISTORY_CSV, output_dir=OUTPUT
                     observed = group[column].dropna().astype(str).str.lower()
                     profile["events"][column.removeprefix("result_event_")] = {
                         "observed": len(observed), "true": int(observed.isin(["true", "1", "1.0"]).sum()),
+                        "effective_observed": float(group.loc[group[column].notna(), "_weight"].sum()),
+                        "effective_true": float(group.loc[group[column].astype(str).str.lower().isin(["true", "1", "1.0"]), "_weight"].sum()),
                         "true_results": stats(group.loc[group[column].astype(str).str.lower().isin(["true", "1", "1.0"])])}
             names = group.get("player_name", pd.Series(dtype=str)).dropna().astype(str).loc[lambda value: value.ne("")]
             profile["name"] = str(names.iloc[-1]) if len(names) else ""
             profiles[str(player_id)] = profile
     report = {"updated_at_jst": datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(timespec="seconds"),
               "fingerprint": fingerprint, "asof_date": str(asof.date()), "window_start": str(start.date()),
-              "window_end_exclusive": str(asof.date()), "total_archive_races": total_races,
+              "window_end_exclusive": str(asof.date()), "reference_window_start": str(start3.date()),
+              "reference_policy": {"annual_30_or_more": 1, "annual_15_to_29": 2, "annual_0_to_14": 3,
+                                   "year_weights": [1.0, .5, .25]}, "total_archive_races": total_races,
               "annual_races": annual_races, "annual_archive_races": annual_archive_races,
               "supplemental_result_races": supplemental_races, "reference_races_including_supplemental": reference_races,
               "players": len(profiles), "profiles": profiles,
               "observation_coverage": coverage, "status": "ready" if profiles else "history_unavailable",
-              "policy": "full archive retained; previous calendar year used for specialist proposals; same-day/future results excluded",
+              "policy": "full archive retained; adaptive previous 1/2/3 calendar years weighted 1/.5/.25 for all riders; same-day/future results excluded",
               "limitations": ["脚質と決まり手を区別。決まり手・行動の未取得分は推測しない。",
                                "部署予想は暫定の影予想。実戦検証前に本番モデルを置換しない。"]}
     saved.write_text(json.dumps(report, ensure_ascii=False, allow_nan=False), encoding="utf-8")
@@ -222,8 +243,9 @@ def forecast_departments(pred, odds, report, now, output_dir=OUTPUT_DIR):
                 if not profile:
                     values.append(baseline)
                     continue
-                n = profile["races"]
-                rates = (np.array(profile["rates"]) * n + baseline * 20) / (n + 20)
+                evaluation = profile.get("evaluation", profile)
+                n = evaluation.get("effective_races", evaluation["races"])
+                rates = (np.array(evaluation["rates"]) * n + baseline * 20) / (n + 20)
                 context = None
                 if department == "pace_department":
                     context = profile["recent90"]
@@ -231,7 +253,8 @@ def forecast_departments(pred, odds, report, now, output_dir=OUTPUT_DIR):
                     position = pd.to_numeric(rider.get("line_position"), errors="coerce")
                     context = profile["line_positions"].get(str(int(position))) if pd.notna(position) else None
                 if context and context["races"]:
-                    weight = context["races"] / (context["races"] + 20)
+                    mass = context.get("effective_races", context["races"])
+                    weight = mass / (mass + 20)
                     rates = rates * (1 - weight) + np.array(context["rates"]) * weight
                 if department == "pace_department":
                     # Historical behavior associations are provisional shadow features.
@@ -240,16 +263,16 @@ def forecast_departments(pred, odds, report, now, output_dir=OUTPUT_DIR):
                     weights = []
                     for event in profile.get("events", {}).values():
                         result = event.get("true_results", {})
-                        count = result.get("races", 0)
+                        count = result.get("effective_races", result.get("races", 0))
                         if event.get("observed", 0) >= 10 and count >= 5:
                             associations.append((np.array(result["rates"]) * count + rates * 20) / (count + 20))
-                            weights.append(event["true"] / event["observed"])
+                            weights.append(event.get("effective_true", event["true"]) / event.get("effective_observed", event["observed"]))
                     if weights and sum(weights) > 0:
                         behavior = np.average(associations, axis=0, weights=weights)
                         strength = min(.25, sum(weights) / len(weights) * n / (n + 40))
                         rates = rates * (1 - strength) + behavior * strength
                 if department == "risk_department":
-                    reliability = n / (n + 40) * (1 - profile["unplaced_rows"] / profile["entries"])
+                    reliability = n / (n + 40) * (1 - evaluation.get("effective_unplaced", evaluation["unplaced_rows"]) / evaluation.get("effective_entries", evaluation["entries"]))
                     rates = rates * reliability + baseline * (1 - reliability)
                 values.append(rates)
             matrix = np.array(values)
@@ -268,6 +291,11 @@ def forecast_departments(pred, odds, report, now, output_dir=OUTPUT_DIR):
                 "close_at": float(close), "snapshot_at": now.isoformat(timespec="seconds"),
                 "winner_car": int(riders.loc[riders.rank_first.eq(1), "car_no"].iloc[0]),
                 "rider_year_races": {str(int(car)): p["races"] if p else 0 for car, p in zip(race.car_no, profiles)},
+                "rider_reference": {str(int(car)): {"years": p.get("reference_years", 1),
+                    "races": p.get("evaluation", p)["races"],
+                    "effective_races": p.get("evaluation", p).get("effective_races", p["races"])}
+                    if p else {"years": 3, "races": 0, "effective_races": 0}
+                    for car, p in zip(race.car_no, profiles)},
                 "tickets": [{"buy": str(t.buy), "group": str(t.ticket_group), "prob": float(t.prob), "ev": float(t.ev)}
                             for t in selected.itertuples()],
                 "main_count": plan["main_count"], "hole_count": plan["hole_count"],
@@ -345,23 +373,23 @@ def audit_department_predictions(output_dir=OUTPUT_DIR):
     cells = "".join(f'<tr><td>{labels[r["department"]]}</td><td>{r["races"]}</td>'
                     f'<td>{percent(r["top1_hit_rate"])}</td><td>{percent(r["flat_return_rate"])}</td></tr>' for r in comparisons)
     page = ('<!doctype html><html lang="ja"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
-            '<title>直近1年の部署予想</title><style>body{font-family:system-ui;background:#f4f7fb;padding:20px;color:#172b45}'
+            '<title>選手別1〜3年の部署予想</title><style>body{font-family:system-ui;background:#f4f7fb;padding:20px;color:#172b45}'
             'main{max-width:900px;margin:auto;background:white;padding:24px;border-radius:16px}'
             'table{width:100%;border-collapse:collapse}td,th{padding:10px;border-bottom:1px solid #ddd}p{line-height:1.8}</style>'
-            '<main><a href="../index.html">レース一覧へ戻る</a><h1>直近1年の部署予想</h1>'
+            '<main><a href="../index.html">レース一覧へ戻る</a><h1>選手別1〜3年の部署予想</h1>'
             f'<p>保持している全履歴 {knowledge.get("total_archive_races", 0):,}レース<br>'
             f'選手別の補足結果 {knowledge.get("supplemental_result_races", 0):,}レース（一部選手の記録）<br>'
             f'直近1年の全体履歴 {knowledge.get("annual_archive_races", 0):,}レース<br>'
             f'補足込みの直近1年の参考記録 {knowledge.get("annual_races", 0):,}レース ／ {knowledge.get("players", 0):,}選手<br>'
             f'集計期間 {knowledge.get("window_start", "未取得")} ～ {knowledge.get("window_end_exclusive", "未取得")}の前日</p>'
             f'<p>従来集計 {verified_live["legacy_settled_rows"]}件のうち、締切前時刻を確認できる記録は {verified_live["timestamp_verified_races"]}件です。未確認分を新しい実戦検証に混ぜません。</p>'
-            '<p>各部署が年間成績・最近の調子・ライン位置・出走数を使って独立した検証用予想を作ります。'
+            '<p>全選手に共通で、直近1年30走以上は1年、15〜29走は2年、14走以下は3年を参照。重みは直近1年100%、1〜2年前50%、2〜3年前25%です。各部署が成績・最近の調子・ライン位置・出走数を使って独立した検証用予想を作ります。'
             '全履歴は保持します。決まり手と行動記録は、取得できた実測分だけを集計します。</p>'
             '<table><tr><th>部署</th><th>実戦検証R</th><th>1着的中率</th><th>100円均等回収率</th></tr>' + cells + '</table>'
             '<p>発走前に固定した予想のみ検証します。本番モデルの自動置換・購入許可は行いません。'
             '回収率120%は未検証です。</p><a href="annual_department_predictions.json">最新の部署別予想</a>'
             ' ／ <a href="annual_rider_knowledge.json">選手の年間成績と取得状況</a></main></html>')
-    player_view = """<h2>選手の直近1年</h2><label for="player-search">選手名・選手IDで検索</label>
+    player_view = """<h2>選手の成績と参考期間</h2><label for="player-search">選手名・選手IDで検索</label>
 <input id="player-search" placeholder="選手名またはID" style="width:90%;padding:12px;margin:12px 0">
 <p>出走数が少ない選手の率は参考値です。脚質から決まり手を推測せず、実際に取得できた記録だけを表示します。</p>
 <div id="player-list">成績を読み込み中</div><script>
@@ -374,12 +402,13 @@ function renderPlayers() {
  for (const [id,p] of matched.slice(0,20)) {
   const article = document.createElement('article'); article.style.borderBottom='1px solid #ddd';
   const title = document.createElement('h3'); title.textContent=(p.name||'名前未取得')+' / ID '+id;
-  const rates = document.createElement('p'); rates.textContent=p.races+'レース：1着 '+percent(p.rates[0])+' / 2着 '+percent(p.rates[1])+' / 3着 '+percent(p.rates[2]);
+  const rates = document.createElement('p'); rates.textContent='直近1年 '+p.races+'レース：1着 '+percent(p.rates[0])+' / 2着 '+percent(p.rates[1])+' / 3着 '+percent(p.rates[2]);
+  const reference = document.createElement('p'); const evaluation=p.evaluation||p; reference.textContent='予想の参考期間：直近'+(p.reference_years||1)+'年 ／ '+evaluation.races+'走 ／ 重み付き参考走数 '+(evaluation.effective_races||evaluation.races).toFixed(1)+' ／ 1着 '+percent(evaluation.rates[0])+'・2着 '+percent(evaluation.rates[1])+'・3着 '+percent(evaluation.rates[2]);
   const line = document.createElement('p'); line.textContent='ライン位置別：'+Object.entries(p.line_positions||{}).map(([pos,v])=>pos+'番手 '+v.races+'R・1着 '+percent(v.rates[0])).join(' ／ ');
   const tactics = document.createElement('p'); const records=Object.entries(p.winning_tactics||{}); tactics.textContent='取得済みの勝利時の決まり手：'+(records.length?records.map(([name,count])=>name+' '+count+'回').join(' ／ '):'未取得');
   const eventLabels = {back:'バック獲得',spurtSucceeded:'先行成功',thrustSucceeded:'突っ張り成功',leftBehind:'離れ',splitLine:'ライン分断',snatchSucceeded:'捲り成功',competeSucceeded:'競り成功',hasAccident:'事故あり'};
   const events = document.createElement('p'); events.textContent='取得済みの動き：'+Object.entries(p.events||{}).filter(([key,v])=>v.observed>0).map(([key,v])=>(eventLabels[key]||key)+' '+v.true+'/'+v.observed+'記録').join(' ／ ');
-  article.append(title,rates,line,tactics,events); target.append(article);
+  article.append(title,rates,reference,line,tactics,events); target.append(article);
  }
  const count = document.createElement('p'); count.textContent=matched.length+'人中、最大20人を表示'; target.append(count);
 }
