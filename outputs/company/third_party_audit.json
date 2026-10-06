@@ -1,16 +1,21 @@
 {
-  "updated_at_jst": "2026-10-06T00:00:13+09:00",
+  "updated_at_jst": "2026-10-06T09:25:12+09:00",
   "role": "independent_audit_and_ceo_coach",
   "overall_status": "amber",
   "findings": [
     {
       "severity": "amber",
-      "finding": "historical auxiliary data is not cross-source verified",
-      "challenge_to_ceo": "Which proposed change is supported by official pre-race validation rather than auxiliary history alone?"
+      "finding": "live Top1 accuracy is materially below chronological validation",
+      "challenge_to_ceo": "Which production-stage adjustment or live-data shift explains the gap before any new override is promoted?",
+      "evidence": {
+        "production_hit_rate": 0.4207492795389049,
+        "validation_top1_final_rate": 0.5546259280411193,
+        "gap_pp": -13.387664850221443
+      }
     }
   ],
   "ceo_coaching_questions": [
-    "Which proposed change is supported by official pre-race validation rather than auxiliary history alone?"
+    "Which production-stage adjustment or live-data shift explains the gap before any new override is promoted?"
   ],
   "may_override_ceo": false
 }
