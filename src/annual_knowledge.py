@@ -394,7 +394,7 @@ fetch('annual_department_predictions.json',{cache:'no-store'}).then(r=>{if(!r.ok
   const article=document.createElement('article');article.style.borderBottom='1px solid #ddd';
   const title=document.createElement('h3');title.textContent=p.venue+' '+p.race_no+'R ／ '+labels[p.department];
   const content=document.createElement('p');content.textContent='1着候補 '+p.winner_car+'番 ／ 本線 '+p.main_count+'点・穴 '+p.hole_count+'点';
-  const tickets=document.createElement('p');tickets.textContent=(p.tickets||[]).map(t=>(t.group==='main'?'本線':'穴')+' '+t.buy+'（期待値 '+t.ev.toFixed(2)+'）').join(' ／ ')||'期待値条件を満たす買い目なし・見送り';
+  const tickets=document.createElement('p');tickets.textContent=(p.tickets||[]).map(t=>((t.group==='main'||t.group==='本線')?'本線':'穴')+' '+t.buy+'（期待値 '+t.ev.toFixed(2)+'）').join(' ／ ')||'期待値条件を満たす買い目なし・見送り';
   article.append(title,content,tickets);target.append(article);
  }
  if(!(d.proposals||[]).length)target.textContent='対象の発走前レースがありません。';
