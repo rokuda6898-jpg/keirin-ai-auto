@@ -579,11 +579,11 @@ def apply_nexus_race_reading(pred):
             lambda g: (g - g.mean()) / (g.std(ddof=0) if pd.notna(g.std(ddof=0)) and g.std(ddof=0) > 1e-9 else 1.0)
         ).fillna(0.0)
 
-    # NEXUS race-reading mix: line/development 30, form 20, score 15,
-    # style/finishing 15, track conditions 10, matchup/development 10.
+    # NEXUS race-reading mix: line/development 33, form 15, score 15,
+    # style/finishing 20, track conditions 8, matchup/development 9.
     # Line weight is deliberately split between line strength and disruption
-    # risk so a 30% line component does not become a line-sweep assumption.
-    form = (-z_by_race(recent) * 0.15) + (-z_by_race(current) * 0.05)
+    # risk so a 33% line component does not become a line-sweep assumption.
+    form = (-z_by_race(recent) * 0.1125) + (-z_by_race(current) * 0.0375)
     score_adj = z_by_race(score) * 0.15
 
     line_strength = z_by_race(line_role) * 0.15
@@ -594,20 +594,20 @@ def apply_nexus_race_reading(pred):
 
     attack = z_by_race(back.fillna(0) + front.fillna(0))
     finish = z_by_race(stalker.fillna(0) + closer.fillna(0) + marker.fillna(0))
-    style_pressure = attack * 0.06
-    style_finish = finish * 0.09
-    condition = z_by_race(track) * 0.10
+    style_pressure = attack * 0.08
+    style_finish = finish * 0.12
+    condition = z_by_race(track) * 0.08
 
     # Matchup/development rewards riders capable of breaking the expected line:
     # attacking pressure and finishing/marking ability both contribute, while
     # races with several strong attackers naturally spread probability wider.
-    matchup = attack * 0.05 + finish * 0.05
+    matchup = attack * 0.045 + finish * 0.045
     race_attack_spread = attack.groupby(pred["race_id"]).transform("std").fillna(0.0)
     disruption = race_attack_spread.clip(lower=0, upper=2.0) * 0.04
-    line = line_strength * (1.0 - disruption.clip(upper=0.35))
+    line = line_strength * (33.0 / 30.0) * (1.0 - disruption.clip(upper=0.35))
 
     # Weather/time are retained only as small uncertainty signals; the explicit
-    # 10% condition bucket is track suitability rather than fabricated weather fit.
+    # 8% condition bucket is track suitability rather than fabricated weather fit.
     uncertainty = wind.fillna(0).clip(lower=0) * 0.004
     uncertainty += (z_by_race(weather).abs() + z_by_race(hour).abs()) * 0.002
 
