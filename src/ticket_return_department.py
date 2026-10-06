@@ -69,8 +69,15 @@ def save_snapshots(plans, shadow_bets, now_jst, output_dir=OUTPUT_DIR, position_
             if "p_core" in race and pd.to_numeric(race.p_core, errors="coerce").notna().any():
                 core_winner = int(race.loc[pd.to_numeric(race.p_core, errors="coerce").idxmax(), "car_no"])
         candidate_evidence = None
+        challenger = None
         if candidate_rows is not None and not candidate_rows.empty:
             matching = candidate_rows[candidate_rows.race_id.astype(str).eq(race_id) & candidate_rows.bet_type.eq("trifecta")]
+            from selection_research import probability_first
+            if {"buy", "prob", "ev", "main_formation", "hole_formation"}.issubset(matching.columns):
+                challenger = {"version": "probability_first_v1", "snapshot_at": key[2],
+                              "tickets": probability_first(matching, plan,
+                                  sum(t["group"] == "本線" for t in tickets),
+                                  sum(t["group"] == "穴" for t in tickets))}
             def finite(value):
                 number = pd.to_numeric(value, errors="coerce")
                 return float(number) if pd.notna(number) and math.isfinite(float(number)) else None
@@ -99,6 +106,7 @@ def save_snapshots(plans, shadow_bets, now_jst, output_dir=OUTPUT_DIR, position_
             "skip_reason": plan.get("skip_reason"), "tickets": tickets,
             "position_probabilities": positions, "core_winner": core_winner,
             "candidate_evidence": candidate_evidence,
+            "selection_challenger": challenger,
         })
     if rows:
         with path.open("a", encoding="utf-8") as handle:
@@ -268,6 +276,8 @@ def build_ticket_return_department(output_dir=OUTPUT_DIR):
     (folder / "ticket_return_department.html").write_text(page, encoding="utf-8")
     from prediction_quality import build_prediction_quality
     build_prediction_quality(list(settled.values()), output_dir)
+    from selection_research import build_selection_research
+    build_selection_research(list(settled.values()), output_dir)
     from public_performance import build_performance_page
     build_performance_page(output_dir)
     return report
