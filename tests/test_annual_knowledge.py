@@ -46,6 +46,18 @@ class AnnualKnowledgeTests(unittest.TestCase):
         self.assertEqual(report["annual_archive_races"], 2)
         self.assertEqual(report["annual_races"], 3)
 
+    def test_behavior_associations_use_only_observed_flags(self):
+        frame = pd.read_csv(self.history)
+        frame["result_event_back"] = None
+        frame.loc[frame.player_id.eq(1) & frame.race_id.eq("recent"), "result_event_back"] = True
+        frame.to_csv(self.history, index=False)
+        report = build_annual_profiles("2026-10-06", self.history, self.root)
+        event = report["profiles"]["1"]["events"]["back"]
+        self.assertEqual(event["observed"], 1)
+        self.assertEqual(event["true_results"]["races"], 1)
+        self.assertEqual(event["true_results"]["rates"], [1, 0, 0])
+        self.assertEqual(report["profiles"]["2"]["events"]["back"]["observed"], 0)
+
     def test_history_change_invalidates_profile_cache(self):
         before = build_annual_profiles("2026-10-06", self.history, self.root)
         frame = pd.read_csv(self.history); frame.loc[frame.race_id.eq("recent"), "finish_pos"] = [3, 2, 1]

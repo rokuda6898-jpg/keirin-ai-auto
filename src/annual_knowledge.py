@@ -185,7 +185,8 @@ def build_annual_profiles(asof=None, history_path=HISTORY_CSV, output_dir=OUTPUT
                 if column.startswith("result_event_"):
                     observed = group[column].dropna().astype(str).str.lower()
                     profile["events"][column.removeprefix("result_event_")] = {
-                        "observed": len(observed), "true": int(observed.isin(["true", "1", "1.0"]).sum())}
+                        "observed": len(observed), "true": int(observed.isin(["true", "1", "1.0"]).sum()),
+                        "true_results": stats(group.loc[group[column].astype(str).str.lower().isin(["true", "1", "1.0"])])}
             names = group.get("player_name", pd.Series(dtype=str)).dropna().astype(str).loc[lambda value: value.ne("")]
             profile["name"] = str(names.iloc[-1]) if len(names) else ""
             profiles[str(player_id)] = profile
@@ -232,6 +233,21 @@ def forecast_departments(pred, odds, report, now, output_dir=OUTPUT_DIR):
                 if context and context["races"]:
                     weight = context["races"] / (context["races"] + 20)
                     rates = rates * (1 - weight) + np.array(context["rates"]) * weight
+                if department == "pace_department":
+                    # Historical behavior associations are provisional shadow features.
+                    # Require observed samples; absent flags never mean false.
+                    associations = []
+                    weights = []
+                    for event in profile.get("events", {}).values():
+                        result = event.get("true_results", {})
+                        count = result.get("races", 0)
+                        if event.get("observed", 0) >= 10 and count >= 5:
+                            associations.append((np.array(result["rates"]) * count + rates * 20) / (count + 20))
+                            weights.append(event["true"] / event["observed"])
+                    if weights and sum(weights) > 0:
+                        behavior = np.average(associations, axis=0, weights=weights)
+                        strength = min(.25, sum(weights) / len(weights) * n / (n + 40))
+                        rates = rates * (1 - strength) + behavior * strength
                 if department == "risk_department":
                     reliability = n / (n + 40) * (1 - profile["unplaced_rows"] / profile["entries"])
                     rates = rates * reliability + baseline * (1 - reliability)
@@ -255,7 +271,12 @@ def forecast_departments(pred, odds, report, now, output_dir=OUTPUT_DIR):
                 "tickets": [{"buy": str(t.buy), "group": str(t.ticket_group), "prob": float(t.prob), "ev": float(t.ev)}
                             for t in selected.itertuples()],
                 "main_count": plan["main_count"], "hole_count": plan["hole_count"],
-                "probability_status": "provisional_annual_shadow", "purchase_authorized": False})
+                "probability_status": "provisional_annual_shadow",
+                "features_used": {"data_department": ["annual_place_rates"],
+                                  "pace_department": ["annual_place_rates", "recent90", "observed_behavior_result_associations"],
+                                  "line_department": ["annual_place_rates", "line_position_rates"],
+                                  "risk_department": ["annual_place_rates", "sample_reliability", "unplaced_rate"]}[department],
+                "purchase_authorized": False})
     folder = output_dir / "company"
     folder.mkdir(parents=True, exist_ok=True)
     (folder / "annual_department_predictions.json").write_text(
