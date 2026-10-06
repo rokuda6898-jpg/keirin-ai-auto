@@ -110,6 +110,29 @@ def ev_audit(rows):
     return bands
 
 
+def fixed_axis_audit(rows):
+    samples = []
+    missing = 0
+    for row in rows:
+        evidence = row.get("candidate_evidence") or {}
+        if not evidence.get("first_fixed"):
+            continue
+        car = str(evidence.get("fixed_car"))
+        first = next((p for p in row.get("position_probabilities", []) if p.get("position") == 1), {})
+        probabilities = first.get("probabilities", {})
+        probability = finite(probabilities.get(car))
+        if probability is None or not 0 <= probability <= 1:
+            missing += 1
+            continue
+        samples.append((row["race_id"], probability, int(car == row["actual_trifecta"].split("-")[0])))
+    count = len(samples)
+    return {"races_with_probability": count, "missing_probability_races": missing,
+            "axis_wins": sum(s[2] for s in samples),
+            "mean_predicted": sum(s[1] for s in samples) / count if count else None,
+            "actual_win_rate": sum(s[2] for s in samples) / count if count else None,
+            "automatic_change": False}
+
+
 def quality_audit(rows, strategy_version=STRATEGY_VERSION):
     latest = {}
     rejected = 0
@@ -148,6 +171,7 @@ def quality_audit(rows, strategy_version=STRATEGY_VERSION):
             "strategy_version": strategy_version, "races": len(rows), "rejected_rows": rejected,
             "candidate_detail_races": sum(c["candidate_detail_saved"] for c in cases),
             "reason_counts": dict(categories), "cases": cases, "positions": positions,
+            "fixed_axis_audit": fixed_axis_audit(rows),
             "selected_ticket_calibration": reliability(ticket_samples, [0, .01, .02, .05, .1, .2, .4, .6, .8, 1]), "ev_bands": ev_audit(rows), "automatically_recalibrated": False,
             "limitations": ["公式結果と払戻が確認できた締切前の保存記録のみ。未保存候補を事後生成しない。",
                             "分類は保存された買い目・候補の比較であり、選手が負けた原因の断定ではない。",
@@ -163,6 +187,8 @@ def build_prediction_quality(rows, output_dir=OUTPUT_DIR):
     folder.mkdir(parents=True, exist_ok=True)
     (folder / "prediction_quality.json").write_text(json.dumps(report, ensure_ascii=False, indent=2, allow_nan=False), encoding="utf-8")
     percent = lambda value: "未集計" if value is None else f"{100 * value:.1f}%"
+    axis = report['fixed_axis_audit']
+    axis_html = f"<h2>1着固定の軸は実際に勝っているか</h2><p>確率を保存した固定軸 {axis['races_with_probability']}レース ／ 軸の1着 {axis['axis_wins']}件。AIの平均推定勝率 {percent(axis['mean_predicted'])} ／ 実際の軸の勝率 {percent(axis['actual_win_rate'])}。</p><p>軸が勝った割合は3連単の的中率と異なります。少数の参考集計のため、閾値の最適化や確率補正には使わず、固定解除案との締切前比較を蓄積します。確率未保存は {axis['missing_probability_races']}レース。</p>"
     reasons = ''.join(f'<tr><td>{LABELS[key]}</td><td>{count}レース</td></tr>' for key, count in report["reason_counts"].items())
     examples = ''.join(f'<tr><td>{html.escape(str(c["venue"]))} {html.escape(str(c["race_no"]))}R</td><td>{c["actual_trifecta"]}</td><td>{LABELS[c["reason"]]}</td></tr>' for c in report["cases"][-20:])
     tables = []
@@ -172,7 +198,7 @@ def build_prediction_quality(rows, output_dir=OUTPUT_DIR):
         tables.append(f'<h3>{label}</h3><p>{item["races"]}レース ／ {item["observations"]}件・{item["sample_status"]}</p><div class="scroll"><table><tr><th>AIの確率帯</th><th>平均の推定確率</th><th>実際に当たった割合</th><th>検証件数 / レース数</th></tr>{cells or "<tr><td colspan=4>保存済みの確率データがありません</td></tr>"}</table></div>')
     ev_cells = "".join(f'<tr><td>{b["lower"]:.2f}〜{b["upper"] if b["upper"] is not None else "以上"}</td><td>{b["mean_predicted_ev"]:.2f}</td><td>{percent(b["actual_flat_return_rate"])}</td><td>{b["observations"]}点 / {b["races"]}レース</td></tr>' for b in report["ev_bands"] if b["observations"])
     previous = "".join(f'<p>変更前：{html.escape(r["strategy_version"])}・{r["races"]}レース（最新版と合算しません）</p>' for r in report["previous_strategies"])
-    page = f"""<!doctype html><html lang="ja"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>外れ方とAI確率の検証</title><style>body{{font-family:system-ui;background:#f4f7fb;color:#172b45;padding:20px}}main{{max-width:960px;margin:auto;background:white;padding:24px;border-radius:16px}}p{{line-height:1.8}}table{{border-collapse:collapse;width:100%}}td,th{{padding:10px;border-bottom:1px solid #ddd;text-align:left}}.scroll{{overflow:auto}}a{{color:#0965c7}}</style><main><a href="../performance.html">成績と数字の見方</a> ／ <a href="../index.html">今日の予想</a><h1>外れ方とAI確率の検証</h1><p>対象 {report['races']}レース ／ 候補の詳細まで保存済み {report['candidate_detail_races']}レース<br>更新 {report['updated_at_jst']}</p><p>締切前に保存した予想と公式結果・払戻を使う検証です。まだ少数のため、改善効果や回収率120%の達成を示すものではありません。</p><p>最新版の1着固定は、推定勝率60%以上かつ1位と2位の差10ポイント以上が条件です（暫定）。変更前の記録は別集計で保持します。</p>{previous}<h2>買い目のどこで取りこぼしたか</h2><table><tr><th>分類</th><th>件数</th></tr>{reasons or '<tr><td colspan=2>未集計</td></tr>'}</table><p>候補が保存されている場合は、期待値の基準で除外したのか、期待値順で点数を絞る際に除外したのかを区別します。旧記録は買い目のカバー範囲まで確認し、候補を除外した理由は後付けで推測しません。</p><details><summary>直近のレース別内訳</summary><table><tr><th>レース</th><th>公式結果</th><th>分類</th></tr>{examples}</table></details><h2>AIの確率と実際の結果は合っているか</h2><p>例えば30〜40%と予測した選手について、推定確率の平均と実際にその着順になった割合を比較します。1・2・3着は全選手が対象。3連単は選択済み買い目が対象です。同じレース内の複数選手・買い目を含むため、件数とレース数を分けて表示します。</p>{''.join(tables)}<h2>期待値と実際の回収率</h2><p>締切前の期待値と、各点100円の公式払戻を比較します。少数レースでは参考集計です。</p><table><tr><th>期待値帯</th><th>平均の推定期待値</th><th>実際の回収率</th><th>点数 / レース数</th></tr>{ev_cells or '<tr><td colspan=4>期待値付きの確定記録は未集計</td></tr>'}</table><p>確率・期待値の自動補正や購入許可の変更はしていません。検証結果を蓄積してから改善を判断します。1着確率の一致だけでは、3連単の期待値が正しいとは断定できません。</p></main></html>"""
+    page = f"""<!doctype html><html lang="ja"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>外れ方とAI確率の検証</title><style>body{{font-family:system-ui;background:#f4f7fb;color:#172b45;padding:20px}}main{{max-width:960px;margin:auto;background:white;padding:24px;border-radius:16px}}p{{line-height:1.8}}table{{border-collapse:collapse;width:100%}}td,th{{padding:10px;border-bottom:1px solid #ddd;text-align:left}}.scroll{{overflow:auto}}a{{color:#0965c7}}</style><main><a href="../performance.html">成績と数字の見方</a> ／ <a href="../index.html">今日の予想</a><h1>外れ方とAI確率の検証</h1><p>対象 {report['races']}レース ／ 候補の詳細まで保存済み {report['candidate_detail_races']}レース<br>更新 {report['updated_at_jst']}</p><p>締切前に保存した予想と公式結果・払戻を使う検証です。まだ少数のため、改善効果や回収率120%の達成を示すものではありません。</p><p>最新版の1着固定は、推定勝率60%以上かつ1位と2位の差10ポイント以上が条件です（暫定）。変更前の記録は別集計で保持します。</p>{previous}{axis_html}<h2>買い目のどこで取りこぼしたか</h2><table><tr><th>分類</th><th>件数</th></tr>{reasons or '<tr><td colspan=2>未集計</td></tr>'}</table><p>候補が保存されている場合は、期待値の基準で除外したのか、期待値順で点数を絞る際に除外したのかを区別します。旧記録は買い目のカバー範囲まで確認し、候補を除外した理由は後付けで推測しません。</p><details><summary>直近のレース別内訳</summary><table><tr><th>レース</th><th>公式結果</th><th>分類</th></tr>{examples}</table></details><h2>AIの確率と実際の結果は合っているか</h2><p>例えば30〜40%と予測した選手について、推定確率の平均と実際にその着順になった割合を比較します。1・2・3着は全選手が対象。3連単は選択済み買い目が対象です。同じレース内の複数選手・買い目を含むため、件数とレース数を分けて表示します。</p>{''.join(tables)}<h2>期待値と実際の回収率</h2><p>締切前の期待値と、各点100円の公式払戻を比較します。少数レースでは参考集計です。</p><table><tr><th>期待値帯</th><th>平均の推定期待値</th><th>実際の回収率</th><th>点数 / レース数</th></tr>{ev_cells or '<tr><td colspan=4>期待値付きの確定記録は未集計</td></tr>'}</table><p>確率・期待値の自動補正や購入許可の変更はしていません。検証結果を蓄積してから改善を判断します。1着確率の一致だけでは、3連単の期待値が正しいとは断定できません。</p></main></html>"""
     page=page.replace('<h1>', '<p><a href="selection_research.html">確率補正と買い目圧縮の比較検証</a></p><h1>',1)
     (folder / "prediction_quality.html").write_text(page, encoding="utf-8")
     return report

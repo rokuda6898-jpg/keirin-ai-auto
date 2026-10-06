@@ -31,6 +31,20 @@ class PredictionQualityTests(unittest.TestCase):
         row["candidate_evidence"].update(first_fixed=True, fixed_car=2)
         self.assertEqual(miss_reason(row), "fixed_axis_miss")
 
+    def test_fixed_axis_wins_are_separate_from_ticket_hits(self):
+        row = self.row()
+        row['candidate_evidence'] = {'first_fixed': True, 'fixed_car': 1}
+        report = quality_audit([row])
+        axis = report['fixed_axis_audit']
+        self.assertEqual(axis['axis_wins'], 1)
+        self.assertEqual(axis['actual_win_rate'], 1)
+        self.assertAlmostEqual(axis['mean_predicted'], .3)
+        self.assertNotIn('hit', report['reason_counts'])
+        row['position_probabilities'] = []
+        axis = quality_audit([row])['fixed_axis_audit']
+        self.assertEqual(axis['missing_probability_races'], 1)
+        self.assertIsNone(axis['actual_win_rate'])
+
     def test_legacy_coverage_does_not_invent_ev_compression(self):
         row = self.row()
         self.assertEqual(miss_reason(row), "third_not_covered")
