@@ -61,7 +61,7 @@ jobs:
           python src/preserve_validation.py save /tmp/annual_validation
           cp outputs/company/annual_department_predictions.json /tmp/annual_predictions.json
           publish_reports() {
-            git add outputs/company/annual_*
+            git add outputs/company/annual_* outputs/company/verified_live_audit.json
             if [ -f outputs/company/rider_official_observations.csv ]; then
               git add outputs/company/rider_official_observations.csv
             fi

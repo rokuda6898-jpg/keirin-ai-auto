@@ -226,6 +226,8 @@ def forecast_departments(pred, odds, report, now, output_dir=OUTPUT_DIR):
 
 
 def audit_department_predictions(output_dir=OUTPUT_DIR):
+    from verified_live_audit import build_verified_live_audit
+    verified_live = build_verified_live_audit(output_dir)
     folder = output_dir / "company"
     folder.mkdir(parents=True, exist_ok=True)
     ledger = folder / "annual_department_prediction_ledger.jsonl"
@@ -285,6 +287,7 @@ def audit_department_predictions(output_dir=OUTPUT_DIR):
             f'<p>保持している全履歴 {knowledge.get("total_archive_races", 0):,}レース<br>'
             f'直近1年の参考記録 {knowledge.get("annual_races", 0):,}レース ／ {knowledge.get("players", 0):,}選手<br>'
             f'集計期間 {knowledge.get("window_start", "未取得")} ～ {knowledge.get("window_end_exclusive", "未取得")}の前日</p>'
+            f'<p>従来集計 {verified_live["legacy_settled_rows"]}件のうち、締切前時刻を確認できる記録は {verified_live["timestamp_verified_races"]}件です。未確認分を新しい実戦検証に混ぜません。</p>'
             '<p>各部署が年間成績・最近の調子・ライン位置・出走数を使って独立した検証用予想を作ります。'
             '全履歴は保持します。決まり手と行動記録は、取得できた実測分だけを集計します。</p>'
             '<table><tr><th>部署</th><th>実戦検証R</th><th>1着的中率</th><th>100円均等回収率</th></tr>' + cells + '</table>'
