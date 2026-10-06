@@ -1,8 +1,7 @@
 {
-  "checked_at_jst": "2026-10-07T00:19:07+09:00",
-  "status": "unhealthy",
-  "repaired": false,
-  "check_source": "post_settlement_read_only_audit",
+  "checked_at_jst": "2026-10-07T00:27:49+09:00",
+  "status": "repaired",
+  "repaired": true,
   "attempts": [
     {
       "attempt": 0,
@@ -1238,6 +1237,19 @@
         "expected_riders": 500,
         "actual_riders": 500,
         "rider_integrity_ok": true
+      },
+      "repair_action": "prediction_regeneration"
+    },
+    {
+      "attempt": 1,
+      "problems": [],
+      "health": {
+        "severity": "ok",
+        "problem_types": [],
+        "race_count": 72,
+        "expected_riders": 500,
+        "actual_riders": 500,
+        "rider_integrity_ok": true
       }
     }
   ],
@@ -2320,14 +2332,15 @@
     }
   },
   "health": {
-    "severity": "critical",
-    "problem_types": [
-      "prediction_missing_riders",
-      "site_missing_race"
-    ],
+    "severity": "ok",
+    "problem_types": [],
     "race_count": 72,
     "expected_riders": 500,
     "actual_riders": 500,
     "rider_integrity_ok": true
+  },
+  "recurrence": {
+    "level": 0,
+    "counts": {}
   }
 }
