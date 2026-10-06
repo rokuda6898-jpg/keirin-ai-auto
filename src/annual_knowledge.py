@@ -254,3 +254,17 @@ def audit_department_predictions(output_dir=OUTPUT_DIR):
             ' ／ <a href="annual_rider_knowledge.json">選手の年間成績と取得状況</a></main></html>')
     (folder / "annual_department_report.html").write_text(page, encoding="utf-8")
     return report
+
+
+if __name__ == "__main__":
+    from common import TODAY_CSV, TODAY_ODDS_CSV
+    now = datetime.now(ZoneInfo("Asia/Tokyo"))
+    knowledge = build_annual_profiles(now.date())
+    entries = frame_read(TODAY_CSV)
+    market = frame_read(TODAY_ODDS_CSV)
+    if not entries.empty:
+        entries["p_win"] = 1 / entries.groupby("race_id")["car_no"].transform("size")
+        forecast_departments(entries, market, knowledge, now)
+    audit_department_predictions()
+    print(json.dumps({"archive_races": knowledge["total_archive_races"], "annual_races": knowledge["annual_races"],
+                      "players": knowledge["players"]}, ensure_ascii=False))
