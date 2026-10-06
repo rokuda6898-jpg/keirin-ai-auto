@@ -5,6 +5,20 @@ from train import clean_training_history
 from prediction_quality import reliability, ev_audit, quality_audit
 
 class ResultIntegrityTests(unittest.TestCase):
+    def test_published_strategy_refresh_required_after_change(self):
+        import json, tempfile
+        from pathlib import Path
+        from unittest.mock import patch
+        from betting_logic import STRATEGY_VERSION
+        import site_manager
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch.object(site_manager, 'OUTPUT_DIR', Path(tmp)):
+                path=Path(tmp)/'latest_race_strategy.json'
+                path.write_text(json.dumps([{'strategy_version':'old'}]))
+                self.assertTrue(site_manager.audit_strategy_version())
+                path.write_text(json.dumps([{'strategy_version':STRATEGY_VERSION}]))
+                self.assertEqual(site_manager.audit_strategy_version(),[])
+
     def test_invalid_ranks(self):
         data=pd.DataFrame({'finish_pos':[0,-1,99,1.5,float('inf'),None,1,3,4], 'entries_number':[3]*9})
         self.assertEqual(valid_finish_mask(data).tolist(),[False]*6+[True,True,False])

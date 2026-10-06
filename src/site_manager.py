@@ -502,8 +502,18 @@ def audit_results():
     return problems
 
 
+def audit_strategy_version():
+    from betting_logic import STRATEGY_VERSION
+    try:
+        plans = json.loads((OUTPUT_DIR / "latest_race_strategy.json").read_text(encoding="utf-8"))
+        current = bool(plans) and all(p.get("strategy_version") == STRATEGY_VERSION for p in plans)
+    except (OSError, ValueError, TypeError, AttributeError):
+        current = False
+    return [] if current else [{"type": "prediction_strategy_schema_stale", "reason": "strategy_version_changed", "expected_strategy": STRATEGY_VERSION}]
+
+
 def audit_prediction_outputs():
-    problems = []
+    problems = audit_strategy_version()
     latest = OUTPUT_DIR / "latest_predictions.csv"
     if not latest.exists() or latest.stat().st_size == 0:
         problems.append({"type": "prediction_missing"})
