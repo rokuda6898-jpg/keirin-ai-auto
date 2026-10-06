@@ -21,10 +21,11 @@ concurrency:
   # Only manager runs compete with each other; the latest pending cycle may
   # replace an older pending cycle without being evicted by settle/daily jobs.
   group: keirin-site-manager
-  # Manager is idempotent and scheduled every five minutes. If an older repair
-  # cycle gets stuck, prefer the newest repository/data state instead of
-  # blocking all later health checks behind it.
-  cancel-in-progress: true
+  # History-based prediction regeneration can exceed the five-minute tick.
+  # Let the active repair finish; newer scheduled runs replace only pending
+  # work. The job timeout bounds failures, and publication below regenerates
+  # against latest main if the repository advances during this repair.
+  cancel-in-progress: false
 
 jobs:
   manage:
