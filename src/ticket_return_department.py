@@ -284,6 +284,8 @@ def build_ticket_return_department(output_dir=OUTPUT_DIR):
     build_prediction_quality(list(settled.values()), output_dir)
     from selection_research import build_selection_research
     build_selection_research(list(settled.values()), output_dir)
+    from validation_coverage import build_validation_coverage
+    build_validation_coverage(output_dir)
     from public_performance import build_performance_page
     build_performance_page(output_dir)
     return report

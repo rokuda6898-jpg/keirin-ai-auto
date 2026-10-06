@@ -227,10 +227,17 @@ def build_annual_profiles(asof=None, history_path=HISTORY_CSV, output_dir=OUTPUT
 
 def forecast_departments(pred, odds, report, now, output_dir=OUTPUT_DIR):
     """Each specialist creates its own 1/2/3-place proposal from the shared year."""
+    cutoff = pd.to_datetime(report.get("window_end_exclusive"), errors="coerce")
+    asof = pd.to_datetime(report.get("asof_date"), errors="coerce")
+    if pd.isna(cutoff) or pd.isna(asof) or cutoff != asof or cutoff.date() > now.astimezone(ZoneInfo("Asia/Tokyo")).date():
+        raise ValueError("Annual reference cutoff is missing, inconsistent or later than prediction date")
     proposals = []
     for race_id, race in pred.groupby("race_id", sort=False):
         close = pd.to_numeric(race.iloc[0].get("close_at"), errors="coerce")
         if pd.isna(close) or close <= now.timestamp() + 300:
+            continue
+        race_date = pd.to_datetime(race.iloc[0].get("date"), errors="coerce")
+        if pd.isna(race_date) or cutoff.date() > race_date.date():
             continue
         profiles = [report["profiles"].get(str(pid)) for pid in race.player_id]
         if not any(profiles):
@@ -300,6 +307,7 @@ def forecast_departments(pred, odds, report, now, output_dir=OUTPUT_DIR):
                             for t in selected.itertuples()],
                 "main_count": plan["main_count"], "hole_count": plan["hole_count"],
                 "probability_status": "provisional_annual_shadow",
+                "reference_cutoff_exclusive": report["window_end_exclusive"],
                 "features_used": {"data_department": ["annual_place_rates"],
                                   "pace_department": ["annual_place_rates", "recent90", "observed_behavior_result_associations"],
                                   "line_department": ["annual_place_rates", "line_position_rates"],

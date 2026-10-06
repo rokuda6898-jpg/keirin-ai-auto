@@ -40,7 +40,7 @@ body{{font-family:system-ui;background:#f4f7fb;color:#172b45;margin:0;padding:20
     from site_ui import continuous_section,CONTINUOUS_JS,assets
     assets()
     page=page.replace('</head>','<link rel="stylesheet" href="site-ui.css"></head>')
-    page=page.replace('<h1>成績と数字の見方</h1>','<h1>成績と数字の見方</h1>'+continuous_section())
+    page=page.replace('<h1>成績と数字の見方</h1>','<h1>成績と数字の見方</h1><p><a href="company/validation_coverage.html">検証の抜けと条件別成績を見る</a></p>'+continuous_section())
     page=page.replace('</body>','<script>'+CONTINUOUS_JS+'</script></body>')
     (output_dir / "performance.html").write_text(page, encoding="utf-8")
     return page

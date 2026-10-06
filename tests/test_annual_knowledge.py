@@ -121,6 +121,10 @@ class AnnualKnowledgeTests(unittest.TestCase):
         (self.root / "latest_results.json").write_text("[]")
         self.assertTrue(all(d["races"] == 1 for d in audit_department_predictions(self.root)["departments"]))
         self.assertEqual(forecast_departments(race, odds, report, now + timedelta(hours=1), self.root), [])
+        report['asof_date']='2026-10-07'
+        report['window_end_exclusive']='2026-10-07'
+        with self.assertRaisesRegex(ValueError,'cutoff'):
+            forecast_departments(race,odds,report,now,self.root)
 
     def test_observed_past_events_exclude_today_and_preserve_missing_fields(self):
         from unittest.mock import patch

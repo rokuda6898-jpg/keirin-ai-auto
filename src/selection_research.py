@@ -154,6 +154,6 @@ def build_selection_research(rows, output_dir=OUTPUT_DIR):
     page+='</ul><h2>2・3着を広げる比較案</h2><p>現行と同じ1着候補・期待値基準・点数予算で、2・3着の推定確率を使い、同じ下位選手への偏りを抑えて選びます。締切前に保存した比較案だけを検証します。</p><p>比較可能な確定レース：'+str(len(lower_paired))+'件。</p><table><tr><th>案</th><th>的中／購入対象</th><th>回収率</th><th>投資額</th></tr>'
     for key,label in [('baseline','現行案'),('coverage','2・3着分散案')]:
         r=report['lower_comparison'][key];page+=f'<tr><td>{label}</td><td>{r["hits"]}／{r["bet_races"]}R</td><td>{pct(r["return_rate"])}</td><td>{r["stake_yen"]:,}円</td></tr>'
-    page+='</table><p>'+html.escape(calibration['scope'])+'</p><p>現行予想の確率・買い目を自動変更する段階ではありません。時系列の再計算は実戦検証と区別します。</p><a href="prediction_quality.html">着順別の確率と外れ原因</a> ／ <a href="../index.html">今日の予想</a></main></html>'
+    page+='</table><p>'+html.escape(calibration['scope'])+'</p><p>現行予想の確率・買い目を自動変更する段階ではありません。時系列の再計算は実戦検証と区別します。</p><a href="validation_coverage.html">検証の抜け・条件別成績・データ時刻の確認</a><br><a href="prediction_quality.html">着順別の確率と外れ原因</a> ／ <a href="../index.html">今日の予想</a></main></html>'
     (folder/'selection_research.html').write_text(page,encoding='utf-8')
     return report
