@@ -2,6 +2,11 @@ name: keirin-cross-source-audit
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "src/cross_source_audit.py"
+      - ".github/workflows/cross-source-audit.yml"
   schedule:
     # Monday 03:30 JST
     - cron: "30 18 * * 0"
@@ -135,11 +140,15 @@ jobs:
           test -s data/raw/history.csv
           python src/cross_source_audit.py --max-races 200 --candidate-pool 5000
 
+      - name: Refresh company audit status
+        run: |
+          python src/company_knowledge.py --mode settle
+
       - name: Publish audit results
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add outputs/cross_source_audit_results.csv outputs/cross_source_audit_summary.json
+          git add outputs/cross_source_audit_results.csv outputs/cross_source_audit_summary.json outputs/company
           git diff --staged --quiet && exit 0
           git commit -m "Update cross-source history audit"
           for attempt in 1 2 3 4; do
