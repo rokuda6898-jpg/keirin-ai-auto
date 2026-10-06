@@ -34,7 +34,9 @@ jobs:
       - name: Restore real pre-race learning snapshots
         uses: actions/cache/restore@v4
         with:
-          path: data/raw/live_snapshot_history.csv
+          path: |
+            data/raw/live_snapshot_history.csv
+            data/raw/live_feature_base.csv
           key: keirin-live-snapshots-v1-${{ github.run_id }}
           restore-keys: |
             keirin-live-snapshots-v1-
