@@ -377,14 +377,30 @@ function renderPlayers() {
   const rates = document.createElement('p'); rates.textContent=p.races+'レース：1着 '+percent(p.rates[0])+' / 2着 '+percent(p.rates[1])+' / 3着 '+percent(p.rates[2]);
   const line = document.createElement('p'); line.textContent='ライン位置別：'+Object.entries(p.line_positions||{}).map(([pos,v])=>pos+'番手 '+v.races+'R・1着 '+percent(v.rates[0])).join(' ／ ');
   const tactics = document.createElement('p'); const records=Object.entries(p.winning_tactics||{}); tactics.textContent='取得済みの勝利時の決まり手：'+(records.length?records.map(([name,count])=>name+' '+count+'回').join(' ／ '):'未取得');
-  article.append(title,rates,line,tactics); target.append(article);
+  const eventLabels = {back:'バック獲得',spurtSucceeded:'先行成功',thrustSucceeded:'突っ張り成功',leftBehind:'離れ',splitLine:'ライン分断',snatchSucceeded:'捲り成功',competeSucceeded:'競り成功',hasAccident:'事故あり'};
+  const events = document.createElement('p'); events.textContent='取得済みの動き：'+Object.entries(p.events||{}).filter(([key,v])=>v.observed>0).map(([key,v])=>(eventLabels[key]||key)+' '+v.true+'/'+v.observed+'記録').join(' ／ ');
+  article.append(title,rates,line,tactics,events); target.append(article);
  }
  const count = document.createElement('p'); count.textContent=matched.length+'人中、最大20人を表示'; target.append(count);
 }
 document.getElementById('player-search').addEventListener('input',renderPlayers);
 fetch('annual_rider_knowledge.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('load');return r.json()}).then(d=>{riderKnowledge=d.profiles||{};renderPlayers()}).catch(()=>{document.getElementById('player-list').textContent='成績を読み込めませんでした。ページを更新してください。'});
 </script>"""
-    page = page.replace('</main></html>', player_view + '</main></html>')
+    forecast_view = """<h2>部署ごとの最新予想（検証用）</h2><p>取得時点の予想です。締切後も記録を残します。買い目が空の場合は見送りです。</p><div id="department-forecasts">読み込み中</div><script>
+fetch('annual_department_predictions.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('load');return r.json()}).then(d=>{
+ const target=document.getElementById('department-forecasts');target.replaceChildren();
+ const labels={data_department:'データ部署',pace_department:'展開部署',line_department:'ライン部署',risk_department:'リスク部署'};
+ for(const p of d.proposals||[]){
+  const article=document.createElement('article');article.style.borderBottom='1px solid #ddd';
+  const title=document.createElement('h3');title.textContent=p.venue+' '+p.race_no+'R ／ '+labels[p.department];
+  const content=document.createElement('p');content.textContent='1着候補 '+p.winner_car+'番 ／ 本線 '+p.main_count+'点・穴 '+p.hole_count+'点';
+  const tickets=document.createElement('p');tickets.textContent=(p.tickets||[]).map(t=>(t.group==='main'?'本線':'穴')+' '+t.buy+'（期待値 '+t.ev.toFixed(2)+'）').join(' ／ ')||'期待値条件を満たす買い目なし・見送り';
+  article.append(title,content,tickets);target.append(article);
+ }
+ if(!(d.proposals||[]).length)target.textContent='対象の発走前レースがありません。';
+}).catch(()=>document.getElementById('department-forecasts').textContent='予想を読み込めませんでした。');
+</script>"""
+    page = page.replace('</main></html>', forecast_view + player_view + '</main></html>')
     (folder / "annual_department_report.html").write_text(page, encoding="utf-8")
     return report
 
