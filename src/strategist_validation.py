@@ -157,7 +157,8 @@ def render_report(report, folder):
     escape = lambda value: html.escape(str(value))
     pct = lambda value: "未集計" if value is None else f"{value * 100:.1f}%"
     labels = {"ev_filter_skip": "期待値条件で除外", "fixed_axis_miss": "1着固定の軸違い",
-              "ev_compression_miss": "期待値順の圧縮で取りこぼし", "formation_miss": "フォーメーション外"}
+              "ev_compression_miss": "期待値順の圧縮で取りこぼし", "formation_miss": "フォーメーション外",
+              "odds_missing": "オッズ未取得"}
     body = '<h1>軍師の分析と比較検証</h1><p>軍師案は検証用です。現行買い目の自動変更・購入は行いません。</p>'
     body += '<h2>現行案との同一レース比較</h2><p>比較できる確定レース：'+str(report['paired_races'])+'件。両方が締切前保存・同じ公式払戻のレースだけを比較します。各点100円、点数の違いも回収率に反映します。</p>'
     body += '<table><tr><th>案</th><th>的中／購入対象</th><th>回収率</th></tr>'
@@ -169,7 +170,7 @@ def render_report(report, folder):
         body += f'<li>{escape(labels.get(reason,reason))}：{count}件</li>'
     body += '</ul><h2>部署の見立てと軍師案</h2><p>展開部・ライン部・データ部・リスク部の見立てを比較します。未観測の展開を事実として扱いません。最低2部署の支持、価格の整合、各部署のうち最も低い期待値で選定し、最大12点まで。期待値は暫定推定です。</p>'
     for row in sorted(report['latest_plans'],key=lambda r:r['close_at']):
-        body += f'<section><h3>{escape(row["venue"])} {escape(row["race_no"])}R</h3><p>締切前保存：{escape(row["snapshot_at"])} ／ '+('結果確定' if row['close_at'] <= datetime.fromisoformat(report['updated_at_jst']).timestamp() else '発走前')+'</p>'
+        body += f'<section><h3>{escape(row["venue"])} {escape(row["race_no"])}R</h3><p>締切前保存：{escape(row["snapshot_at"])} ／ '+('締切済み・結果は比較欄で確認' if row['close_at'] <= datetime.fromisoformat(report['updated_at_jst']).timestamp() else '締切前')+'</p>'
         for view in row['views']:
             body += f'<p>{LABELS[view["department"]]}：1着 {escape(view["winner_car"])}番・{len(view["tickets"])}点 ／ 選手の最小参考量 {view["minimum_reference_races"]:.1f}走相当</p>'
         body += '<p>軍師案：'+(' ／ '.join(f'{escape(t["buy"])}（{t["votes"]}部署支持）' for t in row['tickets']) or '条件を満たす候補なし')+'</p></section>'
