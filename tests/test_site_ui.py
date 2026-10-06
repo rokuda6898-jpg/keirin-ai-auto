@@ -6,6 +6,14 @@ from bs4 import BeautifulSoup
 from site_ui import history_document,enhance_today
 
 class SiteUITests(unittest.TestCase):
+    def test_quote_provenance_is_explicit_and_escaped(self):
+        from site_ui import odds_provenance
+        self.assertIn('未保存',odds_provenance({}))
+        text=odds_provenance({'odds_sources':'winticket | <script>','odds_captured_at_jst':'2026-10-06T10:00:00+09:00'})
+        self.assertIn('10:00:00',text)
+        self.assertIn('WINTICKET',text)
+        self.assertNotIn('<script>',text)
+        self.assertIn('確認できません',odds_provenance({'odds_sources':'winticket','odds_captured_at_jst':'bad'}))
     def test_history_race_groups_and_pending_returns(self):
         rows=[{"date":"2026-10-06","venue":"大垣","race_no":1,"race_id":"r1","buy":"2-1-6","is_prospective":True,"is_decided":True,"is_hit":True,"stake_yen":100,"actual_return_yen":550,"actual_profit_yen":450}, {"date":"2026-10-06","venue":"大垣","race_no":1,"race_id":"r1","buy":"2-1-4","is_prospective":True,"is_decided":False,"is_hit":False,"stake_yen":100}]
         soup=BeautifulSoup(history_document(pd.DataFrame(rows)),"html.parser")

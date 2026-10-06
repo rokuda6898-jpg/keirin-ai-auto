@@ -147,7 +147,11 @@ def verify_market(entry_rows, odds_rows, fetch_html=None):
     result=[r for r in odds_rows if r["bet_type"] != "trifecta"]
     for ticket in sorted(set(verified)|{r["buy"] for r in odds_rows if r["bet_type"]=="trifecta"}|{t for t in conflicts if re.fullmatch(r"[1-9]-[1-9]-[1-9]",t)}):
         price=verified.get(ticket,float("nan"))
-        result.append({"date":base["date"],"venue":base["venue"],"race_no":race_no,"race_id":rid,"bet_type":"trifecta","buy":ticket,"odds":price,"min_odds":0,"max_odds":0,"odds_used":price,"popularity_order":None,"source_url":" | ".join(urls[n] if n in urls else base["source_url"] for n in evidence.get(ticket,[]))})
+        providers=evidence.get(ticket,[])
+        captured=min((s["captured_at_jst"] for s in sources if s["provider"] in providers),default=None)
+        result.append({"date":base["date"],"venue":base["venue"],"race_no":race_no,"race_id":rid,"bet_type":"trifecta","buy":ticket,"odds":price,"min_odds":0,"max_odds":0,"odds_used":price,"popularity_order":None,"source_url":" | ".join(urls[n] if n in urls else base["source_url"] for n in providers),
+                       "odds_sources":" | ".join(providers),"odds_captured_at_jst":captured,
+                       "odds_verification_status":"verified" if ticket in verified else "excluded"})
     return result
 
 def parse_kdreams(html):

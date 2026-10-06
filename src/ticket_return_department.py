@@ -56,6 +56,8 @@ def save_snapshots(plans, shadow_bets, now_jst, output_dir=OUTPUT_DIR, position_
                     "prob": float(ticket["prob"]) if pd.notna(ticket.get("prob")) else None,
                     "ev": float(ticket["ev"]) if pd.notna(ticket.get("ev")) else None,
                     "purchase_authorized": truth(ticket.get("purchase_authorized", False)),
+                    "odds_sources": ticket.get("odds_sources") if isinstance(ticket.get("odds_sources"),str) else None,
+                    "odds_captured_at_jst": ticket.get("odds_captured_at_jst") if isinstance(ticket.get("odds_captured_at_jst"),str) else None,
                 })
         positions, core_winner = [], None
         if position_rows is not None and not position_rows.empty:
@@ -70,14 +72,17 @@ def save_snapshots(plans, shadow_bets, now_jst, output_dir=OUTPUT_DIR, position_
                 core_winner = int(race.loc[pd.to_numeric(race.p_core, errors="coerce").idxmax(), "car_no"])
         candidate_evidence = None
         challenger = None
+        lower_challenger = None
         if candidate_rows is not None and not candidate_rows.empty:
             matching = candidate_rows[candidate_rows.race_id.astype(str).eq(race_id) & candidate_rows.bet_type.eq("trifecta")]
-            from selection_research import probability_first
+            from selection_research import probability_first, lower_position_coverage
             if {"buy", "prob", "ev", "main_formation", "hole_formation"}.issubset(matching.columns):
                 challenger = {"version": "probability_first_v1", "snapshot_at": key[2],
                               "tickets": probability_first(matching, plan,
                                   sum(t["group"] == "本線" for t in tickets),
                                   sum(t["group"] == "穴" for t in tickets))}
+                lower_challenger = {"version":"lower_coverage_v1","snapshot_at":key[2],
+                                    "tickets":lower_position_coverage(matching,plan,tickets)}
             def finite(value):
                 number = pd.to_numeric(value, errors="coerce")
                 return float(number) if pd.notna(number) and math.isfinite(float(number)) else None
@@ -107,6 +112,7 @@ def save_snapshots(plans, shadow_bets, now_jst, output_dir=OUTPUT_DIR, position_
             "position_probabilities": positions, "core_winner": core_winner,
             "candidate_evidence": candidate_evidence,
             "selection_challenger": challenger,
+            "lower_challenger": lower_challenger,
         })
     if rows:
         with path.open("a", encoding="utf-8") as handle:

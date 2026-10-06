@@ -31,6 +31,7 @@ from common import (
 )
 from multi_bet_backtest import BET_LABELS, make_candidates as make_multi_bet_candidates
 from betting_logic import STRATEGY_VERSION, MAIN_EV, HOLE_EV, score_riders, select_race
+from site_ui import odds_provenance
 from model_drift_audit import audit_live_drift
 from trifecta_reranker import score_candidates as score_trifecta_reranker
 from commander_selector import choose_variant as choose_commander_variant
@@ -454,7 +455,7 @@ def load_today_odds():
             odds["buy"] = odds["buy"].astype(str)
             odds["bet_type"] = odds["bet_type"].astype(str)
             odds["odds_used"] = pd.to_numeric(odds["odds_used"], errors="coerce")
-            return odds[required]
+            return odds[required+[c for c in ['odds_sources','odds_captured_at_jst','odds_verification_status','source_url'] if c in odds]]
 
     trifecta = load_trifecta_odds()
     if len(trifecta):
@@ -1102,6 +1103,10 @@ def build_strategy_outputs(pred, today_odds, epoch, max_seconds, version=STRATEG
         riders = score_riders(race, odds)
         scored_parts.append(riders)
         trifecta, plan = select_race(riders, odds, main_ev, hole_ev)
+        metadata=[c for c in ['odds_sources','odds_captured_at_jst','odds_verification_status','source_url'] if c in odds]
+        if metadata:
+            quotes=odds[odds.bet_type.eq('trifecta')].sort_values('odds_used').drop_duplicates('buy')
+            trifecta=trifecta.merge(quotes[['buy','odds_used']+metadata],on=['buy','odds_used'],how='left',validate='one_to_one')
         base = race.iloc[0]
         close = pd.to_numeric(base.get("close_at", np.nan), errors="coerce")
         seconds = close - epoch
@@ -1469,7 +1474,7 @@ def main():
             bet_html = "".join(
                 f'<div class="bet"><b>{row.get("ticket_group", "")} {row.get("bet_label", row.get("bet_type", ""))}</b>'
                 f'<strong>{row["buy"]}</strong><span>{int(row["stake_yen"]):,}円</span>'
-                f'<small>オッズ {float(row["odds_used"]):.1f} ｜ EV {float(row["ev"]):.2f}</small></div>'
+                f'<small>オッズ {float(row["odds_used"]):.1f} ｜ EV {float(row["ev"]):.2f}</small>{odds_provenance(row)}</div>'
                 for _, row in race_bets.iterrows()
             )
         else:

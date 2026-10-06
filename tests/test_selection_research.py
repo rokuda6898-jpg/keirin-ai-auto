@@ -5,7 +5,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 import pandas as pd
 from betting_logic import STRATEGY_VERSION
-from selection_research import probability_first, chronological_calibration, build_selection_research
+from selection_research import probability_first, chronological_calibration, build_selection_research, lower_position_coverage, lower_miss_audit
 
 
 class SelectionResearchTests(unittest.TestCase):
@@ -55,3 +55,28 @@ class SelectionResearchTests(unittest.TestCase):
             self.assertEqual(report['paired_races'],1)
             self.assertEqual(report['current_ev_first']['return_rate'],5)
             self.assertEqual(report['probability_first']['return_rate'],0)
+
+    def test_lower_coverage_preserves_heads_gates_budget_and_diversifies(self):
+        frame=pd.DataFrame([
+            {'buy':'1-2-3','prob':.20,'ev':2,'main_formation':True,'hole_formation':False},
+            {'buy':'1-2-4','prob':.19,'ev':3,'main_formation':True,'hole_formation':False},
+            {'buy':'1-3-4','prob':.18,'ev':2,'main_formation':True,'hole_formation':True},
+            {'buy':'1-4-2','prob':.3,'ev':1,'main_formation':True,'hole_formation':True},
+            {'buy':'2-1-3','prob':.5,'ev':3,'main_formation':True,'hole_formation':True}])
+        tickets=[{'buy':'1-2-3','group':'本線'},{'buy':'1-2-4','group':'本線'}]
+        chosen=lower_position_coverage(frame,{},tickets)
+        self.assertEqual(len(chosen),2)
+        self.assertTrue(all(t['buy'].startswith('1-') and t['ev']>=1.1 for t in chosen))
+        # New coverage can be gained at either lower position; never force weak riders.
+        self.assertGreaterEqual(sum(len({t['buy'].split('-')[position] for t in chosen}) for position in (1,2)),3)
+        self.assertEqual(len({t['buy'] for t in chosen}),2)
+
+    def test_lower_miss_uses_conditional_position_pairs(self):
+        rows=self.rows(3)
+        rows[0]['tickets']=[{'buy':'1-3-2'}]
+        rows[1]['tickets']=[{'buy':'1-2-4'}]
+        rows[2]['tickets']=[{'buy':'2-1-3'}]
+        result=lower_miss_audit(rows)
+        self.assertEqual(result['second_missing_under_correct_first'],1)
+        self.assertEqual(result['third_missing_under_correct_first_second'],1)
+        self.assertEqual(result['first_missing'],1)

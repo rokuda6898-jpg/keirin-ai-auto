@@ -35,6 +35,9 @@ ODDS_COLUMNS = [
     "odds_used",
     "popularity_order",
     "source_url",
+    "odds_sources",
+    "odds_captured_at_jst",
+    "odds_verification_status",
 ]
 TRIFECTA_ODDS_COLUMNS = ["date", "venue", "race_no", "race_id", "buy", "trifecta_odds", "popularity_order", "source_url"]
 BET_SPECS = {

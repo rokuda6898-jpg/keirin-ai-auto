@@ -32,6 +32,16 @@ def fair_odds(riders, ev=1.4):
 
 
 class BettingLogicTests(unittest.TestCase):
+    def test_quote_metadata_survives_into_candidate_portfolio(self):
+        race=fixture().assign(close_at=1000)
+        odds=fair_odds(score_riders(race)).assign(race_id='fixture',odds_sources='winticket',
+                                               odds_captured_at_jst='2026-10-06T10:00:00+09:00',
+                                               odds_verification_status='verified')
+        _,candidates,_=predict.build_strategy_outputs(race,odds,600,3600)
+        chosen=candidates[candidates.is_selected]
+        self.assertFalse(chosen.empty)
+        self.assertTrue(chosen.odds_sources.eq('winticket').all())
+        self.assertTrue(chosen.odds_captured_at_jst.eq('2026-10-06T10:00:00+09:00').all())
     def test_validated_position_models_take_priority_over_fallback_rates(self):
         race = fixture().assign(position_model_source="position_specialists",
                                 p_second=[.05, .1, .15, .2, .25, .2, .05],

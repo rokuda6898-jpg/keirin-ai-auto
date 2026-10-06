@@ -35,6 +35,50 @@ def eligible(rows):
     return sorted(latest.values(),key=lambda r:(r['close_at'],r['race_id']))
 
 
+def lower_position_coverage(candidates, plan, tickets):
+    """Spread supported second/third riders under the original heads and budget."""
+    if candidates is None or candidates.empty or not tickets:
+        return []
+    frame=candidates.drop_duplicates('buy').copy()
+    frame=frame[frame.prob.map(lambda p:isinstance(p,(int,float)) and math.isfinite(p) and 0<p<=1)]
+    heads={t['buy'].split('-')[0] for t in tickets}
+    frame=frame[frame.buy.map(lambda b:b.split('-')[0] in heads)]
+    selected=[];covered_second=set();covered_third=set();used=set()
+    for group,flag,threshold in [('本線','main_formation',plan.get('main_ev',1.10)),('穴','hole_formation',plan.get('hole_ev',1.25))]:
+        pool=frame[frame[flag] & frame.ev.ge(threshold) & ~frame.buy.isin(used)]
+        rows=pool.to_dict('records')
+        second_mass={};third_mass={}
+        for row in rows:
+            a,b,c=row['buy'].split('-')
+            second_mass[(a,b)]=second_mass.get((a,b),0)+row['prob']
+            third_mass[(a,c)]=third_mass.get((a,c),0)+row['prob']
+        for _ in range(sum(t['group']==group for t in tickets)):
+            if not rows:break
+            def rank(row):
+                a,b,c=row['buy'].split('-')
+                gain=.5*(second_mass[(a,b)] if (a,b) not in covered_second else 0)+.5*(third_mass[(a,c)] if (a,c) not in covered_third else 0)+.01*row['prob']
+                return (-gain,-row['prob'],-row['ev'],row['buy'])
+            row=min(rows,key=rank);rows.remove(row)
+            a,b,c=row['buy'].split('-');covered_second.add((a,b));covered_third.add((a,c));used.add(row['buy'])
+            selected.append({'buy':row['buy'],'group':group,'prob':float(row['prob']),'ev':float(row['ev']),'stake_yen':100,'purchase_authorized':False})
+    return selected
+
+
+def lower_miss_audit(rows):
+    counts={'hit':0,'first_missing':0,'second_missing_under_correct_first':0,
+            'third_missing_under_correct_first_second':0,'skip':0}
+    for row in eligible(rows):
+        buys=[t['buy'].split('-') for t in row.get('tickets',[])]
+        actual=row['actual_trifecta'].split('-')
+        if not buys:reason='skip'
+        elif actual in buys:reason='hit'
+        elif not any(b[0]==actual[0] for b in buys):reason='first_missing'
+        elif not any(b[:2]==actual[:2] for b in buys):reason='second_missing_under_correct_first'
+        else:reason='third_missing_under_correct_first_second'
+        counts[reason]+=1
+    return counts
+
+
 def samples(rows):
     return [(float(t['prob']),int(t['buy']==r['actual_trifecta'])) for r in rows for t in r.get('tickets',[])
             if isinstance(t.get('prob'),(int,float)) and math.isfinite(t['prob']) and 0<=t['prob']<=1]
@@ -76,10 +120,10 @@ def build_selection_research(rows, output_dir=OUTPUT_DIR):
     rows = eligible(rows)
     paired = [r for r in rows if (r.get('selection_challenger') or {}).get('version')=='probability_first_v1'
               and r['selection_challenger'].get('snapshot_at') == r['snapshot_at']]
-    def totals(challenger):
+    def totals(challenger, cohort=paired, field='selection_challenger'):
         stake=returned=hits=bet=0
-        for row in paired:
-            tickets=row['selection_challenger']['tickets'] if challenger else row.get('tickets',[])
+        for row in cohort:
+            tickets=row[field]['tickets'] if challenger else row.get('tickets',[])
             if not tickets:continue
             bet+=1;stake+=100*len(tickets)
             if any(t['buy']==row['actual_trifecta'] for t in tickets):
@@ -87,9 +131,13 @@ def build_selection_research(rows, output_dir=OUTPUT_DIR):
         return {'bet_races':bet,'hits':hits,'hit_rate':hits/bet if bet else None,
                 'stake_yen':stake,'return_yen':returned,'return_rate':returned/stake if stake else None}
     calibration=chronological_calibration(rows)
+    lower_paired=[r for r in rows if (r.get('lower_challenger') or {}).get('version')=='lower_coverage_v1'
+                  and r['lower_challenger'].get('snapshot_at')==r['snapshot_at']]
     report={'updated_at_jst':datetime.now(ZoneInfo('Asia/Tokyo')).isoformat(timespec='seconds'),
             'strategy_version':STRATEGY_VERSION,'paired_races':len(paired),'probability_first':totals(True),
-            'current_ev_first':totals(False),'calibration':calibration,'auto_promotion':False}
+            'current_ev_first':totals(False),'calibration':calibration,'auto_promotion':False,
+            'lower_miss_audit':lower_miss_audit(rows),'lower_comparison':{'paired_races':len(lower_paired),
+            'coverage':totals(True,lower_paired,'lower_challenger'),'baseline':totals(False,lower_paired)}}
     folder=output_dir/'company';folder.mkdir(parents=True,exist_ok=True)
     (folder/'selection_research.json').write_text(json.dumps(report,ensure_ascii=False,indent=2,allow_nan=False),encoding='utf-8')
     pct=lambda v:'未集計' if v is None else f'{v*100:.1f}%'
@@ -100,6 +148,12 @@ def build_selection_research(rows, output_dir=OUTPUT_DIR):
     if calibration['status']=='offline_holdout':
         page+=f'<p>確率の誤差（小さいほど良い）：補正前 {calibration["raw_brier"]:.6f}／補正後 {calibration["corrected_brier"]:.6f}</p>'
     else:page+='<p>必要な保存済みレースが不足しています。補正の有効性は未確認です。</p>'
-    page+='<p>'+html.escape(calibration['scope'])+'</p><p>現行予想の確率・買い目を自動変更する段階ではありません。時系列の再計算は実戦検証と区別します。</p><a href="prediction_quality.html">着順別の確率と外れ原因</a> ／ <a href="../index.html">今日の予想</a></main></html>'
+    page+='<h2>2・3着の取りこぼし</h2><p>実際の1着を含む買い目があったか、1・2着の組み合わせまで含まれていたかを分けます。選手の敗因を断定する分析ではありません。</p><ul>'
+    labels={'hit':'的中','first_missing':'1着を買い目に含めていなかった','second_missing_under_correct_first':'1着は含むが正しい2着との組み合わせなし','third_missing_under_correct_first_second':'1・2着の組み合わせは含むが3着で外れ','skip':'見送り'}
+    for key,label in labels.items():page+=f'<li>{label}：{report["lower_miss_audit"][key]}件</li>'
+    page+='</ul><h2>2・3着を広げる比較案</h2><p>現行と同じ1着候補・期待値基準・点数予算で、2・3着の推定確率を使い、同じ下位選手への偏りを抑えて選びます。締切前に保存した比較案だけを検証します。</p><p>比較可能な確定レース：'+str(len(lower_paired))+'件。</p><table><tr><th>案</th><th>的中／購入対象</th><th>回収率</th><th>投資額</th></tr>'
+    for key,label in [('baseline','現行案'),('coverage','2・3着分散案')]:
+        r=report['lower_comparison'][key];page+=f'<tr><td>{label}</td><td>{r["hits"]}／{r["bet_races"]}R</td><td>{pct(r["return_rate"])}</td><td>{r["stake_yen"]:,}円</td></tr>'
+    page+='</table><p>'+html.escape(calibration['scope'])+'</p><p>現行予想の確率・買い目を自動変更する段階ではありません。時系列の再計算は実戦検証と区別します。</p><a href="prediction_quality.html">着順別の確率と外れ原因</a> ／ <a href="../index.html">今日の予想</a></main></html>'
     (folder/'selection_research.html').write_text(page,encoding='utf-8')
     return report
