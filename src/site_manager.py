@@ -386,6 +386,8 @@ def audit_site_output():
         return [{"type": "site_output_missing_or_too_small"}]
     try:
         content = html.read_text(encoding="utf-8")
+        from bs4 import BeautifulSoup
+        document = BeautifulSoup(content, "html.parser")
         entries = pd.read_csv(TODAY_CSV, dtype={"race_id": str, "player_id": str})
         # The published HTML must contain every race/car currently present in
         # the validated prediction input. This catches stale pages that are
@@ -401,10 +403,10 @@ def audit_site_output():
             if not cars:
                 problems.append({"type": "site_race_has_no_valid_cars", "race_id": race_id})
             if "player_name" in group.columns:
-                marker = f'<article class="race" id="race-{race_id}"'
-                start = content.find(marker)
-                end = content.find('<article class="race"', start + len(marker)) if start >= 0 else -1
-                race_html = content[start:] if start >= 0 and end < 0 else content[start:end]
+                # Attribute order and additional CSS classes are presentation
+                # details. Scope identity checks to this actual race element.
+                article = document.find("article", id=f"race-{race_id}")
+                race_html = str(article) if article is not None else ""
 
                 # Parse rider attributes independently of their HTML attribute
                 # order. The old exact-substring audit falsely reported a name

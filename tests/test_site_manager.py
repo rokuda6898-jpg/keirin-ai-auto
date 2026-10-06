@@ -156,7 +156,7 @@ class SiteManagerTests(unittest.TestCase):
 
             html = (
                 '<html><body>'
-                '<article class="race" id="race-race1">'
+                '<article data-start="1" id="race-race1" class="race venue-visible">'
                 '<button class="rider selected" data-name="選手A" '
                 'data-car="1" data-extra="x" data-player-id="p100">'
                 '<span>選手A</span></button>'
@@ -174,6 +174,17 @@ class SiteManagerTests(unittest.TestCase):
                 problems = site_manager.audit_site_output()
 
             self.assertEqual(problems, [])
+
+    def test_site_identity_does_not_leak_from_another_race(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root=Path(temp_dir)
+            pd.DataFrame([{"race_id":"race1","player_id":"p100","car_no":1,"player_name":"選手A"}]).to_csv(root/"today.csv",index=False)
+            document='<article id="race-race1" class="race"></article><article class="race" id="race-race2"><button class="rider" data-name="選手A" data-player-id="p100"></button></article>'+" "*1500
+            (root/"index.html").write_text(document,encoding="utf-8")
+            with mock.patch.multiple(site_manager,TODAY_CSV=root/"today.csv",OUTPUT_DIR=root):
+                problems=site_manager.audit_site_output()
+            self.assertEqual(len(problems),1)
+            self.assertEqual(problems[0]["type"],"site_player_name_mismatch")
 
     def test_results_waiting_does_not_enter_repair_loop(self):
         with tempfile.TemporaryDirectory() as temp_dir:
