@@ -11,7 +11,38 @@ import pandas as pd
 from common import FEATURE_COLS, HISTORY_CSV, MODEL_PATH, OUTPUT_DIR, RAW_DIR, TODAY_CSV, ensure_dirs, prepare_features
 
 SNAPSHOT_CSV = RAW_DIR / "live_snapshot_history.csv"
+FEATURE_BASE_CSV = RAW_DIR / "live_feature_base.csv"
 SUMMARY_JSON = OUTPUT_DIR / "live_snapshot_learning_summary.json"
+
+HISTORY_FEATURE_COLUMNS = [
+    "player_prior_races",
+    "player_prior_win_rate",
+    "player_prior_place2_rate",
+    "player_prior_place3_rate",
+    "player_prior_avg_finish",
+    "player_recent5_avg_finish",
+    "player_recent10_avg_finish",
+    "player_recent5_win_rate",
+    "player_recent10_win_rate",
+    "player_form_trend_5_vs_10",
+    "meeting_prior_races",
+    "meeting_prior_avg_finish",
+    "meeting_form_delta",
+    "meeting_finish_trend",
+    "player_prior_days_since_last_race",
+    "player_prior_strength",
+    "player_prior_strength_rank",
+    "player_prior_strength_gap_to_best",
+    "player_prior_strength_vs_field",
+    "player_elo",
+    "player_recent_weighted_finish",
+    "player_elo_rank",
+    "player_elo_vs_field",
+    "h2h_prior_meetings",
+    "h2h_prior_win_share",
+    "line_pair_prior_races",
+    "line_pair_second_win_rate",
+]
 
 TARGET_SECONDS = {
     "morning": 4 * 3600,
@@ -35,6 +66,64 @@ def snapshot_bucket(seconds_to_close):
     if 420 <= value <= 780:
         return "10m"
     return None
+
+
+def _feature_key(frame):
+    work = frame.copy()
+    return (
+        work["race_id"].astype(str)
+        + "::" + work["player_id"].astype(str)
+        + "::" + pd.to_numeric(work.get("car_no"), errors="coerce").fillna(-1).astype(int).astype(str)
+    )
+
+
+def _load_feature_base(today):
+    try:
+        base = pd.read_csv(
+            FEATURE_BASE_CSV,
+            dtype={"race_id": str, "player_id": str},
+        )
+    except (FileNotFoundError, OSError, pd.errors.EmptyDataError, pd.errors.ParserError):
+        return None
+    required = {"race_id", "player_id", "car_no", *HISTORY_FEATURE_COLUMNS}
+    if base.empty or not required.issubset(base.columns):
+        return None
+    current_keys = set(_feature_key(today))
+    base_keys = set(_feature_key(base))
+    if not current_keys.issubset(base_keys):
+        return None
+    cols = ["race_id", "player_id", "car_no", *HISTORY_FEATURE_COLUMNS]
+    return base[cols].drop_duplicates(["race_id", "player_id", "car_no"], keep="last")
+
+
+def _apply_feature_base(today, base):
+    out = today.copy()
+    for col in HISTORY_FEATURE_COLUMNS:
+        out = out.drop(columns=[col], errors="ignore")
+    out["race_id"] = out["race_id"].astype(str)
+    out["player_id"] = out["player_id"].astype(str)
+    out["_car_merge"] = pd.to_numeric(out.get("car_no"), errors="coerce")
+    base = base.copy()
+    base["race_id"] = base["race_id"].astype(str)
+    base["player_id"] = base["player_id"].astype(str)
+    base["_car_merge"] = pd.to_numeric(base.get("car_no"), errors="coerce")
+    base = base.drop(columns=["car_no"], errors="ignore")
+    return out.merge(
+        base,
+        on=["race_id", "player_id", "_car_merge"],
+        how="left",
+    ).drop(columns=["_car_merge"], errors="ignore")
+
+
+def _save_feature_base(enriched):
+    cols = ["race_id", "player_id", "car_no", *[
+        col for col in HISTORY_FEATURE_COLUMNS if col in enriched.columns
+    ]]
+    if not {"race_id", "player_id", "car_no"}.issubset(enriched.columns):
+        return
+    enriched[cols].drop_duplicates(
+        ["race_id", "player_id", "car_no"], keep="last"
+    ).to_csv(FEATURE_BASE_CSV, index=False)
 
 
 def _read_snapshots():
@@ -148,7 +237,14 @@ def capture():
         # for ordinary inference, while snapshot collection reuses the exact
         # same live enrichment functions.
         from predict import add_live_odds_movement, add_today_prior_features
-        enriched = add_today_prior_features(today)
+        cached = _load_feature_base(today)
+        if cached is not None:
+            enriched = _apply_feature_base(today, cached)
+            print("using cached daily historical live features")
+        else:
+            enriched = add_today_prior_features(today)
+            _save_feature_base(enriched)
+            print(f"built live historical feature base: {FEATURE_BASE_CSV}")
         enriched = add_live_odds_movement(enriched)
         fill_values = None
         if MODEL_PATH.exists():
