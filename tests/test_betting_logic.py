@@ -161,6 +161,22 @@ class BettingLogicTests(unittest.TestCase):
         bets = chosen[chosen.is_selected].sort_values("ev", ascending=False)
         self.assertEqual(bets.iloc[0].buy, odds.iloc[3].buy)
 
+    def test_main_is_under_100x_and_hole_is_100x_or_more(self):
+        riders = score_riders(fixture())
+        candidates = generate_formations(riders, race_plan(riders))
+        odds = candidates[["buy", "bet_type", "prob"]].copy()
+        odds["odds_used"] = np.where(odds["prob"].rank(ascending=False, method="first").le(20), 50.0, 150.0)
+        odds = odds.drop(columns="prob")
+        chosen, _ = select_race(riders, odds)
+        main = chosen[chosen.ticket_group.eq("本線")]
+        holes = chosen[chosen.ticket_group.eq("穴")]
+        self.assertFalse(main.empty)
+        self.assertTrue(main.odds_used.lt(100).all())
+        if not holes.empty:
+            self.assertTrue(holes.odds_used.ge(100).all())
+        main_sorted = main.sort_values(["prob", "ev", "buy"], ascending=[False, False, True])
+        self.assertEqual(main.buy.tolist(), main_sorted.buy.tolist())
+
     def test_popularity_direction_and_incomplete_proxy(self):
         self.assertEqual([divergence_points(x) for x in range(7)], [0, 0, 3, 5, 7, 10, 10])
         riders = score_riders(fixture())
