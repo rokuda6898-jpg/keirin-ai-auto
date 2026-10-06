@@ -8,7 +8,7 @@ from itertools import permutations
 import numpy as np
 import pandas as pd
 
-STRATEGY_VERSION = "position_ev_v6_20261006"
+STRATEGY_VERSION = "position_prob_v7_20261007"
 MAIN_EV = 1.10
 HOLE_EV = 1.25
 FIXED_MIN_WIN_PROBABILITY = 0.60
@@ -215,10 +215,24 @@ def select_race(riders, odds, main_ev=MAIN_EV, hole_ev=HOLE_EV, force_no_fixed=F
     candidates["expected_profit_100yen"] = 100 * (candidates.ev - 1)
     candidates["ticket_group"] = ""
     candidates["is_selected"] = False
-    ranked = candidates.sort_values(["ev", "prob", "buy"], ascending=[False, False, True], na_position="last")
-    main = ranked[ranked.main_formation & ranked.ev.ge(main_ev)].head(plan["main_limit"])
+    # Group semantics are strict:
+    # - 本線: under 100x, selected primarily by model probability (hit-rate first)
+    # - 穴: 100x or higher only, selected by EV within the longshot pool
+    # This prevents high odds alone from pushing a low-probability ticket into 本線.
+    main_pool = candidates[
+        candidates.main_formation
+        & candidates.ev.ge(main_ev)
+        & candidates.odds_used.lt(100)
+    ].sort_values(["prob", "ev", "buy"], ascending=[False, False, True], na_position="last")
+    main = main_pool.head(plan["main_limit"])
     candidates.loc[main.index, "ticket_group"] = "本線"
-    hole_pool = ranked[ranked.hole_formation & ranked.ev.ge(hole_ev) & ~ranked.index.isin(main.index)]
+
+    hole_pool = candidates[
+        candidates.hole_formation
+        & candidates.ev.ge(hole_ev)
+        & candidates.odds_used.ge(100)
+        & ~candidates.index.isin(main.index)
+    ].sort_values(["ev", "prob", "buy"], ascending=[False, False, True], na_position="last")
     plan["hole_limit"] = hole_limit(hole_pool, plan, riders)
     holes = hole_pool.head(plan["hole_limit"])
     candidates.loc[holes.index, "ticket_group"] = "穴"
