@@ -149,17 +149,22 @@ class BettingLogicTests(unittest.TestCase):
             chosen, plan = select_race(riders, odds.assign(odds_used=value))
             self.assertFalse(chosen.is_selected.any())
 
-    def test_exact_ev_boundaries_and_sort(self):
+    def test_exact_ev_boundaries_and_probability_first_main_sort(self):
         riders = score_riders(fixture(True))
-        odds = fair_odds(riders).head(4)
-        probabilities = generate_formations(riders, race_plan(riders)).set_index("buy").prob
-        odds.odds_used = [1.10 / probabilities[buy] for buy in odds.buy]
-        chosen, _ = select_race(riders, odds)
-        self.assertEqual(chosen.is_selected.sum(), 4)
-        odds.odds_used *= np.array([1, 2, 3, 4])
-        chosen, _ = select_race(riders, odds)
-        bets = chosen[chosen.is_selected].sort_values("ev", ascending=False)
-        self.assertEqual(bets.iloc[0].buy, odds.iloc[3].buy)
+        generated = generate_formations(riders, race_plan(riders))
+        probabilities = generated.set_index("buy").prob
+        top4 = generated.sort_values("prob", ascending=False).head(4)[["buy", "bet_type"]].copy()
+        top4["odds_used"] = [1.10 / probabilities[buy] for buy in top4.buy]
+        self.assertTrue(top4.odds_used.lt(100).all())
+        chosen, _ = select_race(riders, top4)
+        main = chosen[chosen.ticket_group.eq("本線")]
+        self.assertEqual(len(main), 4)
+        self.assertTrue(main.ev.ge(1.10).all())
+        expected = top4.assign(prob=[probabilities[buy] for buy in top4.buy]).sort_values(
+            ["prob", "buy"], ascending=[False, True]
+        ).buy.tolist()
+        actual = main.sort_values(["prob", "ev", "buy"], ascending=[False, False, True]).buy.tolist()
+        self.assertEqual(actual, expected)
 
     def test_main_is_under_100x_and_hole_is_100x_or_more(self):
         riders = score_riders(fixture())
