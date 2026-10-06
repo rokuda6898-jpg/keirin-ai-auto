@@ -1005,6 +1005,8 @@ def run(mode):
     write_json("pace_department.json", pace_dept)
     write_json("line_department.json", line_dept)
     write_json("risk_department.json", risk)
+    from strategist_validation import build_strategist_validation
+    strategist["prospective_comparison"] = build_strategist_validation()
     write_json("strategist_brief.json", strategist)
     write_json("third_party_audit.json", third_party)
     write_json("ceo_decision_support.json", ceo)

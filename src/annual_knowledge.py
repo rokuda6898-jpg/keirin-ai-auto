@@ -315,6 +315,8 @@ def forecast_departments(pred, odds, report, now, output_dir=OUTPUT_DIR):
         with (folder / "annual_department_prediction_ledger.jsonl").open("a", encoding="utf-8") as handle:
             for proposal in proposals:
                 handle.write(json.dumps(proposal, ensure_ascii=False, allow_nan=False) + "\n")
+    from strategist_validation import build_strategist_validation
+    build_strategist_validation(output_dir, now)
     return proposals
 
 
@@ -431,7 +433,10 @@ fetch('annual_department_predictions.json',{cache:'no-store'}).then(r=>{if(!r.ok
 }).catch(()=>document.getElementById('department-forecasts').textContent='予想を読み込めませんでした。');
 </script>"""
     page = page.replace('</main></html>', forecast_view + player_view + '</main></html>')
+    page = page.replace('<h2>部署ごとの最新予想（検証用）</h2>', '<p><a href="annual_strategist_report.html">軍師の分析・部署の比較検証を見る</a></p><h2>部署ごとの最新予想（検証用）</h2>')
     (folder / "annual_department_report.html").write_text(page, encoding="utf-8")
+    from strategist_validation import build_strategist_validation
+    build_strategist_validation(output_dir)
     return report
 
 
