@@ -1384,7 +1384,7 @@ def main():
         shadow_bets["model_sha256"] = file_sha256(MODEL_PATH)
         shadow_bets["prediction_created_at_jst"] = now_jst.isoformat(timespec="seconds")
         shadow_bets["odds_snapshot"] = odds_snapshot_label
-    save_snapshots(strategy_plans, shadow_bets, datetime.now(ZoneInfo("Asia/Tokyo")), position_rows=pred)
+    save_snapshots(strategy_plans, shadow_bets, datetime.now(ZoneInfo("Asia/Tokyo")), position_rows=pred, candidate_rows=candidates)
     from annual_knowledge import build_annual_profiles, forecast_departments
     annual = build_annual_profiles(now_jst.date())
     forecast_departments(pred, today_odds, annual, datetime.now(ZoneInfo("Asia/Tokyo")))

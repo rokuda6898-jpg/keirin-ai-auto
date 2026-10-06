@@ -1,6 +1,7 @@
 """Prospective, immutable full-portfolio audit; never grants purchase authority."""
 import json
 import html
+import math
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -20,7 +21,7 @@ def truth(value):
     return str(value).lower() in {"true", "1"}
 
 
-def save_snapshots(plans, shadow_bets, now_jst, output_dir=OUTPUT_DIR, position_rows=None):
+def save_snapshots(plans, shadow_bets, now_jst, output_dir=OUTPUT_DIR, position_rows=None, candidate_rows=None):
     """Freeze even eligible zero-ticket decisions, with their exact ticket set."""
     folder = output_dir / "company"
     folder.mkdir(parents=True, exist_ok=True)
@@ -62,17 +63,42 @@ def save_snapshots(plans, shadow_bets, now_jst, output_dir=OUTPUT_DIR, position_
             for position, column in enumerate(["p_win", "p_second", "p_third"], 1):
                 if column in race:
                     values = pd.to_numeric(race[column], errors="coerce")
-                    if values.notna().all() and values.ge(0).all() and values.sum() > 0:
+                    if values.notna().all() and values.map(math.isfinite).all() and values.ge(0).all() and values.sum() > 0:
                         positions.append({"position": position,
                             "probabilities": {str(int(car)): float(prob) for car, prob in zip(race.car_no, values / values.sum())}})
             if "p_core" in race and pd.to_numeric(race.p_core, errors="coerce").notna().any():
                 core_winner = int(race.loc[pd.to_numeric(race.p_core, errors="coerce").idxmax(), "car_no"])
+        candidate_evidence = None
+        if candidate_rows is not None and not candidate_rows.empty:
+            matching = candidate_rows[candidate_rows.race_id.astype(str).eq(race_id) & candidate_rows.bet_type.eq("trifecta")]
+            def finite(value):
+                number = pd.to_numeric(value, errors="coerce")
+                return float(number) if pd.notna(number) and math.isfinite(float(number)) else None
+            candidate_evidence = {"schema_version": 2,
+                "first_fixed": bool(plan.get("first_fixed", False)), "fixed_car": plan.get("fixed_car"),
+                "formation": plan.get("formation", {}), "main_ev": finite(plan.get("main_ev", 1.10)),
+                "hole_ev": finite(plan.get("hole_ev", 1.25)),
+                "reason_buys": {"ev_compression_miss": [], "ev_filter_skip": [],
+                                "odds_missing": [], "formation_omission": []}}
+            for _, candidate in matching.drop_duplicates("buy").iterrows():
+                ev = finite(candidate.get("ev"))
+                main = truth(candidate.get("main_formation", False))
+                hole = truth(candidate.get("hole_formation", False))
+                if ev is None:
+                    reason = "odds_missing"
+                elif (main and ev >= candidate_evidence["main_ev"]) or (hole and ev >= candidate_evidence["hole_ev"]):
+                    reason = "ev_compression_miss"
+                else:
+                    reason = "ev_filter_skip" if main or hole else "formation_omission"
+                candidate_evidence["reason_buys"][reason].append(str(candidate["buy"]))
+
         rows.append({
             "strategy_version": key[0], "race_id": race_id, "snapshot_at": key[2],
             "date": plan.get("date", now_jst.strftime("%Y-%m-%d")), "close_at": float(close_at),
             "venue": plan["venue"], "race_no": plan["race_no"],
             "skip_reason": plan.get("skip_reason"), "tickets": tickets,
             "position_probabilities": positions, "core_winner": core_winner,
+            "candidate_evidence": candidate_evidence,
         })
     if rows:
         with path.open("a", encoding="utf-8") as handle:
@@ -231,9 +257,12 @@ def build_ticket_return_department(output_dir=OUTPUT_DIR):
             '<p>的中率は「1点でも当たったレース ÷ 買い目がある確定レース」。回収率は「全点の払戻 ÷ 全点の購入額」です。実購入の成績ではありません。</p>'
             '<details><summary>配分額・見送り率も見る</summary>'
             f'<div class="scroll">{table}</div></details>'
+            '<p><a href="prediction_quality.html">外れ方とAI確率の検証を見る</a></p>'
             '<p>回収率120%は未検証です。部署追加後の発走前予想から蓄積します。'
             '未確定・払戻未取得は成績に含めません。</p></main></html>')
     (folder / "ticket_return_department.html").write_text(page, encoding="utf-8")
+    from prediction_quality import build_prediction_quality
+    build_prediction_quality(rows, output_dir)
     from public_performance import build_performance_page
     build_performance_page(output_dir)
     return report
