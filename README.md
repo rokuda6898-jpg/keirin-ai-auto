@@ -140,3 +140,10 @@ python src/honest_backtest.py --rebuild-entry
 ```
 
 `src/external_holdout.py` は、開発履歴とURLが重複しないレースを評価し、使用モデルのSHA-256を記録します。`outputs/external_holdout_overall.json` の `target_passed` が `true` になるまで、`outputs/latest_bets.csv` は0点です。未承認候補は `outputs/latest_shadow_bets.csv` にだけ保存されます。
+
+
+### 買い目・回収率検証部
+
+`src/ticket_return_department.py` は部署追加後の発走前に固定した本線・穴の全点数（最大24点）を公式払戻で検証します。予想ごとの全買い目と見送りを保持し、同一レースは最新の有効な一組を使います。旧予想の事後復元はしません。
+
+会社更新時に `outputs/company/ticket_return_department.html` とJSONを生成し、本線・穴・合計の的中率、100円均等/既存配分での回収率、見送り率、月別成績を報告します。実購入の成績は別集計。公式払戻が未取得のレースは除外し、確定済み成績は日付が変わっても保持します。回収率120%の単純超過だけで購入を許可したりモデルを昇格させたりしません。

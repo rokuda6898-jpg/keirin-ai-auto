@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 
 from common import HISTORY_CSV, MODEL_DIR, OUTPUT_DIR, TODAY_CSV, ensure_dirs
+from ticket_return_department import build_ticket_return_department
 from model_audit_office import build_model_audit
 
 COMPANY_DIR = OUTPUT_DIR / "company"
@@ -637,6 +638,7 @@ def run(mode):
             "difficulty_routing": {"segments": []},
         }
 
+    ticket_return = build_ticket_return_department(OUTPUT_DIR)
     archive = update_archive()
     aux_races, aux_meta = load_auxiliary_race_knowledge()
     manifest = history_manifest(archive, aux_meta, aux_races)
@@ -859,6 +861,7 @@ def run(mode):
         "official_top1_hit_rate": risk["top1_hit_rate"],
         "trifecta_top10_kpi": risk.get("trifecta_top10"),
         "final_trifecta_product_kpi": risk.get("final_trifecta_tickets"),
+        "full_ticket_return_department": ticket_return,
         "live_feature_drift": risk.get("live_drift"),
         "cross_source_audit": manifest.get("cross_source_audit"),
         "engine_lab": engine_lab,
@@ -917,6 +920,10 @@ def run(mode):
                 "instruction": "track live feature drift and cross-source history agreement; quarantine mismatches before retraining",
             },
             {
+                "target": "ticket_return_department",
+                "instruction": "audit every frozen main/hole ticket against official payout; report hit, return and skip rates separately; never authorize purchases",
+            },
+            {
                 "target": "ticket_audit",
                 "instruction": "track live 3連単10点 hit rate independently from Top1 accuracy",
             },
@@ -964,6 +971,7 @@ def run(mode):
             "model_freshness_department": "recency_weighted_shadow_model_competition",
             "data_quality_audit": "live_feature_drift_and_cross_source_validation",
             "ticket_audit": "live_trifecta_top10_product_kpi",
+            "ticket_return_department": "full_main_hole_prospective_return_audit",
             "production_replay_lab": "chronological_current_logic_replay",
             "trifecta_combination_lab": "ordered_top10_shadow_reranker",
             "commander_ai": "race_specific_shadow_department_selection",
@@ -1006,6 +1014,7 @@ def run(mode):
         f"- 実戦専用モデル状態: {live_snapshot_model.get('status', 'collecting')}",
         f"- 実戦専用モデル純増pp: {live_snapshot_model.get('delta_pp', '未算出')}",
         f"- 昇格候補: {len((model_audit.get('promotion_board', {}) or {}).get('eligible_for_external_validation', []))}",
+        f"- 全買い目回収率検証部: 保存 {ticket_return['frozen_races']}R / 確定 {ticket_return['settled_races']}R（120%未検証）",
         f"- 第三者監査: {status}",
         "",
         "## 軍師提言",

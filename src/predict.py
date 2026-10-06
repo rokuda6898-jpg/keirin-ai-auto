@@ -9,6 +9,8 @@ from datetime import datetime
 from itertools import permutations
 from zoneinfo import ZoneInfo
 
+from ticket_return_department import save_snapshots
+
 import joblib
 import numpy as np
 import pandas as pd
@@ -1098,7 +1100,9 @@ def build_strategy_outputs(pred, today_odds, epoch, max_seconds, version=STRATEG
         seconds = close - epoch
         eligible = pd.notna(seconds) and 300 < seconds <= max_seconds
         plan.update(race_id=str(race_id), venue=str(base.get("venue", "")),
-                    race_no=int(base.get("race_no", 0)), timing_eligible=bool(eligible))
+                    race_no=int(base.get("race_no", 0)), timing_eligible=bool(eligible),
+                    date=str(base.get("date", "")), strategy_version=version,
+                    close_at=float(close) if pd.notna(close) else None)
         if not eligible:
             trifecta["is_selected"] = False
             plan.update(main_count=0, hole_count=0, skip_reason="締切時刻未取得・締切5分以内・対象時間外")
@@ -1369,6 +1373,7 @@ def main():
         shadow_bets["model_sha256"] = file_sha256(MODEL_PATH)
         shadow_bets["prediction_created_at_jst"] = now_jst.isoformat(timespec="seconds")
         shadow_bets["odds_snapshot"] = odds_snapshot_label
+    save_snapshots(strategy_plans, shadow_bets, datetime.now(ZoneInfo("Asia/Tokyo")))
     shadow_path = OUTPUT_DIR / f"shadow_bets_{output_tag}.csv"
     latest_shadow_path = OUTPUT_DIR / "latest_shadow_bets.csv"
     prediction_ledger_path = OUTPUT_DIR / "prediction_ledger.csv"
@@ -1485,7 +1490,7 @@ main{{max-width:920px;margin:auto;padding:22px 15px 90px}}nav{{display:grid;grid
 footer{{text-align:center;padding:24px;color:#7b899b;font-size:11px}}@media(max-width:520px){{main{{padding:12px 12px 90px}}.race-head{{align-items:flex-start;flex-direction:column}}.brand{{font-size:22px;min-width:220px}}.hero{{align-items:flex-start;flex-direction:column}}.trust{{width:100%}}}}
 </style></head><body><header><div class="brand">NEXUS</div><div class="tag">KEIRIN PREDICTION SYSTEM</div></header><main>
 <nav><a href="index.html">今日の予想</a><a href="history.html">予想履歴</a></nav>
-<section class="hero"><div><span class="eyebrow">TODAY’S KEIRIN</span><h1>今日のレース</h1><p>更新 {generated} JST ｜ 本線6〜12点・穴0〜12点を期待値で選定</p></div><div class="trust"><b>予想は事前保存</b><small>的中・不的中を結果確定後に記録</small></div></section>
+<section class="hero"><div><span class="eyebrow">TODAY’S KEIRIN</span><h1>今日のレース</h1><p>更新 {generated} JST ｜ 本線6〜12点・穴0〜12点を期待値で選定</p><p><a style="color:#b9ddff" href="company/ticket_return_department.html">買い目・回収率検証部の報告</a></p></div><div class="trust"><b>予想は事前保存</b><small>的中・不的中を結果確定後に記録</small></div></section>
 <section class="venue-jump"><b>開催場を選択</b><div id="venueJump"></div></section>
 {"".join(race_cards) if race_cards else '<div class="race">本日の予想データを取得中です。</div>'}
 </main><script>
