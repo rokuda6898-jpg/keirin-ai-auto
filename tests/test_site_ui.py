@@ -48,13 +48,27 @@ class SiteUITests(unittest.TestCase):
         import tempfile
         from unittest import mock
         from site_ui import saved_race_tickets
+        from betting_logic import STRATEGY_VERSION
         with tempfile.TemporaryDirectory() as directory:
-            base={"race_id":"014420261006","bet_type":"trifecta","close_at":1000,"prediction_created_at_jst":"1970-01-01T00:15:00Z"}
+            base={"race_id":"014420261006","bet_type":"trifecta","close_at":1000,"prediction_created_at_jst":"1970-01-01T00:15:00Z","strategy_version":STRATEGY_VERSION}
             pd.DataFrame([dict(base,buy="2-1-6")]).to_csv(Path(directory)/"shadow_bets_20261006_001500.csv",index=False)
             pd.DataFrame([dict(base,buy="1-2-3",prediction_created_at_jst="1970-01-01T00:18:00Z")]).to_csv(Path(directory)/"shadow_bets_20261006_001800.csv",index=False)
             with mock.patch("site_ui.OUTPUT_DIR",Path(directory)):
                 self.assertEqual(saved_race_tickets("014420261006",1100)[0]['buy'],'2-1-6')
                 self.assertEqual(saved_race_tickets("014420261006",950),[])
+
+    def test_saved_picks_ignore_old_strategy_snapshots(self):
+        import tempfile
+        from unittest import mock
+        from site_ui import saved_race_tickets
+        with tempfile.TemporaryDirectory() as directory:
+            pd.DataFrame([{
+                "race_id":"014420261006","buy":"1-2-3","bet_type":"trifecta",
+                "close_at":1000,"prediction_created_at_jst":"1970-01-01T00:15:00Z",
+                "strategy_version":"position_ev_v6_20261006"
+            }]).to_csv(Path(directory)/"shadow_bets_20261006_001500.csv",index=False)
+            with mock.patch("site_ui.OUTPUT_DIR",Path(directory)):
+                self.assertEqual(saved_race_tickets("014420261006",1100),[])
 
 
     def test_reference_holes_exclude_low_odds_and_main_overlap(self):
@@ -67,5 +81,7 @@ class SiteUITests(unittest.TestCase):
             pd.DataFrame(rows).to_csv(path,index=False)
             result=reference_candidates("race1",path)
             holes=[row['buy'] for row in result if row['reference_group']=='穴狙い参考']
-            self.assertEqual(set(holes),{'3-2-1','3-1-2'})
+            self.assertEqual(set(holes),{'1-2-3','3-2-1','3-1-2'})
+            mains=[row['buy'] for row in result if row['reference_group']=='本線参考']
+            self.assertNotIn('1-2-3',mains)
             self.assertEqual(len({row['buy'] for row in result}),len(result))
