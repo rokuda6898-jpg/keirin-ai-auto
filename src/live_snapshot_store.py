@@ -1,4 +1,5 @@
 import argparse
+import hashlib
 import json
 from datetime import datetime
 from pathlib import Path
@@ -12,6 +13,7 @@ from common import FEATURE_COLS, HISTORY_CSV, MODEL_PATH, OUTPUT_DIR, RAW_DIR, T
 
 SNAPSHOT_CSV = RAW_DIR / "live_snapshot_history.csv"
 FEATURE_BASE_CSV = RAW_DIR / "live_feature_base.csv"
+FEATURE_BASE_META = RAW_DIR / "live_feature_base.meta.json"
 SUMMARY_JSON = OUTPUT_DIR / "live_snapshot_learning_summary.json"
 
 HISTORY_FEATURE_COLUMNS = [
@@ -77,13 +79,36 @@ def _feature_key(frame):
     )
 
 
+def _feature_fingerprint(frame):
+    # These are the inputs consumed by the chronological history enrichers.
+    text = ["date", "venue", "race_id", "player_id", "meeting_id"]
+    numeric = ["race_no", "car_no", "line_id", "line_position", "finish_pos"]
+    normalized = frame.reindex(columns=text + numeric).copy()
+    for col in text:
+        normalized[col] = normalized[col].fillna("").astype(str)
+    for col in numeric:
+        normalized[col] = pd.to_numeric(normalized[col], errors="coerce").astype(float)
+    normalized = normalized.sort_values(["race_id", "car_no", "player_id"], kind="mergesort")
+    digest = hashlib.sha256(pd.util.hash_pandas_object(normalized, index=False).values.tobytes())
+    for path in [HISTORY_CSV, Path(__file__).with_name("common.py")]:
+        if not path.exists():
+            return None
+        with path.open("rb") as handle:
+            for block in iter(lambda: handle.read(1024 * 1024), b""):
+                digest.update(block)
+    return digest.hexdigest()
+
+
 def _load_feature_base(today):
     try:
+        meta = json.loads(FEATURE_BASE_META.read_text(encoding="utf-8"))
+        if meta.get("fingerprint") != _feature_fingerprint(today):
+            return None
         base = pd.read_csv(
             FEATURE_BASE_CSV,
             dtype={"race_id": str, "player_id": str},
         )
-    except (FileNotFoundError, OSError, pd.errors.EmptyDataError, pd.errors.ParserError):
+    except (FileNotFoundError, OSError, ValueError, pd.errors.EmptyDataError, pd.errors.ParserError):
         return None
     required = {"race_id", "player_id", "car_no", *HISTORY_FEATURE_COLUMNS}
     if base.empty or not required.issubset(base.columns):
@@ -124,6 +149,7 @@ def _save_feature_base(enriched):
     enriched[cols].drop_duplicates(
         ["race_id", "player_id", "car_no"], keep="last"
     ).to_csv(FEATURE_BASE_CSV, index=False)
+    FEATURE_BASE_META.write_text(json.dumps({"fingerprint": _feature_fingerprint(enriched)}), encoding="utf-8")
 
 
 def _read_snapshots():
@@ -365,8 +391,15 @@ def write_summary(frame=None):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--capture", action="store_true")
+    parser.add_argument("--capture-raw", action="store_true")
     parser.add_argument("--label", action="store_true")
     args = parser.parse_args()
+
+    if args.capture_raw:
+        if TODAY_CSV.exists():
+            capture_frame(pd.read_csv(TODAY_CSV, dtype={"race_id": str, "player_id": str}), None)
+        write_summary()
+        return
 
     if not args.capture and not args.label:
         args.capture = True

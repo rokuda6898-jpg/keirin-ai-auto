@@ -507,6 +507,11 @@ def add_live_odds_movement(df):
 def add_today_prior_features(df):
     if not HISTORY_CSV.exists():
         return df
+    from live_snapshot_store import _load_feature_base, _apply_feature_base, _save_feature_base
+    cached = _load_feature_base(df)
+    if cached is not None:
+        print("using verified historical feature cache", flush=True)
+        return _apply_feature_base(df, cached)
     hist = pd.read_csv(HISTORY_CSV, dtype={"race_id": str, "player_id": str})
     df = df.copy()
     hist["_today_row_id"] = np.nan
@@ -519,7 +524,9 @@ def add_today_prior_features(df):
     combined = add_pair_history_features(combined)
     today = combined[combined["_today_row_id"].notna()].copy()
     today = today.sort_values("_today_row_id", kind="mergesort")
-    return today.drop(columns=["_today_row_id"], errors="ignore")
+    today = today.drop(columns=["_today_row_id"], errors="ignore")
+    _save_feature_base(today)
+    return today
 
 
 def apply_nexus_race_reading(pred):
@@ -1335,7 +1342,9 @@ def main():
     })
     top1 = top1.merge(runner, on="race_id", how="left")
     top1 = top1.rename(columns={"car_no": "predicted_winner_car_no", "player_id": "predicted_winner_player_id", "p_win": "predicted_win_prob"})
-    top1["prediction_created_at_jst"] = now_jst.isoformat(timespec="seconds")
+    freeze_now = datetime.now(ZoneInfo("Asia/Tokyo"))
+    top1 = top1[pd.to_numeric(top1["close_at"], errors="coerce").gt(freeze_now.timestamp())].copy()
+    top1["prediction_created_at_jst"] = freeze_now.isoformat(timespec="seconds")
     try:
         old_top1 = pd.read_csv(top1_ledger_path, dtype={"race_id": str})
     except (FileNotFoundError, pd.errors.EmptyDataError, pd.errors.ParserError):
@@ -1343,8 +1352,10 @@ def main():
     top1_ledger = pd.concat([old_top1, top1], ignore_index=True, sort=False)
     top1_ledger = top1_ledger.drop_duplicates(["date", "race_id"], keep="last")
     top1_ledger.to_csv(top1_ledger_path, index=False)
-    save_top1_variants(pred, now_jst)
-    save_trifecta_top10_ledger(pred, now_jst, candidates)
+    preclose_pred = pred[pd.to_numeric(pred.close_at, errors="coerce").gt(freeze_now.timestamp())]
+    if not preclose_pred.empty:
+        save_top1_variants(preclose_pred, freeze_now)
+        save_trifecta_top10_ledger(preclose_pred, freeze_now, candidates)
 
     if len(candidates):
         bets = candidates[candidates["is_selected"]].copy()
@@ -1373,7 +1384,10 @@ def main():
         shadow_bets["model_sha256"] = file_sha256(MODEL_PATH)
         shadow_bets["prediction_created_at_jst"] = now_jst.isoformat(timespec="seconds")
         shadow_bets["odds_snapshot"] = odds_snapshot_label
-    save_snapshots(strategy_plans, shadow_bets, datetime.now(ZoneInfo("Asia/Tokyo")))
+    save_snapshots(strategy_plans, shadow_bets, datetime.now(ZoneInfo("Asia/Tokyo")), position_rows=pred)
+    from annual_knowledge import build_annual_profiles, forecast_departments
+    annual = build_annual_profiles(now_jst.date())
+    forecast_departments(pred, today_odds, annual, datetime.now(ZoneInfo("Asia/Tokyo")))
     shadow_path = OUTPUT_DIR / f"shadow_bets_{output_tag}.csv"
     latest_shadow_path = OUTPUT_DIR / "latest_shadow_bets.csv"
     prediction_ledger_path = OUTPUT_DIR / "prediction_ledger.csv"
@@ -1490,7 +1504,7 @@ main{{max-width:920px;margin:auto;padding:22px 15px 90px}}nav{{display:grid;grid
 footer{{text-align:center;padding:24px;color:#7b899b;font-size:11px}}@media(max-width:520px){{main{{padding:12px 12px 90px}}.race-head{{align-items:flex-start;flex-direction:column}}.brand{{font-size:22px;min-width:220px}}.hero{{align-items:flex-start;flex-direction:column}}.trust{{width:100%}}}}
 </style></head><body><header><div class="brand">NEXUS</div><div class="tag">KEIRIN PREDICTION SYSTEM</div></header><main>
 <nav><a href="index.html">今日の予想</a><a href="history.html">予想履歴</a></nav>
-<section class="hero"><div><span class="eyebrow">TODAY’S KEIRIN</span><h1>今日のレース</h1><p>更新 {generated} JST ｜ 本線6〜12点・穴0〜12点を期待値で選定</p><p><a style="color:#b9ddff" href="company/ticket_return_department.html">買い目・回収率検証部の報告</a></p></div><div class="trust"><b>予想は事前保存</b><small>的中・不的中を結果確定後に記録</small></div></section>
+<section class="hero"><div><span class="eyebrow">TODAY’S KEIRIN</span><h1>今日のレース</h1><p>更新 {generated} JST ｜ 本線6〜12点・穴0〜12点を期待値で選定</p><p><a style="color:#b9ddff" href="company/ticket_return_department.html">買い目・回収率検証部の報告</a> ／ <a style="color:#b9ddff" href="company/annual_department_report.html">直近1年の部署予想</a></p></div><div class="trust"><b>予想は事前保存</b><small>的中・不的中を結果確定後に記録</small></div></section>
 <section class="venue-jump"><b>開催場を選択</b><div id="venueJump"></div></section>
 {"".join(race_cards) if race_cards else '<div class="race">本日の予想データを取得中です。</div>'}
 </main><script>

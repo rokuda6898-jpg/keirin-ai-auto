@@ -88,6 +88,9 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           git add outputs/latest_results.json outputs/index.html
+          if [ -f outputs/company/rider_official_observations.csv ]; then
+            git add outputs/company/rider_official_observations.csv
+          fi
           git diff --cached --quiet && exit 0
           git commit -m "Quick refresh official keirin results"
           # fetch_today_entries.py may leave data/raw changes that this
@@ -130,6 +133,9 @@ jobs:
             fi
             python src/settle_results.py
             git add outputs/latest_results.json outputs/index.html
+          if [ -f outputs/company/rider_official_observations.csv ]; then
+            git add outputs/company/rider_official_observations.csv
+          fi
             git diff --cached --quiet && exit 0
             git commit -m "Quick refresh official keirin results"
             git reset --hard HEAD

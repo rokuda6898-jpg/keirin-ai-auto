@@ -39,12 +39,20 @@ jobs:
       - name: Restore real pre-race learning snapshots
         uses: actions/cache/restore@v4
         with:
-          path: |
-            data/raw/live_snapshot_history.csv
-            data/raw/live_feature_base.csv
+          path: data/raw/live_snapshot_history.csv
           key: keirin-live-snapshots-v1-${{ github.run_id }}
           restore-keys: |
             keirin-live-snapshots-v1-
+
+      - name: Restore verified historical feature cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            data/raw/live_feature_base.csv
+            data/raw/live_feature_base.meta.json
+          key: keirin-feature-base-v2-${{ github.run_id }}
+          restore-keys: |
+            keirin-feature-base-v2-
 
       - name: Restore central history for live features
         id: live_central_history
@@ -167,6 +175,16 @@ jobs:
             echo "KEIRIN_TODAY_CSV_URL is configured; skip WINTICKET fetch"
           fi
 
+      - name: Freeze morning raw feed before enrichment
+        run: python src/live_snapshot_store.py --capture-raw
+
+      - name: Preserve early morning raw snapshots
+        if: hashFiles('data/raw/live_snapshot_history.csv') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: data/raw/live_snapshot_history.csv
+          key: keirin-live-snapshots-v1-${{ github.run_id }}-raw
+
       - name: Capture morning real-feed learning snapshot
         run: |
           python src/live_snapshot_store.py --capture
@@ -177,6 +195,15 @@ jobs:
         with:
           path: data/raw/live_snapshot_history.csv
           key: keirin-live-snapshots-v1-${{ github.run_id }}
+
+      - name: Preserve verified historical feature cache
+        if: hashFiles('data/raw/live_feature_base.csv') != '' && hashFiles('data/raw/live_feature_base.meta.json') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            data/raw/live_feature_base.csv
+            data/raw/live_feature_base.meta.json
+          key: keirin-feature-base-v2-${{ github.run_id }}
 
       - name: Build fallback model only if missing
         env:
@@ -227,6 +254,8 @@ jobs:
             cp data/raw/history.csv /tmp/daily_history.csv
           fi
 
+          python src/preserve_validation.py save /tmp/daily_validation
+
           stage_daily_state() {
             git add outputs models data/raw/today_entries.csv data/raw/today_odds.csv || true
             git diff --staged --quiet || git commit -m "Update keirin predictions"
@@ -236,6 +265,7 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
             git clean -fd
+            python src/preserve_validation.py restore /tmp/daily_validation
 
             if [ -s /tmp/daily_history.csv ]; then
               mkdir -p data/raw

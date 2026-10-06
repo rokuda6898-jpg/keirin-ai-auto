@@ -316,6 +316,10 @@ def build_entry_rows(race_data, race_date, venue, race_no, race_id, source_url, 
                 "finish_pos": finish_pos,
                 "official_finish_pos": raw_order,
                 "result_available": result_available,
+                "result_factor": result.get("factor") if result else None,
+                **{f"result_event_{key}": result[key] if key in result else None
+                   for key in ["back", "spurtSucceeded", "thrustSucceeded", "leftBehind",
+                               "splitLine", "snatchSucceeded", "competeSucceeded", "hasAccident"]},
                 "is_dnf": int(include_results and (pd.isna(raw_order) or raw_order <= 0)),
                 "result_status": result.get("accidentName") or result.get("accident") or "",
                 # Provenance boundary: keep source/licensing metadata attached to raw-derived rows.

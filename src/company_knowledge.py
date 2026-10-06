@@ -8,6 +8,8 @@ import numpy as np
 import pandas as pd
 
 from common import HISTORY_CSV, MODEL_DIR, OUTPUT_DIR, TODAY_CSV, ensure_dirs
+from verified_live_audit import build_verified_live_audit
+from annual_knowledge import build_annual_profiles, audit_department_predictions
 from ticket_return_department import build_ticket_return_department
 from model_audit_office import build_model_audit
 
@@ -241,6 +243,11 @@ def load_auxiliary_race_knowledge():
         meta["providers"] = sorted(
             x for x in history["source_provider"].dropna().astype(str).unique() if x
         )
+
+    # Departments use a bounded rolling year; the manifest still counts the full archive.
+    today = pd.Timestamp(datetime.now(ZoneInfo("Asia/Tokyo")).date())
+    dates = pd.to_datetime(history["date"], errors="coerce")
+    history = history[dates.ge(today - pd.DateOffset(years=1)) & dates.lt(today)].copy()
 
     finish_col = None
     for candidate in ["official_finish_pos", "finish_pos"]:
@@ -638,6 +645,9 @@ def run(mode):
             "difficulty_routing": {"segments": []},
         }
 
+    verified_live = build_verified_live_audit(OUTPUT_DIR)
+    annual_knowledge = build_annual_profiles(output_dir=OUTPUT_DIR)
+    annual_department_audit = audit_department_predictions(OUTPUT_DIR)
     ticket_return = build_ticket_return_department(OUTPUT_DIR)
     archive = update_archive()
     aux_races, aux_meta = load_auxiliary_race_knowledge()
@@ -698,6 +708,12 @@ def run(mode):
     line_dept["top1_hit_rate_by_number_of_lines"] = fresh_line["top1_hit_rate_by_number_of_lines"]
 
     risk = risk_report(archive)
+    risk["timestamp_verified_evidence"] = verified_live
+    risk["legacy_evaluated_races_are_not_all_timestamp_verified"] = True
+    annual_reference = {key: annual_knowledge[key] for key in ["asof_date", "window_start", "annual_races", "players", "status"]}
+    for department in [data_dept, pace_dept, line_dept, risk]:
+        department["annual_reference"] = annual_reference
+        department["annual_profile_source"] = "annual_rider_knowledge.json"
     strategist = strategist_report(risk, manifest, model_audit)
 
     replay = read_json(PRODUCTION_REPLAY_SUMMARY)
@@ -862,6 +878,9 @@ def run(mode):
         "trifecta_top10_kpi": risk.get("trifecta_top10"),
         "final_trifecta_product_kpi": risk.get("final_trifecta_tickets"),
         "full_ticket_return_department": ticket_return,
+        "timestamp_verified_live_evidence": verified_live,
+        "annual_department_audit": annual_department_audit,
+        "annual_specialist_knowledge": {k: v for k, v in annual_knowledge.items() if k != "profiles"},
         "live_feature_drift": risk.get("live_drift"),
         "cross_source_audit": manifest.get("cross_source_audit"),
         "engine_lab": engine_lab,
@@ -972,6 +991,7 @@ def run(mode):
             "data_quality_audit": "live_feature_drift_and_cross_source_validation",
             "ticket_audit": "live_trifecta_top10_product_kpi",
             "ticket_return_department": "full_main_hole_prospective_return_audit",
+            "annual_specialist_knowledge": "shared_rolling_year_rider_results_tactics_and_observed_events",
             "production_replay_lab": "chronological_current_logic_replay",
             "trifecta_combination_lab": "ordered_top10_shadow_reranker",
             "commander_ai": "race_specific_shadow_department_selection",
@@ -1015,6 +1035,8 @@ def run(mode):
         f"- 実戦専用モデル純増pp: {live_snapshot_model.get('delta_pp', '未算出')}",
         f"- 昇格候補: {len((model_audit.get('promotion_board', {}) or {}).get('eligible_for_external_validation', []))}",
         f"- 全買い目回収率検証部: 保存 {ticket_return['frozen_races']}R / 確定 {ticket_return['settled_races']}R（120%未検証）",
+        f"- 直近1年の部署知識: {annual_knowledge['annual_races']}R / {annual_knowledge['players']}選手（全履歴保持・部署別の影予想）",
+        f"- 締切前時刻確認: {verified_live['timestamp_verified_races']}R ／ 従来集計 {verified_live['legacy_settled_rows']}R（未確認分は実戦証拠に含めない）",
         f"- 第三者監査: {status}",
         "",
         "## 軍師提言",

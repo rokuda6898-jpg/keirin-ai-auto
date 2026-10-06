@@ -1,0 +1,54 @@
+"""Carry immutable pre-close evidence and validated feature cache across git resets."""
+import argparse
+import hashlib
+import shutil
+from pathlib import Path
+
+from common import ROOT
+
+LEDGERS = ["outputs/company/ticket_return_snapshots.jsonl",
+           "outputs/company/annual_department_prediction_ledger.jsonl"]
+CACHES = ["data/raw/live_feature_base.csv", "data/raw/live_feature_base.meta.json",
+          "outputs/company/annual_rider_knowledge.json"]
+
+
+def save(directory, root=ROOT):
+    directory = Path(directory)
+    for name in LEDGERS + CACHES:
+        path = root / name
+        if path.exists():
+            target = directory / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(path, target)
+
+
+def restore(directory, root=ROOT):
+    directory = Path(directory)
+    for name in LEDGERS:
+        source = directory / name
+        if not source.exists():
+            continue
+        target = root / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        existing = target.read_text(encoding="utf-8").splitlines() if target.exists() else []
+        seen = {hashlib.sha256(line.encode()).hexdigest() for line in existing}
+        for line in source.read_text(encoding="utf-8").splitlines():
+            key = hashlib.sha256(line.encode()).hexdigest()
+            if line and key not in seen:
+                existing.append(line)
+                seen.add(key)
+        target.write_text("\n".join(existing) + "\n", encoding="utf-8")
+    for name in CACHES:
+        source = directory / name
+        if source.exists():
+            target = root / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, target)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("mode", choices=["save", "restore"])
+    parser.add_argument("directory")
+    args = parser.parse_args()
+    (save if args.mode == "save" else restore)(args.directory)

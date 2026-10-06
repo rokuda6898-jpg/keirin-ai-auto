@@ -151,6 +151,7 @@ jobs:
       - name: Preserve central history across manager git resets
         run: |
           cp data/raw/history.csv /tmp/manager_history.csv
+          python src/preserve_validation.py save /tmp/manager_validation
 
       - name: Persist repaired outputs and health status
         # Publication gate: if the manager exits unhealthy, never commit the
@@ -169,6 +170,7 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
             git clean -fd
+            python src/preserve_validation.py restore /tmp/manager_validation
             # reset/clean removes the cache-mounted untracked history file.
             # Restore it from the preserved copy before any repair can rerun
             # prediction, otherwise live prior/Elo/H2H features disappear.

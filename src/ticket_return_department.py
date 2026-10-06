@@ -20,7 +20,7 @@ def truth(value):
     return str(value).lower() in {"true", "1"}
 
 
-def save_snapshots(plans, shadow_bets, now_jst, output_dir=OUTPUT_DIR):
+def save_snapshots(plans, shadow_bets, now_jst, output_dir=OUTPUT_DIR, position_rows=None):
     """Freeze even eligible zero-ticket decisions, with their exact ticket set."""
     folder = output_dir / "company"
     folder.mkdir(parents=True, exist_ok=True)
@@ -52,13 +52,27 @@ def save_snapshots(plans, shadow_bets, now_jst, output_dir=OUTPUT_DIR):
                     "buy": str(ticket["buy"]),
                     "group": str(ticket["ticket_group"]),
                     "stake_yen": int(ticket["stake_yen"]),
+                    "prob": float(ticket["prob"]) if pd.notna(ticket.get("prob")) else None,
+                    "ev": float(ticket["ev"]) if pd.notna(ticket.get("ev")) else None,
                     "purchase_authorized": truth(ticket.get("purchase_authorized", False)),
                 })
+        positions, core_winner = [], None
+        if position_rows is not None and not position_rows.empty:
+            race = position_rows[position_rows.race_id.astype(str).eq(race_id)]
+            for position, column in enumerate(["p_win", "p_second", "p_third"], 1):
+                if column in race:
+                    values = pd.to_numeric(race[column], errors="coerce")
+                    if values.notna().all() and values.ge(0).all() and values.sum() > 0:
+                        positions.append({"position": position,
+                            "probabilities": {str(int(car)): float(prob) for car, prob in zip(race.car_no, values / values.sum())}})
+            if "p_core" in race and pd.to_numeric(race.p_core, errors="coerce").notna().any():
+                core_winner = int(race.loc[pd.to_numeric(race.p_core, errors="coerce").idxmax(), "car_no"])
         rows.append({
             "strategy_version": key[0], "race_id": race_id, "snapshot_at": key[2],
             "date": plan.get("date", now_jst.strftime("%Y-%m-%d")), "close_at": float(close_at),
             "venue": plan["venue"], "race_no": plan["race_no"],
             "skip_reason": plan.get("skip_reason"), "tickets": tickets,
+            "position_probabilities": positions, "core_winner": core_winner,
         })
     if rows:
         with path.open("a", encoding="utf-8") as handle:
@@ -92,6 +106,31 @@ def summarize(rows, group=None, authorized_only=False):
                       "profit_yen": returned - stake,
                       "return_rate": returned / stake if stake else None},
     }
+
+
+def calibration_audit(rows):
+    positions = []
+    for position in [1, 2, 3]:
+        samples = []
+        for row in rows:
+            matches = [p for p in row.get("position_probabilities", []) if p["position"] == position]
+            if not matches:
+                continue
+            probs = matches[0]["probabilities"]
+            actual = row["actual_trifecta"].split("-")[position - 1]
+            best = max(probs, key=probs.get)
+            samples.append((probs[best], int(best == actual), sum((prob - int(car == actual))**2 for car, prob in probs.items())))
+        positions.append({"position": position, "races": len(samples),
+            "mean_top_probability": sum(x[0] for x in samples)/len(samples) if samples else None,
+            "actual_top_hit_rate": sum(x[1] for x in samples)/len(samples) if samples else None,
+            "multiclass_brier": sum(x[2] for x in samples)/len(samples) if samples else None})
+    comparison = [r for r in rows if r.get("core_winner") is not None and r.get("position_probabilities")]
+    core_hits = sum(str(r["core_winner"]) == r["actual_trifecta"].split("-")[0] for r in comparison)
+    final_hits = sum(max(r["position_probabilities"][0]["probabilities"], key=r["position_probabilities"][0]["probabilities"].get)
+                     == r["actual_trifecta"].split("-")[0] for r in comparison)
+    return {"positions": positions, "same_race_core_vs_final": {"races": len(comparison),
+            "core_hits": core_hits, "final_hits": final_hits, "net_final_hits": final_hits-core_hits},
+            "automatically_recalibrated": False}
 
 
 def build_ticket_return_department(output_dir=OUTPUT_DIR):
@@ -141,6 +180,7 @@ def build_ticket_return_department(output_dir=OUTPUT_DIR):
         "shadow": {"total": summarize(rows), "main": summarize(rows, "本線"),
                    "hole": summarize(rows, "穴")},
         "authorized_purchase": summarize(rows, authorized_only=True),
+        "calibration_audit": calibration_audit(rows),
         "monthly": {month: summarize([r for r in rows if r["date"][:7] == month])
                     for month in sorted({r["date"][:7] for r in rows})},
         "limitations": ["旧戦略と混合しない。部署追加前の予想を事後生成しない。",

@@ -232,6 +232,9 @@ def parse_result_page(url):
         if e.get("number") and e.get("bracketNumber")
     }
 
+    from annual_knowledge import collect_observations
+    collect_observations(race_data, url, OUTPUT_DIR)
+
     ordered = []
     for result in race_data.get("results", []) or []:
         order = result.get("order")

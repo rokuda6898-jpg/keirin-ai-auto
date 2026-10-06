@@ -379,78 +379,70 @@ def add_player_elo_features(df: pd.DataFrame, k_factor=20.0, base_rating=1500.0)
 
 
 def add_pair_history_features(df: pd.DataFrame) -> pd.DataFrame:
-    """Leakage-safe direct matchup and leader/second-wheel partnership history."""
+    """Same chronological matchup features, using arrays for per-race updates."""
     out = df.copy()
-    defaults = {
-        "h2h_prior_meetings": 0.0, "h2h_prior_win_share": np.nan,
-        "line_pair_prior_races": 0.0, "line_pair_second_win_rate": np.nan,
-    }
+    defaults = {"h2h_prior_meetings": 0.0, "h2h_prior_win_share": np.nan,
+                "line_pair_prior_races": 0.0, "line_pair_second_win_rate": np.nan}
     for col, val in defaults.items():
         out[col] = val
-    required = {"race_id","player_id","date"}
-    if not required.issubset(out.columns):
+    if not {"race_id", "player_id", "date"}.issubset(out.columns):
         return out
     work = out.copy()
     work["_orig"] = np.arange(len(work))
     work["_date"] = pd.to_datetime(work["date"], errors="coerce")
-    work = work.sort_values([x for x in ["_date","race_id","race_no","car_no","_orig"] if x in work.columns], kind="mergesort")
-    pair_stats = {}
-    line_stats = {}
-    for _, idx in work.groupby("race_id", sort=False).groups.items():
-        idx = list(idx)
-        race = work.loc[idx]
-        players = race["player_id"].astype(str).tolist()
-        finish = pd.to_numeric(race.get("finish_pos"), errors="coerce")
-        pos_by_player = dict(zip(players, finish.tolist()))
+    work = work.sort_values([x for x in ["_date", "race_id", "race_no", "car_no", "_orig"]
+                             if x in work.columns], kind="mergesort").reset_index(drop=True)
+    players_all = work["player_id"].astype(str).to_numpy()
+    def values(col):
+        return pd.to_numeric(work.get(col, pd.Series(np.nan, index=work.index)), errors="coerce").to_numpy()
+    finish_all, lines_all, positions_all = values("finish_pos"), values("line_id"), values("line_position")
+    buffers = {col: np.full(len(work), val) for col, val in defaults.items()}
+    pair_stats, line_stats = {}, {}
+    for idx in work.groupby("race_id", sort=False).indices.values():
+        players, finish = players_all[idx], finish_all[idx]
+        positions, lines = positions_all[idx], lines_all[idx]
+        pos_by_player = dict(zip(players, finish))
         for row_idx, pid in zip(idx, players):
             meetings = wins = 0.0
             for opp in players:
                 if opp == pid:
                     continue
-                key = tuple(sorted((pid, opp)))
-                stat = pair_stats.get(key, {"meetings":0.0, "wins":{}})
-                meetings += stat["meetings"]
-                wins += stat["wins"].get(pid, 0.0)
-            work.loc[row_idx, "h2h_prior_meetings"] = meetings
-            work.loc[row_idx, "h2h_prior_win_share"] = wins / meetings if meetings else np.nan
-
-        line_id = pd.to_numeric(race.get("line_id"), errors="coerce")
-        line_pos = pd.to_numeric(race.get("line_position"), errors="coerce")
-        for lid in line_id.dropna().unique():
-            leader_rows = race.index[(line_id.eq(lid)) & (line_pos.eq(1))]
-            second_rows = race.index[(line_id.eq(lid)) & (line_pos.eq(2))]
-            if len(leader_rows) != 1 or len(second_rows) != 1:
+                stat = pair_stats.get(tuple(sorted((pid, opp))))
+                if stat is not None:
+                    meetings += stat["meetings"]
+                    wins += stat["wins"].get(pid, 0.0)
+            buffers["h2h_prior_meetings"][row_idx] = meetings
+            buffers["h2h_prior_win_share"][row_idx] = wins / meetings if meetings else np.nan
+        partnerships = []
+        for lid in dict.fromkeys(lines[pd.notna(lines)]):
+            leaders = np.flatnonzero((lines == lid) & (positions == 1))
+            seconds = np.flatnonzero((lines == lid) & (positions == 2))
+            if len(leaders) != 1 or len(seconds) != 1:
                 continue
-            li, si = leader_rows[0], second_rows[0]
-            leader = str(work.at[li, "player_id"]); second = str(work.at[si, "player_id"])
-            stat = line_stats.get((leader, second), {"races":0.0, "second_wins":0.0})
-            work.loc[si, "line_pair_prior_races"] = stat["races"]
-            work.loc[si, "line_pair_second_win_rate"] = stat["second_wins"] / stat["races"] if stat["races"] else np.nan
-
-        # Update only after all pre-race features have been assigned.
-        observed = [(pid, pos_by_player.get(pid)) for pid in players if pd.notna(pos_by_player.get(pid))]
+            li, si = leaders[0], seconds[0]
+            key = (players[li], players[si])
+            stat = line_stats.get(key)
+            if stat:
+                buffers["line_pair_prior_races"][idx[si]] = stat["races"]
+                buffers["line_pair_second_win_rate"][idx[si]] = stat["second_wins"] / stat["races"]
+            partnerships.append((key, si))
+        # Update only after every starter has received pre-race values.
+        observed = [(pid, pos_by_player[pid]) for pid in players if pd.notna(pos_by_player[pid])]
         for i, (pid, pos) in enumerate(observed):
-            for opp, opp_pos in observed[i+1:]:
-                key = tuple(sorted((pid, opp)))
-                stat = pair_stats.setdefault(key, {"meetings":0.0, "wins":{}})
+            for opp, opp_pos in observed[i + 1:]:
+                stat = pair_stats.setdefault(tuple(sorted((pid, opp))), {"meetings": 0.0, "wins": {}})
                 stat["meetings"] += 1.0
-                if pos < opp_pos:
-                    stat["wins"][pid] = stat["wins"].get(pid, 0.0) + 1.0
-                elif opp_pos < pos:
-                    stat["wins"][opp] = stat["wins"].get(opp, 0.0) + 1.0
-        for lid in line_id.dropna().unique():
-            leader_rows = race.index[(line_id.eq(lid)) & (line_pos.eq(1))]
-            second_rows = race.index[(line_id.eq(lid)) & (line_pos.eq(2))]
-            if len(leader_rows) != 1 or len(second_rows) != 1:
-                continue
-            leader = str(work.at[leader_rows[0], "player_id"]); second = str(work.at[second_rows[0], "player_id"])
-            stat = line_stats.setdefault((leader, second), {"races":0.0, "second_wins":0.0})
+                winner = pid if pos < opp_pos else opp if opp_pos < pos else None
+                if winner is not None:
+                    stat["wins"][winner] = stat["wins"].get(winner, 0.0) + 1.0
+        for key, si in partnerships:
+            stat = line_stats.setdefault(key, {"races": 0.0, "second_wins": 0.0})
             stat["races"] += 1.0
-            if pd.to_numeric(work.at[second_rows[0], "finish_pos"], errors="coerce") == 1:
+            if finish[si] == 1:
                 stat["second_wins"] += 1.0
-    work = work.sort_values("_orig", kind="mergesort")
+    order = np.argsort(work["_orig"].to_numpy())
     for col in defaults:
-        out[col] = work[col].to_numpy()
+        out[col] = buffers[col][order]
     return out
 
 
