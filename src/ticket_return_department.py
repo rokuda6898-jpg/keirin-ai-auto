@@ -195,6 +195,10 @@ def build_ticket_return_department(output_dir=OUTPUT_DIR):
     settled_path.write_text(json.dumps(list(settled.values()), ensure_ascii=False,
                                        indent=2, allow_nan=False), encoding="utf-8")
     rows = [r for r in settled.values() if r["strategy_version"] == STRATEGY_VERSION]
+    ordered=sorted(rows,key=lambda r:(r.get("date",""),r.get("close_at",0),r.get("race_id","")))
+    today=datetime.now(ZoneInfo("Asia/Tokyo")).strftime("%Y-%m-%d")
+    windows={"today":[r for r in ordered if r.get("date")==today],"all":ordered,"last50":ordered[-50:],"last100":ordered[-100:]}
+    continuous={key:{"settled_races":len(values),"total":summarize(values),"main":summarize(values,"本線"),"hole":summarize(values,"穴")} for key,values in windows.items()}
     report = {
         "updated_at_jst": datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(timespec="seconds"),
         "role": "ticket_return_department", "strategy_version": STRATEGY_VERSION,
@@ -203,6 +207,7 @@ def build_ticket_return_department(output_dir=OUTPUT_DIR):
         "settled_races": len(rows), "target_return_rate": 1.20,
         "target_validated": False, "production_auto_promotion": False,
         "scope": "latest eligible pre-close frozen portfolio; full main and hole tickets",
+        "today_date": today, "continuous": continuous,
         "shadow": {"total": summarize(rows), "main": summarize(rows, "本線"),
                    "hole": summarize(rows, "穴")},
         "authorized_purchase": summarize(rows, authorized_only=True),

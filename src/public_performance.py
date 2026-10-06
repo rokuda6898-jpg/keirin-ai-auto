@@ -37,5 +37,10 @@ body{{font-family:system-ui;background:#f4f7fb;color:#172b45;margin:0;padding:20
 <section><h2>予想画面の％・部署の成績</h2><p>選手横の％は、AIが推定する「今回1着になる確率」です。過去の的中率ではありません。<br>各部署の成績は検証用予想の比較です。上の成績に合算しません。<br>過去データでの再計算やモデルのテスト成績も、締切前に保存した買い目成績とは分けて扱います。</p>
 <a href="company/annual_department_report.html">各部署の検証用成績</a> ／ <a href="company/prediction_quality.html">外れ方とAI確率の検証</a></section>
 <p>回収率120%は目標です。達成を確認した成績ではありません。<br><small>買い目成績の更新 {updated}</small></p></main></body></html>"""
+    from site_ui import continuous_section,CONTINUOUS_JS,assets
+    assets()
+    page=page.replace('</head>','<link rel="stylesheet" href="site-ui.css"></head>')
+    page=page.replace('<h1>成績と数字の見方</h1>','<h1>成績と数字の見方</h1>'+continuous_section())
+    page=page.replace('</body>','<script>'+CONTINUOUS_JS+'</script></body>')
     (output_dir / "performance.html").write_text(page, encoding="utf-8")
     return page

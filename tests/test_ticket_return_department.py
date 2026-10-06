@@ -83,6 +83,22 @@ class TicketReturnTests(unittest.TestCase):
         self.result(10)
         self.assertEqual(build_ticket_return_department(self.root)["settled_races"], 0)
 
+    def test_today_and_rolling_results_keep_date_boundaries(self):
+        from betting_logic import STRATEGY_VERSION
+        today=datetime.now(ZoneInfo("Asia/Tokyo")).strftime("%Y-%m-%d")
+        yesterday=(datetime.now(ZoneInfo("Asia/Tokyo"))-timedelta(days=1)).strftime("%Y-%m-%d")
+        folder=self.root/"company";folder.mkdir()
+        rows=[]
+        for index in range(105):
+            rows.append({"race_id":str(index),"date":today if index==104 else yesterday,"close_at":index,"strategy_version":STRATEGY_VERSION,"tickets":[{"buy":"1-2-3","group":"本線","stake_yen":100,"purchase_authorized":False}],"actual_trifecta":"1-2-3","payout_per_100yen":550})
+        (folder/"ticket_return_settled.json").write_text(json.dumps(rows),encoding="utf-8")
+        report=build_ticket_return_department(self.root)
+        self.assertEqual(report['continuous']['today']['total']['bet_races'],1)
+        self.assertEqual(report['continuous']['all']['total']['bet_races'],105)
+        self.assertEqual(report['continuous']['last50']['total']['bet_races'],50)
+        self.assertEqual(report['continuous']['last100']['total']['bet_races'],100)
+        self.assertEqual(report['continuous']['today']['total']['flat_100yen']['return_rate'],5.5)
+
 
 if __name__ == "__main__":
     unittest.main()
