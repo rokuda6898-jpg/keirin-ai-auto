@@ -71,17 +71,20 @@ class SiteUITests(unittest.TestCase):
                 self.assertEqual(saved_race_tickets("014420261006",1100),[])
 
 
-    def test_reference_holes_exclude_low_odds_and_main_overlap(self):
+    def test_hole_predictions_are_100x_or_higher_only(self):
         import tempfile
-        from site_ui import reference_candidates
+        from site_ui import hole_predictions
         with tempfile.TemporaryDirectory() as directory:
             path=Path(directory)/"candidates.csv"
             base={"race_id":"race1","bet_type":"trifecta","prob":0.02,"main_formation":False,"hole_formation":True}
-            rows=[dict(base,buy="1-2-3",main_formation=True,odds_used=150),dict(base,buy="2-1-3",odds_used=5.5),dict(base,buy="3-2-1",odds_used=150),dict(base,buy="3-1-2",odds_used=None)]
+            rows=[
+                dict(base,buy="1-2-3",main_formation=True,odds_used=150),
+                dict(base,buy="2-1-3",odds_used=5.5),
+                dict(base,buy="3-2-1",odds_used=180),
+                dict(base,buy="3-1-2",odds_used=None),
+            ]
             pd.DataFrame(rows).to_csv(path,index=False)
-            result=reference_candidates("race1",path)
-            holes=[row['buy'] for row in result if row['reference_group']=='穴狙い参考']
-            self.assertEqual(set(holes),{'1-2-3','3-2-1','3-1-2'})
-            mains=[row['buy'] for row in result if row['reference_group']=='本線参考']
-            self.assertNotIn('1-2-3',mains)
-            self.assertEqual(len({row['buy'] for row in result}),len(result))
+            result=hole_predictions("race1",path)
+            self.assertEqual({row['buy'] for row in result},{'1-2-3','3-2-1'})
+            self.assertTrue(all(float(row['odds_used'])>=100 for row in result))
+            self.assertTrue(all(row['prediction_group']=='穴予想' for row in result))
