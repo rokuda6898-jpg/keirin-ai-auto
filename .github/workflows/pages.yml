@@ -17,8 +17,9 @@ permissions:
   id-token: write
   actions: write
 
+# A skipped/failed upstream event must not cancel a valid push deployment.
 concurrency:
-  group: pages
+  group: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.conclusion != 'success' && format('pages-skipped-{0}', github.run_id) || 'pages' }}
   cancel-in-progress: true
 
 jobs:
