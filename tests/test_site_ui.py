@@ -1,3 +1,4 @@
+from pathlib import Path
 import json
 import unittest
 import pandas as pd
@@ -34,3 +35,16 @@ class SiteUITests(unittest.TestCase):
         race=json.loads(soup.select_one('#historyData').string)[0]
         self.assertEqual(race['stake'],100)
         self.assertIn('1点',race['html'])
+
+    def test_saved_picks_reject_postclose_and_keep_latest_preclose(self):
+        import tempfile
+        from unittest import mock
+        from site_ui import saved_race_tickets
+        with tempfile.TemporaryDirectory() as directory:
+            base={"race_id":"014420261006","bet_type":"trifecta","close_at":1000,"prediction_created_at_jst":"1970-01-01T00:15:00Z"}
+            pd.DataFrame([dict(base,buy="2-1-6")]).to_csv(Path(directory)/"shadow_bets_20261006_001500.csv",index=False)
+            pd.DataFrame([dict(base,buy="1-2-3",prediction_created_at_jst="1970-01-01T00:18:00Z")]).to_csv(Path(directory)/"shadow_bets_20261006_001800.csv",index=False)
+            with mock.patch("site_ui.OUTPUT_DIR",Path(directory)):
+                self.assertEqual(saved_race_tickets("014420261006",1100)[0]['buy'],'2-1-6')
+                self.assertEqual(saved_race_tickets("014420261006",950),[])
+
