@@ -49,6 +49,23 @@ class BettingLogicTests(unittest.TestCase):
         for label in ["本線", "穴", "1着固定", "荒れ指数", "購入停止中", "期待値条件"]:
             self.assertIn(label, card)
 
+    def test_top10_history_is_subset_of_new_selected_portfolio(self):
+        race = fixture().assign(close_at=1000)
+        odds = fair_odds(score_riders(race)).assign(race_id="fixture")
+        pred, candidates, _ = predict.build_strategy_outputs(race, odds, 600, 3600)
+        selected = set(candidates.loc[candidates.is_selected, "buy"])
+        with tempfile.TemporaryDirectory() as directory, \
+             patch.object(predict, "OUTPUT_DIR", Path(directory)), \
+             patch.object(predict, "score_trifecta_reranker", return_value=None):
+            ledger = predict.save_trifecta_top10_ledger(
+                pred, predict.datetime.now(predict.ZoneInfo("Asia/Tokyo")), candidates)
+        current = ledger[ledger.variant.eq("production_top10")]
+        self.assertGreater(len(current), 0)
+        self.assertLessEqual(len(current), 10)
+        self.assertTrue(set(current.buy).issubset(selected))
+        self.assertTrue(current.ev.ge(1.10).all())
+        self.assertTrue(current.strategy_version.eq(predict.STRATEGY_VERSION).all())
+
     def test_main_boundaries_and_third_expansion(self):
         for margin, expected in [(10, 6), (9, 8), (7, 8), (6, 10), (4, 10), (3, 12), (0, 12)]:
             self.assertEqual(main_limit(margin, 3), expected)

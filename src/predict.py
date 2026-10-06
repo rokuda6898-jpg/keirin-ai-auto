@@ -876,7 +876,7 @@ def build_policy_shadow_variants(pred):
     return pd.DataFrame(rows)
 
 
-def save_trifecta_top10_ledger(pred, now_jst):
+def save_trifecta_top10_ledger(pred, now_jst, selected_strategy=None):
     path = OUTPUT_DIR / "trifecta_top10_prediction_ledger.csv"
     rows = []
     current_races = set()
@@ -899,6 +899,9 @@ def save_trifecta_top10_ledger(pred, now_jst):
                 "prob": cand.get("prob", cand.get("base_prob", np.nan)),
                 "variant_score": cand.get(score_col, np.nan),
                 "trifecta_portfolio_mode": cand.get("trifecta_portfolio_mode", ""),
+                "strategy_version": cand.get("strategy_version", "legacy_top10"),
+                "ticket_group": cand.get("ticket_group", ""),
+                "ev": cand.get("ev", np.nan),
                 "prediction_created_at_jst": now_jst.isoformat(timespec="seconds"),
             })
 
@@ -931,6 +934,15 @@ def save_trifecta_top10_ledger(pred, now_jst):
             append_variant(
                 base, race_id, production_tri, "legacy_top10_comparison", "prob"
             )
+        if selected_strategy is not None and len(selected_strategy):
+            strategy_tri = selected_strategy[
+                selected_strategy["race_id"].astype(str).eq(str(race_id))
+                & selected_strategy["bet_type"].eq("trifecta")
+                & selected_strategy["is_selected"]
+            ]
+            # Preserve the existing Top10 comparison metric as a subset of
+            # the actual new EV-selected portfolio, without capping live bets.
+            append_variant(base, race_id, strategy_tri, "production_top10", "ev")
 
         # The combination AI must see the broad ordered field, not only tickets
         # that survived the production head/position filter. Otherwise it can
@@ -1328,7 +1340,7 @@ def main():
     top1_ledger = top1_ledger.drop_duplicates(["date", "race_id"], keep="last")
     top1_ledger.to_csv(top1_ledger_path, index=False)
     save_top1_variants(pred, now_jst)
-    save_trifecta_top10_ledger(pred, now_jst)
+    save_trifecta_top10_ledger(pred, now_jst, candidates)
 
     if len(candidates):
         bets = candidates[candidates["is_selected"]].copy()
