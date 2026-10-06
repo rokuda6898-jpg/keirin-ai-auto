@@ -457,6 +457,20 @@ def normalize_bets_for_settlement(bets):
 
 
 
+def preserve_decided_settlements(previous, current):
+    """A missing result in a later fetch must not erase a confirmed result."""
+    combined = pd.concat([previous, current], ignore_index=True, sort=False)
+    if combined.empty:
+        return combined
+    key = [c for c in ["date", "race_id", "bet_type", "buy"] if c in combined]
+    decided = combined.get("is_decided", pd.Series(False, index=combined.index))
+    combined["_confirmed_priority"] = decided.fillna(False).astype(str).str.lower().isin(["true", "1"])
+    combined = combined.sort_values("_confirmed_priority", kind="mergesort")
+    if key:
+        combined = combined.drop_duplicates(key, keep="last")
+    return combined.drop(columns="_confirmed_priority").reset_index(drop=True)
+
+
 def update_prediction_history(settled):
     """Persist settled predictions across workflow runs without double counting."""
     current = settled.copy()
@@ -472,7 +486,7 @@ def update_prediction_history(settled):
             history = pd.read_csv(PREDICTION_HISTORY_CSV, dtype={"race_id": str, "buy": str})
         except (OSError, pd.errors.ParserError, pd.errors.EmptyDataError):
             history = current.head(0).copy()
-        combined = pd.concat([history, current], ignore_index=True, sort=False)
+        combined = preserve_decided_settlements(history, current)
     else:
         combined = current
 
@@ -894,6 +908,12 @@ def run_settlement(args):
             for (_, row), fallback in zip(settled.iterrows(), payout_if_hit.to_numpy())
         ]
         settled["actual_profit_yen"] = np.where(settled["is_decided"], settled["actual_return_yen"] - stake, np.nan)
+    if SETTLED_BETS_CSV.exists():
+        try:
+            previous = pd.read_csv(SETTLED_BETS_CSV, dtype={"race_id": str, "buy": str})
+        except (pd.errors.EmptyDataError, pd.errors.ParserError):
+            previous = settled.head(0)
+        settled = preserve_decided_settlements(previous, settled)
     settled.to_csv(SETTLED_BETS_CSV, index=False)
 
     selected = settled[settled["is_selected"]].copy()

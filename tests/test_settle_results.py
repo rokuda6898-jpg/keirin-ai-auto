@@ -10,6 +10,21 @@ import settle_results
 
 
 class SettleResultsTests(unittest.TestCase):
+    def test_day_rollover_preserves_confirmation_and_accepts_new_results(self):
+        prior = pd.DataFrame([
+            {"race_id":"old", "bet_type":"trifecta", "buy":"1-2-3", "is_decided":True, "actual_return_yen":500},
+            {"race_id":"new", "bet_type":"trifecta", "buy":"2-1-3", "is_decided":False, "actual_return_yen":0},
+        ])
+        current = pd.DataFrame([
+            {"race_id":"old", "bet_type":"trifecta", "buy":"1-2-3", "is_decided":False, "actual_return_yen":0},
+            {"race_id":"new", "bet_type":"trifecta", "buy":"2-1-3", "is_decided":True, "actual_return_yen":800},
+        ])
+        kept = settle_results.preserve_decided_settlements(prior, current).set_index("race_id")
+        self.assertEqual(len(kept), 2)
+        self.assertEqual(kept.loc["old", "actual_return_yen"], 500)
+        self.assertEqual(kept.loc["new", "actual_return_yen"], 800)
+        self.assertTrue(kept.is_decided.all())
+
     def test_empty_bet_file_writes_zero_summary_without_fetching_results(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             output_dir = Path(temp_dir)
