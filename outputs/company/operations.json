@@ -1,6 +1,89 @@
 {
-  "updated_at_jst": "2026-10-07T18:06:55+09:00",
+  "updated_at_jst": "2026-10-07T18:38:31+09:00",
   "implementation": "自動集計・ルールによる担当機能。独立した人間や会話AIを雇ったものではない。",
+  "strategy_review": {
+    "strategy_version": "position_prob_v10_balanced_risk_20261007",
+    "weights": {
+      "line_development": 33,
+      "recent_form": 15,
+      "race_score": 15,
+      "riding_style": 20,
+      "track_fit": 8,
+      "opponents": 9
+    },
+    "weight_scope": "既存モデルへの補正配分。最終的な寄与率や最適値の証明ではない。",
+    "optimality_validated": false,
+    "risk_budget_policy": "候補は広げるが荒れ指数だけで本線の点数を増やさない。期待値基準を下げない。",
+    "fixed_axis_policy": "勝率の独立した校正検証が済むまで固定停止。",
+    "agenda": [
+      {
+        "department": "着順分析・軍師",
+        "decision": "2着以内・3着以内をちょうど2着・3着へ変換する比較案を締切前保存。",
+        "evidence": {
+          "paired_races": 0,
+          "auto_promotion": false,
+          "status": "collecting",
+          "test_start_date": null,
+          "earlier": [
+            {
+              "position": 2,
+              "races": 0,
+              "baseline_brier": null,
+              "challenger_brier": null
+            },
+            {
+              "position": 3,
+              "races": 0,
+              "baseline_brier": null,
+              "challenger_brier": null
+            }
+          ],
+          "later": [
+            {
+              "position": 2,
+              "races": 0,
+              "baseline_brier": null,
+              "challenger_brier": null
+            },
+            {
+              "position": 3,
+              "races": 0,
+              "baseline_brier": null,
+              "challenger_brier": null
+            }
+          ]
+        },
+        "adoption": "比較期間が不足しているため採用保留"
+      },
+      {
+        "department": "リスク・回収率",
+        "decision": "過信した固定軸と点数の強制増加を抑制。配分は据え置き。",
+        "evidence": {
+          "races_with_probability": 0,
+          "missing_probability_races": 0,
+          "axis_wins": 0,
+          "mean_predicted": null,
+          "actual_win_rate": null,
+          "automatic_change": false
+        },
+        "adoption": "保護ルールを適用。精度改善は未確認"
+      },
+      {
+        "department": "検証監査",
+        "decision": "開催日を分けて同じレースの的中率・回収率・確率誤差を比較し、変更を審査。",
+        "evidence": {
+          "status": "collecting",
+          "train_races": 0,
+          "test_races": 0,
+          "minimum_train_races": 100,
+          "minimum_test_races": 50,
+          "auto_apply": false,
+          "scope": "時系列で分けた保存済み選択買い目の検証。全候補や着順確率へは適用しない。"
+        },
+        "adoption": "少数の好成績では配分を変更しない"
+      }
+    ]
+  },
   "site_status": "unhealthy",
   "roles": [
     {
@@ -23,12 +106,12 @@
       "task": "開催予定に対する保存・公式結果・成績照合の抜けを確認。",
       "evidence": {
         "scheduled_races": 72,
-        "saved_preclose": 10,
-        "saved_with_tickets": 4,
-        "saved_skip": 6,
+        "saved_preclose": 0,
+        "saved_with_tickets": 0,
+        "saved_skip": 0,
         "verified_odds_record": 72,
-        "official_result": 47,
-        "settled_current_strategy": 8
+        "official_result": 48,
+        "settled_current_strategy": 0
       },
       "report": "validation_coverage.html"
     },
@@ -36,11 +119,7 @@
       "role": "着順分析担当",
       "status": "比較検証中",
       "task": "1着固定、期待値順、2・3着分散案を別々に検証。",
-      "evidence": {
-        "skip": 6,
-        "ev_compression_miss": 1,
-        "ev_filter_skip": 1
-      },
+      "evidence": {},
       "report": "selection_research.html"
     },
     {
@@ -48,9 +127,9 @@
       "status": "自動採用停止・検証不足",
       "task": "同じレース・同じ100円単位で現行案と比較。少数の好成績を本番採用しない。",
       "evidence": {
-        "probability_first_paired_races": 8,
-        "lower_paired_races": 8,
-        "axis_paired_races": 2
+        "probability_first_paired_races": 0,
+        "lower_paired_races": 0,
+        "axis_paired_races": 0
       },
       "report": "selection_research.html"
     }
