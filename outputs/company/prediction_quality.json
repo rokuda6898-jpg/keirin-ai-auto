@@ -1,13 +1,14 @@
 {
-  "updated_at_jst": "2026-10-07T10:22:55+09:00",
+  "updated_at_jst": "2026-10-07T10:42:25+09:00",
   "strategy_version": "position_prob_v7_20261007",
-  "races": 4,
+  "races": 5,
   "rejected_rows": 33,
-  "candidate_detail_races": 4,
+  "candidate_detail_races": 5,
   "reason_counts": {
     "skip": 1,
     "hit": 2,
-    "ev_compression_miss": 1
+    "ev_compression_miss": 1,
+    "ev_filter_skip": 1
   },
   "cases": [
     {
@@ -45,22 +46,31 @@
       "actual_trifecta": "3-4-6",
       "reason": "hit",
       "candidate_detail_saved": true
+    },
+    {
+      "race_id": "067420261007",
+      "venue": "高知",
+      "race_no": 6,
+      "snapshot_at": "2026-10-07T10:04:13+09:00",
+      "actual_trifecta": "2-5-7",
+      "reason": "ev_filter_skip",
+      "candidate_detail_saved": true
     }
   ],
   "positions": [
     {
       "position": 1,
-      "observations": 28,
-      "races": 4,
+      "observations": 35,
+      "races": 5,
       "bins": [
         {
           "lower": 0.0,
           "upper": 0.1,
-          "observations": 20,
-          "races": 4,
-          "mean_predicted": 0.016333046925009257,
+          "observations": 26,
+          "races": 5,
+          "mean_predicted": 0.01338752748936414,
           "actual_rate": 0.0,
-          "gap": -0.016333046925009257
+          "gap": -0.01338752748936414
         },
         {
           "lower": 0.1,
@@ -137,31 +147,31 @@
         {
           "lower": 0.9,
           "upper": 1.0,
-          "observations": 0,
-          "races": 0,
-          "mean_predicted": null,
-          "actual_rate": null,
-          "gap": null
+          "observations": 1,
+          "races": 1,
+          "mean_predicted": 0.9785852237767174,
+          "actual_rate": 1.0,
+          "gap": 0.021414776223282583
         }
       ],
-      "expected_calibration_error": 0.06721408566429908,
+      "expected_calibration_error": 0.05499497002991255,
       "sample_status": "参考集計・100レース未満",
-      "multiclass_brier": 0.32578264230653037,
-      "uniform_brier": 0.8571428571428572
+      "multiclass_brier": 0.2607449355941729,
+      "uniform_brier": 0.8571428571428573
     },
     {
       "position": 2,
-      "observations": 28,
-      "races": 4,
+      "observations": 35,
+      "races": 5,
       "bins": [
         {
           "lower": 0.0,
           "upper": 0.1,
-          "observations": 14,
-          "races": 4,
-          "mean_predicted": 0.04536616901262086,
-          "actual_rate": 0.07142857142857142,
-          "gap": 0.026062402415950564
+          "observations": 19,
+          "races": 5,
+          "mean_predicted": 0.044871408038173674,
+          "actual_rate": 0.10526315789473684,
+          "gap": 0.06039174985656316
         },
         {
           "lower": 0.1,
@@ -175,11 +185,11 @@
         {
           "lower": 0.2,
           "upper": 0.3,
-          "observations": 4,
-          "races": 2,
-          "mean_predicted": 0.24094302177915472,
-          "actual_rate": 0.25,
-          "gap": 0.00905697822084528
+          "observations": 5,
+          "races": 3,
+          "mean_predicted": 0.2356777122327492,
+          "actual_rate": 0.2,
+          "gap": -0.03567771223274918
         },
         {
           "lower": 0.3,
@@ -202,11 +212,11 @@
         {
           "lower": 0.5,
           "upper": 0.6,
-          "observations": 1,
-          "races": 1,
-          "mean_predicted": 0.5997512375459193,
+          "observations": 2,
+          "races": 2,
+          "mean_predicted": 0.5838521884750922,
           "actual_rate": 0.0,
-          "gap": -0.5997512375459193
+          "gap": -0.5838521884750922
         },
         {
           "lower": 0.6,
@@ -245,24 +255,24 @@
           "gap": null
         }
       ],
-      "expected_calibration_error": 0.09670580414284329,
+      "expected_calibration_error": 0.12001274048958956,
       "sample_status": "参考集計・100レース未満",
-      "multiclass_brier": 0.9871674059215076,
-      "uniform_brier": 0.8571428571428572
+      "multiclass_brier": 1.0291246920016275,
+      "uniform_brier": 0.8571428571428573
     },
     {
       "position": 3,
-      "observations": 28,
-      "races": 4,
+      "observations": 35,
+      "races": 5,
       "bins": [
         {
           "lower": 0.0,
           "upper": 0.1,
-          "observations": 14,
-          "races": 4,
-          "mean_predicted": 0.06574839696805534,
-          "actual_rate": 0.0,
-          "gap": -0.06574839696805534
+          "observations": 19,
+          "races": 5,
+          "mean_predicted": 0.05945035214787318,
+          "actual_rate": 0.05263157894736842,
+          "gap": -0.006818773200504759
         },
         {
           "lower": 0.1,
@@ -276,11 +286,11 @@
         {
           "lower": 0.2,
           "upper": 0.3,
-          "observations": 1,
-          "races": 1,
-          "mean_predicted": 0.20611035390017737,
+          "observations": 2,
+          "races": 2,
+          "mean_predicted": 0.21860285408516633,
           "actual_rate": 0.0,
-          "gap": -0.20611035390017737
+          "gap": -0.21860285408516633
         },
         {
           "lower": 0.3,
@@ -303,11 +313,11 @@
         {
           "lower": 0.5,
           "upper": 0.6,
-          "observations": 1,
-          "races": 1,
-          "mean_predicted": 0.5879389695151481,
+          "observations": 2,
+          "races": 2,
+          "mean_predicted": 0.5738822409940887,
           "actual_rate": 0.0,
-          "gap": -0.5879389695151481
+          "gap": -0.5738822409940887
         },
         {
           "lower": 0.6,
@@ -346,23 +356,23 @@
           "gap": null
         }
       ],
-      "expected_calibration_error": 0.20089082388625515,
+      "expected_calibration_error": 0.16071265910900412,
       "sample_status": "参考集計・100レース未満",
-      "multiclass_brier": 1.0032458047564377,
-      "uniform_brier": 0.8571428571428572
+      "multiclass_brier": 1.0565032204205087,
+      "uniform_brier": 0.8571428571428573
     }
   ],
   "fixed_axis_audit": {
-    "races_with_probability": 4,
+    "races_with_probability": 5,
     "missing_probability_races": 0,
-    "axis_wins": 3,
-    "mean_predicted": 0.7853131499270692,
-    "actual_win_rate": 0.75,
+    "axis_wins": 4,
+    "mean_predicted": 0.8239675646969988,
+    "actual_win_rate": 0.8,
     "automatic_change": false
   },
   "selected_ticket_calibration": {
-    "observations": 17,
-    "races": 3,
+    "observations": 23,
+    "races": 4,
     "bins": [
       {
         "lower": 0,
@@ -385,29 +395,29 @@
       {
         "lower": 0.02,
         "upper": 0.05,
-        "observations": 8,
-        "races": 3,
-        "mean_predicted": 0.03152611274329165,
-        "actual_rate": 0.125,
-        "gap": 0.09347388725670835
+        "observations": 10,
+        "races": 4,
+        "mean_predicted": 0.03349218920006982,
+        "actual_rate": 0.1,
+        "gap": 0.06650781079993018
       },
       {
         "lower": 0.05,
         "upper": 0.1,
-        "observations": 4,
-        "races": 2,
-        "mean_predicted": 0.0764420602028437,
+        "observations": 6,
+        "races": 3,
+        "mean_predicted": 0.07437023268646488,
         "actual_rate": 0.0,
-        "gap": -0.0764420602028437
+        "gap": -0.07437023268646488
       },
       {
         "lower": 0.1,
         "upper": 0.2,
-        "observations": 1,
-        "races": 1,
-        "mean_predicted": 0.17916016413708583,
-        "actual_rate": 1.0,
-        "gap": 0.8208398358629142
+        "observations": 3,
+        "races": 2,
+        "mean_predicted": 0.14505220681858363,
+        "actual_rate": 0.3333333333333333,
+        "gap": 0.18828112651474968
       },
       {
         "lower": 0.2,
@@ -446,7 +456,7 @@
         "gap": null
       }
     ],
-    "expected_calibration_error": 0.11423202343401405,
+    "expected_calibration_error": 0.07581252640489665,
     "sample_status": "参考集計・100レース未満"
   },
   "ev_bands": [
@@ -485,17 +495,17 @@
     {
       "lower": 2,
       "upper": 3,
-      "observations": 1,
-      "races": 1,
-      "mean_predicted_ev": 2.018553093486577,
-      "actual_flat_return_rate": 65.2
+      "observations": 2,
+      "races": 2,
+      "mean_predicted_ev": 2.277791956030131,
+      "actual_flat_return_rate": 32.6
     },
     {
       "lower": 3,
       "upper": null,
-      "observations": 2,
-      "races": 2,
-      "mean_predicted_ev": 4.870092920772702,
+      "observations": 7,
+      "races": 3,
+      "mean_predicted_ev": 4.559422902962744,
       "actual_flat_return_rate": 0.0
     }
   ],
@@ -508,10 +518,10 @@
   ],
   "previous_strategies": [
     {
-      "updated_at_jst": "2026-10-07T10:22:55+09:00",
+      "updated_at_jst": "2026-10-07T10:42:25+09:00",
       "strategy_version": "position_ev_v5_20261006",
       "races": 12,
-      "rejected_rows": 25,
+      "rejected_rows": 26,
       "candidate_detail_races": 6,
       "reason_counts": {
         "first_not_covered": 4,
@@ -1090,10 +1100,10 @@
       ]
     },
     {
-      "updated_at_jst": "2026-10-07T10:22:55+09:00",
+      "updated_at_jst": "2026-10-07T10:42:25+09:00",
       "strategy_version": "position_ev_v6_20261006",
       "races": 21,
-      "rejected_rows": 16,
+      "rejected_rows": 17,
       "candidate_detail_races": 21,
       "reason_counts": {
         "ev_filter_skip": 9,
