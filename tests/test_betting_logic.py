@@ -127,7 +127,7 @@ class BettingLogicTests(unittest.TestCase):
         # Close exact-place scores create an intentionally chaotic test race.
         riders["score_second"] = 50.
         riders["score_third"] = 50.
-        selected, plan = select_race(riders, fair_odds(riders))
+        selected, plan = select_race(riders, fair_odds(riders, ev=1.6))
         bets = selected[selected.is_selected]
         self.assertFalse(bets.buy.duplicated().any())
         self.assertLessEqual(plan["main_count"], plan["main_limit"])
