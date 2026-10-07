@@ -16,7 +16,7 @@ concurrency:
   # Settlement keeps its own queue. GitHub only retains one pending run per
   # concurrency group, so sharing the generic writer queue could evict a
   # scheduled settlement before it ever starts.
-  group: keirin-settle-results
+  group: keirin-settle-results-v2
   cancel-in-progress: false
 
 jobs:
@@ -201,55 +201,43 @@ jobs:
           retention-days: 30
 
       - name: Commit settlement
+        timeout-minutes: 10
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          if [ -s data/raw/history.csv ]; then
-            cp data/raw/history.csv /tmp/settle_history.csv
+          # Only publish generated artifacts. Central history is persisted by
+          # the cache step above and must not block or race the live writers.
+          git add models outputs || true
+
+          if git diff --staged --quiet; then
+            echo "no settlement changes to publish"
+          else
+            git commit -m "Settle keirin predictions"
           fi
 
-          stage_and_commit_settlement() {
-            git add models outputs data/raw/today_entries.csv data/raw/today_odds.csv || true
-            git diff --staged --quiet || git commit -m "Settle keirin predictions"
-          }
+          # Other workflows update main frequently during racing hours.
+          # Never rerun the full settlement pipeline inside the push step:
+          # merge the newest main in seconds, keep this settlement snapshot on
+          # direct conflicts, then retry the push.
+          git restore --worktree . || true
+          git clean -fd
 
-          regenerate_settlement_on_latest_main() {
+          for attempt in 1 2 3 4 5 6 7 8; do
             git fetch origin main
-            git reset --hard origin/main
-            git clean -fd
 
-            if [ -s /tmp/settle_history.csv ]; then
-              mkdir -p data/raw
-              cp /tmp/settle_history.csv data/raw/history.csv
+            if ! git merge-base --is-ancestor origin/main HEAD; then
+              git merge --no-edit -X ours origin/main
             fi
 
-            # Rebuild every published settlement artifact from the newest main.
-            # Never rebase an older generated snapshot over newer predictions.
-            python src/fetch_today_entries.py || true
-            python src/settle_results.py
-            python src/append_confirmed_history.py --min-existing-races 30000 || true
-            python src/company_knowledge.py --mode settle
-            python src/update_growth_log.py --kind settle
-            python src/settle_shadow.py
-            python src/report_growth.py --days 31 --start-date 2026-07-01
-            stage_and_commit_settlement
-          }
+            if git push origin HEAD:main; then
+              echo "settlement published"
+              exit 0
+            fi
 
-          stage_and_commit_settlement
-
-          # If another workflow advanced main after this run checked out, throw
-          # away the generated snapshot and rebuild it on that newer state.
-          git fetch origin main
-          if [ "$(git rev-parse origin/main)" != "$GITHUB_SHA" ]; then
-            echo "main advanced since settlement checkout; regenerating on latest main"
-            regenerate_settlement_on_latest_main
-          fi
-
-          for attempt in 1 2 3 4; do
-            git push origin HEAD:main && exit 0
-            echo "settlement push race: regenerate from latest main retry $attempt/4"
-            regenerate_settlement_on_latest_main
-            sleep $((attempt * 2))
+            echo "settlement push race; fast merge retry $attempt/8"
+            sleep 2
           done
+
+          echo "settlement publish failed after bounded retries"
           exit 1
