@@ -1,5 +1,5 @@
 {
-  "checked_at_jst": "2026-10-07T18:24:08+09:00",
+  "checked_at_jst": "2026-10-07T18:30:29+09:00",
   "status": "repaired",
   "repaired": true,
   "attempts": [
@@ -7,23 +7,22 @@
       "attempt": 0,
       "problems": [
         {
-          "type": "results_overdue",
-          "race_ids": [
-            "064820261007"
-          ]
+          "type": "prediction_strategy_schema_stale",
+          "reason": "strategy_version_changed",
+          "expected_strategy": "position_prob_v9_calibration_guard_20261007"
         }
       ],
       "health": {
         "severity": "warning",
         "problem_types": [
-          "results_overdue"
+          "prediction_strategy_schema_stale"
         ],
         "race_count": 72,
         "expected_riders": 500,
         "actual_riders": 500,
         "rider_integrity_ok": true
       },
-      "repair_action": "settlement_refresh"
+      "repair_action": "prediction_regeneration"
     },
     {
       "attempt": 1,
