@@ -8,11 +8,13 @@ from itertools import permutations
 import numpy as np
 import pandas as pd
 
-STRATEGY_VERSION = "position_prob_v7_20261007"
+STRATEGY_VERSION = "position_prob_v8_risk_governed_20261007"
 MAIN_EV = 1.10
 HOLE_EV = 1.25
 FIXED_MIN_WIN_PROBABILITY = 0.60
 FIXED_MIN_GAP = 10.0
+RISK_FIXED_REVIEW = 45.0
+RISK_FIXED_VETO = 60.0
 
 
 def numbers(frame, column, default=np.nan):
@@ -139,16 +141,38 @@ def race_plan(riders):
     }
     chaos = round(sum(components.values()), 2)
     top_probability = float(riders.p_win.max())
-    fixed = first >= FIXED_MIN_GAP and top_probability >= FIXED_MIN_WIN_PROBABILITY
+    provisional_fixed = first >= FIXED_MIN_GAP and top_probability >= FIXED_MIN_WIN_PROBABILITY
+
+    # Risk department sits above the flow/formation judgement.  A strong
+    # first-place axis is not allowed to stay fixed when the rest of the race
+    # is structurally unstable.  The review band is deliberately stricter
+    # unless both the first-place gap and absolute win probability are strong.
+    risk_fixed_block = bool(
+        chaos >= RISK_FIXED_VETO
+        or (chaos >= RISK_FIXED_REVIEW and (first < 12 or top_probability < 0.68))
+    )
+    risk_veto_fixed = bool(provisional_fixed and risk_fixed_block)
+    fixed = bool(provisional_fixed and not risk_fixed_block)
+    risk_level = "低" if chaos < 30 else "中" if chaos < 50 else "高" if chaos < 70 else "極高"
+    base_main_limit = main_limit(first, third)
+    governed_main_limit = (
+        max(base_main_limit, 12) if chaos >= 70
+        else max(base_main_limit, 10) if chaos >= 50
+        else base_main_limit
+    )
     return {
         "first_gap": first, "third_boundary_gap": third if np.isfinite(third) else None,
-        "main_limit": main_limit(first, third), "first_fixed": fixed,
+        "main_limit": governed_main_limit, "first_fixed": fixed,
         "top_win_probability": top_probability, "fixed_min_probability": FIXED_MIN_WIN_PROBABILITY,
-        "fixed_min_gap": FIXED_MIN_GAP, "fixed_policy_status": "provisional",
+        "fixed_min_gap": FIXED_MIN_GAP, "fixed_policy_status": "risk_governed",
         "fixed_car": int(riders.loc[riders.rank_first.eq(1), "car_no"].iloc[0]) if fixed else None,
         "chaos_index": chaos,
         "chaos_label": "固め" if chaos < 30 else "やや荒れ" if chaos < 50 else "荒れ" if chaos < 70 else "大荒れ警戒",
         "chaos_components": components, "line_count": line_count,
+        "risk_score": chaos, "risk_level": risk_level,
+        "risk_fixed_block": risk_fixed_block, "risk_veto_fixed": risk_veto_fixed,
+        "risk_policy": "risk_department_overrides_flow",
+        "scenario_policy": "3展開分散" if chaos >= 50 else "本命展開中心",
         "popularity_source": riders.popularity_source.iloc[0],
         "probability_method": "position_sequential",
         "position_score_source": riders.position_score_source.iloc[0],
@@ -164,14 +188,26 @@ def expanded_pool(riders, position, count):
 def generate_formations(riders, plan):
     cars = riders.car_no.astype(int).tolist()
     by_car = riders.set_index("car_no")
-    heads = {plan["fixed_car"]} if plan["first_fixed"] else expanded_pool(riders, "first", 2)
-    seconds = expanded_pool(riders, "second", 4) | expanded_pool(riders, "first", 3)
-    thirds = expanded_pool(riders, "third", 5) | expanded_pool(riders, "second", 4)
-    # Strong axis: spread all lower positions before EV compression.
+    risk_score = float(plan.get("risk_score", plan.get("chaos_index", 0)))
+    head_count = 3 if risk_score >= 50 else 2
+    second_count = 5 if risk_score >= 50 else 4
+    third_count = 6 if risk_score >= 50 else 5
+
+    heads = {plan["fixed_car"]} if plan["first_fixed"] else expanded_pool(riders, "first", head_count)
+    seconds = expanded_pool(riders, "second", second_count) | expanded_pool(riders, "first", min(4 if risk_score >= 50 else 3, len(riders)))
+    thirds = expanded_pool(riders, "third", min(third_count, len(riders))) | expanded_pool(riders, "second", min(5 if risk_score >= 50 else 4, len(riders)))
+
+    # The risk department widens the lower places before EV compression.
+    # At extreme risk the third-place lane is fully open.  A manually forced
+    # no-fixed challenger keeps the previous full lower-position expansion.
+    if risk_score >= 70 and not plan["first_fixed"]:
+        thirds = set(cars)
     if plan["first_fixed"] or plan.get("expand_lower_pool", False):
         seconds = thirds = set(cars)
+
     plan["formation"] = {"first": sorted(heads), "second": sorted(seconds), "third": sorted(thirds)}
     rows = []
+    top_car = int(riders.loc[riders.rank_first.eq(1), "car_no"].iloc[0])
     for a, b, c in permutations(cars, 3):
         if plan["first_fixed"] and a != plan["fixed_car"]:
             continue
@@ -180,13 +216,22 @@ def generate_formations(riders, plan):
         probability = float(by_car.at[a, "p_win"] * by_car.at[b, "score_second"] / second_mass * by_car.at[c, "score_third"] / third_mass)
         core = a in heads and b in seconds and c in thirds
         value_rider = any(by_car.at[x, "undervalued_points"] >= 3 for x in (a, b, c))
-        rows.append({"buy": f"{a}-{b}-{c}", "bet_type": "trifecta", "prob": probability,
-                     "head": a, "main_formation": core,
-                     "hole_formation": not core or value_rider,
-                     "value_rider": value_rider})
-    return pd.DataFrame(rows, columns=["buy", "bet_type", "prob", "head", "main_formation", "hole_formation", "value_rider"])
-
-
+        if a != top_car:
+            scenario = "縦脚逆転"
+        elif by_car.at[b, "rank_second"] <= 2 and by_car.at[c, "rank_third"] <= 3:
+            scenario = "本命展開"
+        else:
+            scenario = "崩れ展開"
+        rows.append({
+            "buy": f"{a}-{b}-{c}", "bet_type": "trifecta", "prob": probability,
+            "head": a, "second": b, "third": c, "scenario": scenario,
+            "main_formation": core, "hole_formation": not core or value_rider,
+            "value_rider": value_rider,
+        })
+    return pd.DataFrame(rows, columns=[
+        "buy", "bet_type", "prob", "head", "second", "third", "scenario",
+        "main_formation", "hole_formation", "value_rider",
+    ])
 def hole_limit(eligible, plan, riders):
     if eligible.empty:
         return 0
@@ -204,12 +249,52 @@ def hole_limit(eligible, plan, riders):
     return 6
 
 
+def select_main_with_risk(pool, limit, risk_score):
+    """Probability-first selection with risk-weighted 2nd/3rd-place coverage."""
+    ordered = pool.sort_values(
+        ["prob", "ev", "buy"], ascending=[False, False, True], na_position="last"
+    )
+    if ordered.empty or limit <= 0:
+        return ordered.head(0)
+    if risk_score < 50:
+        return ordered.head(limit)
+
+    remaining = ordered.copy()
+    chosen = []
+    covered_second, covered_third, covered_scenarios = set(), set(), set()
+    risk_weight = float(np.clip((risk_score - 30) / 70, 0, 1))
+    while not remaining.empty and len(chosen) < limit:
+        scored = remaining.copy()
+        scored["coverage_bonus"] = risk_weight * (
+            scored["second"].map(lambda value: 0.12 if int(value) not in covered_second else 0.0)
+            + scored["third"].map(lambda value: 0.18 if int(value) not in covered_third else 0.0)
+            + scored["scenario"].map(lambda value: 0.10 if str(value) not in covered_scenarios else 0.0)
+        )
+        scored["risk_selection_score"] = scored["prob"] * (1 + scored["coverage_bonus"])
+        best = scored.sort_values(
+            ["risk_selection_score", "prob", "ev", "buy"],
+            ascending=[False, False, False, True],
+            na_position="last",
+        ).index[0]
+        row = remaining.loc[best]
+        chosen.append(best)
+        covered_second.add(int(row["second"]))
+        covered_third.add(int(row["third"]))
+        covered_scenarios.add(str(row["scenario"]))
+        remaining = remaining.drop(index=best)
+    return ordered.loc[chosen]
+
+
 def select_race(riders, odds, main_ev=MAIN_EV, hole_ev=HOLE_EV, force_no_fixed=False):
     if not np.isfinite(main_ev) or not np.isfinite(hole_ev) or main_ev < 1 or hole_ev < main_ev:
         raise ValueError("EV thresholds must be finite and 1 <= main <= hole")
     plan = race_plan(riders)
     if force_no_fixed and plan["first_fixed"]:
-        plan.update(first_fixed=False,fixed_car=None,expand_lower_pool=True)
+        plan.update(
+            first_fixed=False, fixed_car=None, expand_lower_pool=True,
+            risk_veto_fixed=True, risk_fixed_block=True,
+            risk_policy="manual_no_fixed_overrides_flow",
+        )
     candidates = generate_formations(riders, plan).merge(clean_odds(odds), on="buy", how="left", validate="one_to_one")
     candidates["ev"] = candidates.prob * candidates.odds_used
     candidates["expected_profit_100yen"] = 100 * (candidates.ev - 1)
@@ -224,7 +309,7 @@ def select_race(riders, odds, main_ev=MAIN_EV, hole_ev=HOLE_EV, force_no_fixed=F
         & candidates.ev.ge(main_ev)
         & candidates.odds_used.lt(100)
     ].sort_values(["prob", "ev", "buy"], ascending=[False, False, True], na_position="last")
-    main = main_pool.head(plan["main_limit"])
+    main = select_main_with_risk(main_pool, plan["main_limit"], plan["risk_score"])
     candidates.loc[main.index, "ticket_group"] = "本線"
 
     hole_pool = candidates[
@@ -239,8 +324,13 @@ def select_race(riders, odds, main_ev=MAIN_EV, hole_ev=HOLE_EV, force_no_fixed=F
     candidates.loc[list(main.index) + list(holes.index), "is_selected"] = True
     candidates["candidate_rank"] = candidates.prob.rank(ascending=False, method="first").astype(int)
     candidates["chaos_index"] = plan["chaos_index"]
+    candidates["risk_score"] = plan["risk_score"]
+    candidates["risk_level"] = plan["risk_level"]
+    candidates["risk_veto_fixed"] = plan["risk_veto_fixed"]
     candidates["first_fixed"] = plan["first_fixed"]
     candidates["probability_method"] = plan["probability_method"]
+    selected = candidates.loc[candidates.is_selected]
+    plan["selected_scenarios"] = sorted(selected.scenario.dropna().astype(str).unique().tolist())
     plan.update(main_count=len(main), hole_count=len(holes),
                 skip_reason="期待値条件を満たす買い目なし（オッズ未取得含む）" if main.empty and holes.empty else "",
                 main_ev=main_ev, hole_ev=hole_ev)
