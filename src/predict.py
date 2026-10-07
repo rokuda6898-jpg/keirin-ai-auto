@@ -1141,6 +1141,11 @@ def build_strategy_outputs(pred, today_odds, epoch, max_seconds, version=STRATEG
         if not eligible:
             trifecta["is_selected"] = False
             plan.update(main_count=0, hole_count=0, skip_reason="締切時刻未取得・締切5分以内・対象時間外")
+            trifecta['high_payout_selected']=False
+            department=plan.get('high_payout_department')
+            if department:
+                department.update(analysis_rating=department['rating'],rating='見送り',recommended_count=0,tickets=[],
+                                  skip_reason='このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）')
         plans.append(plan)
         # Other ticket types keep their existing generation and filters.
         other = make_multi_bet_candidates(race, top_k=min(len(race), 9))
