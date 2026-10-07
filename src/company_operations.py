@@ -30,6 +30,8 @@ def build_company_operations(output_dir=OUTPUT_DIR):
                         'lower_paired_races':research.get('lower_comparison',{}).get('paired_races',0),
                         'axis_paired_races':research.get('axis_comparison',{}).get('paired_races',0)},'report':'selection_research.html'}]
     now=datetime.now(ZoneInfo('Asia/Tokyo')).isoformat(timespec='seconds')
+    from race_meeting import build_race_meetings
+    race_meetings=build_race_meetings(output_dir, datetime.fromisoformat(now))
     report={'updated_at_jst':now,'implementation':'自動集計・ルールによる担当機能。独立した人間や会話AIを雇ったものではない。',
             'strategy_review': {'strategy_version': STRATEGY_VERSION,
                 'weights': {'line_development':33, 'recent_form':15, 'race_score':15, 'riding_style':20, 'track_fit':8, 'opponents':9},
@@ -42,6 +44,9 @@ def build_company_operations(output_dir=OUTPUT_DIR):
                     {'department':'リスク・回収率','decision':'過信した固定軸と点数の強制増加を抑制。配分は据え置き。', 'evidence':quality.get('fixed_axis_audit',{}), 'adoption':'保護ルールを適用。精度改善は未確認'},
                     {'department':'検証監査','decision':'開催日を分けて同じレースの的中率・回収率・確率誤差を比較し、変更を審査。', 'evidence':research.get('calibration',{}), 'adoption':'少数の好成績では配分を変更しない'}]},
             'site_status':manager.get('status','未確認'),'roles':roles,
+            'employee_workflow': {'roles':['データ担当','予想担当','軍師','リスク担当','検証担当'],
+                'equal_speaking_rights':True, 'decision_rule':'発言権は平等。採用は検証根拠で決め、多数決で変更しない。',
+                'race_meetings':race_meetings},
             'release_policy':{'minimum_same_race_comparisons':300,'chronological_holdout_required':True,
                               'profit_gate_required':True,'automatic_promotion':False},
             'target_return_rate':1.20,'target_validated':False,
@@ -61,6 +66,15 @@ def build_company_operations(output_dir=OUTPUT_DIR):
     for entry in review['agenda']:
         body+='<section><h3>'+esc(entry['department'])+'</h3><p>'+esc(entry['decision'])+'</p><p>判断：'+esc(entry['adoption'])+'</p></section>'
     body+='<p>この会議は各部門の集計結果を使った自動審査です。別々の会話AIが討論する機能ではありません。更新ごとに判断材料を集計します。</p>'
+    body+='<h2>レース別の担当報告・会議</h2><p>データ担当→予想担当→軍師→リスク担当→検証担当。発言権は全員同じです。採用は多数決ではなく検証根拠で決めます。以下は保存候補の説明で、現在の購入承認ではありません。</p>'
+    for meeting in race_meetings:
+        body+='<details><summary>'+esc(meeting['venue'])+' '+esc(meeting['race_no'])+'R｜本線'+str(meeting['main_count'])+'点・穴'+str(meeting['hole_count'])+'点</summary>'
+        for key,label in [('main_basis','本線の根拠'),('failure_scenario','外れる展開'),('hole_reason','穴を入れる理由'),('information_gaps','情報不足')]:
+            value=meeting['topics'][key]
+            body+='<h3>'+label+'</h3><p>'+esc('／'.join(value) if isinstance(value,list) else value)+'</p>'
+        for opinion in meeting['opinions']:
+            body+='<p><b>'+esc(opinion['role'])+'</b>：'+esc(opinion['statement'])+'</p>'
+        body+='</details>'
     for role in roles:
         body+='<section><h3>'+role['role']+'</h3><p>'+role['status']+'</p><p>'+role['task']+'</p><a href="'+role['report']+'">確認結果を見る</a></section>'
     body+='<h2>本番採用の条件</h2><p>同一レースで最低300件の比較、期間を分けた検証、回収率の審査を経て判断します。部署の多数決や数レースの的中だけで自動採用しません。</p><h2>残っている未確認事項</h2><ul>'
