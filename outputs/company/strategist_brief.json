@@ -1,8 +1,8 @@
 {
-  "updated_at_jst": "2026-10-07T20:27:00+09:00",
+  "updated_at_jst": "2026-10-07T20:48:44+09:00",
   "role": "strategist",
-  "central_races_available": 60002,
-  "official_evaluated_races": 471,
+  "central_races_available": 60003,
+  "official_evaluated_races": 472,
   "warnings": [],
   "recommended_actions": [
     {
@@ -10,10 +10,10 @@
       "type": "final_trifecta_product_kpi",
       "action": "treat latest selected trifecta tickets as the primary product KPI; keep model Top10 coverage as a diagnostic KPI",
       "evidence": {
-        "races": 97,
-        "hit_rate": 0.08247422680412371,
+        "races": 98,
+        "hit_rate": 0.08163265306122448,
         "recent_50_hit_rate": 0.12,
-        "avg_ticket_count": 9.948453608247423
+        "avg_ticket_count": 9.979591836734693
       }
     },
     {
@@ -33,14 +33,14 @@
       "evidence": {
         "variant": "core_model",
         "department": "model_audit_office",
-        "races": 195,
+        "races": 196,
         "production_hits": 88,
         "challenger_hits": 97,
-        "production_hit_rate": 0.4512820512820513,
-        "challenger_hit_rate": 0.49743589743589745,
-        "delta_hit_rate": 0.046153846153846156,
-        "delta_pp": 4.615384615384616,
-        "changed_races": 32,
+        "production_hit_rate": 0.4489795918367347,
+        "challenger_hit_rate": 0.49489795918367346,
+        "delta_hit_rate": 0.04591836734693877,
+        "delta_pp": 4.591836734693877,
+        "changed_races": 33,
         "flip_gains": 15,
         "flip_losses": 6,
         "net_hits": 9,
@@ -54,15 +54,15 @@
       "evidence": {
         "rule": "switch_to_second_when_margin<=0.05",
         "margin_threshold": 0.05,
-        "switched_races": 55,
+        "switched_races": 56,
         "production_hits_in_switched_races": 16,
-        "second_pick_hits_in_switched_races": 19,
-        "net_hits": 3,
+        "second_pick_hits_in_switched_races": 20,
+        "net_hits": 4,
         "baseline_total_hits": 203,
-        "hypothetical_total_hits": 206,
-        "baseline_hit_rate": 0.4309978768577495,
-        "hypothetical_hit_rate": 0.43736730360934184,
-        "global_delta_pp": 0.6369426751592357,
+        "hypothetical_total_hits": 207,
+        "baseline_hit_rate": 0.4300847457627119,
+        "hypothetical_hit_rate": 0.4385593220338983,
+        "global_delta_pp": 0.847457627118644,
         "status": "shadow_candidate_only",
         "promotion_requirement": "must beat production prospectively on >=300 settled races and pass external validation"
       }
@@ -73,9 +73,9 @@
       "action": "keep multi-head coverage for near-tie races; do not collapse to a single head",
       "evidence": {
         "segment": "near_tie_<=0.03",
-        "races": 36,
+        "races": 37,
         "hits": 10,
-        "hit_rate": 0.277778
+        "hit_rate": 0.27027
       }
     }
   ],
@@ -117,7 +117,7 @@
     "live_snapshot_model": {}
   },
   "prospective_comparison": {
-    "updated_at_jst": "2026-10-07T20:27:00+09:00",
+    "updated_at_jst": "2026-10-07T20:48:44+09:00",
     "version": "strategist_consensus_v1",
     "status": "collecting",
     "production_effect": "advisory_and_shadow_only",
@@ -10848,8 +10848,8 @@
       {
         "version": "strategist_consensus_v1",
         "race_id": "014420261007",
-        "snapshot_at": "2026-10-07T20:05:15+09:00",
-        "source_snapshot_at": "2026-10-07T20:05:15+09:00",
+        "snapshot_at": "2026-10-07T20:23:08+09:00",
+        "source_snapshot_at": "2026-10-07T20:23:08+09:00",
         "close_at": 1791372900.0,
         "venue": "大垣",
         "race_no": 1,
@@ -10858,28 +10858,21 @@
             "department": "data_department",
             "winner_car": 5,
             "tickets": [
+              "1-2-5",
+              "1-5-2",
+              "2-1-4",
               "2-3-5",
-              "2-4-5",
-              "2-5-1",
-              "2-5-3",
-              "2-5-4",
-              "3-4-5",
-              "3-5-4",
+              "3-4-2",
+              "3-5-1",
+              "3-5-2",
               "4-2-3",
               "4-2-5",
               "4-3-5",
               "4-5-1",
-              "4-5-2",
               "4-5-3",
-              "5-2-1",
-              "5-2-3",
-              "5-2-4",
+              "5-1-2",
               "5-3-1",
-              "5-3-2",
-              "5-3-4",
-              "5-4-1",
-              "5-4-2",
-              "5-4-3"
+              "5-3-4"
             ],
             "minimum_reference_races": 39.0
           },
@@ -10891,14 +10884,9 @@
               "1-5-2",
               "1-5-3",
               "1-5-4",
-              "5-2-1",
-              "5-2-3",
-              "5-2-4",
-              "5-3-2",
-              "5-3-4",
-              "5-4-1",
-              "5-4-2",
-              "5-4-3"
+              "2-1-4",
+              "3-4-2",
+              "5-3-4"
             ],
             "minimum_reference_races": 39.0
           },
@@ -10906,28 +10894,15 @@
             "department": "line_department",
             "winner_car": 3,
             "tickets": [
-              "2-1-5",
-              "2-3-4",
+              "2-1-4",
               "2-3-5",
-              "2-4-1",
-              "2-4-3",
-              "2-4-5",
-              "2-5-1",
-              "2-5-3",
-              "2-5-4",
               "3-4-2",
               "3-5-2",
+              "4-2-5",
               "4-3-5",
-              "4-5-2",
               "4-5-3",
               "5-1-2",
-              "5-2-3",
-              "5-2-4",
-              "5-3-2",
-              "5-3-4",
-              "5-4-1",
-              "5-4-2",
-              "5-4-3"
+              "5-3-4"
             ],
             "minimum_reference_races": 39.0
           },
@@ -10935,30 +10910,23 @@
             "department": "risk_department",
             "winner_car": 5,
             "tickets": [
+              "1-2-5",
+              "1-5-2",
+              "2-1-4",
               "2-3-5",
-              "2-4-5",
-              "2-5-1",
-              "2-5-3",
-              "2-5-4",
-              "3-4-5",
+              "3-4-2",
               "3-5-1",
-              "3-5-4",
+              "3-5-2",
+              "4-2-1",
               "4-2-3",
               "4-2-5",
+              "4-3-2",
               "4-3-5",
               "4-5-1",
-              "4-5-2",
               "4-5-3",
               "5-1-2",
-              "5-2-1",
-              "5-2-3",
-              "5-2-4",
               "5-3-1",
-              "5-3-2",
-              "5-3-4",
-              "5-4-1",
-              "5-4-2",
-              "5-4-3"
+              "5-3-4"
             ],
             "minimum_reference_races": 39.0
           }
@@ -10972,7 +10940,7 @@
           {
             "buy": "5-3-4",
             "group": "本線",
-            "ev": 2.195817865764161,
+            "ev": 2.0764799382769783,
             "votes": 4,
             "departments": [
               "data_department",
@@ -10982,9 +10950,9 @@
             ]
           },
           {
-            "buy": "5-4-3",
+            "buy": "3-4-2",
             "group": "本線",
-            "ev": 1.9935290732561461,
+            "ev": 1.2785461854027393,
             "votes": 4,
             "departments": [
               "data_department",
@@ -10994,9 +10962,9 @@
             ]
           },
           {
-            "buy": "5-4-2",
+            "buy": "2-1-4",
             "group": "本線",
-            "ev": 1.6935089796411702,
+            "ev": 1.1168786832700908,
             "votes": 4,
             "departments": [
               "data_department",
@@ -11006,57 +10974,9 @@
             ]
           },
           {
-            "buy": "5-4-1",
-            "group": "本線",
-            "ev": 1.517936212233768,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "5-2-4",
-            "group": "本線",
-            "ev": 1.495270918763821,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "5-2-3",
-            "group": "本線",
-            "ev": 1.1983610178719046,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "5-3-2",
-            "group": "本線",
-            "ev": 1.1314161236920013,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "2-5-4",
+            "buy": "4-5-3",
             "group": "穴",
-            "ev": 3.211102237061893,
+            "ev": 1.394723029411001,
             "votes": 3,
             "departments": [
               "data_department",
@@ -11065,9 +10985,20 @@
             ]
           },
           {
-            "buy": "2-4-5",
-            "group": "穴",
-            "ev": 2.7048437342885463,
+            "buy": "1-5-2",
+            "group": "本線",
+            "ev": 1.3714721226107027,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "2-3-5",
+            "group": "本線",
+            "ev": 1.342067166335004,
             "votes": 3,
             "departments": [
               "data_department",
@@ -11076,9 +11007,9 @@
             ]
           },
           {
-            "buy": "2-5-1",
-            "group": "穴",
-            "ev": 2.626135625517183,
+            "buy": "3-5-2",
+            "group": "本線",
+            "ev": 1.3394251272052977,
             "votes": 3,
             "departments": [
               "data_department",
@@ -11087,9 +11018,9 @@
             ]
           },
           {
-            "buy": "2-5-3",
+            "buy": "4-3-5",
             "group": "穴",
-            "ev": 2.311216236406668,
+            "ev": 1.3215093998174277,
             "votes": 3,
             "departments": [
               "data_department",
@@ -11098,13 +11029,45 @@
             ]
           },
           {
-            "buy": "4-5-2",
+            "buy": "4-2-5",
             "group": "穴",
-            "ev": 1.7770268377369998,
+            "ev": 1.2615136412530152,
             "votes": 3,
             "departments": [
               "data_department",
               "line_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "5-1-2",
+            "group": "本線",
+            "ev": 1.1200473833878073,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "line_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "1-2-5",
+            "group": "本線",
+            "ev": 1.1170121235188244,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "4-5-1",
+            "group": "穴",
+            "ev": 1.5961981496918094,
+            "votes": 2,
+            "departments": [
+              "data_department",
               "risk_department"
             ]
           }
@@ -11114,483 +11077,88 @@
       {
         "version": "strategist_consensus_v1",
         "race_id": "012220261007",
-        "snapshot_at": "2026-10-07T20:02:03+09:00",
-        "source_snapshot_at": "2026-10-07T20:02:03+09:00",
+        "snapshot_at": "2026-10-07T20:38:30+09:00",
+        "source_snapshot_at": "2026-10-07T20:38:30+09:00",
         "close_at": 1791373500.0,
         "venue": "前橋",
         "race_no": 1,
         "views": [
           {
             "department": "data_department",
-            "winner_car": 2,
-            "tickets": [
-              "1-3-4",
-              "2-4-3",
-              "2-7-4",
-              "4-3-7",
-              "4-7-3",
-              "5-3-4",
-              "5-4-3",
-              "5-7-4",
-              "7-1-3",
-              "7-1-4",
-              "7-3-4",
-              "7-4-2"
-            ],
+            "winner_car": 1,
+            "tickets": [],
             "minimum_reference_races": 39.0
           },
           {
             "department": "pace_department",
-            "winner_car": 2,
-            "tickets": [
-              "1-3-4",
-              "2-1-6",
-              "2-3-5",
-              "2-4-3",
-              "4-7-3",
-              "5-3-4",
-              "5-4-3",
-              "6-1-3",
-              "7-1-3",
-              "7-1-4",
-              "7-1-5",
-              "7-1-6",
-              "7-3-4",
-              "7-4-3"
-            ],
+            "winner_car": 1,
+            "tickets": [],
             "minimum_reference_races": 39.0
           },
           {
             "department": "line_department",
-            "winner_car": 2,
-            "tickets": [
-              "1-3-4",
-              "2-4-3",
-              "2-7-4",
-              "4-3-7",
-              "5-3-4",
-              "5-4-3",
-              "5-4-7",
-              "5-6-4",
-              "5-7-4",
-              "7-1-3",
-              "7-1-4",
-              "7-3-4"
-            ],
+            "winner_car": 1,
+            "tickets": [],
             "minimum_reference_races": 39.0
           },
           {
             "department": "risk_department",
-            "winner_car": 2,
-            "tickets": [
-              "4-3-7",
-              "4-7-3",
-              "6-1-3",
-              "6-1-7",
-              "7-1-3",
-              "7-1-4",
-              "7-1-6",
-              "7-2-6",
-              "7-3-4",
-              "7-4-2"
-            ],
+            "winner_car": 1,
+            "tickets": [],
             "minimum_reference_races": 39.0
           }
         ],
         "winner_votes": {
-          "2": 4
+          "1": 4
         },
-        "tickets": [
-          {
-            "buy": "7-1-4",
-            "group": "穴",
-            "ev": 36.53085851331312,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "7-3-4",
-            "group": "穴",
-            "ev": 19.977469322967213,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "7-1-3",
-            "group": "穴",
-            "ev": 19.659632824237832,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "4-7-3",
-            "group": "穴",
-            "ev": 20.730864447743286,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "5-4-3",
-            "group": "穴",
-            "ev": 20.243714120138225,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "5-3-4",
-            "group": "穴",
-            "ev": 19.589579936477012,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "4-3-7",
-            "group": "穴",
-            "ev": 18.986093537303613,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "1-3-4",
-            "group": "本線",
-            "ev": 1.238466068005305,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "2-4-3",
-            "group": "本線",
-            "ev": 1.1769858386798484,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "7-1-6",
-            "group": "穴",
-            "ev": 22.90934851339992,
-            "votes": 2,
-            "departments": [
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "6-1-3",
-            "group": "穴",
-            "ev": 22.658278126287936,
-            "votes": 2,
-            "departments": [
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "7-4-2",
-            "group": "穴",
-            "ev": 20.32961813817503,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "risk_department"
-            ]
-          }
-        ],
+        "tickets": [],
         "purchase_authorized": false
       },
       {
         "version": "strategist_consensus_v1",
         "race_id": "024420261007",
-        "snapshot_at": "2026-10-07T20:02:03+09:00",
-        "source_snapshot_at": "2026-10-07T20:02:03+09:00",
+        "snapshot_at": "2026-10-07T20:38:30+09:00",
+        "source_snapshot_at": "2026-10-07T20:38:30+09:00",
         "close_at": 1791374100.0,
         "venue": "大垣",
         "race_no": 2,
         "views": [
           {
             "department": "data_department",
-            "winner_car": 2,
-            "tickets": [
-              "1-5-4",
-              "2-4-5",
-              "2-5-3",
-              "3-1-4",
-              "3-2-1",
-              "3-2-4",
-              "3-4-2",
-              "3-4-5",
-              "3-5-1",
-              "3-5-2",
-              "3-5-4",
-              "4-1-5",
-              "4-5-1",
-              "4-5-3",
-              "5-1-4",
-              "5-2-4",
-              "5-4-1"
-            ],
+            "winner_car": 1,
+            "tickets": [],
             "minimum_reference_races": 54.0
           },
           {
             "department": "pace_department",
-            "winner_car": 2,
-            "tickets": [
-              "2-1-5",
-              "2-4-3",
-              "2-4-5",
-              "2-5-3",
-              "3-1-2",
-              "3-1-4",
-              "3-2-1",
-              "3-2-4",
-              "3-4-2",
-              "3-5-1",
-              "3-5-2",
-              "3-5-4",
-              "4-1-5",
-              "5-1-3",
-              "5-1-4",
-              "5-2-4",
-              "5-4-2"
-            ],
+            "winner_car": 1,
+            "tickets": [],
             "minimum_reference_races": 54.0
           },
           {
             "department": "line_department",
-            "winner_car": 2,
-            "tickets": [
-              "2-3-4",
-              "2-4-3",
-              "2-4-5",
-              "2-5-1",
-              "2-5-3",
-              "2-5-4",
-              "3-1-4",
-              "3-2-1",
-              "3-2-4",
-              "3-5-1",
-              "3-5-4",
-              "4-5-1",
-              "5-1-4",
-              "5-2-4",
-              "5-4-1",
-              "5-4-3"
-            ],
+            "winner_car": 1,
+            "tickets": [],
             "minimum_reference_races": 54.0
           },
           {
             "department": "risk_department",
-            "winner_car": 2,
-            "tickets": [
-              "1-5-4",
-              "2-4-5",
-              "2-5-3",
-              "3-1-4",
-              "3-2-1",
-              "3-2-4",
-              "3-4-2",
-              "3-4-5",
-              "3-5-1",
-              "3-5-2",
-              "3-5-4",
-              "4-5-3",
-              "5-1-3",
-              "5-3-1",
-              "5-3-2",
-              "5-3-4",
-              "5-4-3"
-            ],
+            "winner_car": 1,
+            "tickets": [],
             "minimum_reference_races": 54.0
           }
         ],
         "winner_votes": {
-          "2": 4
+          "1": 4
         },
-        "tickets": [
-          {
-            "buy": "3-5-4",
-            "group": "穴",
-            "ev": 4.381810689738996,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "3-5-1",
-            "group": "穴",
-            "ev": 3.506166873134325,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "2-5-3",
-            "group": "穴",
-            "ev": 3.1182878625365724,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "2-4-5",
-            "group": "本線",
-            "ev": 2.0301999455682176,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "3-1-4",
-            "group": "本線",
-            "ev": 1.7006987218861571,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "3-2-4",
-            "group": "本線",
-            "ev": 1.6596306085795756,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "3-2-1",
-            "group": "本線",
-            "ev": 1.3955212884723431,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "3-5-2",
-            "group": "穴",
-            "ev": 4.715182751739285,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "5-2-4",
-            "group": "穴",
-            "ev": 3.2859374448036873,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "3-4-2",
-            "group": "穴",
-            "ev": 3.1124267998998874,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "5-1-4",
-            "group": "穴",
-            "ev": 2.859689918277832,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "5-4-1",
-            "group": "穴",
-            "ev": 4.346488581513356,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "line_department"
-            ]
-          }
-        ],
+        "tickets": [],
         "purchase_authorized": false
       },
       {
         "version": "strategist_consensus_v1",
         "race_id": "022220261007",
-        "snapshot_at": "2026-10-07T20:02:03+09:00",
-        "source_snapshot_at": "2026-10-07T20:02:03+09:00",
+        "snapshot_at": "2026-10-07T20:34:19+09:00",
+        "source_snapshot_at": "2026-10-07T20:34:19+09:00",
         "close_at": 1791374700.0,
         "venue": "前橋",
         "race_no": 2,
@@ -11600,16 +11168,16 @@
             "winner_car": 1,
             "tickets": [
               "1-2-7",
-              "2-7-4",
-              "3-7-4",
-              "5-2-4",
-              "5-4-7",
-              "5-6-3",
-              "5-6-4",
-              "5-7-4",
-              "7-2-4",
-              "7-4-3",
-              "7-6-3"
+              "3-6-2",
+              "3-7-2",
+              "4-2-5",
+              "5-3-4",
+              "5-4-3",
+              "5-6-2",
+              "5-6-7",
+              "6-3-2",
+              "6-3-4",
+              "7-5-3"
             ],
             "minimum_reference_races": 37.0
           },
@@ -11618,16 +11186,16 @@
             "winner_car": 1,
             "tickets": [
               "1-2-7",
-              "2-6-3",
+              "2-4-3",
+              "2-4-7",
+              "2-5-3",
               "2-6-5",
               "2-6-7",
-              "4-2-7",
-              "4-5-3",
-              "5-7-3",
-              "7-2-3",
-              "7-2-4",
-              "7-4-3",
-              "7-6-3"
+              "3-2-7",
+              "3-6-2",
+              "3-7-2",
+              "4-2-5",
+              "7-5-3"
             ],
             "minimum_reference_races": 37.0
           },
@@ -11636,17 +11204,17 @@
             "winner_car": 1,
             "tickets": [
               "1-2-7",
+              "1-7-4",
               "2-1-4",
-              "2-7-3",
-              "2-7-4",
-              "3-7-4",
-              "5-2-4",
-              "5-4-7",
-              "5-6-3",
-              "5-6-4",
-              "5-7-4",
-              "7-2-4",
-              "7-6-3"
+              "2-4-3",
+              "2-4-7",
+              "3-6-2",
+              "3-7-2",
+              "5-3-4",
+              "5-4-3",
+              "5-6-2",
+              "5-6-7",
+              "6-3-2"
             ],
             "minimum_reference_races": 37.0
           },
@@ -11654,16 +11222,16 @@
             "department": "risk_department",
             "winner_car": 1,
             "tickets": [
-              "3-7-4",
-              "5-4-7",
-              "5-6-3",
-              "5-6-4",
-              "5-7-4",
-              "7-2-4",
-              "7-2-6",
-              "7-3-4",
-              "7-4-3",
-              "7-6-3"
+              "3-6-2",
+              "3-7-2",
+              "4-2-5",
+              "5-3-4",
+              "5-4-3",
+              "5-6-2",
+              "5-6-7",
+              "6-3-2",
+              "6-3-4",
+              "7-5-3"
             ],
             "minimum_reference_races": 37.0
           }
@@ -11673,9 +11241,9 @@
         },
         "tickets": [
           {
-            "buy": "7-2-4",
+            "buy": "3-6-2",
             "group": "穴",
-            "ev": 13.051762708603006,
+            "ev": 7.621637378394219,
             "votes": 4,
             "departments": [
               "data_department",
@@ -11685,9 +11253,9 @@
             ]
           },
           {
-            "buy": "7-6-3",
+            "buy": "3-7-2",
             "group": "穴",
-            "ev": 11.498453067357786,
+            "ev": 3.0306126698119806,
             "votes": 4,
             "departments": [
               "data_department",
@@ -11697,9 +11265,9 @@
             ]
           },
           {
-            "buy": "5-6-4",
+            "buy": "5-6-2",
             "group": "穴",
-            "ev": 20.10707866866348,
+            "ev": 8.37397878888128,
             "votes": 3,
             "departments": [
               "data_department",
@@ -11708,9 +11276,9 @@
             ]
           },
           {
-            "buy": "5-6-3",
+            "buy": "5-4-3",
             "group": "穴",
-            "ev": 18.129295639531936,
+            "ev": 8.31490148509203,
             "votes": 3,
             "departments": [
               "data_department",
@@ -11719,9 +11287,9 @@
             ]
           },
           {
-            "buy": "3-7-4",
+            "buy": "5-6-7",
             "group": "穴",
-            "ev": 14.063356970014322,
+            "ev": 7.5030058199958285,
             "votes": 3,
             "departments": [
               "data_department",
@@ -11730,9 +11298,31 @@
             ]
           },
           {
-            "buy": "7-4-3",
+            "buy": "5-3-4",
             "group": "穴",
-            "ev": 12.271304235333014,
+            "ev": 7.39643532204645,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "line_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "6-3-2",
+            "group": "穴",
+            "ev": 5.490492462752323,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "line_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "4-2-5",
+            "group": "穴",
+            "ev": 5.184146532280578,
             "votes": 3,
             "departments": [
               "data_department",
@@ -11741,31 +11331,203 @@
             ]
           },
           {
-            "buy": "5-4-7",
+            "buy": "7-5-3",
             "group": "穴",
-            "ev": 12.159792503405258,
+            "ev": 3.8078341331232037,
             "votes": 3,
             "departments": [
               "data_department",
-              "line_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "5-7-4",
-            "group": "穴",
-            "ev": 11.716362811786341,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
+              "pace_department",
               "risk_department"
             ]
           },
           {
             "buy": "1-2-7",
             "group": "本線",
-            "ev": 1.4545035575502703,
+            "ev": 1.3204292072732902,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department"
+            ]
+          },
+          {
+            "buy": "2-4-7",
+            "group": "穴",
+            "ev": 5.05656782948062,
+            "votes": 2,
+            "departments": [
+              "line_department",
+              "pace_department"
+            ]
+          },
+          {
+            "buy": "2-4-3",
+            "group": "穴",
+            "ev": 4.942701514632154,
+            "votes": 2,
+            "departments": [
+              "line_department",
+              "pace_department"
+            ]
+          }
+        ],
+        "purchase_authorized": false
+      },
+      {
+        "version": "strategist_consensus_v1",
+        "race_id": "034420261007",
+        "snapshot_at": "2026-10-07T20:34:19+09:00",
+        "source_snapshot_at": "2026-10-07T20:34:19+09:00",
+        "close_at": 1791375300.0,
+        "venue": "大垣",
+        "race_no": 3,
+        "views": [
+          {
+            "department": "data_department",
+            "winner_car": 2,
+            "tickets": [
+              "1-4-7",
+              "2-5-4",
+              "2-6-7",
+              "6-1-3",
+              "6-4-1",
+              "6-7-4",
+              "7-1-4",
+              "7-2-4",
+              "7-3-4",
+              "7-4-6",
+              "7-5-1",
+              "7-5-2",
+              "7-6-4"
+            ],
+            "minimum_reference_races": 25.0
+          },
+          {
+            "department": "pace_department",
+            "winner_car": 2,
+            "tickets": [
+              "1-3-7",
+              "1-4-7",
+              "1-5-6",
+              "2-5-3",
+              "2-5-4",
+              "2-6-7",
+              "2-7-3",
+              "2-7-4",
+              "3-1-4",
+              "3-7-1",
+              "3-7-4",
+              "5-7-6",
+              "7-1-4",
+              "7-4-6",
+              "7-5-1"
+            ],
+            "minimum_reference_races": 25.0
+          },
+          {
+            "department": "line_department",
+            "winner_car": 2,
+            "tickets": [
+              "1-3-7",
+              "1-4-7",
+              "2-7-3",
+              "2-7-4",
+              "3-7-1",
+              "5-1-7",
+              "5-7-6",
+              "7-1-4",
+              "7-4-6",
+              "7-6-4"
+            ],
+            "minimum_reference_races": 25.0
+          },
+          {
+            "department": "risk_department",
+            "winner_car": 2,
+            "tickets": [
+              "1-7-6",
+              "2-6-7",
+              "6-1-3",
+              "6-4-1",
+              "6-7-4",
+              "7-1-4",
+              "7-2-4",
+              "7-4-6",
+              "7-5-1",
+              "7-5-2",
+              "7-6-1",
+              "7-6-4"
+            ],
+            "minimum_reference_races": 25.0
+          }
+        ],
+        "winner_votes": {
+          "2": 4
+        },
+        "tickets": [
+          {
+            "buy": "7-1-4",
+            "group": "穴",
+            "ev": 4.6340077660159436,
+            "votes": 4,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "7-4-6",
+            "group": "穴",
+            "ev": 2.3089029151223626,
+            "votes": 4,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "7-6-4",
+            "group": "穴",
+            "ev": 3.970624630147157,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "line_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "7-5-1",
+            "group": "穴",
+            "ev": 3.3989065066099053,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "2-6-7",
+            "group": "穴",
+            "ev": 2.7315619585606106,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "1-4-7",
+            "group": "穴",
+            "ev": 2.4721168894253354,
             "votes": 3,
             "departments": [
               "data_department",
@@ -11776,200 +11538,7 @@
           {
             "buy": "2-7-4",
             "group": "穴",
-            "ev": 14.502409608833833,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "line_department"
-            ]
-          },
-          {
-            "buy": "5-2-4",
-            "group": "穴",
-            "ev": 13.85591833020042,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "line_department"
-            ]
-          }
-        ],
-        "purchase_authorized": false
-      },
-      {
-        "version": "strategist_consensus_v1",
-        "race_id": "034420261007",
-        "snapshot_at": "2026-10-07T20:02:03+09:00",
-        "source_snapshot_at": "2026-10-07T20:02:03+09:00",
-        "close_at": 1791375300.0,
-        "venue": "大垣",
-        "race_no": 3,
-        "views": [
-          {
-            "department": "data_department",
-            "winner_car": 2,
-            "tickets": [
-              "2-6-7",
-              "3-5-7",
-              "3-6-7",
-              "4-6-7",
-              "5-7-1",
-              "5-7-4",
-              "7-1-3",
-              "7-1-4",
-              "7-1-6",
-              "7-4-6",
-              "7-5-4",
-              "7-6-4"
-            ],
-            "minimum_reference_races": 25.0
-          },
-          {
-            "department": "pace_department",
-            "winner_car": 2,
-            "tickets": [
-              "2-5-7",
-              "3-1-4",
-              "3-5-4",
-              "3-5-7",
-              "5-1-4",
-              "5-1-7",
-              "5-3-7",
-              "5-7-1",
-              "5-7-4",
-              "7-1-3",
-              "7-1-4",
-              "7-1-6",
-              "7-5-4"
-            ],
-            "minimum_reference_races": 25.0
-          },
-          {
-            "department": "line_department",
-            "winner_car": 2,
-            "tickets": [
-              "1-6-7",
-              "2-7-4",
-              "3-7-1",
-              "4-1-7",
-              "4-6-7",
-              "5-1-7",
-              "5-7-1",
-              "5-7-4",
-              "7-1-3",
-              "7-1-6"
-            ],
-            "minimum_reference_races": 25.0
-          },
-          {
-            "department": "risk_department",
-            "winner_car": 2,
-            "tickets": [
-              "1-6-7",
-              "4-6-7",
-              "5-7-1",
-              "5-7-4",
-              "6-7-1",
-              "6-7-4",
-              "7-1-3",
-              "7-1-4",
-              "7-1-6",
-              "7-4-6",
-              "7-5-4",
-              "7-6-4"
-            ],
-            "minimum_reference_races": 25.0
-          }
-        ],
-        "winner_votes": {
-          "2": 4
-        },
-        "tickets": [
-          {
-            "buy": "7-1-6",
-            "group": "穴",
-            "ev": 12.301022768874102,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "5-7-4",
-            "group": "穴",
-            "ev": 5.378310363195357,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "5-7-1",
-            "group": "穴",
-            "ev": 5.204918448159039,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "7-1-3",
-            "group": "穴",
-            "ev": 4.527845408274261,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "4-6-7",
-            "group": "穴",
-            "ev": 6.130825008204592,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "7-5-4",
-            "group": "穴",
-            "ev": 4.669512863079088,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "7-1-4",
-            "group": "穴",
-            "ev": 4.535940805045819,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "5-1-7",
-            "group": "穴",
-            "ev": 8.357327994794888,
+            "ev": 3.9370107854849237,
             "votes": 2,
             "departments": [
               "line_department",
@@ -11977,43 +11546,53 @@
             ]
           },
           {
-            "buy": "1-6-7",
+            "buy": "6-4-1",
             "group": "穴",
-            "ev": 6.292944679015425,
+            "ev": 3.4725373005209383,
+            "votes": 2,
+            "departments": [
+              "data_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "7-2-4",
+            "group": "穴",
+            "ev": 3.278520472538935,
+            "votes": 2,
+            "departments": [
+              "data_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "6-7-4",
+            "group": "穴",
+            "ev": 2.989480959815237,
+            "votes": 2,
+            "departments": [
+              "data_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "3-7-1",
+            "group": "穴",
+            "ev": 2.9176128695448913,
             "votes": 2,
             "departments": [
               "line_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "7-4-6",
-            "group": "穴",
-            "ev": 6.203224461393728,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "7-6-4",
-            "group": "穴",
-            "ev": 6.0698150371761175,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "3-5-7",
-            "group": "穴",
-            "ev": 5.035019135491265,
-            "votes": 2,
-            "departments": [
-              "data_department",
               "pace_department"
+            ]
+          },
+          {
+            "buy": "6-1-3",
+            "group": "穴",
+            "ev": 2.8294601142096654,
+            "votes": 2,
+            "departments": [
+              "data_department",
+              "risk_department"
             ]
           }
         ],
@@ -12022,8 +11601,8 @@
       {
         "version": "strategist_consensus_v1",
         "race_id": "032220261007",
-        "snapshot_at": "2026-10-07T20:02:03+09:00",
-        "source_snapshot_at": "2026-10-07T20:02:03+09:00",
+        "snapshot_at": "2026-10-07T20:34:19+09:00",
+        "source_snapshot_at": "2026-10-07T20:34:19+09:00",
         "close_at": 1791375900.0,
         "venue": "前橋",
         "race_no": 3,
@@ -12032,22 +11611,18 @@
             "department": "data_department",
             "winner_car": 3,
             "tickets": [
+              "1-2-6",
+              "1-3-6",
+              "1-3-7",
+              "1-4-7",
               "2-4-6",
-              "2-6-7",
-              "2-7-6",
-              "3-1-5",
-              "3-1-7",
               "3-2-6",
-              "3-4-6",
-              "7-1-4",
-              "7-1-6",
-              "7-2-6",
-              "7-3-1",
-              "7-3-5",
-              "7-3-6",
-              "7-4-1",
-              "7-4-6",
-              "7-6-2"
+              "5-1-6",
+              "5-3-7",
+              "5-4-2",
+              "5-4-6",
+              "5-4-7",
+              "5-7-6"
             ],
             "minimum_reference_races": 39.0
           },
@@ -12056,21 +11631,14 @@
             "winner_car": 3,
             "tickets": [
               "1-2-6",
+              "1-3-6",
+              "1-3-7",
               "1-4-7",
-              "1-7-6",
+              "1-5-6",
               "2-4-6",
-              "2-6-7",
-              "3-1-5",
               "3-2-6",
-              "3-4-6",
-              "4-7-6",
-              "6-1-7",
-              "7-1-6",
-              "7-2-6",
-              "7-3-6",
-              "7-4-6",
-              "7-5-6",
-              "7-6-2"
+              "6-5-7",
+              "7-1-4"
             ],
             "minimum_reference_races": 39.0
           },
@@ -12078,19 +11646,16 @@
             "department": "line_department",
             "winner_car": 3,
             "tickets": [
+              "1-3-7",
+              "1-4-7",
               "2-4-6",
-              "3-1-5",
-              "3-4-6",
+              "5-1-6",
+              "5-3-7",
+              "5-4-1",
+              "5-4-2",
               "5-4-6",
-              "7-1-6",
-              "7-2-6",
-              "7-3-1",
-              "7-3-5",
-              "7-3-6",
-              "7-4-1",
-              "7-4-2",
-              "7-4-6",
-              "7-6-2"
+              "5-4-7",
+              "5-7-6"
             ],
             "minimum_reference_races": 39.0
           },
@@ -12098,18 +11663,18 @@
             "department": "risk_department",
             "winner_car": 3,
             "tickets": [
-              "1-6-7",
-              "2-6-7",
-              "2-7-6",
-              "4-7-6",
-              "6-1-7",
-              "6-7-2",
-              "7-1-6",
-              "7-2-6",
-              "7-4-6",
-              "7-6-1",
-              "7-6-2",
-              "7-6-4"
+              "1-2-6",
+              "1-3-6",
+              "1-3-7",
+              "1-4-7",
+              "5-1-6",
+              "5-4-2",
+              "5-4-6",
+              "5-4-7",
+              "5-7-6",
+              "6-3-7",
+              "6-5-7",
+              "6-7-3"
             ],
             "minimum_reference_races": 39.0
           }
@@ -12119,9 +11684,9 @@
         },
         "tickets": [
           {
-            "buy": "7-1-6",
+            "buy": "1-4-7",
             "group": "穴",
-            "ev": 5.645077794629582,
+            "ev": 2.114865188846862,
             "votes": 4,
             "departments": [
               "data_department",
@@ -12131,9 +11696,9 @@
             ]
           },
           {
-            "buy": "7-2-6",
+            "buy": "1-3-7",
             "group": "穴",
-            "ev": 5.364166146248734,
+            "ev": 1.2840887328970978,
             "votes": 4,
             "departments": [
               "data_department",
@@ -12143,33 +11708,31 @@
             ]
           },
           {
-            "buy": "7-4-6",
+            "buy": "5-4-6",
             "group": "穴",
-            "ev": 3.2211145535240893,
-            "votes": 4,
+            "ev": 3.2209720533870594,
+            "votes": 3,
             "departments": [
               "data_department",
               "line_department",
-              "pace_department",
               "risk_department"
             ]
           },
           {
-            "buy": "7-6-2",
+            "buy": "5-4-2",
             "group": "穴",
-            "ev": 2.2961494548894077,
-            "votes": 4,
+            "ev": 1.993357493861031,
+            "votes": 3,
             "departments": [
               "data_department",
               "line_department",
-              "pace_department",
               "risk_department"
             ]
           },
           {
-            "buy": "2-6-7",
+            "buy": "1-2-6",
             "group": "穴",
-            "ev": 3.7685416577477793,
+            "ev": 1.8930609607744007,
             "votes": 3,
             "departments": [
               "data_department",
@@ -12178,31 +11741,53 @@
             ]
           },
           {
-            "buy": "7-3-6",
+            "buy": "1-3-6",
             "group": "穴",
-            "ev": 2.57048946859334,
+            "ev": 1.8424130380049402,
             "votes": 3,
             "departments": [
               "data_department",
-              "line_department",
-              "pace_department"
+              "pace_department",
+              "risk_department"
             ]
           },
           {
-            "buy": "3-4-6",
-            "group": "本線",
-            "ev": 1.8175272588837992,
+            "buy": "5-7-6",
+            "group": "穴",
+            "ev": 1.69995108998648,
             "votes": 3,
             "departments": [
               "data_department",
               "line_department",
-              "pace_department"
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "5-1-6",
+            "group": "穴",
+            "ev": 1.6541531784529788,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "line_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "5-4-7",
+            "group": "穴",
+            "ev": 1.5539073642235892,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "line_department",
+              "risk_department"
             ]
           },
           {
             "buy": "2-4-6",
             "group": "本線",
-            "ev": 1.2487564371654223,
+            "ev": 1.3017339829845613,
             "votes": 3,
             "departments": [
               "data_department",
@@ -12211,20 +11796,9 @@
             ]
           },
           {
-            "buy": "3-1-5",
-            "group": "本線",
-            "ev": 1.1857909697336162,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "4-7-6",
+            "buy": "6-5-7",
             "group": "穴",
-            "ev": 4.092321184231007,
+            "ev": 1.5009744909508467,
             "votes": 2,
             "departments": [
               "pace_department",
@@ -12232,19 +11806,9 @@
             ]
           },
           {
-            "buy": "7-3-5",
+            "buy": "5-3-7",
             "group": "穴",
-            "ev": 4.028128187106509,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "line_department"
-            ]
-          },
-          {
-            "buy": "7-3-1",
-            "group": "穴",
-            "ev": 3.9207304479516543,
+            "ev": 1.353661232322593,
             "votes": 2,
             "departments": [
               "data_department",
@@ -12257,8 +11821,8 @@
       {
         "version": "strategist_consensus_v1",
         "race_id": "044420261007",
-        "snapshot_at": "2026-10-07T20:02:03+09:00",
-        "source_snapshot_at": "2026-10-07T20:02:03+09:00",
+        "snapshot_at": "2026-10-07T20:34:19+09:00",
+        "source_snapshot_at": "2026-10-07T20:34:19+09:00",
         "close_at": 1791376500.0,
         "venue": "大垣",
         "race_no": 4,
@@ -12270,16 +11834,16 @@
               "1-3-7",
               "1-5-2",
               "1-5-3",
-              "4-2-5",
-              "4-3-5",
-              "4-3-6",
-              "4-5-3",
-              "4-5-6",
-              "4-5-7",
-              "4-6-3",
+              "4-7-5",
+              "5-3-6",
+              "5-4-2",
+              "7-2-3",
               "7-2-5",
+              "7-3-2",
               "7-3-5",
-              "7-5-6"
+              "7-4-2",
+              "7-5-2",
+              "7-5-3"
             ],
             "minimum_reference_races": 19.0
           },
@@ -12290,16 +11854,16 @@
               "1-3-7",
               "1-5-2",
               "1-5-3",
-              "4-2-3",
-              "4-3-2",
-              "4-3-5",
-              "4-3-6",
-              "4-5-3",
-              "4-5-6",
-              "4-5-7",
-              "4-6-3",
-              "4-7-2",
-              "7-3-2"
+              "2-3-7",
+              "2-4-3",
+              "2-5-7",
+              "2-7-3",
+              "5-4-2",
+              "6-3-2",
+              "6-5-2",
+              "7-3-2",
+              "7-5-2",
+              "7-5-3"
             ],
             "minimum_reference_races": 19.0
           },
@@ -12307,20 +11871,20 @@
             "department": "line_department",
             "winner_car": 1,
             "tickets": [
-              "1-3-6",
               "1-3-7",
+              "1-4-5",
               "1-5-2",
               "1-5-3",
-              "4-3-2",
-              "4-3-5",
-              "4-3-6",
-              "4-5-3",
-              "4-5-7",
-              "4-6-3",
               "5-6-3",
+              "7-2-3",
               "7-2-5",
+              "7-3-1",
               "7-3-2",
-              "7-3-5"
+              "7-3-5",
+              "7-3-6",
+              "7-4-2",
+              "7-5-2",
+              "7-5-3"
             ],
             "minimum_reference_races": 19.0
           },
@@ -12328,18 +11892,18 @@
             "department": "risk_department",
             "winner_car": 1,
             "tickets": [
-              "4-3-6",
-              "4-5-3",
-              "4-5-6",
-              "4-5-7",
-              "4-6-3",
-              "4-6-7",
+              "5-3-6",
+              "5-4-2",
+              "5-4-6",
+              "5-4-7",
               "5-6-3",
+              "6-3-2",
+              "6-3-5",
+              "6-4-3",
+              "6-4-5",
+              "6-5-2",
               "6-5-3",
-              "7-2-5",
-              "7-3-5",
-              "7-5-4",
-              "7-5-6"
+              "6-5-7"
             ],
             "minimum_reference_races": 19.0
           }
@@ -12349,68 +11913,9 @@
         },
         "tickets": [
           {
-            "buy": "4-3-6",
+            "buy": "7-3-2",
             "group": "穴",
-            "ev": 10.76703743493078,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "4-5-3",
-            "group": "穴",
-            "ev": 7.074922285355966,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "4-6-3",
-            "group": "穴",
-            "ev": 6.052313754979582,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "4-5-7",
-            "group": "穴",
-            "ev": 5.324520997312494,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "7-3-5",
-            "group": "穴",
-            "ev": 6.872701404733927,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "4-3-5",
-            "group": "穴",
-            "ev": 6.416335314725633,
+            "ev": 7.1588914072974,
             "votes": 3,
             "departments": [
               "data_department",
@@ -12419,9 +11924,31 @@
             ]
           },
           {
-            "buy": "4-5-6",
+            "buy": "7-5-2",
             "group": "穴",
-            "ev": 6.236594450110073,
+            "ev": 4.784638446545724,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department"
+            ]
+          },
+          {
+            "buy": "7-5-3",
+            "group": "穴",
+            "ev": 3.8196229853872983,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department"
+            ]
+          },
+          {
+            "buy": "5-4-2",
+            "group": "穴",
+            "ev": 3.551039858131508,
             "votes": 3,
             "departments": [
               "data_department",
@@ -12430,20 +11957,9 @@
             ]
           },
           {
-            "buy": "7-2-5",
-            "group": "穴",
-            "ev": 5.508638998265395,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "risk_department"
-            ]
-          },
-          {
             "buy": "1-5-2",
             "group": "本線",
-            "ev": 1.4428234420507164,
+            "ev": 1.4883862875891603,
             "votes": 3,
             "departments": [
               "data_department",
@@ -12454,7 +11970,7 @@
           {
             "buy": "1-5-3",
             "group": "本線",
-            "ev": 1.208930167826891,
+            "ev": 1.382690772988554,
             "votes": 3,
             "departments": [
               "data_department",
@@ -12465,7 +11981,7 @@
           {
             "buy": "1-3-7",
             "group": "本線",
-            "ev": 1.1344644196529672,
+            "ev": 1.201828028917111,
             "votes": 3,
             "departments": [
               "data_department",
@@ -12474,12 +11990,52 @@
             ]
           },
           {
-            "buy": "7-5-6",
+            "buy": "7-3-5",
             "group": "穴",
-            "ev": 8.090259347472058,
+            "ev": 6.204011193936683,
             "votes": 2,
             "departments": [
               "data_department",
+              "line_department"
+            ]
+          },
+          {
+            "buy": "7-2-5",
+            "group": "穴",
+            "ev": 5.07465384083676,
+            "votes": 2,
+            "departments": [
+              "data_department",
+              "line_department"
+            ]
+          },
+          {
+            "buy": "7-4-2",
+            "group": "穴",
+            "ev": 4.648502812576336,
+            "votes": 2,
+            "departments": [
+              "data_department",
+              "line_department"
+            ]
+          },
+          {
+            "buy": "5-3-6",
+            "group": "穴",
+            "ev": 4.452323700527624,
+            "votes": 2,
+            "departments": [
+              "data_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "5-6-3",
+            "group": "穴",
+            "ev": 3.9496352055065698,
+            "votes": 2,
+            "departments": [
+              "line_department",
               "risk_department"
             ]
           }
@@ -12489,8 +12045,8 @@
       {
         "version": "strategist_consensus_v1",
         "race_id": "042220261007",
-        "snapshot_at": "2026-10-07T20:02:03+09:00",
-        "source_snapshot_at": "2026-10-07T20:02:03+09:00",
+        "snapshot_at": "2026-10-07T20:34:19+09:00",
+        "source_snapshot_at": "2026-10-07T20:34:19+09:00",
         "close_at": 1791377100.0,
         "venue": "前橋",
         "race_no": 4,
@@ -12501,8 +12057,7 @@
             "tickets": [
               "2-6-1",
               "2-6-3",
-              "2-6-5",
-              "4-2-1",
+              "4-6-1",
               "4-6-7",
               "5-2-1",
               "5-6-1",
@@ -12512,7 +12067,7 @@
               "5-6-7",
               "6-2-1",
               "6-5-2",
-              "6-7-3"
+              "6-5-4"
             ],
             "minimum_reference_races": 51.0
           },
@@ -12522,15 +12077,14 @@
             "tickets": [
               "2-6-1",
               "4-1-3",
-              "4-2-1",
-              "4-5-7",
-              "5-1-3",
+              "4-5-1",
               "5-2-1",
               "5-6-1",
               "5-6-3",
               "5-6-4",
               "6-1-3",
               "6-2-1",
+              "6-4-1",
               "6-5-1",
               "6-5-2",
               "6-5-4"
@@ -12541,10 +12095,7 @@
             "department": "line_department",
             "winner_car": 5,
             "tickets": [
-              "2-6-5",
-              "3-6-7",
-              "4-2-1",
-              "5-1-3",
+              "4-1-3",
               "5-2-1",
               "5-2-6",
               "5-6-1",
@@ -12552,6 +12103,8 @@
               "5-6-3",
               "5-6-4",
               "5-6-7",
+              "5-7-6",
+              "6-1-3",
               "6-2-1",
               "6-5-2"
             ],
@@ -12561,17 +12114,17 @@
             "department": "risk_department",
             "winner_car": 5,
             "tickets": [
-              "2-6-5",
-              "3-6-7",
+              "2-6-1",
               "4-6-7",
               "4-7-6",
               "5-6-4",
               "5-6-7",
-              "5-7-4",
-              "6-7-3",
-              "7-5-2",
+              "5-7-6",
+              "6-5-2",
+              "6-5-4",
+              "7-1-6",
+              "7-5-6",
               "7-6-1",
-              "7-6-4",
               "7-6-5"
             ],
             "minimum_reference_races": 51.0
@@ -12583,9 +12136,9 @@
         },
         "tickets": [
           {
-            "buy": "5-6-4",
+            "buy": "6-5-2",
             "group": "穴",
-            "ev": 4.121921599070454,
+            "ev": 5.664534117045036,
             "votes": 4,
             "departments": [
               "data_department",
@@ -12595,9 +12148,32 @@
             ]
           },
           {
+            "buy": "5-6-4",
+            "group": "穴",
+            "ev": 4.868674072393189,
+            "votes": 4,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "2-6-1",
+            "group": "穴",
+            "ev": 6.660229848196976,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
             "buy": "5-6-7",
             "group": "穴",
-            "ev": 5.714129910786882,
+            "ev": 6.327612810062111,
             "votes": 3,
             "departments": [
               "data_department",
@@ -12606,20 +12182,20 @@
             ]
           },
           {
-            "buy": "2-6-5",
+            "buy": "6-5-4",
             "group": "穴",
-            "ev": 5.426937390371595,
+            "ev": 5.918716394163661,
             "votes": 3,
             "departments": [
               "data_department",
-              "line_department",
+              "pace_department",
               "risk_department"
             ]
           },
           {
             "buy": "5-6-1",
             "group": "穴",
-            "ev": 5.372584834620163,
+            "ev": 5.769004293620625,
             "votes": 3,
             "departments": [
               "data_department",
@@ -12630,7 +12206,7 @@
           {
             "buy": "6-2-1",
             "group": "穴",
-            "ev": 4.6659596005923865,
+            "ev": 5.636375915956539,
             "votes": 3,
             "departments": [
               "data_department",
@@ -12641,18 +12217,7 @@
           {
             "buy": "5-6-3",
             "group": "穴",
-            "ev": 4.39865607057432,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "6-5-2",
-            "group": "穴",
-            "ev": 3.8365041604721006,
+            "ev": 4.870568449495449,
             "votes": 3,
             "departments": [
               "data_department",
@@ -12663,7 +12228,7 @@
           {
             "buy": "5-2-1",
             "group": "本線",
-            "ev": 1.455139129017298,
+            "ev": 1.3162062473523297,
             "votes": 3,
             "departments": [
               "data_department",
@@ -12672,20 +12237,19 @@
             ]
           },
           {
-            "buy": "4-2-1",
-            "group": "本線",
-            "ev": 1.3188921084237286,
-            "votes": 3,
+            "buy": "5-6-2",
+            "group": "穴",
+            "ev": 7.764526252565958,
+            "votes": 2,
             "departments": [
               "data_department",
-              "line_department",
-              "pace_department"
+              "line_department"
             ]
           },
           {
             "buy": "4-6-7",
             "group": "穴",
-            "ev": 8.167742511454012,
+            "ev": 6.029767488858535,
             "votes": 2,
             "departments": [
               "data_department",
@@ -12693,23 +12257,13 @@
             ]
           },
           {
-            "buy": "3-6-7",
+            "buy": "6-1-3",
             "group": "穴",
-            "ev": 6.533161961507933,
+            "ev": 5.192928490443777,
             "votes": 2,
             "departments": [
               "line_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "6-7-3",
-            "group": "穴",
-            "ev": 5.835532373480006,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "risk_department"
+              "pace_department"
             ]
           }
         ],
@@ -12718,8 +12272,8 @@
       {
         "version": "strategist_consensus_v1",
         "race_id": "054420261007",
-        "snapshot_at": "2026-10-07T20:02:03+09:00",
-        "source_snapshot_at": "2026-10-07T20:02:03+09:00",
+        "snapshot_at": "2026-10-07T20:34:19+09:00",
+        "source_snapshot_at": "2026-10-07T20:34:19+09:00",
         "close_at": 1791377700.0,
         "venue": "大垣",
         "race_no": 5,
@@ -12728,13 +12282,18 @@
             "department": "data_department",
             "winner_car": 1,
             "tickets": [
-              "1-6-3",
-              "1-6-5",
-              "2-7-1",
-              "2-7-5",
-              "4-1-7",
-              "6-5-2",
-              "7-5-3"
+              "1-3-2",
+              "1-4-2",
+              "1-7-3",
+              "1-7-6",
+              "2-7-6",
+              "5-7-6",
+              "7-3-1",
+              "7-4-1",
+              "7-4-2",
+              "7-4-5",
+              "7-4-6",
+              "7-5-6"
             ],
             "minimum_reference_races": 40.0
           },
@@ -12742,11 +12301,19 @@
             "department": "pace_department",
             "winner_car": 1,
             "tickets": [
+              "1-3-2",
+              "1-4-2",
+              "1-4-7",
               "1-5-2",
-              "1-6-3",
-              "1-6-5",
-              "2-7-1",
-              "2-7-5"
+              "1-7-3",
+              "1-7-6",
+              "2-7-6",
+              "5-7-6",
+              "7-4-1",
+              "7-4-2",
+              "7-4-5",
+              "7-4-6",
+              "7-5-6"
             ],
             "minimum_reference_races": 40.0
           },
@@ -12754,14 +12321,18 @@
             "department": "line_department",
             "winner_car": 1,
             "tickets": [
-              "1-6-3",
-              "1-6-5",
-              "2-7-1",
-              "2-7-4",
-              "2-7-5",
-              "3-6-4",
-              "5-7-1",
-              "5-7-2"
+              "1-3-2",
+              "1-4-2",
+              "1-4-7",
+              "1-6-7",
+              "1-7-2",
+              "1-7-3",
+              "1-7-6",
+              "2-7-6",
+              "5-7-6",
+              "7-4-2",
+              "7-4-6",
+              "7-5-6"
             ],
             "minimum_reference_races": 40.0
           },
@@ -12769,16 +12340,18 @@
             "department": "risk_department",
             "winner_car": 1,
             "tickets": [
-              "1-6-3",
-              "1-6-5",
-              "2-7-1",
-              "2-7-4",
-              "2-7-5",
-              "4-1-7",
-              "5-6-4",
-              "6-2-3",
-              "6-5-2",
-              "6-5-7"
+              "1-7-3",
+              "2-7-6",
+              "4-7-5",
+              "5-7-6",
+              "6-4-3",
+              "7-2-6",
+              "7-3-1",
+              "7-4-1",
+              "7-4-2",
+              "7-4-5",
+              "7-4-6",
+              "7-5-6"
             ],
             "minimum_reference_races": 40.0
           }
@@ -12788,9 +12361,9 @@
         },
         "tickets": [
           {
-            "buy": "1-6-3",
+            "buy": "2-7-6",
             "group": "穴",
-            "ev": 2.2353422986777325,
+            "ev": 5.267370254540939,
             "votes": 4,
             "departments": [
               "data_department",
@@ -12800,9 +12373,9 @@
             ]
           },
           {
-            "buy": "2-7-5",
+            "buy": "5-7-6",
             "group": "穴",
-            "ev": 2.090218008839938,
+            "ev": 5.248111916633542,
             "votes": 4,
             "departments": [
               "data_department",
@@ -12812,9 +12385,9 @@
             ]
           },
           {
-            "buy": "2-7-1",
+            "buy": "1-7-3",
             "group": "穴",
-            "ev": 1.8376829344694399,
+            "ev": 4.384247961722584,
             "votes": 4,
             "departments": [
               "data_department",
@@ -12824,9 +12397,9 @@
             ]
           },
           {
-            "buy": "1-6-5",
+            "buy": "7-5-6",
             "group": "穴",
-            "ev": 1.8028953948184356,
+            "ev": 3.8911463916964735,
             "votes": 4,
             "departments": [
               "data_department",
@@ -12836,29 +12409,88 @@
             ]
           },
           {
-            "buy": "2-7-4",
+            "buy": "7-4-2",
             "group": "穴",
-            "ev": 1.592018052713023,
-            "votes": 2,
-            "departments": [
-              "line_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "6-5-2",
-            "group": "穴",
-            "ev": 1.5458852608785694,
-            "votes": 2,
+            "ev": 3.833978337180197,
+            "votes": 4,
             "departments": [
               "data_department",
+              "line_department",
+              "pace_department",
               "risk_department"
             ]
           },
           {
-            "buy": "4-1-7",
+            "buy": "7-4-6",
             "group": "穴",
-            "ev": 1.2784704945954448,
+            "ev": 3.6063598289302967,
+            "votes": 4,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "1-7-6",
+            "group": "穴",
+            "ev": 5.743809214959241,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department"
+            ]
+          },
+          {
+            "buy": "7-4-5",
+            "group": "穴",
+            "ev": 4.361212436709437,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "7-4-1",
+            "group": "穴",
+            "ev": 4.208683521617486,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "1-3-2",
+            "group": "本線",
+            "ev": 1.447726113407551,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department"
+            ]
+          },
+          {
+            "buy": "1-4-2",
+            "group": "本線",
+            "ev": 1.1357448828522552,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department"
+            ]
+          },
+          {
+            "buy": "7-3-1",
+            "group": "穴",
+            "ev": 4.426965066155139,
             "votes": 2,
             "departments": [
               "data_department",
@@ -12871,8 +12503,8 @@
       {
         "version": "strategist_consensus_v1",
         "race_id": "052220261007",
-        "snapshot_at": "2026-10-07T20:02:03+09:00",
-        "source_snapshot_at": "2026-10-07T20:02:03+09:00",
+        "snapshot_at": "2026-10-07T20:34:19+09:00",
+        "source_snapshot_at": "2026-10-07T20:34:19+09:00",
         "close_at": 1791378300.0,
         "venue": "前橋",
         "race_no": 5,
@@ -12881,12 +12513,17 @@
             "department": "data_department",
             "winner_car": 3,
             "tickets": [
-              "1-3-6",
-              "1-4-5",
-              "2-3-1",
-              "2-3-6",
-              "5-3-6",
-              "6-3-1"
+              "3-5-1",
+              "6-3-5",
+              "7-2-6",
+              "7-3-5",
+              "7-4-2",
+              "7-4-6",
+              "7-5-6",
+              "7-6-1",
+              "7-6-2",
+              "7-6-4",
+              "7-6-5"
             ],
             "minimum_reference_races": 49.0
           },
@@ -12895,10 +12532,18 @@
             "winner_car": 3,
             "tickets": [
               "1-3-5",
-              "2-3-1",
-              "2-3-6",
-              "7-3-4",
-              "7-3-5"
+              "7-2-6",
+              "7-3-5",
+              "7-3-6",
+              "7-4-1",
+              "7-4-2",
+              "7-4-5",
+              "7-4-6",
+              "7-5-6",
+              "7-6-1",
+              "7-6-2",
+              "7-6-4",
+              "7-6-5"
             ],
             "minimum_reference_races": 49.0
           },
@@ -12907,13 +12552,17 @@
             "winner_car": 3,
             "tickets": [
               "1-3-5",
-              "2-4-5",
-              "3-4-7",
-              "3-6-1",
-              "3-6-5",
-              "3-6-7",
-              "7-3-4",
-              "7-3-5"
+              "2-3-7",
+              "3-5-1",
+              "7-2-6",
+              "7-3-5",
+              "7-4-2",
+              "7-4-6",
+              "7-5-1",
+              "7-5-2",
+              "7-5-4",
+              "7-5-6",
+              "7-6-2"
             ],
             "minimum_reference_races": 49.0
           },
@@ -12921,11 +12570,18 @@
             "department": "risk_department",
             "winner_car": 3,
             "tickets": [
-              "5-3-6",
-              "5-3-7",
-              "5-4-1",
-              "6-3-1",
-              "6-3-7"
+              "5-4-2",
+              "6-3-5",
+              "6-5-2",
+              "7-2-6",
+              "7-4-2",
+              "7-4-6",
+              "7-5-2",
+              "7-5-6",
+              "7-6-1",
+              "7-6-2",
+              "7-6-4",
+              "7-6-5"
             ],
             "minimum_reference_races": 49.0
           }
@@ -12935,19 +12591,113 @@
         },
         "tickets": [
           {
+            "buy": "7-4-2",
+            "group": "穴",
+            "ev": 6.716863109578246,
+            "votes": 4,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "7-5-6",
+            "group": "穴",
+            "ev": 5.324010983290014,
+            "votes": 4,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "7-4-6",
+            "group": "穴",
+            "ev": 4.162700148433367,
+            "votes": 4,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "7-2-6",
+            "group": "穴",
+            "ev": 4.1496498984824335,
+            "votes": 4,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "7-6-2",
+            "group": "穴",
+            "ev": 3.8686657674151683,
+            "votes": 4,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "7-6-5",
+            "group": "穴",
+            "ev": 4.8656426888129305,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
             "buy": "7-3-5",
             "group": "穴",
-            "ev": 3.6055508112491386,
-            "votes": 2,
+            "ev": 4.059387994066616,
+            "votes": 3,
             "departments": [
+              "data_department",
               "line_department",
               "pace_department"
             ]
           },
           {
-            "buy": "5-3-6",
+            "buy": "7-6-4",
             "group": "穴",
-            "ev": 2.0397482686790034,
+            "ev": 3.975363959196464,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "7-6-1",
+            "group": "穴",
+            "ev": 3.3742568883484005,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "6-3-5",
+            "group": "穴",
+            "ev": 4.687958934522475,
             "votes": 2,
             "departments": [
               "data_department",
@@ -12955,49 +12705,19 @@
             ]
           },
           {
-            "buy": "7-3-4",
+            "buy": "7-5-2",
             "group": "穴",
-            "ev": 1.654199214706409,
+            "ev": 3.850994817895458,
             "votes": 2,
             "departments": [
               "line_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "6-3-1",
-            "group": "穴",
-            "ev": 1.4986081848594608,
-            "votes": 2,
-            "departments": [
-              "data_department",
               "risk_department"
-            ]
-          },
-          {
-            "buy": "2-3-1",
-            "group": "本線",
-            "ev": 1.3082366655500783,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "2-3-6",
-            "group": "本線",
-            "ev": 1.1279589432260027,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "pace_department"
             ]
           },
           {
             "buy": "1-3-5",
             "group": "本線",
-            "ev": 1.1222903608662724,
+            "ev": 1.3223769801628065,
             "votes": 2,
             "departments": [
               "line_department",
@@ -13010,8 +12730,8 @@
       {
         "version": "strategist_consensus_v1",
         "race_id": "064420261007",
-        "snapshot_at": "2026-10-07T20:02:03+09:00",
-        "source_snapshot_at": "2026-10-07T20:02:03+09:00",
+        "snapshot_at": "2026-10-07T20:34:19+09:00",
+        "source_snapshot_at": "2026-10-07T20:34:19+09:00",
         "close_at": 1791378900.0,
         "venue": "大垣",
         "race_no": 6,
@@ -13020,7 +12740,19 @@
             "department": "data_department",
             "winner_car": 1,
             "tickets": [
-              "1-7-2"
+              "1-2-4",
+              "1-5-2",
+              "1-5-4",
+              "1-7-2",
+              "4-6-3",
+              "4-7-5",
+              "5-4-3",
+              "5-6-4",
+              "5-7-4",
+              "6-5-2",
+              "6-5-4",
+              "7-4-5",
+              "7-5-4"
             ],
             "minimum_reference_races": 49.0
           },
@@ -13028,12 +12760,21 @@
             "department": "pace_department",
             "winner_car": 1,
             "tickets": [
+              "1-2-3",
               "1-2-4",
               "1-2-5",
-              "1-2-6",
-              "1-4-6",
+              "1-5-2",
+              "1-6-2",
+              "1-6-4",
               "1-6-5",
-              "1-7-2"
+              "1-6-7",
+              "1-7-2",
+              "4-6-3",
+              "4-7-5",
+              "5-6-4",
+              "6-4-3",
+              "6-5-2",
+              "7-4-5"
             ],
             "minimum_reference_races": 49.0
           },
@@ -13041,11 +12782,17 @@
             "department": "line_department",
             "winner_car": 1,
             "tickets": [
-              "1-4-6",
-              "1-5-4",
+              "1-6-4",
               "1-6-5",
               "1-7-2",
-              "2-6-4"
+              "4-6-3",
+              "4-7-5",
+              "5-4-3",
+              "5-6-4",
+              "5-7-4",
+              "7-4-5",
+              "7-4-6",
+              "7-5-4"
             ],
             "minimum_reference_races": 49.0
           },
@@ -13053,8 +12800,16 @@
             "department": "risk_department",
             "winner_car": 1,
             "tickets": [
-              "1-7-2",
-              "6-1-5"
+              "4-3-6",
+              "4-5-3",
+              "4-5-7",
+              "4-6-3",
+              "4-7-1",
+              "4-7-5",
+              "6-4-3",
+              "6-4-5",
+              "6-5-2",
+              "6-5-4"
             ],
             "minimum_reference_races": 49.0
           }
@@ -13064,9 +12819,9 @@
         },
         "tickets": [
           {
-            "buy": "1-7-2",
-            "group": "本線",
-            "ev": 1.1724222844971477,
+            "buy": "4-6-3",
+            "group": "穴",
+            "ev": 3.189655424692417,
             "votes": 4,
             "departments": [
               "data_department",
@@ -13076,9 +12831,105 @@
             ]
           },
           {
+            "buy": "4-7-5",
+            "group": "穴",
+            "ev": 2.3461550403664115,
+            "votes": 4,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "7-4-5",
+            "group": "穴",
+            "ev": 4.549595047443674,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department"
+            ]
+          },
+          {
+            "buy": "6-5-2",
+            "group": "穴",
+            "ev": 4.170779748691223,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "5-6-4",
+            "group": "穴",
+            "ev": 2.2400341403587825,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department"
+            ]
+          },
+          {
+            "buy": "1-7-2",
+            "group": "本線",
+            "ev": 1.3747596665158979,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department"
+            ]
+          },
+          {
+            "buy": "5-4-3",
+            "group": "穴",
+            "ev": 6.976686803972789,
+            "votes": 2,
+            "departments": [
+              "data_department",
+              "line_department"
+            ]
+          },
+          {
+            "buy": "5-7-4",
+            "group": "穴",
+            "ev": 5.115527440157309,
+            "votes": 2,
+            "departments": [
+              "data_department",
+              "line_department"
+            ]
+          },
+          {
+            "buy": "6-5-4",
+            "group": "穴",
+            "ev": 4.399799023203443,
+            "votes": 2,
+            "departments": [
+              "data_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "7-5-4",
+            "group": "穴",
+            "ev": 4.067749082263582,
+            "votes": 2,
+            "departments": [
+              "data_department",
+              "line_department"
+            ]
+          },
+          {
             "buy": "1-6-5",
             "group": "穴",
-            "ev": 2.7830046210730814,
+            "ev": 3.0950724192957675,
             "votes": 2,
             "departments": [
               "line_department",
@@ -13086,9 +12937,9 @@
             ]
           },
           {
-            "buy": "1-4-6",
+            "buy": "1-6-4",
             "group": "穴",
-            "ev": 2.1789799010033515,
+            "ev": 2.857805501005485,
             "votes": 2,
             "departments": [
               "line_department",
@@ -13101,8 +12952,8 @@
       {
         "version": "strategist_consensus_v1",
         "race_id": "062220261007",
-        "snapshot_at": "2026-10-07T20:02:03+09:00",
-        "source_snapshot_at": "2026-10-07T20:02:03+09:00",
+        "snapshot_at": "2026-10-07T20:34:19+09:00",
+        "source_snapshot_at": "2026-10-07T20:34:19+09:00",
         "close_at": 1791379500.0,
         "venue": "前橋",
         "race_no": 6,
@@ -13113,7 +12964,18 @@
             "tickets": [
               "1-4-2",
               "1-5-2",
-              "7-3-2"
+              "4-5-7",
+              "4-7-1",
+              "5-7-6",
+              "6-1-7",
+              "6-5-2",
+              "6-5-7",
+              "6-7-1",
+              "7-1-3",
+              "7-4-2",
+              "7-4-3",
+              "7-5-2",
+              "7-5-6"
             ],
             "minimum_reference_races": 43.0
           },
@@ -13125,7 +12987,16 @@
               "1-5-2",
               "1-5-3",
               "2-5-3",
-              "7-3-2"
+              "4-3-2",
+              "4-3-7",
+              "4-5-3",
+              "4-5-7",
+              "5-7-6",
+              "6-5-7",
+              "7-4-3",
+              "7-5-2",
+              "7-5-3",
+              "7-5-6"
             ],
             "minimum_reference_races": 43.0
           },
@@ -13133,12 +13004,17 @@
             "department": "line_department",
             "winner_car": 1,
             "tickets": [
-              "2-7-3",
-              "2-7-5",
-              "3-5-7",
-              "3-6-5",
-              "7-3-2",
-              "7-3-5"
+              "1-3-5",
+              "1-6-5",
+              "1-7-6",
+              "4-7-1",
+              "5-7-6",
+              "6-3-5",
+              "6-7-1",
+              "6-7-5",
+              "7-1-3",
+              "7-4-3",
+              "7-5-6"
             ],
             "minimum_reference_races": 43.0
           },
@@ -13146,8 +13022,18 @@
             "department": "risk_department",
             "winner_car": 1,
             "tickets": [
-              "5-1-7",
-              "7-3-2"
+              "4-5-7",
+              "4-7-1",
+              "5-7-6",
+              "6-1-7",
+              "6-5-2",
+              "6-5-4",
+              "6-5-7",
+              "6-7-1",
+              "7-1-6",
+              "7-4-3",
+              "7-5-2",
+              "7-5-6"
             ],
             "minimum_reference_races": 43.0
           }
@@ -13157,9 +13043,9 @@
         },
         "tickets": [
           {
-            "buy": "7-3-2",
+            "buy": "7-4-3",
             "group": "穴",
-            "ev": 1.3000432209333015,
+            "ev": 4.790303091035305,
             "votes": 4,
             "departments": [
               "data_department",
@@ -13169,19 +13055,118 @@
             ]
           },
           {
-            "buy": "1-5-2",
-            "group": "本線",
-            "ev": 1.2421769696261145,
+            "buy": "5-7-6",
+            "group": "穴",
+            "ev": 4.6714776845760415,
+            "votes": 4,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "7-5-6",
+            "group": "穴",
+            "ev": 4.177162198070259,
+            "votes": 4,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "7-5-2",
+            "group": "穴",
+            "ev": 7.749112946022008,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "6-7-1",
+            "group": "穴",
+            "ev": 4.968617438440461,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "line_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "4-5-7",
+            "group": "穴",
+            "ev": 4.152866452331133,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "4-7-1",
+            "group": "穴",
+            "ev": 3.910891848812611,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "line_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "6-5-7",
+            "group": "穴",
+            "ev": 3.7542368919782207,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "6-5-2",
+            "group": "穴",
+            "ev": 4.648243163247793,
             "votes": 2,
             "departments": [
               "data_department",
-              "pace_department"
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "6-1-7",
+            "group": "穴",
+            "ev": 4.276204453200518,
+            "votes": 2,
+            "departments": [
+              "data_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "7-1-3",
+            "group": "穴",
+            "ev": 3.9201233016665253,
+            "votes": 2,
+            "departments": [
+              "data_department",
+              "line_department"
             ]
           },
           {
             "buy": "1-4-2",
             "group": "本線",
-            "ev": 1.1271473107915568,
+            "ev": 1.3350532706213565,
             "votes": 2,
             "departments": [
               "data_department",
@@ -13194,8 +13179,8 @@
       {
         "version": "strategist_consensus_v1",
         "race_id": "074420261007",
-        "snapshot_at": "2026-10-07T20:02:03+09:00",
-        "source_snapshot_at": "2026-10-07T20:02:03+09:00",
+        "snapshot_at": "2026-10-07T20:34:19+09:00",
+        "source_snapshot_at": "2026-10-07T20:34:19+09:00",
         "close_at": 1791380100.0,
         "venue": "大垣",
         "race_no": 7,
@@ -13204,17 +13189,17 @@
             "department": "data_department",
             "winner_car": 1,
             "tickets": [
+              "4-5-3",
               "4-5-6",
               "4-5-7",
-              "4-7-2",
+              "4-7-5",
               "5-4-2",
-              "5-4-3",
               "5-4-6",
+              "5-4-7",
               "5-6-4",
-              "6-7-1",
-              "6-7-4",
+              "6-5-4",
+              "7-4-2",
               "7-4-6",
-              "7-6-1",
               "7-6-4"
             ],
             "minimum_reference_races": 48.0
@@ -13223,18 +13208,18 @@
             "department": "pace_department",
             "winner_car": 3,
             "tickets": [
-              "3-5-1",
+              "1-5-7",
               "3-5-4",
               "4-5-6",
               "4-5-7",
-              "5-4-3",
               "5-6-4",
+              "6-5-1",
               "6-5-2",
               "6-5-4",
+              "6-5-7",
               "6-7-1",
-              "6-7-4",
               "7-4-2",
-              "7-6-1",
+              "7-4-6",
               "7-6-4"
             ],
             "minimum_reference_races": 48.0
@@ -13247,12 +13232,12 @@
               "4-5-3",
               "4-5-6",
               "4-5-7",
+              "4-7-5",
               "5-4-2",
-              "5-4-3",
               "5-4-6",
               "5-4-7",
               "5-6-4",
-              "6-7-4",
+              "7-4-2",
               "7-4-5",
               "7-4-6",
               "7-6-4"
@@ -13263,17 +13248,17 @@
             "department": "risk_department",
             "winner_car": 1,
             "tickets": [
+              "4-5-3",
               "4-5-6",
               "4-5-7",
-              "4-7-2",
-              "5-4-2",
-              "5-4-3",
+              "4-7-5",
               "5-4-6",
               "5-6-4",
-              "6-7-1",
-              "6-7-4",
+              "6-5-2",
+              "6-5-4",
+              "7-4-2",
+              "7-4-5",
               "7-4-6",
-              "7-6-1",
               "7-6-4"
             ],
             "minimum_reference_races": 48.0
@@ -13287,7 +13272,7 @@
           {
             "buy": "5-6-4",
             "group": "穴",
-            "ev": 7.907502512159461,
+            "ev": 8.45664663263562,
             "votes": 4,
             "departments": [
               "data_department",
@@ -13299,31 +13284,7 @@
           {
             "buy": "4-5-6",
             "group": "穴",
-            "ev": 6.899767661513685,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "5-4-3",
-            "group": "穴",
-            "ev": 6.465933928856231,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "6-7-4",
-            "group": "穴",
-            "ev": 6.324189480417629,
+            "ev": 7.8709428853257535,
             "votes": 4,
             "departments": [
               "data_department",
@@ -13335,7 +13296,19 @@
           {
             "buy": "4-5-7",
             "group": "穴",
-            "ev": 5.95804819358242,
+            "ev": 6.6083209532032985,
+            "votes": 4,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "7-4-2",
+            "group": "穴",
+            "ev": 5.776773464920201,
             "votes": 4,
             "departments": [
               "data_department",
@@ -13347,7 +13320,7 @@
           {
             "buy": "7-6-4",
             "group": "穴",
-            "ev": 5.682628481336715,
+            "ev": 4.861687070307632,
             "votes": 4,
             "departments": [
               "data_department",
@@ -13357,42 +13330,21 @@
             ]
           },
           {
-            "buy": "7-6-1",
+            "buy": "7-4-6",
             "group": "穴",
-            "ev": 9.041914380990466,
-            "votes": 3,
+            "ev": 4.832168784856118,
+            "votes": 4,
             "departments": [
               "data_department",
+              "line_department",
               "pace_department",
               "risk_department"
             ]
           },
           {
-            "buy": "5-4-2",
+            "buy": "6-5-4",
             "group": "穴",
-            "ev": 7.281350594983992,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "7-4-6",
-            "group": "穴",
-            "ev": 6.728986828206388,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "6-7-1",
-            "group": "穴",
-            "ev": 6.551339787472538,
+            "ev": 5.950649229770833,
             "votes": 3,
             "departments": [
               "data_department",
@@ -13403,7 +13355,7 @@
           {
             "buy": "5-4-6",
             "group": "穴",
-            "ev": 5.759119783086123,
+            "ev": 5.474656648788787,
             "votes": 3,
             "departments": [
               "data_department",
@@ -13412,242 +13364,41 @@
             ]
           },
           {
-            "buy": "4-7-2",
+            "buy": "4-7-5",
             "group": "穴",
-            "ev": 5.651764513306003,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "risk_department"
-            ]
-          }
-        ],
-        "purchase_authorized": false
-      },
-      {
-        "version": "strategist_consensus_v1",
-        "race_id": "072220261007",
-        "snapshot_at": "2026-10-07T20:02:03+09:00",
-        "source_snapshot_at": "2026-10-07T20:02:03+09:00",
-        "close_at": 1791380700.0,
-        "venue": "前橋",
-        "race_no": 7,
-        "views": [
-          {
-            "department": "data_department",
-            "winner_car": 4,
-            "tickets": [
-              "4-5-3",
-              "4-5-7",
-              "5-4-3",
-              "5-6-1",
-              "5-6-3",
-              "5-6-7",
-              "7-4-1",
-              "7-4-2",
-              "7-4-3",
-              "7-4-5",
-              "7-5-3",
-              "7-6-1"
-            ],
-            "minimum_reference_races": 48.0
-          },
-          {
-            "department": "pace_department",
-            "winner_car": 4,
-            "tickets": [
-              "4-5-3",
-              "4-5-7",
-              "5-4-1",
-              "5-4-3",
-              "5-6-1",
-              "5-6-3",
-              "5-6-7",
-              "7-4-1",
-              "7-4-3",
-              "7-4-5",
-              "7-5-3",
-              "7-6-1"
-            ],
-            "minimum_reference_races": 48.0
-          },
-          {
-            "department": "line_department",
-            "winner_car": 4,
-            "tickets": [
-              "4-2-5",
-              "4-2-7",
-              "4-5-3",
-              "4-5-7",
-              "5-6-3",
-              "5-6-7",
-              "7-4-1",
-              "7-4-2",
-              "7-4-3",
-              "7-4-5",
-              "7-5-3",
-              "7-6-1"
-            ],
-            "minimum_reference_races": 48.0
-          },
-          {
-            "department": "risk_department",
-            "winner_car": 4,
-            "tickets": [
-              "4-5-3",
-              "4-5-7",
-              "5-4-3",
-              "5-6-1",
-              "5-6-3",
-              "5-6-7",
-              "5-7-6",
-              "7-4-1",
-              "7-4-3",
-              "7-4-5",
-              "7-5-3",
-              "7-6-1"
-            ],
-            "minimum_reference_races": 48.0
-          }
-        ],
-        "winner_votes": {
-          "4": 4
-        },
-        "tickets": [
-          {
-            "buy": "5-6-7",
-            "group": "穴",
-            "ev": 13.370137308655563,
-            "votes": 4,
+            "ev": 5.422214138400818,
+            "votes": 3,
             "departments": [
               "data_department",
               "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "5-6-3",
-            "group": "穴",
-            "ev": 10.232820384047262,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
               "risk_department"
             ]
           },
           {
             "buy": "4-5-3",
             "group": "穴",
-            "ev": 9.667275067179299,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "7-4-5",
-            "group": "穴",
-            "ev": 8.807622491620126,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "7-4-1",
-            "group": "穴",
-            "ev": 8.446068344084663,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "7-4-3",
-            "group": "穴",
-            "ev": 8.422115188949043,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "7-6-1",
-            "group": "穴",
-            "ev": 5.714686112943105,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "4-5-7",
-            "group": "穴",
-            "ev": 5.462769792259444,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "7-5-3",
-            "group": "穴",
-            "ev": 5.44569946575078,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "5-4-3",
-            "group": "穴",
-            "ev": 7.340927636970331,
+            "ev": 5.270198229194979,
             "votes": 3,
             "departments": [
               "data_department",
-              "pace_department",
+              "line_department",
               "risk_department"
             ]
           },
           {
-            "buy": "5-6-1",
+            "buy": "5-4-2",
             "group": "穴",
-            "ev": 6.405034701055351,
-            "votes": 3,
+            "ev": 6.273838298326234,
+            "votes": 2,
             "departments": [
               "data_department",
-              "pace_department",
-              "risk_department"
+              "line_department"
             ]
           },
           {
-            "buy": "7-4-2",
+            "buy": "5-4-7",
             "group": "穴",
-            "ev": 6.717392474478329,
+            "ev": 5.656804748550422,
             "votes": 2,
             "departments": [
               "data_department",
@@ -13659,9 +13410,242 @@
       },
       {
         "version": "strategist_consensus_v1",
+        "race_id": "072220261007",
+        "snapshot_at": "2026-10-07T20:34:19+09:00",
+        "source_snapshot_at": "2026-10-07T20:34:19+09:00",
+        "close_at": 1791380700.0,
+        "venue": "前橋",
+        "race_no": 7,
+        "views": [
+          {
+            "department": "data_department",
+            "winner_car": 4,
+            "tickets": [
+              "4-5-2",
+              "4-5-3",
+              "4-5-7",
+              "4-6-3",
+              "5-4-2",
+              "5-4-3",
+              "5-6-1",
+              "5-6-3",
+              "7-4-1",
+              "7-4-2",
+              "7-4-3",
+              "7-4-5",
+              "7-5-3"
+            ],
+            "minimum_reference_races": 48.0
+          },
+          {
+            "department": "pace_department",
+            "winner_car": 4,
+            "tickets": [
+              "4-5-3",
+              "4-5-7",
+              "4-7-1",
+              "5-4-1",
+              "5-4-2",
+              "5-4-3",
+              "5-6-1",
+              "5-6-3",
+              "7-4-1",
+              "7-4-2",
+              "7-4-3",
+              "7-5-3"
+            ],
+            "minimum_reference_races": 48.0
+          },
+          {
+            "department": "line_department",
+            "winner_car": 4,
+            "tickets": [
+              "3-5-7",
+              "4-2-5",
+              "4-5-3",
+              "4-5-7",
+              "4-6-3",
+              "5-4-3",
+              "5-6-3",
+              "7-4-1",
+              "7-4-2",
+              "7-4-3",
+              "7-4-5",
+              "7-5-3",
+              "7-6-1"
+            ],
+            "minimum_reference_races": 48.0
+          },
+          {
+            "department": "risk_department",
+            "winner_car": 4,
+            "tickets": [
+              "4-5-3",
+              "4-5-7",
+              "4-7-1",
+              "5-4-2",
+              "5-4-3",
+              "5-6-1",
+              "5-6-3",
+              "7-1-4",
+              "7-4-1",
+              "7-4-2",
+              "7-4-3",
+              "7-5-3"
+            ],
+            "minimum_reference_races": 48.0
+          }
+        ],
+        "winner_votes": {
+          "4": 4
+        },
+        "tickets": [
+          {
+            "buy": "7-4-1",
+            "group": "穴",
+            "ev": 10.905844563164298,
+            "votes": 4,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "5-6-3",
+            "group": "穴",
+            "ev": 8.808813363055307,
+            "votes": 4,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "7-4-3",
+            "group": "穴",
+            "ev": 8.700449475982785,
+            "votes": 4,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "4-5-3",
+            "group": "穴",
+            "ev": 8.321916451077948,
+            "votes": 4,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "5-4-3",
+            "group": "穴",
+            "ev": 7.4127909862912365,
+            "votes": 4,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "4-5-7",
+            "group": "穴",
+            "ev": 5.643303553820086,
+            "votes": 4,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "7-4-2",
+            "group": "穴",
+            "ev": 5.1531671689204765,
+            "votes": 4,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "7-5-3",
+            "group": "穴",
+            "ev": 5.022234970395221,
+            "votes": 4,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "5-4-2",
+            "group": "穴",
+            "ev": 6.720029386407253,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "5-6-1",
+            "group": "穴",
+            "ev": 6.20250997826418,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "7-4-5",
+            "group": "穴",
+            "ev": 5.758977913137797,
+            "votes": 2,
+            "departments": [
+              "data_department",
+              "line_department"
+            ]
+          },
+          {
+            "buy": "4-7-1",
+            "group": "穴",
+            "ev": 5.387249139019135,
+            "votes": 2,
+            "departments": [
+              "pace_department",
+              "risk_department"
+            ]
+          }
+        ],
+        "purchase_authorized": false
+      },
+      {
+        "version": "strategist_consensus_v1",
         "race_id": "084420261007",
-        "snapshot_at": "2026-10-07T20:02:03+09:00",
-        "source_snapshot_at": "2026-10-07T20:02:03+09:00",
+        "snapshot_at": "2026-10-07T20:34:19+09:00",
+        "source_snapshot_at": "2026-10-07T20:34:19+09:00",
         "close_at": 1791381300.0,
         "venue": "大垣",
         "race_no": 8,
@@ -13670,7 +13654,6 @@
             "department": "data_department",
             "winner_car": 5,
             "tickets": [
-              "5-2-4",
               "5-3-4",
               "5-3-7",
               "5-4-3",
@@ -13679,9 +13662,10 @@
               "5-7-3",
               "5-7-4",
               "7-3-2",
+              "7-3-4",
               "7-3-6",
-              "7-4-6",
-              "7-5-4"
+              "7-4-2",
+              "7-4-6"
             ],
             "minimum_reference_races": 51.0
           },
@@ -13689,18 +13673,18 @@
             "department": "pace_department",
             "winner_car": 1,
             "tickets": [
-              "3-4-5",
               "3-7-5",
-              "5-2-4",
               "5-3-4",
-              "5-3-7",
+              "5-4-2",
               "5-4-3",
+              "5-4-7",
               "5-7-1",
               "5-7-2",
               "5-7-3",
               "5-7-4",
               "6-5-2",
-              "7-3-2"
+              "7-3-2",
+              "7-4-2"
             ],
             "minimum_reference_races": 51.0
           },
@@ -13708,7 +13692,6 @@
             "department": "line_department",
             "winner_car": 5,
             "tickets": [
-              "3-5-7",
               "5-3-4",
               "5-3-7",
               "5-4-3",
@@ -13717,7 +13700,8 @@
               "5-7-3",
               "5-7-4",
               "6-4-7",
-              "7-3-2"
+              "7-3-2",
+              "7-4-2"
             ],
             "minimum_reference_races": 51.0
           },
@@ -13726,17 +13710,17 @@
             "winner_car": 5,
             "tickets": [
               "5-3-4",
-              "5-3-7",
-              "5-4-3",
               "5-4-7",
               "5-7-1",
               "5-7-3",
               "5-7-4",
-              "7-2-6",
+              "7-1-5",
               "7-3-2",
               "7-3-5",
               "7-3-6",
-              "7-4-6"
+              "7-4-2",
+              "7-4-6",
+              "7-5-6"
             ],
             "minimum_reference_races": 51.0
           }
@@ -13749,19 +13733,7 @@
           {
             "buy": "5-7-4",
             "group": "穴",
-            "ev": 6.370109802311589,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "5-3-4",
-            "group": "穴",
-            "ev": 5.913375521523837,
+            "ev": 6.698015756578847,
             "votes": 4,
             "departments": [
               "data_department",
@@ -13773,7 +13745,19 @@
           {
             "buy": "5-7-3",
             "group": "穴",
-            "ev": 5.6990370282140805,
+            "ev": 5.326871235760407,
+            "votes": 4,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "5-3-4",
+            "group": "穴",
+            "ev": 5.181505105437505,
             "votes": 4,
             "departments": [
               "data_department",
@@ -13785,7 +13769,7 @@
           {
             "buy": "5-7-1",
             "group": "穴",
-            "ev": 4.880149157568229,
+            "ev": 4.789506473920337,
             "votes": 4,
             "departments": [
               "data_department",
@@ -13795,9 +13779,9 @@
             ]
           },
           {
-            "buy": "5-4-3",
+            "buy": "7-4-2",
             "group": "穴",
-            "ev": 4.415369228184679,
+            "ev": 4.78301826943558,
             "votes": 4,
             "departments": [
               "data_department",
@@ -13809,19 +13793,7 @@
           {
             "buy": "7-3-2",
             "group": "穴",
-            "ev": 4.260459828940893,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "5-3-7",
-            "group": "穴",
-            "ev": 4.051653590302765,
+            "ev": 4.646304075921982,
             "votes": 4,
             "departments": [
               "data_department",
@@ -13833,18 +13805,40 @@
           {
             "buy": "5-4-7",
             "group": "穴",
-            "ev": 5.062966248331203,
+            "ev": 4.366120352715266,
+            "votes": 4,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "5-4-3",
+            "group": "穴",
+            "ev": 5.912631069960101,
             "votes": 3,
             "departments": [
               "data_department",
               "line_department",
-              "risk_department"
+              "pace_department"
+            ]
+          },
+          {
+            "buy": "5-3-7",
+            "group": "穴",
+            "ev": 5.515671949743644,
+            "votes": 2,
+            "departments": [
+              "data_department",
+              "line_department"
             ]
           },
           {
             "buy": "7-4-6",
             "group": "穴",
-            "ev": 5.000997935006974,
+            "ev": 5.008261900246163,
             "votes": 2,
             "departments": [
               "data_department",
@@ -13854,21 +13848,11 @@
           {
             "buy": "7-3-6",
             "group": "穴",
-            "ev": 4.368865283867614,
+            "ev": 4.7645271615280755,
             "votes": 2,
             "departments": [
               "data_department",
               "risk_department"
-            ]
-          },
-          {
-            "buy": "5-2-4",
-            "group": "穴",
-            "ev": 4.360227161064897,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "pace_department"
             ]
           }
         ],
@@ -13877,8 +13861,8 @@
       {
         "version": "strategist_consensus_v1",
         "race_id": "082220261007",
-        "snapshot_at": "2026-10-07T20:02:03+09:00",
-        "source_snapshot_at": "2026-10-07T20:02:03+09:00",
+        "snapshot_at": "2026-10-07T20:34:19+09:00",
+        "source_snapshot_at": "2026-10-07T20:34:19+09:00",
         "close_at": 1791381900.0,
         "venue": "前橋",
         "race_no": 8,
@@ -13887,10 +13871,9 @@
             "department": "data_department",
             "winner_car": 5,
             "tickets": [
-              "2-6-7",
-              "2-7-6",
               "4-5-6",
               "4-7-6",
+              "5-4-2",
               "5-4-3",
               "5-4-6",
               "5-6-4",
@@ -13898,7 +13881,8 @@
               "5-7-6",
               "6-5-4",
               "6-7-4",
-              "7-3-4"
+              "7-3-4",
+              "7-4-6"
             ],
             "minimum_reference_races": 46.0
           },
@@ -13906,18 +13890,18 @@
             "department": "pace_department",
             "winner_car": 5,
             "tickets": [
-              "2-6-7",
               "4-5-6",
               "4-7-6",
+              "5-6-1",
               "5-6-4",
+              "5-6-7",
               "5-7-4",
+              "5-7-6",
+              "6-4-7",
               "6-5-4",
-              "6-7-2",
               "6-7-4",
-              "7-2-6",
               "7-3-4",
-              "7-6-1",
-              "7-6-2"
+              "7-6-1"
             ],
             "minimum_reference_races": 46.0
           },
@@ -13926,16 +13910,16 @@
             "winner_car": 5,
             "tickets": [
               "2-3-6",
-              "2-6-7",
-              "2-7-6",
               "4-5-6",
+              "4-7-6",
+              "5-4-2",
               "5-4-3",
               "5-4-6",
               "5-6-4",
               "5-7-4",
               "5-7-6",
-              "6-5-4",
-              "7-3-4"
+              "7-4-6",
+              "7-5-6"
             ],
             "minimum_reference_races": 46.0
           },
@@ -13943,18 +13927,18 @@
             "department": "risk_department",
             "winner_car": 5,
             "tickets": [
-              "2-6-7",
-              "2-7-6",
               "4-5-6",
               "4-7-6",
+              "5-4-6",
               "5-4-7",
+              "5-6-4",
               "5-7-4",
+              "5-7-6",
+              "6-4-7",
               "6-5-4",
               "6-7-4",
-              "7-2-6",
               "7-3-4",
-              "7-5-4",
-              "7-6-1"
+              "7-4-6"
             ],
             "minimum_reference_races": 46.0
           }
@@ -13964,45 +13948,9 @@
         },
         "tickets": [
           {
-            "buy": "7-3-4",
+            "buy": "5-6-4",
             "group": "穴",
-            "ev": 9.633521187846004,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "6-5-4",
-            "group": "穴",
-            "ev": 9.408135026935597,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "2-6-7",
-            "group": "穴",
-            "ev": 9.01959403967005,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "5-7-4",
-            "group": "穴",
-            "ev": 8.007875896589615,
+            "ev": 6.770407460873868,
             "votes": 4,
             "departments": [
               "data_department",
@@ -14014,7 +13962,43 @@
           {
             "buy": "4-5-6",
             "group": "穴",
-            "ev": 6.6344525268410255,
+            "ev": 6.7650668374263105,
+            "votes": 4,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "4-7-6",
+            "group": "穴",
+            "ev": 6.504635413204431,
+            "votes": 4,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "5-7-4",
+            "group": "穴",
+            "ev": 6.221433529211681,
+            "votes": 4,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "5-7-6",
+            "group": "穴",
+            "ev": 5.890278709634582,
             "votes": 4,
             "departments": [
               "data_department",
@@ -14026,7 +14010,7 @@
           {
             "buy": "6-7-4",
             "group": "穴",
-            "ev": 14.521407684519742,
+            "ev": 9.871873809696613,
             "votes": 3,
             "departments": [
               "data_department",
@@ -14035,31 +14019,9 @@
             ]
           },
           {
-            "buy": "2-7-6",
+            "buy": "6-5-4",
             "group": "穴",
-            "ev": 7.900241066106213,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "5-6-4",
-            "group": "穴",
-            "ev": 7.7609685677651665,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "4-7-6",
-            "group": "穴",
-            "ev": 7.176180365691558,
+            "ev": 7.482251053960902,
             "votes": 3,
             "departments": [
               "data_department",
@@ -14070,17 +14032,40 @@
           {
             "buy": "5-4-6",
             "group": "穴",
-            "ev": 9.80435915976553,
-            "votes": 2,
+            "ev": 6.975331174812618,
+            "votes": 3,
             "departments": [
               "data_department",
-              "line_department"
+              "line_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "7-3-4",
+            "group": "穴",
+            "ev": 6.736991571778411,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "7-4-6",
+            "group": "穴",
+            "ev": 6.204778255553508,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "line_department",
+              "risk_department"
             ]
           },
           {
             "buy": "5-4-3",
             "group": "穴",
-            "ev": 8.36326154577146,
+            "ev": 7.5798373298989095,
             "votes": 2,
             "departments": [
               "data_department",
@@ -14088,9 +14073,9 @@
             ]
           },
           {
-            "buy": "5-7-6",
+            "buy": "5-4-2",
             "group": "穴",
-            "ev": 8.070716105533458,
+            "ev": 7.22313910260955,
             "votes": 2,
             "departments": [
               "data_department",
@@ -14103,8 +14088,8 @@
       {
         "version": "strategist_consensus_v1",
         "race_id": "094420261007",
-        "snapshot_at": "2026-10-07T20:02:03+09:00",
-        "source_snapshot_at": "2026-10-07T20:02:03+09:00",
+        "snapshot_at": "2026-10-07T20:34:19+09:00",
+        "source_snapshot_at": "2026-10-07T20:34:19+09:00",
         "close_at": 1791382500.0,
         "venue": "大垣",
         "race_no": 9,
@@ -14114,12 +14099,13 @@
             "winner_car": 2,
             "tickets": [
               "2-4-5",
-              "2-4-6",
+              "4-5-6",
               "4-5-7",
-              "4-6-7",
               "4-7-5",
+              "7-1-4",
               "7-1-5",
               "7-4-1",
+              "7-4-2",
               "7-4-5",
               "7-4-6",
               "7-5-1",
@@ -14133,8 +14119,8 @@
             "winner_car": 2,
             "tickets": [
               "2-4-5",
-              "2-4-6",
-              "4-1-5",
+              "4-5-7",
+              "4-7-1",
               "4-7-5",
               "7-1-4",
               "7-1-5",
@@ -14142,8 +14128,7 @@
               "7-4-5",
               "7-4-6",
               "7-5-1",
-              "7-5-4",
-              "7-6-1"
+              "7-5-4"
             ],
             "minimum_reference_races": 36.0
           },
@@ -14152,17 +14137,16 @@
             "winner_car": 2,
             "tickets": [
               "2-4-5",
-              "2-4-6",
-              "4-5-1",
               "4-5-6",
+              "4-5-7",
               "7-1-4",
               "7-1-5",
               "7-4-1",
+              "7-4-2",
               "7-4-5",
               "7-4-6",
               "7-5-1",
-              "7-5-4",
-              "7-6-1"
+              "7-5-4"
             ],
             "minimum_reference_races": 36.0
           },
@@ -14170,18 +14154,18 @@
             "department": "risk_department",
             "winner_car": 2,
             "tickets": [
-              "4-1-7",
-              "4-5-6",
               "4-5-7",
               "4-6-7",
               "4-7-5",
+              "5-4-3",
+              "6-4-5",
               "7-1-5",
               "7-4-1",
+              "7-4-2",
               "7-4-5",
               "7-4-6",
               "7-5-1",
-              "7-5-4",
-              "7-6-1"
+              "7-5-4"
             ],
             "minimum_reference_races": 36.0
           }
@@ -14191,21 +14175,9 @@
         },
         "tickets": [
           {
-            "buy": "7-5-4",
-            "group": "穴",
-            "ev": 11.261381915375935,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
             "buy": "7-4-5",
             "group": "穴",
-            "ev": 8.372814724039042,
+            "ev": 12.441711200406768,
             "votes": 4,
             "departments": [
               "data_department",
@@ -14215,21 +14187,9 @@
             ]
           },
           {
-            "buy": "7-5-1",
+            "buy": "7-5-4",
             "group": "穴",
-            "ev": 5.48256369352324,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "7-4-6",
-            "group": "穴",
-            "ev": 5.201730183463096,
+            "ev": 11.155429002667763,
             "votes": 4,
             "departments": [
               "data_department",
@@ -14241,7 +14201,7 @@
           {
             "buy": "7-4-1",
             "group": "穴",
-            "ev": 5.177010852796969,
+            "ev": 6.924115009330146,
             "votes": 4,
             "departments": [
               "data_department",
@@ -14251,9 +14211,33 @@
             ]
           },
           {
-            "buy": "7-6-1",
+            "buy": "7-5-1",
             "group": "穴",
-            "ev": 4.863354106233032,
+            "ev": 6.110137321673889,
+            "votes": 4,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "7-4-6",
+            "group": "穴",
+            "ev": 6.011966751008006,
+            "votes": 4,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "4-5-7",
+            "group": "穴",
+            "ev": 5.823615075851202,
             "votes": 4,
             "departments": [
               "data_department",
@@ -14265,7 +14249,7 @@
           {
             "buy": "7-1-5",
             "group": "穴",
-            "ev": 4.5408553761429085,
+            "ev": 5.52080849824912,
             "votes": 4,
             "departments": [
               "data_department",
@@ -14275,9 +14259,31 @@
             ]
           },
           {
+            "buy": "7-4-2",
+            "group": "穴",
+            "ev": 6.11008606591832,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "line_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "7-1-4",
+            "group": "穴",
+            "ev": 5.953171439712511,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department"
+            ]
+          },
+          {
             "buy": "4-7-5",
             "group": "穴",
-            "ev": 4.81700912555538,
+            "ev": 5.1127373790687765,
             "votes": 3,
             "departments": [
               "data_department",
@@ -14288,7 +14294,7 @@
           {
             "buy": "2-4-5",
             "group": "本線",
-            "ev": 1.3356184918461604,
+            "ev": 1.6241256628929803,
             "votes": 3,
             "departments": [
               "data_department",
@@ -14297,34 +14303,13 @@
             ]
           },
           {
-            "buy": "2-4-6",
-            "group": "本線",
-            "ev": 1.3217939987851886,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "4-6-7",
+            "buy": "4-5-6",
             "group": "穴",
-            "ev": 5.429016376022102,
+            "ev": 5.489777979379165,
             "votes": 2,
             "departments": [
               "data_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "4-5-7",
-            "group": "穴",
-            "ev": 5.226035916758466,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "risk_department"
+              "line_department"
             ]
           }
         ],
@@ -14333,8 +14318,8 @@
       {
         "version": "strategist_consensus_v1",
         "race_id": "092220261007",
-        "snapshot_at": "2026-10-07T20:02:03+09:00",
-        "source_snapshot_at": "2026-10-07T20:02:03+09:00",
+        "snapshot_at": "2026-10-07T20:34:19+09:00",
+        "source_snapshot_at": "2026-10-07T20:34:19+09:00",
         "close_at": 1791383100.0,
         "venue": "前橋",
         "race_no": 9,
@@ -14343,6 +14328,11 @@
             "department": "data_department",
             "winner_car": 1,
             "tickets": [
+              "1-3-6",
+              "3-4-5",
+              "3-4-6",
+              "3-4-7",
+              "3-7-4",
               "4-3-6",
               "4-3-7",
               "4-6-5",
@@ -14350,11 +14340,7 @@
               "4-7-6",
               "6-3-5",
               "7-3-4",
-              "7-3-5",
-              "7-4-3",
-              "7-4-5",
-              "7-4-6",
-              "7-5-4"
+              "7-4-3"
             ],
             "minimum_reference_races": 47.0
           },
@@ -14362,21 +14348,21 @@
             "department": "pace_department",
             "winner_car": 1,
             "tickets": [
+              "1-3-6",
               "1-6-3",
               "1-7-6",
-              "2-1-7",
-              "4-1-6",
               "4-3-6",
               "4-3-7",
               "4-5-3",
+              "4-5-6",
               "4-5-7",
               "4-6-3",
               "4-6-5",
               "4-6-7",
               "4-7-3",
               "4-7-6",
-              "7-4-3",
-              "7-4-6"
+              "7-3-4",
+              "7-4-3"
             ],
             "minimum_reference_races": 47.0
           },
@@ -14385,18 +14371,19 @@
             "winner_car": 7,
             "tickets": [
               "1-3-5",
+              "1-3-6",
               "1-6-5",
-              "3-1-4",
+              "3-1-6",
+              "3-4-5",
+              "3-6-4",
               "3-7-4",
               "4-3-7",
               "4-6-5",
-              "4-6-7",
               "4-7-6",
               "6-3-5",
-              "6-7-4",
               "7-3-4",
               "7-3-5",
-              "7-4-5",
+              "7-4-3",
               "7-6-4"
             ],
             "minimum_reference_races": 47.0
@@ -14405,18 +14392,18 @@
             "department": "risk_department",
             "winner_car": 1,
             "tickets": [
+              "3-4-5",
+              "3-4-7",
+              "3-7-4",
               "4-3-7",
-              "4-5-7",
               "4-6-5",
               "4-6-7",
               "4-7-6",
+              "5-6-4",
               "6-3-5",
-              "6-7-4",
               "7-3-4",
               "7-4-3",
-              "7-4-5",
-              "7-4-6",
-              "7-5-4"
+              "7-5-2"
             ],
             "minimum_reference_races": 47.0
           }
@@ -14429,7 +14416,19 @@
           {
             "buy": "4-3-7",
             "group": "穴",
-            "ev": 25.90109255631367,
+            "ev": 33.29694120612986,
+            "votes": 4,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "7-4-3",
+            "group": "穴",
+            "ev": 11.793452128493605,
             "votes": 4,
             "departments": [
               "data_department",
@@ -14441,19 +14440,7 @@
           {
             "buy": "4-7-6",
             "group": "穴",
-            "ev": 16.449932383808015,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "4-6-7",
-            "group": "穴",
-            "ev": 10.331882561924456,
+            "ev": 10.573332428143898,
             "votes": 4,
             "departments": [
               "data_department",
@@ -14465,7 +14452,7 @@
           {
             "buy": "4-6-5",
             "group": "穴",
-            "ev": 8.201492873626178,
+            "ev": 10.543422052569145,
             "votes": 4,
             "departments": [
               "data_department",
@@ -14477,43 +14464,11 @@
           {
             "buy": "7-3-4",
             "group": "穴",
-            "ev": 14.307463786299817,
-            "votes": 3,
+            "ev": 8.080355565184615,
+            "votes": 4,
             "departments": [
               "data_department",
               "line_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "7-4-3",
-            "group": "穴",
-            "ev": 13.867701199045005,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "7-4-5",
-            "group": "穴",
-            "ev": 12.569067955148697,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "7-4-6",
-            "group": "穴",
-            "ev": 8.696958753353574,
-            "votes": 3,
-            "departments": [
-              "data_department",
               "pace_department",
               "risk_department"
             ]
@@ -14521,7 +14476,7 @@
           {
             "buy": "6-3-5",
             "group": "穴",
-            "ev": 8.283367188409299,
+            "ev": 10.649151317919548,
             "votes": 3,
             "departments": [
               "data_department",
@@ -14530,33 +14485,67 @@
             ]
           },
           {
-            "buy": "7-5-4",
+            "buy": "4-6-7",
             "group": "穴",
-            "ev": 10.220302337304501,
-            "votes": 2,
+            "ev": 10.626087426215772,
+            "votes": 3,
             "departments": [
               "data_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "4-5-7",
-            "group": "穴",
-            "ev": 9.964887914813161,
-            "votes": 2,
-            "departments": [
               "pace_department",
               "risk_department"
             ]
           },
           {
-            "buy": "7-3-5",
+            "buy": "3-7-4",
             "group": "穴",
-            "ev": 9.739999696594868,
+            "ev": 9.701486018419546,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "line_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "3-4-5",
+            "group": "穴",
+            "ev": 9.506472443661085,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "line_department",
+              "risk_department"
+            ]
+          },
+          {
+            "buy": "1-3-6",
+            "group": "本線",
+            "ev": 1.522067050853946,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department"
+            ]
+          },
+          {
+            "buy": "4-3-6",
+            "group": "穴",
+            "ev": 11.103875312167883,
             "votes": 2,
             "departments": [
               "data_department",
-              "line_department"
+              "pace_department"
+            ]
+          },
+          {
+            "buy": "3-4-7",
+            "group": "穴",
+            "ev": 8.919141759675023,
+            "votes": 2,
+            "departments": [
+              "data_department",
+              "risk_department"
             ]
           }
         ],
@@ -14564,36 +14553,37 @@
       }
     ],
     "settled": {
-      "settled_races": 55,
-      "bet_races": 46,
+      "settled_races": 56,
+      "bet_races": 47,
       "hits": 0,
       "hit_rate": 0.0,
-      "stake_yen": 52700,
+      "stake_yen": 53900,
       "return_yen": 0,
       "return_rate": 0.0
     },
-    "paired_races": 4,
+    "paired_races": 5,
     "paired_strategist": {
-      "settled_races": 4,
-      "bet_races": 4,
+      "settled_races": 5,
+      "bet_races": 5,
       "hits": 0,
       "hit_rate": 0.0,
-      "stake_yen": 4100,
+      "stake_yen": 5300,
       "return_yen": 0,
       "return_rate": 0.0
     },
     "paired_production": {
-      "settled_races": 4,
-      "bet_races": 3,
+      "settled_races": 5,
+      "bet_races": 4,
       "hits": 0,
       "hit_rate": 0.0,
-      "stake_yen": 4100,
+      "stake_yen": 5400,
       "return_yen": 0,
       "return_rate": 0.0
     },
     "production_miss_reasons": {
       "skip": 1,
-      "ev_filter_skip": 3
+      "ev_filter_skip": 3,
+      "ev_compression_miss": 1
     }
   }
 }
