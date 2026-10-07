@@ -8,7 +8,7 @@ from itertools import permutations
 import numpy as np
 import pandas as pd
 
-STRATEGY_VERSION = "position_prob_v10_balanced_risk_20261007"
+STRATEGY_VERSION = "position_prob_v11_high_payout_20261007"
 MAIN_EV = 1.10
 HOLE_EV = 1.25
 FIXED_MIN_WIN_PROBABILITY = 0.60
@@ -317,16 +317,26 @@ def select_race(riders, odds, main_ev=MAIN_EV, hole_ev=HOLE_EV, force_no_fixed=F
     main = select_main_with_risk(main_pool, plan["main_limit"], plan["risk_score"])
     candidates.loc[main.index, "ticket_group"] = "本線"
 
-    hole_pool = candidates[
-        candidates.hole_formation
-        & candidates.ev.ge(hole_ev)
-        & candidates.odds_used.ge(100)
-        & ~candidates.index.isin(main.index)
-    ].sort_values(["ev", "prob", "buy"], ascending=[False, False, True], na_position="last")
-    plan["hole_limit"] = hole_limit(hole_pool, plan, riders)
-    holes = hole_pool.head(plan["hole_limit"])
-    candidates.loc[holes.index, "ticket_group"] = "穴"
-    candidates.loc[list(main.index) + list(holes.index), "is_selected"] = True
+    candidates.loc[main.index, "is_selected"] = True
+    from high_payout_strategy import select_high_payout
+    independent, department = select_high_payout(riders, clean_odds(odds), plan, set(main.buy), hole_ev)
+    candidates["hole_formation"] = False
+    candidates["high_payout_selected"] = False
+    for row in independent.to_dict('records'):
+        mask=candidates.buy.eq(row['buy'])
+        if not mask.any():
+            candidates=pd.concat([candidates,pd.DataFrame([{**row,'main_formation':False,'hole_formation':True,'ticket_group':'','is_selected':False}])],ignore_index=True)
+            mask=candidates.buy.eq(row['buy'])
+        for column in ['prob','ev','odds_used','scenario','high_payout_selected']:
+            candidates.loc[mask,column]=row[column]
+        candidates.loc[mask,'hole_formation']=True
+        candidates.loc[mask,'expected_profit_100yen']=100*(row['ev']-1)
+        if row['high_payout_selected']:
+            candidates.loc[mask,'ticket_group']='穴'
+            candidates.loc[mask,'is_selected']=True
+    holes=candidates[candidates.ticket_group.eq('穴')]
+    plan['high_payout_department']=department
+    plan['hole_limit']=department['recommended_count']
     candidates["candidate_rank"] = candidates.prob.rank(ascending=False, method="first").astype(int)
     candidates["chaos_index"] = plan["chaos_index"]
     candidates["risk_score"] = plan["risk_score"]
@@ -334,6 +344,7 @@ def select_race(riders, odds, main_ev=MAIN_EV, hole_ev=HOLE_EV, force_no_fixed=F
     candidates["risk_veto_fixed"] = plan["risk_veto_fixed"]
     candidates["first_fixed"] = plan["first_fixed"]
     candidates["probability_method"] = plan["probability_method"]
+    candidates.loc[candidates.hole_formation,'probability_method']=department['probability_method']
     selected = candidates.loc[candidates.is_selected]
     plan["selected_scenarios"] = sorted(selected.scenario.dropna().astype(str).unique().tolist())
     plan.update(main_count=len(main), hole_count=len(holes),

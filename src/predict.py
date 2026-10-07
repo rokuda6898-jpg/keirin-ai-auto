@@ -1191,7 +1191,13 @@ def render_strategy_summary(plan, purchase_authorized):
         risk_control = "2・3着と展開候補を拡張"
     else:
         risk_control = "通常展開"
-    return (f'<div class="strategy-summary"><b>{state}</b><p>荒れ指数 {plan["chaos_index"]:.1f}/100 '
+    department=plan.get('high_payout_department',{})
+    detail=''
+    if department:
+        detail='<div class="high-payout-summary"><b>高配当戦略部判定</b><p>穴評価 '+html_lib.escape(str(department['rating']))+'｜穴期待度 '+str(department['expectation_score'])+'/100（確率ではありません）｜推奨 '+str(department['recommended_count'])+'点</p><p>波乱箇所：'+html_lib.escape('・'.join(department['patterns']) or '判定なし')+'</p>'
+        if department['skip_reason']:detail+='<p>'+html_lib.escape(department['skip_reason'])+'</p>'
+        detail+='<small>'+html_lib.escape('／'.join(department['unknowns']))+'</small><p><a href="company/high_payout_department.html">高配当戦略部の独立成績</a></p></div>'
+    return (detail+f'<div class="strategy-summary"><b>{state}</b><p>荒れ指数 {plan["chaos_index"]:.1f}/100 '
             f'｜ {plan["chaos_label"]} ｜ {fixed}</p>'
             f'<p>リスク部門優先：{risk_level} {risk_score:.1f}/100 ｜ 展開制御：{risk_control}</p>'
             f'<p>本線 {plan["main_count"]}/{plan["main_limit"]}点・穴 {plan["hole_count"]}/{plan["hole_limit"]}点'
@@ -1279,6 +1285,7 @@ def provisional_display_bets(candidates, race_id, seconds_to_close, raw_odds=Non
 
     holes = race[
         race["hole_formation"].fillna(False).astype(bool)
+        & (race["high_payout_selected"].fillna(False).astype(bool) if 'high_payout_selected' in race else pd.Series(False,index=race.index))
         & race["odds_used"].ge(100)
         & race["ev"].ge(HOLE_EV)
         & ~race.index.isin(main.index)
@@ -1459,6 +1466,10 @@ def main():
     (OUTPUT_DIR / "latest_race_strategy.json").write_text(
         json.dumps(strategy_plans, ensure_ascii=False, indent=2, allow_nan=False), encoding="utf-8")
     strategy_plan_map = {p["race_id"]: p for p in strategy_plans}
+    from high_payout_department import build_high_payout_department
+    settled_path=OUTPUT_DIR/'company'/'ticket_return_settled.json'
+    settled_rows=json.loads(settled_path.read_text(encoding='utf-8')) if settled_path.exists() else []
+    build_high_payout_department(settled_rows, OUTPUT_DIR)
     pred[cols].to_csv(pred_path, index=False)
     pred[cols].to_csv(latest_path, index=False)
 

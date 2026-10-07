@@ -139,6 +139,7 @@ def save_snapshots(plans, shadow_bets, now_jst, output_dir=OUTPUT_DIR, position_
             "selection_challenger": challenger,
             "lower_challenger": lower_challenger,
             "axis_challenger": axis_challenger,
+            "high_payout_department": plan.get('high_payout_department'),
         })
     if rows:
         with path.open("a", encoding="utf-8") as handle:
@@ -307,6 +308,8 @@ def build_ticket_return_department(output_dir=OUTPUT_DIR):
             '未確定・払戻未取得は成績に含めません。</p></main></html>')
     (folder / "ticket_return_department.html").write_text(page, encoding="utf-8")
     from prediction_quality import build_prediction_quality
+    from high_payout_department import build_high_payout_department
+    build_high_payout_department(list(settled.values()), output_dir)
     build_prediction_quality(list(settled.values()), output_dir)
     from selection_research import build_selection_research
     build_selection_research(list(settled.values()), output_dir)

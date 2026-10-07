@@ -144,7 +144,7 @@ class BettingLogicTests(unittest.TestCase):
         odds = fair_odds(riders, 1.09)
         chosen, plan = select_race(riders, odds)
         self.assertEqual(plan["main_count"] + plan["hole_count"], 0)
-        odds = fair_odds(riders).head(2)
+        odds = fair_odds(riders).sort_values('odds_used').head(2)
         chosen, plan = select_race(riders, odds)
         self.assertEqual(int(chosen.is_selected.sum()), 2)
         for value in [np.nan, np.inf, -1, 0]:

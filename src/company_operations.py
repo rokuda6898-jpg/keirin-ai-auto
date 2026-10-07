@@ -44,7 +44,7 @@ def build_company_operations(output_dir=OUTPUT_DIR):
                     {'department':'リスク・回収率','decision':'過信した固定軸と点数の強制増加を抑制。配分は据え置き。', 'evidence':quality.get('fixed_axis_audit',{}), 'adoption':'保護ルールを適用。精度改善は未確認'},
                     {'department':'検証監査','decision':'開催日を分けて同じレースの的中率・回収率・確率誤差を比較し、変更を審査。', 'evidence':research.get('calibration',{}), 'adoption':'少数の好成績では配分を変更しない'}]},
             'site_status':manager.get('status','未確認'),'roles':roles,
-            'employee_workflow': {'roles':['データ担当','予想担当','軍師','リスク担当','検証担当'],
+            'employee_workflow': {'roles':['データ担当','予想担当','軍師','高配当戦略部','リスク担当','検証担当'],
                 'equal_speaking_rights':True, 'decision_rule':'発言権は平等。採用は検証根拠で決め、多数決で変更しない。',
                 'race_meetings':race_meetings},
             'release_policy':{'minimum_same_race_comparisons':300,'chronological_holdout_required':True,
@@ -58,6 +58,7 @@ def build_company_operations(output_dir=OUTPUT_DIR):
     esc=lambda value:html.escape(str(value))
     body='<h1>会社の運用・改善状況</h1><p>サイト稼働状況：'+esc(report['site_status'])+'</p><p>稼働が正常でも、予想精度・回収率の改善は別に検証します。</p>'
     links=[('annual_department_report.html','4部署の予想と選手別1〜3年の成績'),('annual_strategist_report.html','軍師の分析と比較'),
+           ('high_payout_department.html','高配当戦略部の穴判定・独立成績'),
            ('selection_research.html','買い目・確率補正の比較検証'),('validation_coverage.html','検証の抜けと条件別成績'),
            ('ticket_return_department.html','本線・穴の的中率と回収率')]
     body+='<nav>'+''.join('<p><a href="'+path+'">'+label+'</a></p>' for path,label in links)+'</nav><h2>担当機能</h2>'

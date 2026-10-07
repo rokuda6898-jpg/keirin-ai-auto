@@ -52,6 +52,10 @@ def build_race_meetings(output_dir, now):
         opinions = [{'role': role, 'speaking_weight': 1, 'statement': statement} for role, statement in [
             ('データ担当', '／'.join(gaps)), ('予想担当', basis), ('軍師', hole_reason),
             ('リスク担当', failure), ('検証担当', '締切前保存と公式結果で照合し、同じ予算・異なる開催日で比較。少数的中では配分を変えない。')]]
+        department=plan.get('high_payout_department')
+        if department:
+            opinions.append({'role':'高配当戦略部','speaking_weight':1,
+                'statement':f'独立判定 {department["rating"]}／期待度{department["expectation_score"]}／{department["recommended_count"]}点。'+(department['skip_reason'] or '100倍以上の根拠付き候補のみ。')})
         meetings.append({'race_id': rid, 'venue': plan.get('venue'), 'race_no': plan.get('race_no'),
                          'strategy_version': plan.get('strategy_version'), 'reviewed_at_jst': now.isoformat(timespec='seconds'),
                          'topics': topics, 'opinions': opinions, 'main_count': len(main), 'hole_count': len(holes),
