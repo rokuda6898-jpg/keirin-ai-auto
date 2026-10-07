@@ -1186,13 +1186,14 @@ def render_strategy_summary(plan, purchase_authorized):
             f'<small>{reason}。確率・EVは推定値、回収率120%は未達成の目標です。</small></div>')
 
 
-def provisional_display_bets(candidates, race_id, seconds_to_close):
+def provisional_display_bets(candidates, race_id, seconds_to_close, raw_odds=None):
     """Build display-only picks before the near-close validation window.
 
-    These rows are never marked as selected and never enter the validation
-    ledger.  They only keep the public site useful earlier in the day; the
-    normal near-close snapshot replaces them once a race enters its validated
-    timing window.
+    Purchase/validation remains strict.  For the public preview only, if the
+    five-minute quote-quality gate has blanked an otherwise observed market
+    quote, reuse the latest raw quote as a clearly provisional display quote.
+    This prevents the site from showing no picks for most future races merely
+    because their quote is older than the purchase-validation freshness window.
     """
     if candidates is None or candidates.empty:
         return pd.DataFrame()
@@ -1201,19 +1202,77 @@ def provisional_display_bets(candidates, race_id, seconds_to_close):
         return pd.DataFrame()
 
     race = candidates[candidates["race_id"].astype(str).eq(str(race_id))].copy()
-    if race.empty or not {"bet_type", "ticket_group", "odds_used", "ev"}.issubset(race.columns):
+    required = {"bet_type", "buy", "main_formation", "hole_formation", "prob"}
+    if race.empty or not required.issubset(race.columns):
         return pd.DataFrame()
+    race = race[race["bet_type"].eq("trifecta")].copy()
+    if race.empty:
+        return race
 
-    odds = pd.to_numeric(race["odds_used"], errors="coerce")
-    ev = pd.to_numeric(race["ev"], errors="coerce")
-    display = race[
-        race["bet_type"].eq("trifecta")
-        & race["ticket_group"].isin(["本線", "穴"])
-        & odds.ge(1)
-        & np.isfinite(odds)
-        & ev.ge(1)
-        & np.isfinite(ev)
-    ].copy()
+    race["prob"] = pd.to_numeric(race["prob"], errors="coerce")
+    race["odds_used"] = pd.to_numeric(race.get("odds_used"), errors="coerce")
+
+    # Keep a validated quote when one exists.  Otherwise use the most
+    # conservative available raw observed quote for display only.  9999.9 is
+    # an upstream no-quote sentinel and is never treated as a real price.
+    if raw_odds is not None and len(raw_odds):
+        raw = raw_odds[
+            raw_odds["race_id"].astype(str).eq(str(race_id))
+            & raw_odds["bet_type"].astype(str).eq("trifecta")
+        ].copy()
+        if len(raw):
+            raw["display_odds"] = pd.to_numeric(raw["odds_used"], errors="coerce")
+            raw = raw[
+                raw["display_odds"].ge(1)
+                & raw["display_odds"].lt(9999.9)
+                & np.isfinite(raw["display_odds"])
+            ]
+            if len(raw):
+                raw = (
+                    raw.sort_values("display_odds")
+                    .drop_duplicates("buy", keep="first")
+                    [["buy", "display_odds"]]
+                )
+                race = race.merge(raw, on="buy", how="left", validate="many_to_one")
+                valid_current = race["odds_used"].ge(1) & np.isfinite(race["odds_used"])
+                race["odds_used"] = race["odds_used"].where(valid_current, race["display_odds"])
+                race["display_quote_fallback"] = ~valid_current & race["display_odds"].notna()
+            else:
+                race["display_quote_fallback"] = False
+        else:
+            race["display_quote_fallback"] = False
+    else:
+        race["display_quote_fallback"] = False
+
+    race["ev"] = race["prob"] * race["odds_used"]
+    race["expected_profit_100yen"] = 100 * (race["ev"] - 1)
+    usable = (
+        race["odds_used"].ge(1)
+        & race["odds_used"].lt(9999.9)
+        & np.isfinite(race["odds_used"])
+        & np.isfinite(race["ev"])
+    )
+    race = race[usable].copy()
+    if race.empty:
+        return race
+
+    race["ticket_group"] = ""
+    main = race[
+        race["main_formation"].fillna(False).astype(bool)
+        & race["odds_used"].lt(100)
+        & race["ev"].ge(MAIN_EV)
+    ].sort_values(["prob", "ev", "buy"], ascending=[False, False, True]).head(12)
+    race.loc[main.index, "ticket_group"] = "本線"
+
+    holes = race[
+        race["hole_formation"].fillna(False).astype(bool)
+        & race["odds_used"].ge(100)
+        & race["ev"].ge(HOLE_EV)
+        & ~race.index.isin(main.index)
+    ].sort_values(["ev", "prob", "buy"], ascending=[False, False, True]).head(12)
+    race.loc[holes.index, "ticket_group"] = "穴"
+
+    display = race[race["ticket_group"].isin(["本線", "穴"])].copy()
     if display.empty:
         return display
 
@@ -1530,13 +1589,13 @@ def main():
         race_bets = shadow_bets[shadow_bets["race_id"].astype(str).eq(str(race_id))] if len(shadow_bets) else shadow_bets
         display_mode = "near_close" if len(race_bets) else "waiting"
         if not len(race_bets):
-            race_bets = provisional_display_bets(candidates, race_id, seconds_to_close_ui)
+            race_bets = provisional_display_bets(candidates, race_id, seconds_to_close_ui, today_odds)
             if len(race_bets):
                 display_mode = "provisional"
 
         if len(race_bets):
             provisional_note = (
-                '<div class="provisional-note">暫定買い目｜締切前オッズ取得時に自動更新</div>'
+                '<div class="provisional-note">暫定買い目｜取得済みオッズを使用・締切前に再検証して自動更新</div>'
                 if display_mode == "provisional" else ""
             )
             bet_html = provisional_note + "".join(
