@@ -240,6 +240,20 @@ class BettingLogicTests(unittest.TestCase):
         self.assertEqual(int(display.stake_yen.sum()), 10000)
         self.assertTrue(display.display_only.all())
 
+    def test_provisional_display_can_use_stale_raw_quote_without_authorizing_purchase(self):
+        race = fixture().assign(close_at=5000)
+        odds = fair_odds(score_riders(race)).assign(race_id="fixture")
+        odds["odds_captured_at_jst"] = "2026-01-01T00:00:00+09:00"
+        odds["odds_verification_status"] = "verified"
+        _, candidates, plans = predict.build_strategy_outputs(race, odds, 2_000_000_000, 3600)
+        self.assertFalse(candidates.is_selected.any())
+
+        display = predict.provisional_display_bets(candidates, "fixture", 5000, odds)
+        self.assertFalse(display.empty)
+        self.assertTrue(display.ticket_group.isin(["本線", "穴"]).all())
+        self.assertTrue(display.display_only.all())
+        self.assertTrue(display.display_quote_fallback.any())
+
     def test_purchase_gate_binds_strategy_model_and_120_percent(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
