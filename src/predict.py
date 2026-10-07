@@ -1179,8 +1179,17 @@ def render_strategy_summary(plan, purchase_authorized):
     fixed = f"{plan['fixed_car']}番で1着固定" if plan['first_fixed'] else "1着候補を複数評価"
     state = "購入対象" if purchase_authorized else "検証用候補・購入停止中"
     reason = html_lib.escape(plan.get("skip_reason") or "条件を満たす点数のみ表示")
+    risk_score = float(plan.get("risk_score", plan.get("chaos_index", 0)))
+    risk_level = html_lib.escape(str(plan.get("risk_level", "未判定")))
+    if plan.get("risk_veto_fixed"):
+        risk_control = "1着固定を解除"
+    elif risk_score >= 50:
+        risk_control = "2・3着と展開候補を拡張"
+    else:
+        risk_control = "通常展開"
     return (f'<div class="strategy-summary"><b>{state}</b><p>荒れ指数 {plan["chaos_index"]:.1f}/100 '
             f'｜ {plan["chaos_label"]} ｜ {fixed}</p>'
+            f'<p>リスク部門優先：{risk_level} {risk_score:.1f}/100 ｜ 展開制御：{risk_control}</p>'
             f'<p>本線 {plan["main_count"]}/{plan["main_limit"]}点・穴 {plan["hole_count"]}/{plan["hole_limit"]}点'
             f' ｜ 本線EV≥{plan["main_ev"]:.2f}・穴EV≥{plan["hole_ev"]:.2f}</p>'
             f'<small>{reason}。確率・EVは推定値、回収率120%は未達成の目標です。</small></div>')

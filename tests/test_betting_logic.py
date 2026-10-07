@@ -276,6 +276,35 @@ class BettingLogicTests(unittest.TestCase):
             json.dumps(plan, allow_nan=False)
 
 
+    def test_risk_department_vetoes_fixed_axis_and_widens_flow(self):
+        riders = score_riders(fixture(True))
+        riders["score_second"] = 50.0
+        riders["score_third"] = 50.0
+        plan = race_plan(riders)
+        self.assertGreaterEqual(plan["risk_score"], 60)
+        self.assertTrue(plan["risk_veto_fixed"])
+        self.assertFalse(plan["first_fixed"])
+        self.assertGreaterEqual(plan["main_limit"], 10)
+        generate_formations(riders, plan)
+        self.assertGreater(len(plan["formation"]["first"]), 1)
+        self.assertGreaterEqual(len(plan["formation"]["second"]), 5)
+        self.assertGreaterEqual(len(plan["formation"]["third"]), 6)
+
+    def test_high_risk_main_spreads_second_and_third_places(self):
+        riders = score_riders(fixture(True))
+        riders["score_second"] = 50.0
+        riders["score_third"] = 50.0
+        generated = generate_formations(riders, race_plan(riders))
+        odds = generated[["buy", "bet_type", "prob"]].copy()
+        odds["odds_used"] = 1.4 / odds["prob"]
+        odds = odds.drop(columns="prob")
+        chosen, plan = select_race(riders, odds)
+        main = chosen[chosen.ticket_group.eq("本線")]
+        self.assertGreaterEqual(plan["risk_score"], 60)
+        self.assertGreaterEqual(main["second"].nunique(), 5)
+        self.assertGreaterEqual(main["third"].nunique(), 5)
+        self.assertIn("本命展開", set(main["scenario"]) | set(plan["selected_scenarios"]))
+
 
 if __name__ == "__main__":
     unittest.main()
