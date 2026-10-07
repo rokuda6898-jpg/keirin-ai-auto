@@ -1633,12 +1633,28 @@ def main():
                 '<div class="provisional-note">暫定買い目｜取得済みオッズを使用・締切前に再検証して自動更新</div>'
                 if display_mode == "provisional" else ""
             )
-            bet_html = provisional_note + "".join(
-                f'<div class="bet"><b>{row.get("ticket_group", "")} {row.get("bet_label", row.get("bet_type", ""))}</b>'
-                f'<strong>{row["buy"]}</strong><span>{int(row["stake_yen"]):,}円</span>'
-                f'<small>オッズ {float(row["odds_used"]):.1f} ｜ EV {float(row["ev"]):.2f}</small>{odds_provenance(row)}</div>'
-                for _, row in race_bets.iterrows()
+            # Prediction display is independent of the external holdout purchase gate.
+            # Never relabel shadow/provisional stakes as authorized purchases.
+            purchase_ok = bool(profit_gate["target_passed"]) and display_mode == "near_close"
+            sections = []
+            for ticket_group in ("本線", "穴"):
+                group_bets = race_bets[race_bets["ticket_group"].eq(ticket_group)]
+                if group_bets.empty:
+                    sections.append(f'<div class="waiting">{ticket_group}：条件を満たす予想なし（見送り）</div>')
+                    continue
+                items = "".join(
+                    f'<div class="bet"><b>{html_lib.escape(ticket_group)} {html_lib.escape(str(row.get("bet_label", row.get("bet_type", ""))))}</b>'
+                    f'<strong>{html_lib.escape(str(row["buy"]))}</strong><span>参考配分 {int(row["stake_yen"]):,}円</span>'
+                    f'<small>オッズ {float(row["odds_used"]):.1f} ｜ 推定EV {float(row["ev"]):.2f}</small>{odds_provenance(row)}</div>'
+                    for _, row in group_bets.iterrows()
+                )
+                sections.append(f'<h4>{ticket_group}予想（{len(group_bets)}点）</h4>' + items)
+            safety_note = (
+                '<div class="provisional-note">購入承認済みの予想です。購入時には最新オッズを再確認してください。</div>'
+                if purchase_ok else
+                '<div class="provisional-note">影予想・検証用／購入停止中。表示金額は参考配分であり、購入指示ではありません。</div>'
             )
+            bet_html = safety_note + provisional_note + "".join(sections)
         else:
             bet_html = '<div class="waiting">オッズ取得待ち｜取得でき次第、買い目を表示</div>'
 
