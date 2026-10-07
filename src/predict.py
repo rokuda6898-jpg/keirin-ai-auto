@@ -1572,7 +1572,7 @@ def main():
     generated = datetime.now(ZoneInfo("Asia/Tokyo")).strftime("%Y/%m/%d %H:%M")
     html = f"""
 <!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>NEXUS | 今日の競輪予想</title><style>
+<title>NEXUS | 今日の競輪予想</title><meta name="nexus-render-schema" content="provisional-picks-v1"/><style>
 *{{box-sizing:border-box}}body{{margin:0;background:#f4f8fd;color:#10233f;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}}
 header{{background:#fff;color:#17395f;padding:20px 18px 16px;border-bottom:5px solid #1d7de8}}.brand{{display:inline-block;background:linear-gradient(135deg,#07121f,#0b263e);color:#fff;border-radius:9px;padding:15px 26px;font-size:25px;font-weight:900;letter-spacing:.1em;min-width:250px;box-shadow:0 7px 22px #0b5bd326}}.brand:before{{content:"N";color:#35e2e7;font-size:34px;margin-right:12px}}.tag{{display:inline-block;color:#1680ea;font-size:10px;font-weight:800;letter-spacing:.16em;margin-left:12px}}
 main{{max-width:920px;margin:auto;padding:22px 15px 90px}}nav{{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin:0 0 18px;background:#fff;border-bottom:4px solid #1d7de8}}nav a{{text-align:center;text-decoration:none;color:#1680ea;background:#fff;padding:15px 5px;font-weight:800}}
