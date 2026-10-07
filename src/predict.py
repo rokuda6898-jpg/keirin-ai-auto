@@ -394,6 +394,10 @@ def apply_position_models(pred):
         out = normalize_race_prob(out, "p_second_raw", "p_second")
         out = normalize_race_prob(out, "p_third_raw", "p_third")
         out["position_model_source"] = "position_specialists"
+        out["position_probability_semantics"] = str(bundle.get("variant", "unknown"))
+        if bundle.get("variant") == "cumulative_place":
+            from position_semantics import exact_place_challenger
+            out = exact_place_challenger(out, second_raw, third_raw)
         return out
     except Exception as exc:
         print(f"position inference failed; using p_win fallback: {exc}", flush=True)
@@ -1182,7 +1186,7 @@ def render_strategy_summary(plan, purchase_authorized):
     risk_score = float(plan.get("risk_score", plan.get("chaos_index", 0)))
     risk_level = html_lib.escape(str(plan.get("risk_level", "未判定")))
     if plan.get("risk_veto_fixed"):
-        risk_control = "1着固定を解除"
+        risk_control = "1着固定を解除（勝率の校正未確認）" if plan.get("fixed_policy_status") == "calibration_unverified" else "1着固定を解除"
     elif risk_score >= 50:
         risk_control = "2・3着と展開候補を拡張"
     else:
@@ -1385,6 +1389,9 @@ def main():
     pred = apply_nexus_race_reading(pred)
     pred = apply_validated_top1_consensus(pred)
     pred = apply_position_models(pred)
+    # Coverage validation does not certify adjusted win probabilities. The
+    # deployed model has no independent fixed-axis calibration approval yet.
+    pred["fixed_axis_calibration_passed"] = False
     if "odds_win" not in pred.columns:
         pred["odds_win"] = np.nan
     pred["odds_win"] = pd.to_numeric(pred["odds_win"], errors="coerce")

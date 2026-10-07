@@ -116,6 +116,44 @@ def chronological_calibration(rows, minimum_train=100, minimum_test=50):
     return summary
 
 
+def exact_position_comparison(rows):
+    """Use only independently saved, pre-close proposals on paired races."""
+    pairs = []
+    for row in rows:
+        challenger = row.get("exact_position_challenger") or {}
+        if challenger.get("version") != "cumulative_difference_v1" or challenger.get("snapshot_at") != row.get("snapshot_at"):
+            continue
+        actual = str(row.get("actual_trifecta", "")).split("-")
+        baseline = {str(p["position"]): p["probabilities"] for p in row.get("position_probabilities", [])}
+        proposed = challenger.get("probabilities", {})
+        if len(actual) != 3 or any(str(p) not in baseline or str(p) not in proposed for p in [2, 3]):
+            continue
+        valid = True
+        for p in [2, 3]:
+            old, new = baseline[str(p)], proposed[str(p)]
+            valid &= set(old) == set(new) and actual[p-1] in old
+            valid &= all(isinstance(v, (int, float)) and math.isfinite(v) and 0 <= v <= 1 for v in list(old.values()) + list(new.values()))
+            valid &= abs(sum(new.values()) - 1) < 1e-6
+        if valid:
+            pairs.append((row, baseline, proposed, actual))
+    pairs.sort(key=lambda item: (item[0]["close_at"], item[0]["race_id"]))
+    # Separate calendar dates; do not split one day's meeting across periods.
+    dates = sorted({item[0]["date"] for item in pairs})
+    boundary = dates[max(1, len(dates) // 2)] if len(dates) >= 2 else None
+    report = {"paired_races": len(pairs), "auto_promotion": False,
+              "status": "chronological_comparison" if boundary else "collecting", "test_start_date": boundary}
+    for label, part in [("earlier", [v for v in pairs if boundary and v[0]["date"] < boundary]),
+                        ("later", [v for v in pairs if boundary and v[0]["date"] >= boundary])]:
+        scores = []
+        for p in [2, 3]:
+            def brier(column):
+                return sum(sum((prob - (car == actual[p-1])) ** 2 for car, prob in item[str(p)].items())
+                           for _, old, new, actual in part for item in [old if column == "baseline" else new]) / len(part) if part else None
+            scores.append({"position": p, "races": len(part), "baseline_brier": brier("baseline"), "challenger_brier": brier("challenger")})
+        report[label] = scores
+    return report
+
+
 def build_selection_research(rows, output_dir=OUTPUT_DIR):
     rows = eligible(rows)
     paired = [r for r in rows if (r.get('selection_challenger') or {}).get('version')=='probability_first_v1'
@@ -135,7 +173,7 @@ def build_selection_research(rows, output_dir=OUTPUT_DIR):
                   and r['lower_challenger'].get('snapshot_at')==r['snapshot_at']]
     axis_paired=[r for r in rows if (r.get('axis_challenger') or {}).get('version')=='axis_spread_v1'
                  and r['axis_challenger'].get('snapshot_at')==r['snapshot_at']]
-    report={'updated_at_jst':datetime.now(ZoneInfo('Asia/Tokyo')).isoformat(timespec='seconds'),
+    report={'exact_position_comparison': exact_position_comparison(rows), 'updated_at_jst':datetime.now(ZoneInfo('Asia/Tokyo')).isoformat(timespec='seconds'),
             'strategy_version':STRATEGY_VERSION,'paired_races':len(paired),'probability_first':totals(True),
             'current_ev_first':totals(False),'calibration':calibration,'auto_promotion':False,
             'lower_miss_audit':lower_miss_audit(rows),'lower_comparison':{'paired_races':len(lower_paired),
@@ -161,6 +199,12 @@ def build_selection_research(rows, output_dir=OUTPUT_DIR):
     page+='</table><h2>1着固定を外す比較案</h2><p>現行が1着固定するレースだけを対象に、同じ点数予算・期待値基準で1着候補を広げます。2・3着の候補範囲は狭めません。検証用で、現行へ自動採用しません。</p><p>比較可能な確定レース：'+str(len(axis_paired))+'件。</p><table><tr><th>案</th><th>的中／購入対象</th><th>回収率</th></tr>'
     for key,label in [('baseline','現行・1着固定'),('spread','1着を広げる案')]:
         r=report['axis_comparison'][key];page+=f'<tr><td>{label}</td><td>{r["hits"]}／{r["bet_races"]}R</td><td>{pct(r["return_rate"])}</td></tr>'
-    page+='</table><p>'+html.escape(calibration['scope'])+'</p><p>現行予想の確率・買い目を自動変更する段階ではありません。時系列の再計算は実戦検証と区別します。</p><a href="validation_coverage.html">検証の抜け・条件別成績・データ時刻の確認</a><br><a href="prediction_quality.html">着順別の確率と外れ原因</a> ／ <a href="../index.html">今日の予想</a></main></html>'
+    exact = report['exact_position_comparison']
+    page+='</table><h2>ちょうど2着・3着の比較</h2><p>2着以内・3着以内の推定値から差分を取り、ちょうど2着・3着を評価する比較案を締切前に保存します。推定値の大小関係を整えてから差分を計算し、計算できない場合は欠測とします。確率の校正や改善を保証する方法ではありません。</p><p>保存済みの比較可能レース：'+str(exact['paired_races'])+'件。異なる開催日を前半・後半に分け、確率誤差を確認します。自動採用しません。</p><table><tr><th>期間</th><th>着順</th><th>レース数</th><th>現行の誤差</th><th>比較案の誤差</th></tr>'
+    for period,label in [('earlier','前半'),('later','後半')]:
+        for entry in exact[period]:
+            fmt=lambda value: '未集計' if value is None else f'{value:.4f}'
+            page+=f'<tr><td>{label}</td><td>{entry["position"]}着</td><td>{entry["races"]}</td><td>{fmt(entry["baseline_brier"])}</td><td>{fmt(entry["challenger_brier"])}</td></tr>'
+    page+='</table><p>'+html.escape(calibration['scope'])+'</p><p>比較案は自動採用しません。時系列の再計算は実戦検証と区別します。</p><a href="validation_coverage.html">検証の抜け・条件別成績・データ時刻の確認</a><br><a href="prediction_quality.html">着順別の確率と外れ原因</a> ／ <a href="../index.html">今日の予想</a></main></html>'
     (folder/'selection_research.html').write_text(page,encoding='utf-8')
     return report

@@ -8,7 +8,7 @@ from itertools import permutations
 import numpy as np
 import pandas as pd
 
-STRATEGY_VERSION = "position_prob_v8_risk_governed_20261007"
+STRATEGY_VERSION = "position_prob_v9_calibration_guard_20261007"
 MAIN_EV = 1.10
 HOLE_EV = 1.25
 FIXED_MIN_WIN_PROBABILITY = 0.60
@@ -74,6 +74,8 @@ def score_riders(race, odds=None):
             if values.sum() > 0:
                 riders[f"score_{position}"] = (100 * values / values.sum()).clip(lower=0.01)
         riders["position_score_source"] = "validated_position_specialists"
+        if riders.get("position_probability_semantics", pd.Series("", index=riders.index)).eq("cumulative_place").all():
+            riders["position_score_source"] = "coverage_validated_cumulative_scores_uncalibrated"
     else:
         riders["position_score_source"] = "provisional_rate_scores"
     for position in ["first", "second", "third"]:
@@ -142,13 +144,16 @@ def race_plan(riders):
     chaos = round(sum(components.values()), 2)
     top_probability = float(riders.p_win.max())
     provisional_fixed = first >= FIXED_MIN_GAP and top_probability >= FIXED_MIN_WIN_PROBABILITY
+    calibration_passed = riders.get("fixed_axis_calibration_passed", pd.Series(False, index=riders.index)).map(
+        lambda value: value is True or isinstance(value, np.bool_) and bool(value)
+    ).all()
 
     # Risk department sits above the flow/formation judgement.  A strong
     # first-place axis is not allowed to stay fixed when the rest of the race
     # is structurally unstable.  The review band is deliberately stricter
     # unless both the first-place gap and absolute win probability are strong.
     risk_fixed_block = bool(
-        chaos >= RISK_FIXED_VETO
+        not calibration_passed or chaos >= RISK_FIXED_VETO
         or (chaos >= RISK_FIXED_REVIEW and (first < 12 or top_probability < 0.68))
     )
     risk_veto_fixed = bool(provisional_fixed and risk_fixed_block)
@@ -164,7 +169,8 @@ def race_plan(riders):
         "first_gap": first, "third_boundary_gap": third if np.isfinite(third) else None,
         "main_limit": governed_main_limit, "first_fixed": fixed,
         "top_win_probability": top_probability, "fixed_min_probability": FIXED_MIN_WIN_PROBABILITY,
-        "fixed_min_gap": FIXED_MIN_GAP, "fixed_policy_status": "risk_governed",
+        "fixed_min_gap": FIXED_MIN_GAP, "fixed_policy_status": "risk_governed" if calibration_passed else "calibration_unverified",
+        "fixed_axis_calibration_passed": bool(calibration_passed),
         "fixed_car": int(riders.loc[riders.rank_first.eq(1), "car_no"].iloc[0]) if fixed else None,
         "chaos_index": chaos,
         "chaos_label": "固め" if chaos < 30 else "やや荒れ" if chaos < 50 else "荒れ" if chaos < 70 else "大荒れ警戒",

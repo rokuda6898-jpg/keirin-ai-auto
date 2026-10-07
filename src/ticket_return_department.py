@@ -70,6 +70,17 @@ def save_snapshots(plans, shadow_bets, now_jst, output_dir=OUTPUT_DIR, position_
                             "probabilities": {str(int(car)): float(prob) for car, prob in zip(race.car_no, values / values.sum())}})
             if "p_core" in race and pd.to_numeric(race.p_core, errors="coerce").notna().any():
                 core_winner = int(race.loc[pd.to_numeric(race.p_core, errors="coerce").idxmax(), "car_no"])
+        exact_challenger = None
+        if position_rows is not None and not position_rows.empty:
+            race = position_rows[position_rows.race_id.astype(str).eq(race_id)]
+            exact_columns = ["p_second_exact_challenger", "p_third_exact_challenger"]
+            if all(c in race for c in exact_columns) and not race.empty:
+                values = race[exact_columns].apply(pd.to_numeric, errors="coerce")
+                if values.notna().all().all() and values.apply(lambda col: col.map(math.isfinite).all()).all():
+                    exact_challenger = {"version": "cumulative_difference_v1", "snapshot_at": key[2],
+                        "probabilities": {str(position): {str(int(car)): float(prob) for car, prob in zip(race.car_no, values[column])}
+                                          for position, column in zip([2, 3], exact_columns)},
+                        "auto_promotion": False}
         candidate_evidence = None
         challenger = None
         lower_challenger = None
@@ -123,6 +134,7 @@ def save_snapshots(plans, shadow_bets, now_jst, output_dir=OUTPUT_DIR, position_
             "venue": plan["venue"], "race_no": plan["race_no"],
             "skip_reason": plan.get("skip_reason"), "tickets": tickets,
             "position_probabilities": positions, "core_winner": core_winner,
+            "exact_position_challenger": exact_challenger,
             "candidate_evidence": candidate_evidence,
             "selection_challenger": challenger,
             "lower_challenger": lower_challenger,

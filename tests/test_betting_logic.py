@@ -17,6 +17,7 @@ import predict
 def fixture(strong=False):
     return pd.DataFrame({
         "car_no": range(1, 8), "race_id": ["fixture"] * 7,
+        "fixed_axis_calibration_passed": [True] * 7,
         "date": ["2026-10-06"] * 7, "venue": ["テスト"] * 7, "race_no": [1] * 7,
         "p_win": [.65, .10, .08, .06, .05, .04, .02] if strong else [.18, .17, .16, .15, .13, .11, .10],
         "place2_rate": [.12, .14, .16, .18, .20, .22, .55],
@@ -113,6 +114,7 @@ class BettingLogicTests(unittest.TestCase):
 
     def test_axis_requires_absolute_probability_in_addition_to_gap(self):
         race = pd.DataFrame({"car_no": [1, 2, 3, 4, 5], "p_win": [.4, .3, .15, .1, .05]})
+        race["fixed_axis_calibration_passed"] = True
         plan = race_plan(score_riders(race))
         self.assertEqual(plan["first_gap"], 10)
         self.assertFalse(plan["first_fixed"])
