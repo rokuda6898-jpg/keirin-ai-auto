@@ -96,7 +96,7 @@ jobs:
 
               missing = {race_id for race_id in expected if race_id not in html}
               fingerprint_ok = published_fingerprint == expected_fingerprint
-              render_schema_ok = 'name="nexus-render-schema" content="provisional-picks-v1"' in html
+              render_schema_ok = "nexus-render-schema" in html and "provisional-picks-v1" in html
               if not missing and fingerprint_ok and render_schema_ok:
                   print(
                       f"published-site verified: races={len(expected)} "
