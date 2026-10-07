@@ -62,7 +62,7 @@ def build_high_payout_department(rows,output_dir):
         body+=f'<h2>{label}</h2><p>確定対象{s["target_races"]}R／穴を出した{s["predicted_races"]}R／見送り{s["skipped_races"]}R／的中{s["hits"]}R</p><p>的中率 {pct(s["hit_rate"])}｜回収率 {pct(s["return_rate"])}｜平均配当 '+esc(s['average_payout_per_100yen'] if s['average_payout_per_100yen'] is not None else '未集計')+'円（100円あたり）</p>'
         body+='<p>'+esc('／'.join(f'{n}倍以上的中：{count}本' for n,count in s['payout_hit_counts'].items()))+'</p>'
         body+='<ul>'+''.join('<li>'+esc(p)+'：'+str(v['hits'])+'/'+str(v['races'])+'R（'+pct(v['hit_rate'])+'）</li>' for p,v in s['pattern_results'].items())+'</ul>'
-    body+='<h2>各レースの統括判定</h2><p>以下は保存時の判定・オッズです。現在価格や実購入の承認ではありません。未確定レースは成績に含めません。</p>'
+    body+='<p><a href="high_payout_history.html">他部署と共通の過去レース検証を見る</a></p><h2>各レースの統括判定</h2><p>以下は保存時の判定・オッズです。現在価格や実購入の承認ではありません。未確定レースは成績に含めません。</p>'
     for d in report['live_decisions']:
         body+='<details><summary>'+esc(d['venue'])+' '+str(d['race_no'])+'R｜'+esc(d['rating'])+'｜'+str(d['recommended_count'])+'点</summary><p>穴期待度 '+str(d['expectation_score'])+'/100｜波乱箇所 '+esc('・'.join(d['patterns']) or 'なし')+'</p>'
         if d['skip_reason']:body+='<p>'+esc(d['skip_reason'])+'</p>'

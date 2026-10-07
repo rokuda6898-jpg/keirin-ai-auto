@@ -107,7 +107,7 @@ def fit_fold_models(train_df, position_variant):
     return win, second, third, fills, calibrator
 
 
-def score_fold(test_df, win, second, third, fills, calibrator=None, odds_by_race=None):
+def score_fold(test_df, win, second, third, fills, calibrator=None, odds_by_race=None, train_end=None):
     X, _ = prepare_features(test_df, fills)
 
     pred = test_df.copy()
@@ -176,6 +176,10 @@ def score_fold(test_df, win, second, third, fills, calibrator=None, odds_by_race
         final_ticket_hit = np.nan
         final_ticket_count = 0
         race_odds = (odds_by_race or {}).get(rid)
+        high_payout_replay=None
+        if train_end is not None:
+            from high_payout_history import replay_high_payout
+            high_payout_replay=replay_high_payout(g,race_odds,train_end)
         if race_odds is not None and len(race_odds):
             odds_tri = race_odds[race_odds["bet_type"].astype(str).eq("trifecta")].copy()
             odds_tri["odds_used"] = pd.to_numeric(odds_tri["odds_used"], errors="coerce")
@@ -230,6 +234,7 @@ def score_fold(test_df, win, second, third, fills, calibrator=None, odds_by_race
             "trifecta_ticket_count": int(len(top10)),
             "final_ticket_hit": final_ticket_hit,
             "final_ticket_count": final_ticket_count,
+            "high_payout_replay": json.dumps(high_payout_replay,ensure_ascii=False),
         })
 
         if len(broad_tri):
@@ -340,6 +345,7 @@ def main():
             fills,
             calibrator=calibrator,
             odds_by_race=odds_by_race,
+            train_end=train_df.date.max(),
         )
         if races.empty:
             continue
@@ -408,6 +414,9 @@ def main():
     SUMMARY_JSON.write_text(
         json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8"
     )
+    from high_payout_history import build_high_payout_history
+    build_high_payout_history([json.loads(v) for v in races.high_payout_replay if v and v!='null'],OUTPUT_DIR,
+                             total_history_races=int(df.race_id.nunique()))
     print(json.dumps(summary, ensure_ascii=False, indent=2))
 
 
