@@ -227,6 +227,19 @@ class BettingLogicTests(unittest.TestCase):
         self.assertTrue(plans[0]["timing_eligible"])
 
 
+    def test_future_race_has_display_only_picks_without_entering_validation(self):
+        race = fixture().assign(close_at=5000)
+        odds = fair_odds(score_riders(race)).assign(race_id="fixture")
+        _, candidates, plans = predict.build_strategy_outputs(race, odds, 0, 3600)
+        self.assertFalse(candidates.is_selected.any())
+        self.assertFalse(plans[0]["timing_eligible"])
+
+        display = predict.provisional_display_bets(candidates, "fixture", 5000)
+        self.assertFalse(display.empty)
+        self.assertTrue(display.ticket_group.isin(["本線", "穴"]).all())
+        self.assertEqual(int(display.stake_yen.sum()), 10000)
+        self.assertTrue(display.display_only.all())
+
     def test_purchase_gate_binds_strategy_model_and_120_percent(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
