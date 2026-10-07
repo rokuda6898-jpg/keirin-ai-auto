@@ -1186,6 +1186,45 @@ def render_strategy_summary(plan, purchase_authorized):
             f'<small>{reason}。確率・EVは推定値、回収率120%は未達成の目標です。</small></div>')
 
 
+def provisional_display_bets(candidates, race_id, seconds_to_close):
+    """Build display-only picks before the near-close validation window.
+
+    These rows are never marked as selected and never enter the validation
+    ledger.  They only keep the public site useful earlier in the day; the
+    normal near-close snapshot replaces them once a race enters its validated
+    timing window.
+    """
+    if candidates is None or candidates.empty:
+        return pd.DataFrame()
+    seconds = pd.to_numeric(seconds_to_close, errors="coerce")
+    if pd.isna(seconds) or float(seconds) <= 300:
+        return pd.DataFrame()
+
+    race = candidates[candidates["race_id"].astype(str).eq(str(race_id))].copy()
+    if race.empty or not {"bet_type", "ticket_group", "odds_used", "ev"}.issubset(race.columns):
+        return pd.DataFrame()
+
+    odds = pd.to_numeric(race["odds_used"], errors="coerce")
+    ev = pd.to_numeric(race["ev"], errors="coerce")
+    display = race[
+        race["bet_type"].eq("trifecta")
+        & race["ticket_group"].isin(["本線", "穴"])
+        & odds.ge(1)
+        & np.isfinite(odds)
+        & ev.ge(1)
+        & np.isfinite(ev)
+    ].copy()
+    if display.empty:
+        return display
+
+    race_budget_yen = get_int_env("BET_RACE_BUDGET_YEN", 10000)
+    display = allocate_race_budget(display, race_budget_yen, race_budget_yen)
+    display = display[pd.to_numeric(display["stake_yen"], errors="coerce").ge(100)].copy()
+    display["display_only"] = True
+    return display
+
+
+
 def main():
     ensure_dirs()
     ensure_ready()
@@ -1489,17 +1528,33 @@ def main():
             for row in leaders.itertuples()
         )
         race_bets = shadow_bets[shadow_bets["race_id"].astype(str).eq(str(race_id))] if len(shadow_bets) else shadow_bets
+        display_mode = "near_close" if len(race_bets) else "waiting"
+        if not len(race_bets):
+            race_bets = provisional_display_bets(candidates, race_id, seconds_to_close_ui)
+            if len(race_bets):
+                display_mode = "provisional"
+
         if len(race_bets):
-            bet_html = "".join(
+            provisional_note = (
+                '<div class="provisional-note">暫定買い目｜締切前オッズ取得時に自動更新</div>'
+                if display_mode == "provisional" else ""
+            )
+            bet_html = provisional_note + "".join(
                 f'<div class="bet"><b>{row.get("ticket_group", "")} {row.get("bet_label", row.get("bet_type", ""))}</b>'
                 f'<strong>{row["buy"]}</strong><span>{int(row["stake_yen"]):,}円</span>'
                 f'<small>オッズ {float(row["odds_used"]):.1f} ｜ EV {float(row["ev"]):.2f}</small>{odds_provenance(row)}</div>'
                 for _, row in race_bets.iterrows()
             )
         else:
-            bet_html = '<div class="waiting">買い目候補は締切前オッズ取得後に表示</div>'
+            bet_html = '<div class="waiting">オッズ取得待ち｜取得でき次第、買い目を表示</div>'
+
         plan = strategy_plan_map[str(race_id)]
-        bet_html = render_strategy_summary(plan, bool(profit_gate["target_passed"])) + bet_html
+        display_plan = dict(plan)
+        if display_mode == "provisional":
+            display_plan["main_count"] = int(race_bets["ticket_group"].eq("本線").sum())
+            display_plan["hole_count"] = int(race_bets["ticket_group"].eq("穴").sum())
+            display_plan["skip_reason"] = "暫定買い目を表示中（締切前オッズで自動更新）"
+        bet_html = render_strategy_summary(display_plan, bool(profit_gate["target_passed"])) + bet_html
         riders_html = "".join(
             f'<button class="rider" type="button" data-car="{int(row.car_no)}" data-player-id="{html_lib.escape(str(row.player_id), quote=True)}" data-name="{rider_display_name(row)}" data-score="{float(row.score) if pd.notna(row.score) else 0:.1f}" data-win="{float(row.p_win)*100:.1f}" onclick="compareRider(this)"><i class="car car-{int(row.car_no)}">{int(row.car_no)}</i><span>{rider_display_name(row)}</span></button>'
             for row in group.sort_values("car_no").itertuples()
