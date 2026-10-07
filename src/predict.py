@@ -1465,6 +1465,7 @@ def main():
         get_float_env("BET_MAIN_MIN_EV", MAIN_EV), get_float_env("BET_HOLE_MIN_EV", HOLE_EV),
     )
     pred = pred.sort_values(sort_cols, kind="mergesort")
+    cols += [c for c in ["line_id", "line_position", "line_size", "number_of_lines", "line_verification_status", "line_source", "line_verification_scope"] if c in pred.columns and c not in cols]
     cols += ["score_first", "score_second", "score_third", "rank_first", "rank_second", "rank_third",
              "position_score_source", "popularity_rank", "popularity_source", "rank_divergence",
              "undervalued_points", "overpopular_points"]

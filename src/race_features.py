@@ -177,6 +177,20 @@ def line_features(line_prediction):
     return mapped, len(lines), prediction.get("lineType", "")
 
 
+def verify_line_prediction(prediction, active_cars):
+    """Verify provider forecast structure, not actual race formation."""
+    cars=[]
+    try:
+        for line in prediction['lines']:
+            for group in line['entries']:
+                nums=group['numbers']
+                if len(nums)!=1:return 'ambiguous'
+                cars.append(int(nums[0]))
+    except (KeyError,TypeError,ValueError):return 'missing'
+    if not cars:return 'missing'
+    return 'verified' if len(cars)==len(set(cars)) and set(cars)==set(active_cars) else 'incomplete'
+
+
 def _line_history_key(position, size):
     if size == 1:
         return "lineSingleHorseman"
@@ -203,6 +217,7 @@ def build_entry_rows(race_data, race_date, venue, race_no, race_id, source_url, 
     )
     field_size = len(entries)
     lines, number_of_lines, line_type = line_features(race_data.get("linePrediction"))
+    line_status=verify_line_prediction(race_data.get("linePrediction"),[int(e["number"]) for e in entries])
 
     weather = race.get("weather", "")
     race_type = race.get("raceType", "")
@@ -290,6 +305,9 @@ def build_entry_rows(race_data, race_date, venue, race_no, race_id, source_url, 
                 "line_role_place2_rate": line_stats["place2"],
                 "line_role_place3_rate": line_stats["place3"],
                 "line_role_races": line_stats["races"],
+                "line_verification_status": line_status,
+                "line_source": "winticket_line_prediction",
+                "line_verification_scope": "provider_forecast_structure_only",
                 "line_id": line.get("line_id", np.nan),
                 "line_position": line.get("line_position", np.nan),
                 "line_size": line.get("line_size", np.nan),
