@@ -1,8 +1,8 @@
 {
-  "updated_at_jst": "2026-10-07T23:04:45+09:00",
+  "updated_at_jst": "2026-10-07T23:37:03+09:00",
   "role": "strategist",
-  "central_races_available": 60017,
-  "official_evaluated_races": 486,
+  "central_races_available": 60020,
+  "official_evaluated_races": 489,
   "warnings": [],
   "recommended_actions": [
     {
@@ -10,10 +10,10 @@
       "type": "final_trifecta_product_kpi",
       "action": "treat latest selected trifecta tickets as the primary product KPI; keep model Top10 coverage as a diagnostic KPI",
       "evidence": {
-        "races": 111,
-        "hit_rate": 0.07207207207207207,
+        "races": 114,
+        "hit_rate": 0.07017543859649122,
         "recent_50_hit_rate": 0.06,
-        "avg_ticket_count": 9.585585585585585
+        "avg_ticket_count": 9.473684210526315
       }
     },
     {
@@ -21,8 +21,8 @@
       "type": "trifecta_top10_kpi",
       "action": "optimize ticket logic against live 10-point hit rate as a separate KPI from Top1 accuracy",
       "evidence": {
-        "races": 110,
-        "hit_rate": 0.17272727272727273,
+        "races": 113,
+        "hit_rate": 0.168141592920354,
         "recent_50_hit_rate": 0.08
       }
     },
@@ -33,13 +33,13 @@
       "evidence": {
         "variant": "core_model",
         "department": "model_audit_office",
-        "races": 210,
-        "production_hits": 96,
-        "challenger_hits": 105,
-        "production_hit_rate": 0.45714285714285713,
-        "challenger_hit_rate": 0.5,
-        "delta_hit_rate": 0.04285714285714287,
-        "delta_pp": 4.285714285714287,
+        "races": 213,
+        "production_hits": 97,
+        "challenger_hits": 106,
+        "production_hit_rate": 0.45539906103286387,
+        "challenger_hit_rate": 0.49765258215962443,
+        "delta_hit_rate": 0.04225352112676056,
+        "delta_pp": 4.225352112676056,
         "changed_races": 33,
         "flip_gains": 15,
         "flip_losses": 6,
@@ -58,11 +58,11 @@
         "production_hits_in_switched_races": 16,
         "second_pick_hits_in_switched_races": 20,
         "net_hits": 4,
-        "baseline_total_hits": 211,
-        "hypothetical_total_hits": 215,
-        "baseline_hit_rate": 0.43415637860082307,
-        "hypothetical_hit_rate": 0.44238683127572015,
-        "global_delta_pp": 0.823045267489712,
+        "baseline_total_hits": 212,
+        "hypothetical_total_hits": 216,
+        "baseline_hit_rate": 0.4335378323108384,
+        "hypothetical_hit_rate": 0.44171779141104295,
+        "global_delta_pp": 0.81799591002045,
         "status": "shadow_candidate_only",
         "promotion_requirement": "must beat production prospectively on >=300 settled races and pass external validation"
       }
@@ -117,7 +117,7 @@
     "live_snapshot_model": {}
   },
   "prospective_comparison": {
-    "updated_at_jst": "2026-10-07T23:04:45+09:00",
+    "updated_at_jst": "2026-10-07T23:37:03+09:00",
     "version": "strategist_consensus_v1",
     "status": "collecting",
     "production_effect": "advisory_and_shadow_only",
@@ -12480,8 +12480,8 @@
       {
         "version": "strategist_consensus_v1",
         "race_id": "094420261007",
-        "snapshot_at": "2026-10-07T22:57:28+09:00",
-        "source_snapshot_at": "2026-10-07T22:57:28+09:00",
+        "snapshot_at": "2026-10-07T23:03:18+09:00",
+        "source_snapshot_at": "2026-10-07T23:03:18+09:00",
         "close_at": 1791382500.0,
         "venue": "大垣",
         "race_no": 9,
@@ -12489,13 +12489,17 @@
           {
             "department": "data_department",
             "winner_car": 1,
-            "tickets": [],
+            "tickets": [
+              "2-3-6"
+            ],
             "minimum_reference_races": 36.0
           },
           {
             "department": "pace_department",
             "winner_car": 1,
-            "tickets": [],
+            "tickets": [
+              "2-3-6"
+            ],
             "minimum_reference_races": 36.0
           },
           {
@@ -12514,14 +12518,25 @@
         "winner_votes": {
           "1": 4
         },
-        "tickets": [],
+        "tickets": [
+          {
+            "buy": "2-3-6",
+            "group": "本線",
+            "ev": 1.5330620703428322,
+            "votes": 2,
+            "departments": [
+              "data_department",
+              "pace_department"
+            ]
+          }
+        ],
         "purchase_authorized": false
       },
       {
         "version": "strategist_consensus_v1",
         "race_id": "092220261007",
-        "snapshot_at": "2026-10-07T22:57:28+09:00",
-        "source_snapshot_at": "2026-10-07T22:57:28+09:00",
+        "snapshot_at": "2026-10-07T23:17:21+09:00",
+        "source_snapshot_at": "2026-10-07T23:17:21+09:00",
         "close_at": 1791383100.0,
         "venue": "前橋",
         "race_no": 9,
@@ -12540,7 +12555,9 @@
             "winner_car": 1,
             "tickets": [
               "1-3-4",
-              "1-3-6"
+              "1-3-6",
+              "2-1-6",
+              "2-3-4"
             ],
             "minimum_reference_races": 47.0
           },
@@ -12568,7 +12585,7 @@
           {
             "buy": "1-3-4",
             "group": "本線",
-            "ev": 1.4876977948669217,
+            "ev": 1.4238691766053047,
             "votes": 3,
             "departments": [
               "data_department",
@@ -12579,7 +12596,7 @@
           {
             "buy": "1-3-6",
             "group": "本線",
-            "ev": 1.1296155320308685,
+            "ev": 1.1519289252561695,
             "votes": 3,
             "departments": [
               "data_department",
@@ -12592,37 +12609,37 @@
       }
     ],
     "settled": {
-      "settled_races": 70,
-      "bet_races": 54,
+      "settled_races": 73,
+      "bet_races": 55,
       "hits": 1,
-      "hit_rate": 0.018518518518518517,
-      "stake_yen": 60300,
+      "hit_rate": 0.01818181818181818,
+      "stake_yen": 60400,
       "return_yen": 8770,
-      "return_rate": 0.14543946932006632
+      "return_rate": 0.14519867549668874
     },
-    "paired_races": 8,
+    "paired_races": 11,
     "paired_strategist": {
-      "settled_races": 8,
-      "bet_races": 4,
+      "settled_races": 11,
+      "bet_races": 5,
       "hits": 0,
       "hit_rate": 0.0,
-      "stake_yen": 3700,
+      "stake_yen": 3800,
       "return_yen": 0,
       "return_rate": 0.0
     },
     "paired_production": {
-      "settled_races": 8,
-      "bet_races": 7,
+      "settled_races": 11,
+      "bet_races": 10,
       "hits": 0,
       "hit_rate": 0.0,
-      "stake_yen": 2900,
+      "stake_yen": 4300,
       "return_yen": 0,
       "return_rate": 0.0
     },
     "production_miss_reasons": {
-      "ev_filter_skip": 3,
+      "ev_filter_skip": 5,
       "skip": 1,
-      "odds_missing": 2,
+      "odds_missing": 3,
       "formation_omission": 2
     }
   }
