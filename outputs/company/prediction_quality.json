@@ -1,8 +1,8 @@
 {
-  "updated_at_jst": "2026-10-07T18:38:27+09:00",
+  "updated_at_jst": "2026-10-07T19:04:36+09:00",
   "strategy_version": "position_prob_v10_balanced_risk_20261007",
   "races": 0,
-  "rejected_rows": 88,
+  "rejected_rows": 89,
   "candidate_detail_races": 0,
   "reason_counts": {},
   "cases": [],
@@ -467,10 +467,10 @@
   ],
   "previous_strategies": [
     {
-      "updated_at_jst": "2026-10-07T18:38:27+09:00",
+      "updated_at_jst": "2026-10-07T19:04:36+09:00",
       "strategy_version": "position_ev_v5_20261006",
       "races": 12,
-      "rejected_rows": 76,
+      "rejected_rows": 77,
       "candidate_detail_races": 6,
       "reason_counts": {
         "first_not_covered": 4,
@@ -1049,10 +1049,10 @@
       ]
     },
     {
-      "updated_at_jst": "2026-10-07T18:38:27+09:00",
+      "updated_at_jst": "2026-10-07T19:04:36+09:00",
       "strategy_version": "position_ev_v6_20261006",
       "races": 21,
-      "rejected_rows": 67,
+      "rejected_rows": 68,
       "candidate_detail_races": 21,
       "reason_counts": {
         "ev_filter_skip": 9,
@@ -1713,10 +1713,10 @@
       ]
     },
     {
-      "updated_at_jst": "2026-10-07T18:38:27+09:00",
+      "updated_at_jst": "2026-10-07T19:04:36+09:00",
       "strategy_version": "position_prob_v7_20261007",
       "races": 46,
-      "rejected_rows": 42,
+      "rejected_rows": 43,
       "candidate_detail_races": 46,
       "reason_counts": {
         "skip": 9,
@@ -2603,15 +2603,16 @@
       ]
     },
     {
-      "updated_at_jst": "2026-10-07T18:38:27+09:00",
+      "updated_at_jst": "2026-10-07T19:04:36+09:00",
       "strategy_version": "position_prob_v8_risk_governed_20261007",
-      "races": 9,
+      "races": 10,
       "rejected_rows": 79,
-      "candidate_detail_races": 9,
+      "candidate_detail_races": 10,
       "reason_counts": {
         "skip": 6,
         "ev_compression_miss": 1,
-        "ev_filter_skip": 2
+        "ev_filter_skip": 2,
+        "hit": 1
       },
       "cases": [
         {
@@ -2694,40 +2695,49 @@
           "actual_trifecta": "3-5-7",
           "reason": "ev_filter_skip",
           "candidate_detail_saved": true
+        },
+        {
+          "race_id": "074820261007",
+          "venue": "四日市",
+          "race_no": 7,
+          "snapshot_at": "2026-10-07T18:13:41+09:00",
+          "actual_trifecta": "2-1-3",
+          "reason": "hit",
+          "candidate_detail_saved": true
         }
       ],
       "positions": [
         {
           "position": 1,
-          "observations": 63,
-          "races": 9,
+          "observations": 70,
+          "races": 10,
           "bins": [
             {
               "lower": 0.0,
               "upper": 0.1,
-              "observations": 39,
-              "races": 9,
-              "mean_predicted": 0.025916073408268125,
-              "actual_rate": 0.05128205128205128,
-              "gap": 0.025365977873783155
+              "observations": 43,
+              "races": 10,
+              "mean_predicted": 0.025955519388711976,
+              "actual_rate": 0.046511627906976744,
+              "gap": 0.020556108518264768
             },
             {
               "lower": 0.1,
               "upper": 0.2,
-              "observations": 9,
-              "races": 8,
-              "mean_predicted": 0.1413264559912422,
-              "actual_rate": 0.1111111111111111,
-              "gap": -0.030215344880131084
+              "observations": 10,
+              "races": 9,
+              "mean_predicted": 0.13844238637384682,
+              "actual_rate": 0.1,
+              "gap": -0.03844238637384681
             },
             {
               "lower": 0.2,
               "upper": 0.3,
-              "observations": 2,
-              "races": 2,
-              "mean_predicted": 0.2292623090178913,
+              "observations": 3,
+              "races": 3,
+              "mean_predicted": 0.2349903294459517,
               "actual_rate": 0.0,
-              "gap": -0.2292623090178913
+              "gap": -0.2349903294459517
             },
             {
               "lower": 0.3,
@@ -2750,11 +2760,11 @@
             {
               "lower": 0.5,
               "upper": 0.6,
-              "observations": 2,
-              "races": 2,
-              "mean_predicted": 0.5664900152135112,
+              "observations": 3,
+              "races": 3,
+              "mean_predicted": 0.5562291431718345,
               "actual_rate": 1.0,
-              "gap": 0.43350998478648883
+              "gap": 0.4437708568281655
             },
             {
               "lower": 0.6,
@@ -2793,51 +2803,51 @@
               "gap": null
             }
           ],
-          "expected_calibration_error": 0.0650868948972536,
+          "expected_calibration_error": 0.06883340912522427,
           "sample_status": "参考集計・100レース未満",
-          "multiclass_brier": 0.6845626033791008,
-          "uniform_brier": 0.8571428571428572
+          "multiclass_brier": 0.6456465523340482,
+          "uniform_brier": 0.8571428571428573
         },
         {
           "position": 2,
-          "observations": 63,
-          "races": 9,
+          "observations": 70,
+          "races": 10,
           "bins": [
             {
               "lower": 0.0,
               "upper": 0.1,
-              "observations": 19,
-              "races": 9,
-              "mean_predicted": 0.06636425584445449,
-              "actual_rate": 0.21052631578947367,
-              "gap": 0.14416205994501918
+              "observations": 21,
+              "races": 10,
+              "mean_predicted": 0.0629208294082129,
+              "actual_rate": 0.19047619047619047,
+              "gap": 0.12755536106797755
             },
             {
               "lower": 0.1,
               "upper": 0.2,
-              "observations": 31,
-              "races": 9,
-              "mean_predicted": 0.14410781797734856,
-              "actual_rate": 0.0967741935483871,
-              "gap": -0.04733362442896147
+              "observations": 34,
+              "races": 10,
+              "mean_predicted": 0.1434149511720693,
+              "actual_rate": 0.11764705882352941,
+              "gap": -0.025767892348539878
             },
             {
               "lower": 0.2,
               "upper": 0.3,
-              "observations": 11,
-              "races": 7,
-              "mean_predicted": 0.23598170658955772,
-              "actual_rate": 0.18181818181818182,
-              "gap": -0.0541635247713759
+              "observations": 12,
+              "races": 8,
+              "mean_predicted": 0.233608069333467,
+              "actual_rate": 0.16666666666666666,
+              "gap": -0.06694140266680035
             },
             {
               "lower": 0.3,
               "upper": 0.4,
-              "observations": 2,
-              "races": 2,
-              "mean_predicted": 0.3379690045862127,
+              "observations": 3,
+              "races": 3,
+              "mean_predicted": 0.33308580352518957,
               "actual_rate": 0.0,
-              "gap": -0.3379690045862127
+              "gap": -0.33308580352518957
             },
             {
               "lower": 0.4,
@@ -2894,33 +2904,33 @@
               "gap": null
             }
           ],
-          "expected_calibration_error": 0.08695489330017032,
+          "expected_calibration_error": 0.07653321664078654,
           "sample_status": "参考集計・100レース未満",
-          "multiclass_brier": 0.9146743104355113,
-          "uniform_brier": 0.8571428571428572
+          "multiclass_brier": 0.912917062553434,
+          "uniform_brier": 0.8571428571428573
         },
         {
           "position": 3,
-          "observations": 63,
-          "races": 9,
+          "observations": 70,
+          "races": 10,
           "bins": [
             {
               "lower": 0.0,
               "upper": 0.1,
-              "observations": 19,
-              "races": 9,
-              "mean_predicted": 0.07549430272725557,
+              "observations": 21,
+              "races": 10,
+              "mean_predicted": 0.07458644422873195,
               "actual_rate": 0.0,
-              "gap": -0.07549430272725557
+              "gap": -0.07458644422873195
             },
             {
               "lower": 0.1,
               "upper": 0.2,
-              "observations": 34,
-              "races": 9,
-              "mean_predicted": 0.139979802776925,
-              "actual_rate": 0.20588235294117646,
-              "gap": 0.06590255016425145
+              "observations": 38,
+              "races": 10,
+              "mean_predicted": 0.13938786368716888,
+              "actual_rate": 0.18421052631578946,
+              "gap": 0.044822662628620585
             },
             {
               "lower": 0.2,
@@ -2934,11 +2944,11 @@
             {
               "lower": 0.3,
               "upper": 0.4,
-              "observations": 4,
-              "races": 4,
-              "mean_predicted": 0.3267313057269766,
-              "actual_rate": 0.0,
-              "gap": -0.3267313057269766
+              "observations": 5,
+              "races": 5,
+              "mean_predicted": 0.32751522404508476,
+              "actual_rate": 0.2,
+              "gap": -0.12751522404508475
             },
             {
               "lower": 0.4,
@@ -2995,10 +3005,10 @@
               "gap": null
             }
           ],
-          "expected_calibration_error": 0.08702593570557973,
+          "expected_calibration_error": 0.06296832711510841,
           "sample_status": "参考集計・100レース未満",
-          "multiclass_brier": 0.8433301699902367,
-          "uniform_brier": 0.8571428571428572
+          "multiclass_brier": 0.812094044434404,
+          "uniform_brier": 0.8571428571428573
         }
       ],
       "fixed_axis_audit": {
@@ -3010,44 +3020,44 @@
         "automatic_change": false
       },
       "selected_ticket_calibration": {
-        "observations": 45,
-        "races": 3,
+        "observations": 63,
+        "races": 4,
         "bins": [
           {
             "lower": 0,
             "upper": 0.01,
-            "observations": 21,
-            "races": 3,
-            "mean_predicted": 0.005272498019287984,
+            "observations": 26,
+            "races": 4,
+            "mean_predicted": 0.005111892663926526,
             "actual_rate": 0.0,
-            "gap": -0.005272498019287984
+            "gap": -0.005111892663926526
           },
           {
             "lower": 0.01,
             "upper": 0.02,
-            "observations": 11,
-            "races": 3,
-            "mean_predicted": 0.015252164563144184,
+            "observations": 16,
+            "races": 4,
+            "mean_predicted": 0.0144481032380978,
             "actual_rate": 0.0,
-            "gap": -0.015252164563144184
+            "gap": -0.0144481032380978
           },
           {
             "lower": 0.02,
             "upper": 0.05,
-            "observations": 13,
-            "races": 3,
-            "mean_predicted": 0.02862632169534779,
-            "actual_rate": 0.0,
-            "gap": -0.02862632169534779
+            "observations": 19,
+            "races": 4,
+            "mean_predicted": 0.030198315333647023,
+            "actual_rate": 0.05263157894736842,
+            "gap": 0.022433263613721395
           },
           {
             "lower": 0.05,
             "upper": 0.1,
-            "observations": 0,
-            "races": 0,
-            "mean_predicted": null,
-            "actual_rate": null,
-            "gap": null
+            "observations": 2,
+            "races": 1,
+            "mean_predicted": 0.056297170218327024,
+            "actual_rate": 0.0,
+            "gap": -0.056297170218327024
           },
           {
             "lower": 0.1,
@@ -3095,7 +3105,7 @@
             "gap": null
           }
         ],
-        "expected_calibration_error": 0.014458632236425665,
+        "expected_calibration_error": 0.01433182873284151,
         "sample_status": "参考集計・100レース未満"
       },
       "ev_bands": [
@@ -3110,41 +3120,41 @@
         {
           "lower": 1.1,
           "upper": 1.25,
-          "observations": 4,
-          "races": 3,
-          "mean_predicted_ev": 1.163108353557899,
+          "observations": 5,
+          "races": 4,
+          "mean_predicted_ev": 1.172647101011634,
           "actual_flat_return_rate": 0.0
         },
         {
           "lower": 1.25,
           "upper": 1.5,
-          "observations": 11,
-          "races": 3,
-          "mean_predicted_ev": 1.3858676646296213,
+          "observations": 12,
+          "races": 4,
+          "mean_predicted_ev": 1.375181704226262,
           "actual_flat_return_rate": 0.0
         },
         {
           "lower": 1.5,
           "upper": 2,
-          "observations": 12,
-          "races": 3,
-          "mean_predicted_ev": 1.6676234791394606,
-          "actual_flat_return_rate": 0.0
+          "observations": 14,
+          "races": 4,
+          "mean_predicted_ev": 1.695660835912374,
+          "actual_flat_return_rate": 3.4642857142857144
         },
         {
           "lower": 2,
           "upper": 3,
-          "observations": 5,
-          "races": 2,
-          "mean_predicted_ev": 2.345541238605094,
+          "observations": 11,
+          "races": 3,
+          "mean_predicted_ev": 2.4484831591423606,
           "actual_flat_return_rate": 0.0
         },
         {
           "lower": 3,
           "upper": null,
-          "observations": 13,
-          "races": 2,
-          "mean_predicted_ev": 4.21857101505846,
+          "observations": 21,
+          "races": 3,
+          "mean_predicted_ev": 4.125098546560319,
           "actual_flat_return_rate": 0.0
         }
       ],
