@@ -1,13 +1,37 @@
 import unittest
+import json
+import tempfile
+from pathlib import Path
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 import numpy as np
 import pandas as pd
 
 from betting_logic import score_riders, race_plan
 from position_semantics import exact_place_challenger
 from selection_research import exact_position_comparison
+from ticket_return_department import save_snapshots
 
 
 class PositionSemanticsTests(unittest.TestCase):
+    def test_comparison_is_frozen_before_close_and_not_appended_after_close(self):
+        now = datetime(2026, 10, 7, 12, tzinfo=ZoneInfo('Asia/Tokyo'))
+        race = pd.DataFrame({'race_id': ['a'] * 3, 'car_no': [1, 2, 3],
+                             'p_win': [.6, .3, .1], 'p_second': [.35, .4, .25], 'p_third': [.3, .3, .4]})
+        race = exact_place_challenger(race, [.7, .8, .5], [1., 1., 1.])
+        plan = {'race_id': 'a', 'venue': 'test', 'race_no': 1, 'timing_eligible': True,
+                'close_at': (now + timedelta(minutes=20)).timestamp()}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            save_snapshots([plan], pd.DataFrame(), now, root, race)
+            path = root / 'company' / 'ticket_return_snapshots.jsonl'
+            before = path.read_bytes()
+            row = json.loads(before)
+            self.assertEqual(row['exact_position_challenger']['snapshot_at'], row['snapshot_at'])
+            self.assertAlmostEqual(sum(row['exact_position_challenger']['probabilities']['2'].values()), 1)
+            save_snapshots([plan], pd.DataFrame(), now + timedelta(minutes=30), root, race)
+            self.assertEqual(path.read_bytes(), before)
+
     def test_cumulative_difference_not_cumulative_normalization(self):
         race = pd.DataFrame({'race_id': ['a'] * 3, 'p_win': [.6, .3, .1]})
         result = exact_place_challenger(race, [.7, .8, .5], [1., 1., 1.])

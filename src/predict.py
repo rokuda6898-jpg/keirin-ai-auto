@@ -1440,6 +1440,8 @@ def main():
         "car_no", "player_id", "player_name", "style", "score", "odds_win", "odds_move_pct", "odds_move_last_pct", "odds_snapshot_count",
         "p_core", "p_win", "p_second", "p_third", "position_model_source", "p_win_pre_override", "top1_override_applied", "top1_override_reason", "top1_top2_margin", "top1_confidence_class", "place2_rate", "place3_rate", "line_role_place2_rate", "line_role_place3_rate", "nexus_form_adj", "nexus_line_adj", "nexus_style_adj", "nexus_condition_adj", "nexus_uncertainty", "expected_value_win", "stake_yen", "win_return_yen",
         "win_profit_yen", "loss_amount_yen", "expected_profit_yen",
+        "position_probability_semantics", "p_second_exact_challenger", "p_third_exact_challenger",
+        "fixed_axis_calibration_passed",
     ]
     for c in cols:
         if c not in pred.columns:
