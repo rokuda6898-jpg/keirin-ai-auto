@@ -5,7 +5,7 @@ from datetime import datetime,timedelta
 from zoneinfo import ZoneInfo
 from betting_logic import score_riders,select_race
 from high_payout_strategy import select_high_payout,VERSION
-from high_payout_department import summarize_high_payout
+from high_payout_department import summarize_high_payout,summarize_comparison
 
 
 class HighPayoutTests(unittest.TestCase):
@@ -32,6 +32,21 @@ class HighPayoutTests(unittest.TestCase):
         self.assertLessEqual(len(holes),12)
         self.assertFalse(candidates.buy.duplicated().any())
         self.assertFalse(set(holes.buy)&set(candidates[candidates.ticket_group.eq('本線')].buy))
+
+    def test_comparison_is_frozen_separate_and_requires_preclose(self):
+        r=self.race();f,d=select_high_payout(r,self.market(),{'chaos_index':70,'first_gap':50})
+        self.assertFalse(d['comparison']['automatic_promotion'])
+        for t in d['comparison']['variants']['third_focus']:
+            row=f[f.buy.eq(t['buy'])].iloc[0]
+            self.assertIn('3着荒れ',row.hole_pattern)
+            self.assertGreaterEqual(t['odds'],100)
+            self.assertGreaterEqual(t['ev'],1.25)
+        base={'race_id':'a','snapshot_at':'2026-10-07T10:00:00+09:00','close_at':datetime(2026,10,7,11,tzinfo=ZoneInfo('Asia/Tokyo')).timestamp(),'payout_per_100yen':15000,'actual_trifecta':'1-2-7','high_payout_department':{'comparison':{'version':'third_focus_v1','variants':{'current':[], 'third_focus':[{'buy':'1-2-7','odds':150}]}}}}
+        result=summarize_comparison([base,base])
+        self.assertEqual(result['third_focus']['hits'],1)
+        self.assertEqual(result['third_focus']['stake_yen'],100)
+        self.assertEqual(result['current']['proposed_races'],0)
+        self.assertEqual(summarize_comparison([{**base,'snapshot_at':'2026-10-07T12:00:00+09:00'}])['third_focus']['target_races'],0)
 
     def test_incomplete_market_and_orderly_race_skip(self):
         r=self.race();market=self.market()

@@ -42,6 +42,28 @@ def summarize_high_payout(rows):
             'payout_hit_counts':bands,'pattern_results':patterns}
 
 
+def summarize_comparison(rows):
+    unique={}
+    for r in rows:
+        c=(r.get('high_payout_department') or {}).get('comparison') or {}
+        try:
+            valid=datetime.fromisoformat(r['snapshot_at']).timestamp()<float(r['close_at'])
+            payout=float(r['payout_per_100yen'])
+        except (KeyError,TypeError,ValueError):continue
+        if c.get('version')!='third_focus_v1' or not valid or not math.isfinite(payout) or payout<=0:continue
+        if r['race_id'] not in unique or r['snapshot_at']>unique[r['race_id']]['snapshot_at']:unique[r['race_id']]=r
+    result={}
+    for name in ['current','third_focus']:
+        proposed=hits=stake=returned=0
+        for r in unique.values():
+            tickets={t['buy'] for t in r['high_payout_department']['comparison']['variants'].get(name,[]) if t.get('odds',0)>=100}
+            if not tickets:continue
+            proposed+=1;stake+=100*len(tickets)
+            if r['actual_trifecta'] in tickets:hits+=1;returned+=float(r['payout_per_100yen'])
+        result[name]={'target_races':len(unique),'proposed_races':proposed,'hits':hits,'stake_yen':stake,'return_yen':returned,'hit_rate':hits/proposed if proposed else None,'return_rate':returned/stake if stake else None}
+    return result
+
+
 def build_high_payout_department(rows,output_dir):
     folder=output_dir/'company';folder.mkdir(parents=True,exist_ok=True)
     plans_path=output_dir/'latest_race_strategy.json'
@@ -52,7 +74,7 @@ def build_high_payout_department(rows,output_dir):
             'scope':'新部署の締切前保存・公式払戻済みのみ。各点100円の試算。本線と旧穴予想は含めない。',
             'live_decisions':[{'race_id':p['race_id'],'venue':p.get('venue'),'race_no':p.get('race_no'),
                               **p['high_payout_department']} for p in plans if p.get('high_payout_department')],
-            'automatic_purchase':False,'performance_validated':False}
+            'automatic_purchase':False,'performance_validated':False,'comparison':summarize_comparison(rows)}
     (folder/'high_payout_department.json').write_text(json.dumps(report,ensure_ascii=False,indent=2,allow_nan=False),encoding='utf-8')
     esc=lambda v:html.escape(str(v))
     pct=lambda v:'未集計' if v is None else f'{100*v:.1f}%'
@@ -62,6 +84,10 @@ def build_high_payout_department(rows,output_dir):
         body+=f'<h2>{label}</h2><p>確定対象{s["target_races"]}R／穴を出した{s["predicted_races"]}R／見送り{s["skipped_races"]}R／的中{s["hits"]}R</p><p>的中率 {pct(s["hit_rate"])}｜回収率 {pct(s["return_rate"])}｜平均配当 '+esc(s['average_payout_per_100yen'] if s['average_payout_per_100yen'] is not None else '未集計')+'円（100円あたり）</p>'
         body+='<p>'+esc('／'.join(f'{n}倍以上的中：{count}本' for n,count in s['payout_hit_counts'].items()))+'</p>'
         body+='<ul>'+''.join('<li>'+esc(p)+'：'+str(v['hits'])+'/'+str(v['races'])+'R（'+pct(v['hit_rate'])+'）</li>' for p,v in s['pattern_results'].items())+'</ul>'
+    body+='<h2>専用軍師の締切前比較検証</h2><p>本番は現在方式。3着重点方式は比較専用で、買い目には混ぜません。各点100円、公式払戻で別集計。未保存の過去レースは含めません。</p>'
+    for name,label in [('current','現在方式'),('third_focus','3着重点方式')]:
+        c=report['comparison'][name]
+        body+=f'<p>{label}：対象{c["target_races"]}R／穴あり{c["proposed_races"]}R／的中{c["hits"]}R｜的中率{pct(c["hit_rate"])}｜回収率{pct(c["return_rate"])}</p>'
     body+='<p><a href="high_payout_history.html">他部署と共通の過去レース検証を見る</a></p><h2>各レースの統括判定</h2><p>以下は保存時の判定・オッズです。現在価格や実購入の承認ではありません。未確定レースは成績に含めません。</p>'
     for d in report['live_decisions']:
         body+='<details><summary>'+esc(d['venue'])+' '+str(d['race_no'])+'R｜'+esc(d['rating'])+'｜'+str(d['recommended_count'])+'点</summary><p>穴期待度 '+str(d['expectation_score'])+'/100｜波乱箇所 '+esc('・'.join(d['patterns']) or 'なし')+'</p>'
