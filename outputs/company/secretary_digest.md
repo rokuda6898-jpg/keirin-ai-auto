@@ -1,31 +1,32 @@
 # 競輪AI 会社運用ダイジェスト
 
-- 更新: 2026-10-07T00:44:32+09:00
-- 中央戦史: 59,950レース
-- 履歴キャッシュ: 59,950レース
-- 正式な発走前予想検証: 418レース
-- Top1的中率: 0.423445
+- 更新: 2026-10-07T10:22:59+09:00
+- 中央戦史: 59,955レース
+- 履歴キャッシュ: 59,955レース
+- 正式な発走前予想検証: 423レース
+- Top1的中率: 0.427896
 - モデル監査: unmatched_cohort_gap
 - ライブ入力ドリフト: baseline_unavailable
-- モデル3連単Top10的中率: 0.23076923076923078
-- 実商品3連単的中率: 0.0425531914893617
+- モデル3連単Top10的中率: 0.24285714285714285
+- 実商品3連単的中率: 0.07692307692307693
 - 戦史クロスソース一致: 1.0
 - 本番再現Top1: 未算出
 - 本番再現3連単Top10: 未算出
 - 本番再現最終券: 未算出
 - 3連単専用AI純増pp: 未算出
 - 司令塔AI純増pp: 未算出
-- 実戦スナップショット学習済R: 0
-- モデル入力完成スナップショットR: 0
+- 実戦スナップショット学習済R: 26
+- モデル入力完成スナップショットR: 26
 - 実戦専用モデル状態: collecting
 - 実戦専用モデル純増pp: 未算出
 - 昇格候補: 0
-- 全買い目回収率検証部: 保存 18R / 確定 18R（120%未検証）
-- 直近1年の部署知識: 16485R / 2644選手（全履歴保持・部署別の影予想）
-- 締切前時刻確認: 38R ／ 従来集計 418R（未確認分は実戦証拠に含めない）
+- 全買い目回収率検証部: 保存 7R / 確定 4R（120%未検証）
+- 直近1年の部署知識: 17258R / 2644選手（全履歴保持・部署別の影予想）
+- 締切前時刻確認: 43R ／ 従来集計 423R（未確認分は実戦証拠に含めない）
 - 第三者監査: amber
 
 ## 軍師提言
+- P1: treat latest selected trifecta tickets as the primary product KPI; keep model Top10 coverage as a diagnostic KPI
 - P2: optimize ticket logic against live 10-point hit rate as a separate KPI from Top1 accuracy
 - P2: keep the current best challenger in shadow until the 300-race promotion floor is reached
 - P2: continue prospective shadow testing of the best second-pick reversal rule; no live switch until promotion criteria pass

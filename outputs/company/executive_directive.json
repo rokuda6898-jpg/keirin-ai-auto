@@ -1,5 +1,5 @@
 {
-  "updated_at_jst": "2026-10-07T00:44:32+09:00",
+  "updated_at_jst": "2026-10-07T10:22:59+09:00",
   "role": "executive_officer",
   "source": "ceo_decision_support",
   "status": "dissemination_package_pending_ceo_or_owner_decision",
@@ -67,13 +67,24 @@
   ],
   "strategist_actions_to_disseminate_after_approval": [
     {
+      "priority": 1,
+      "type": "final_trifecta_product_kpi",
+      "action": "treat latest selected trifecta tickets as the primary product KPI; keep model Top10 coverage as a diagnostic KPI",
+      "evidence": {
+        "races": 52,
+        "hit_rate": 0.07692307692307693,
+        "recent_50_hit_rate": 0.08,
+        "avg_ticket_count": 8.884615384615385
+      }
+    },
+    {
       "priority": 2,
       "type": "trifecta_top10_kpi",
       "action": "optimize ticket logic against live 10-point hit rate as a separate KPI from Top1 accuracy",
       "evidence": {
-        "races": 65,
-        "hit_rate": 0.23076923076923078,
-        "recent_50_hit_rate": 0.2
+        "races": 70,
+        "hit_rate": 0.24285714285714285,
+        "recent_50_hit_rate": 0.16
       }
     },
     {
@@ -83,13 +94,13 @@
       "evidence": {
         "variant": "core_model",
         "department": "model_audit_office",
-        "races": 142,
-        "production_hits": 62,
-        "challenger_hits": 67,
-        "production_hit_rate": 0.43661971830985913,
-        "challenger_hit_rate": 0.47183098591549294,
-        "delta_hit_rate": 0.03521126760563381,
-        "delta_pp": 3.521126760563381,
+        "races": 147,
+        "production_hits": 66,
+        "challenger_hits": 71,
+        "production_hit_rate": 0.4489795918367347,
+        "challenger_hit_rate": 0.48299319727891155,
+        "delta_hit_rate": 0.03401360544217685,
+        "delta_pp": 3.4013605442176855,
         "changed_races": 26,
         "flip_gains": 11,
         "flip_losses": 6,
@@ -108,11 +119,11 @@
         "production_hits_in_switched_races": 16,
         "second_pick_hits_in_switched_races": 19,
         "net_hits": 3,
-        "baseline_total_hits": 177,
-        "hypothetical_total_hits": 180,
-        "baseline_hit_rate": 0.423444976076555,
-        "hypothetical_hit_rate": 0.430622009569378,
-        "global_delta_pp": 0.7177033492822966,
+        "baseline_total_hits": 181,
+        "hypothetical_total_hits": 184,
+        "baseline_hit_rate": 0.42789598108747046,
+        "hypothetical_hit_rate": 0.43498817966903075,
+        "global_delta_pp": 0.7092198581560284,
         "status": "shadow_candidate_only",
         "promotion_requirement": "must beat production prospectively on >=300 settled races and pass external validation"
       }
