@@ -151,6 +151,8 @@ document.querySelectorAll('.continuous-results').forEach(async box=>{try{const r
 def enhance_today(document):
     assets()
     soup=BeautifulSoup(document,"html.parser")
+    for reference in soup.select(".reference-picks"):
+        reference.decompose()
     if not soup.select_one('link[href="site-ui.css"]'):
         soup.head.append(soup.new_tag('link',rel='stylesheet',href='site-ui.css'))
     old=soup.select_one('main > nav')
@@ -175,19 +177,6 @@ def enhance_today(document):
                 waiting=panel.select_one('.waiting')
                 if waiting:
                     waiting.string='現在は買い目候補なし。対象時間外、オッズ未取得・不一致、または期待値条件を満たしていません。条件がそろったレースから表示します。'
-                refs=reference_predictions(rid)
-                archived=False
-                if not refs:
-                    refs=saved_reference_predictions(rid)
-                    archived=bool(refs)
-                if refs and not panel.select_one('.reference-picks'):
-                    title='締切前に保存したAI参考予想' if archived else '参考予想・上位6点'
-                    note=('保存時刻 '+html.escape(str(refs[0]['prediction_created_at_jst']))+'。保存済みの候補で、購入条件を満たした買い目とは別です。' if archived else '購入条件を満たす買い目は現在ありません。AI確率順の参考候補です。オッズ・期待値の確認前で、購入推奨や実績集計の対象ではありません。')
-                    markup='<section class="reference-picks"><h4>'+title+'</h4><p>'+note+'</p>'
-                    for row in refs:
-                        markup+='<div class="bet"><b>参考 3連単</b><strong>'+html.escape(row['buy'])+'</strong><small>AI推定確率 '+f"{row['prob']:.1%}"+'</small></div>'
-                    panel.append(BeautifulSoup(markup+'</section>','html.parser'))
-
     import time
     for race in soup.select('article.race'):
         if (numeric(race.get('data-start')) or 0)<=time.time():continue
