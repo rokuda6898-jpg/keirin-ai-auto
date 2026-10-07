@@ -8,6 +8,54 @@ from bs4 import BeautifulSoup
 from common import OUTPUT_DIR
 
 
+def saved_reference_predictions(rid):
+    """Read existing pre-close AI forecasts without reconstructing old picks."""
+    import pandas as pd
+    import time
+    try:
+        frame=pd.read_csv(OUTPUT_DIR/'trifecta_top10_prediction_ledger.csv',dtype={'race_id':str,'buy':str})
+        frame=frame[frame.race_id.eq(str(rid)) & frame.variant.eq('production_top10')].copy()
+        if frame.empty:return []
+        close=pd.to_numeric(frame.close_at,errors='coerce')
+        created=pd.to_datetime(frame.prediction_created_at_jst,errors='coerce',utc=True)
+        epoch=created.map(lambda value:value.timestamp() if pd.notna(value) else float('inf'))
+        frame=frame[close.le(time.time()) & epoch.lt(close) & frame.buy.str.fullmatch(r'[1-9]-[1-9]-[1-9]',na=False)]
+        if frame.empty:return []
+        frame=frame[frame.prediction_created_at_jst.eq(frame.prediction_created_at_jst.max())]
+        return frame.sort_values('ticket_rank').drop_duplicates('buy').head(10).to_dict('records')
+    except (OSError,ValueError,KeyError,pd.errors.EmptyDataError):return []
+
+
+def reference_predictions(rid):
+    """Display-only forecasts; never enter purchase or settlement ledgers."""
+    import pandas as pd
+    import time
+    from itertools import permutations
+    try:
+        frame=pd.read_csv(OUTPUT_DIR / 'latest_predictions.csv',dtype={'race_id':str})
+        frame=frame[frame.race_id.eq(str(rid))].copy()
+        if len(frame)<3:return []
+        close=numeric(frame.iloc[0].get('close_at'))
+        if close is None or close<=time.time():return []
+        cars=pd.to_numeric(frame.car_no,errors='coerce')
+        if cars.isna().any() or cars.duplicated().any():return []
+        frame.index=cars.astype(int)
+        scores={}
+        for key in ['p_win','p_second','p_third']:
+            values=pd.to_numeric(frame.get(key,frame.p_win),errors='coerce')
+            if values.isna().any() or (values<0).any() or values.sum()<=0:return []
+            scores[key]=values/values.sum()
+        rows=[]
+        for a,b,c in permutations(frame.index,3):
+            second=scores['p_second'].drop(a).sum()
+            third=scores['p_third'].drop([a,b]).sum()
+            if second<=0 or third<=0:continue
+            prob=scores['p_win'][a]*scores['p_second'][b]/second*scores['p_third'][c]/third
+            rows.append({'buy':f'{a}-{b}-{c}','prob':float(prob)})
+        return sorted(rows,key=lambda row:(-row['prob'],row['buy']))[:6]
+    except (OSError,ValueError,KeyError,pd.errors.EmptyDataError):return []
+
+
 def odds_provenance(row):
     sources=row.get('odds_sources')
     captured=row.get('odds_captured_at_jst')
@@ -127,6 +175,19 @@ def enhance_today(document):
                 waiting=panel.select_one('.waiting')
                 if waiting:
                     waiting.string='現在は買い目候補なし。対象時間外、オッズ未取得・不一致、または期待値条件を満たしていません。条件がそろったレースから表示します。'
+                refs=reference_predictions(rid)
+                archived=False
+                if not refs:
+                    refs=saved_reference_predictions(rid)
+                    archived=bool(refs)
+                if refs and not panel.select_one('.reference-picks'):
+                    title='締切前に保存したAI参考予想' if archived else '参考予想・上位6点'
+                    note=('保存時刻 '+html.escape(str(refs[0]['prediction_created_at_jst']))+'。保存済みの候補で、購入条件を満たした買い目とは別です。' if archived else '購入条件を満たす買い目は現在ありません。AI確率順の参考候補です。オッズ・期待値の確認前で、購入推奨や実績集計の対象ではありません。')
+                    markup='<section class="reference-picks"><h4>'+title+'</h4><p>'+note+'</p>'
+                    for row in refs:
+                        markup+='<div class="bet"><b>参考 3連単</b><strong>'+html.escape(row['buy'])+'</strong><small>AI推定確率 '+f"{row['prob']:.1%}"+'</small></div>'
+                    panel.append(BeautifulSoup(markup+'</section>','html.parser'))
+
     import time
     for race in soup.select('article.race'):
         if (numeric(race.get('data-start')) or 0)<=time.time():continue

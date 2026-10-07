@@ -88,3 +88,35 @@ class SiteUITests(unittest.TestCase):
             self.assertEqual({row['buy'] for row in result},{'1-2-3','3-2-1'})
             self.assertTrue(all(float(row['odds_used'])>=100 for row in result))
             self.assertTrue(all(row['prediction_group']=='穴予想' for row in result))
+
+class ReferenceForecastTests(unittest.TestCase):
+    def test_future_only_reference_forecasts_are_distinct_and_not_purchases(self):
+        import tempfile
+        from unittest import mock
+        from site_ui import reference_predictions
+        with tempfile.TemporaryDirectory() as directory:
+            frame=pd.DataFrame({'race_id':['017420261007']*3,'car_no':[1,2,3],
+                                'close_at':[2000]*3,'p_win':[.6,.3,.1],
+                                'p_second':[.2,.5,.3],'p_third':[.1,.3,.6]})
+            path=Path(directory)/'latest_predictions.csv';frame.to_csv(path,index=False)
+            with mock.patch('site_ui.OUTPUT_DIR',Path(directory)),mock.patch('time.time',return_value=1000):
+                rows=reference_predictions('017420261007')
+                self.assertEqual(len(rows),6)
+                self.assertEqual(len({row['buy'] for row in rows}),6)
+                self.assertTrue(all(set(row)=={'buy','prob'} for row in rows))
+            with mock.patch('site_ui.OUTPUT_DIR',Path(directory)),mock.patch('time.time',return_value=2000):
+                self.assertEqual(reference_predictions('017420261007'),[])
+
+    def test_saved_reference_rejects_post_close_and_other_variants(self):
+        import tempfile
+        from unittest import mock
+        from site_ui import saved_reference_predictions
+        with tempfile.TemporaryDirectory() as directory:
+            pd.DataFrame([
+                {'race_id':'017420261007','variant':'production_top10','close_at':2000,'prediction_created_at_jst':'1970-01-01T00:30:00+00:00','buy':'1-2-3','prob':.2,'ticket_rank':1},
+                {'race_id':'017420261007','variant':'production_top10','close_at':2000,'prediction_created_at_jst':'1970-01-01T00:40:00+00:00','buy':'3-2-1','prob':.3,'ticket_rank':1},
+                {'race_id':'017420261007','variant':'legacy_top10_comparison','close_at':2000,'prediction_created_at_jst':'1970-01-01T00:30:00+00:00','buy':'2-1-3','prob':.2,'ticket_rank':1},
+            ]).to_csv(Path(directory)/'trifecta_top10_prediction_ledger.csv',index=False)
+            with mock.patch('site_ui.OUTPUT_DIR',Path(directory)),mock.patch('time.time',return_value=3000):
+                self.assertEqual([row['buy'] for row in saved_reference_predictions('017420261007')],['1-2-3'])
+                self.assertEqual(saved_reference_predictions('missing'),[])
