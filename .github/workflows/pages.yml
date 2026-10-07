@@ -96,10 +96,12 @@ jobs:
 
               missing = {race_id for race_id in expected if race_id not in html}
               fingerprint_ok = published_fingerprint == expected_fingerprint
-              if not missing and fingerprint_ok:
+              render_schema_ok = 'name="nexus-render-schema" content="provisional-picks-v1"' in html
+              if not missing and fingerprint_ok and render_schema_ok:
                   print(
                       f"published-site verified: races={len(expected)} "
-                      f"fingerprint={expected_fingerprint[:12]}"
+                      f"fingerprint={expected_fingerprint[:12]} "
+                      f"render_schema=provisional-picks-v1"
                   )
                   sys.exit(0)
 
@@ -109,6 +111,7 @@ jobs:
                   f"published-site mismatch attempt={attempt+1}/6 "
                   f"missing={len(missing)} "
                   f"fingerprint_ok={fingerprint_ok} "
+                  f"render_schema_ok={render_schema_ok} "
                   f"expected_fp={expected_fingerprint[:12]} "
                   f"published_fp={published_fingerprint[:12]} "
                   f"sample={sorted(missing)[:10]}"
