@@ -120,3 +120,13 @@ class ReferenceForecastTests(unittest.TestCase):
             with mock.patch('site_ui.OUTPUT_DIR',Path(directory)),mock.patch('time.time',return_value=3000):
                 self.assertEqual([row['buy'] for row in saved_reference_predictions('017420261007')],['1-2-3'])
                 self.assertEqual(saved_reference_predictions('missing'),[])
+
+class TicketGroupTests(unittest.TestCase):
+    def test_main_hole_sections_are_separate_and_idempotent(self):
+        document='<html><head></head><body><main><article class="race" id="race-test"><div class="picks-panel"><h3>買い目</h3><div class="bet"><b>本線 3連単</b><strong>1-2-3</strong></div><div class="bet"><b>穴 3連単</b><strong>2-1-3</strong></div><section class="hole-picks"><div class="bet"><b>穴予想</b><strong>2-1-3</strong></div></section></div></article></main></body></html>'
+        soup=BeautifulSoup(enhance_today(enhance_today(document)),'html.parser')
+        self.assertEqual(len(soup.select('.ticket-group')),2)
+        self.assertEqual(len(soup.select('.main-group .bet')),1)
+        self.assertEqual(len(soup.select('.hole-group .bet')),1)
+        self.assertEqual(len(soup.select('.bet')),2)
+        self.assertFalse(soup.select('.hole-picks'))

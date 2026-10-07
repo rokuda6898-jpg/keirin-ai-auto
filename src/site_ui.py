@@ -177,20 +177,29 @@ def enhance_today(document):
                 waiting=panel.select_one('.waiting')
                 if waiting:
                     waiting.string='現在は買い目候補なし。対象時間外、オッズ未取得・不一致、または期待値条件を満たしていません。条件がそろったレースから表示します。'
-    import time
-    for race in soup.select('article.race'):
-        if (numeric(race.get('data-start')) or 0)<=time.time():continue
-        panel=race.select_one('.picks-panel')
-        if panel is None or panel.select_one('.hole-picks'):continue
-        holes=hole_predictions(race.get('id','').removeprefix('race-'))
-        if not holes:continue
-        html_hole='<section class="hole-picks"><h4>穴予想</h4><p>100倍以上だけを対象。AIの期待値と確率で最大12点まで表示します。購入条件を満たした買い目は上段の買い目にも反映します。</p>'
-        for row in holes:
-            odds=numeric(row.get('odds_used'))
-            market=f'取得時オッズ {odds:.1f}倍'
-            html_hole+='<div class="bet hole"><b>'+html.escape(row['prediction_group'])+'</b><strong>'+html.escape(row['buy'])+'</strong><small>'+market+'</small>'+odds_provenance(row)+'</div>'
-        html_hole+='</section>'
-        panel.append(BeautifulSoup(html_hole,'html.parser'))
+    # Show selected main/longshot tickets once, in separate groups.
+    for panel in soup.select('.picks-panel'):
+        for preview in panel.select('.hole-picks'):
+            preview.decompose()
+        for previous in panel.select('.ticket-group'):
+            for item in list(previous.children):
+                if getattr(item,'name',None) and 'bet' not in item.get('class',[]):
+                    item.decompose()
+            previous.unwrap()
+        buckets={'本線':[], '穴':[]}
+        for card in panel.select(':scope > .bet'):
+            label=card.find('b')
+            text=label.get_text() if label else ''
+            if '本線' in text:buckets['本線'].append(card)
+            elif '穴' in text:buckets['穴'].append(card)
+        for name,cards in buckets.items():
+            section=soup.new_tag('section',attrs={'class':'ticket-group '+('main-group' if name=='本線' else 'hole-group')})
+            heading=soup.new_tag('h4');heading.string=name+' '+str(len(cards))+'点';section.append(heading)
+            if cards:
+                for card in cards:section.append(card.extract())
+            else:
+                message=soup.new_tag('p');message.string=name+'は現在、条件を満たす買い目がありません。';section.append(message)
+            panel.append(section)
     if not soup.select_one('.continuous-results'):
         hero=soup.select_one('.hero')
         section=BeautifulSoup(continuous_section(),'html.parser')
