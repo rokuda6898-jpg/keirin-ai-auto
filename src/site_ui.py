@@ -182,8 +182,9 @@ def enhance_today(document):
         for preview in panel.select('.hole-picks'):
             preview.decompose()
         for previous in panel.select('.ticket-group'):
-            for heading in previous.select('h4'):
-                heading.decompose()
+            for item in list(previous.children):
+                if getattr(item,'name',None) and 'bet' not in item.get('class',[]):
+                    item.decompose()
             previous.unwrap()
         buckets={'本線':[], '穴':[]}
         for card in panel.select(':scope > .bet'):
