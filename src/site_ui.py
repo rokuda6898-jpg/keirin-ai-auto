@@ -157,7 +157,7 @@ def enhance_today(document):
     if old:old['class']=['top-nav']
     for race in soup.select('article.race'):
         panel=race.select_one('.picks-panel')
-        if panel and not panel.select_one('.bet'):
+        if panel and not any(card.find_parent(class_='hole-picks') is None and card.find_parent(class_='reference-picks') is None for card in panel.select('.bet')):
             rid=race.get('id','').removeprefix('race-')
             stored=saved_race_tickets(rid)
             if stored:
