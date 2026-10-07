@@ -22,6 +22,8 @@ def select_high_payout(riders, market, risk, main_buys=(), minimum_ev=1.25):
         ('2着突っ込み担当','市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。'),
         ('3着紛れ担当','人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。'),
         ('ライン崩壊担当','並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。'),
+        ('細切れ戦担当','確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。'),
+        ('単騎担当','確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。'),
         ('人気過剰担当','全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。'),
         ('高配当期待値担当','全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。')]]
     report['analysts'] += [{'role':'データ確認担当','status':'検証中','evidence_scope':'全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。'}, {'role':'比較検証担当','status':'検証中','evidence_scope':'締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。'}]
@@ -44,7 +46,12 @@ def select_high_payout(riders, market, risk, main_buys=(), minimum_ev=1.25):
     # Full-market first-place marginals give a transparent popularity proxy.
     marginal={car:sum(1/o for buy,o in quotes.items() if int(buy.split('-')[0])==car) for car in cars}
     popularity={car:i+1 for i,car in enumerate(sorted(cars,key=lambda c:(-marginal[c],c)))}
-    line_verified='line_verification_status' in riders and riders.line_verification_status.eq('verified').all()
+    line_verified=('line_verification_status' in riders and riders.line_verification_status.eq('verified').all()
+                   and 'line_id' in riders and riders.line_id.notna().all()
+                   and riders.line_id.astype(str).str.strip().ne('').all())
+    line_sizes=riders.groupby('line_id').size().to_dict() if line_verified else {}
+    report['specialist_analysis']={'細切れ戦':{'status':'分析可能' if line_verified else '並び未確認・判定保留','line_count':len(line_sizes) if line_verified else None},
+                                   '単騎':{'status':'分析可能' if line_verified else '並び未確認・判定保留','cars':[int(c) for c in cars if line_sizes.get(by.at[c,'line_id'])==1] if line_verified else []}}
     if not line_verified: report['unknowns'].append('並びの確認状態が不足。ライン崩壊は判定保留。')
     for a,b,c in permutations(cars,3):
         buy=f'{a}-{b}-{c}'; odds=quotes[buy]
@@ -66,11 +73,17 @@ def select_high_payout(riders, market, risk, main_buys=(), minimum_ev=1.25):
         probability=math.sqrt(model*market_prob)
         ev=probability*odds
         if probability<MIN_PROBABILITY or ev<minimum_ev:continue
+        # Evidence tags do not inflate chaos, expectation score or ticket limits.
+        if line_verified:
+            if len(line_sizes)>=4 and by.at[a,'line_id']!=by.at[b,'line_id'] and by.at[a,'rank_first']<=3 and by.at[b,'rank_second']<=4:
+                patterns.append('細切れ戦')
+            if any(line_sizes.get(by.at[car,'line_id'])==1 and popularity[car]>=4 and by.at[car,rank]<=4 for car,rank in [(a,'rank_first'),(b,'rank_second'),(c,'rank_third')]):
+                patterns.append('単騎')
         rows.append(dict(zip(columns,[buy,'trifecta',probability,odds,ev,a,b,c,'高配当独立分析',patterns,False])))
     frame=pd.DataFrame(rows,columns=columns)
     if frame.empty:return frame,report
     patterns=sorted({p for row in rows for p in row['hole_pattern']})
-    score=min(100,round(.5*risk['chaos_index']+10*len(patterns)+min(20,5*len(frame))))
+    score=min(100,round(.5*risk['chaos_index']+10*len([p for p in patterns if p not in ('細切れ戦','単騎')])+min(20,5*len(frame))))
     rating='S' if score>=85 else 'A' if score>=70 else 'B' if score>=55 else 'C'
     # Twelve points additionally need twelve candidates with stronger provisional
     # EV, not twelve barely qualifying prices. These are design rules, not fits.

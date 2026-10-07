@@ -21,7 +21,7 @@ def summarize_high_payout(rows):
     for row in eligible:
         if row['race_id'] not in unique or row['snapshot_at']>unique[row['race_id']]['snapshot_at']:unique[row['race_id']]=row
     proposed=hits=stake=returned=0;payouts=[];bands={str(n):0 for n in [100,300,500,1000]}
-    patterns={p:{'races':0,'hits':0,'hit_rate':None} for p in ['1着荒れ','2着荒れ','3着荒れ','ライン崩壊','人気過剰']}
+    patterns={p:{'races':0,'hits':0,'hit_rate':None} for p in ['1着荒れ','2着荒れ','3着荒れ','ライン崩壊','人気過剰','細切れ戦','単騎']}
     for row in unique.values():
         department=row['high_payout_department']
         proposed_tickets={t['buy']:t for t in department.get('tickets',[]) if t.get('odds',0)>=100}
@@ -94,7 +94,7 @@ def build_high_payout_department(rows,output_dir):
         if d['skip_reason']:body+='<p>'+esc(d['skip_reason'])+'</p>'
         for t in d['tickets']:body+='<p>'+esc(t['buy'])+'｜'+f'{t["odds"]:.1f}倍｜推定EV {t["ev"]:.2f}'+'</p>'
         body+='<p>'+esc('／'.join(d['unknowns']))+'</p></details>'
-    body+='<h2>担当と確認範囲</h2>'
+    body+='<h2>担当と確認範囲</h2><p>細切れ戦担当：確認済み4ライン以上と別線の着順スコアを照合。単騎担当：確認済み1人ラインと人気薄の着順スコアを照合。並び未確認なら判定保留。担当タグだけで加点・点数増加はしません。</p>'
     if report['live_decisions']:
         for a in report['live_decisions'][0].get('analysts',[]):body+='<p><b>'+esc(a['role'])+'</b>：'+esc(a['evidence_scope'])+'</p>'
     body+='<p>1着波乱・2着突っ込み・3着紛れ・ライン崩壊・人気過剰・期待値審査の担当は、取得項目に基づくルール分析です。未取得の競りやコース取り、ライン崩壊確率は作りません。</p><a href="operations.html">会社の担当報告</a> ／ <a href="../index.html#picks">買い目へ</a>'

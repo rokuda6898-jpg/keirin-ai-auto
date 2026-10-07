@@ -48,6 +48,21 @@ class HighPayoutTests(unittest.TestCase):
         self.assertEqual(result['current']['proposed_races'],0)
         self.assertEqual(summarize_comparison([{**base,'snapshot_at':'2026-10-07T12:00:00+09:00'}])['third_focus']['target_races'],0)
 
+    def test_fragmented_and_solo_need_verified_lines_without_score_bonus(self):
+        r=self.race();r['line_id']=[1,1,2,3,4,5,6]
+        market=self.market();risk={'chaos_index':70,'first_gap':50}
+        _,unverified=select_high_payout(r,market,risk)
+        r['line_verification_status']='verified'
+        f,verified=select_high_payout(r,market,risk)
+        self.assertEqual(verified['expectation_score'],unverified['expectation_score'])
+        self.assertEqual(verified['recommended_count'],unverified['recommended_count'])
+        self.assertIn('細切れ戦',verified['patterns'])
+        self.assertIn('単騎',verified['patterns'])
+        self.assertNotIn('単騎',unverified['patterns'])
+        r.loc[0,'line_id']=None
+        _,invalid=select_high_payout(r,market,risk)
+        self.assertNotIn('単騎',invalid['patterns'])
+
     def test_incomplete_market_and_orderly_race_skip(self):
         r=self.race();market=self.market()
         _,d=select_high_payout(r,market.head(5),{'chaos_index':70,'first_gap':50})
