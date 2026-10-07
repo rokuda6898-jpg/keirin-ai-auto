@@ -386,6 +386,11 @@ def audit_site_output():
         return [{"type": "site_output_missing_or_too_small"}]
     try:
         content = html.read_text(encoding="utf-8")
+        if 'name="nexus-render-schema" content="provisional-picks-v1"' not in content:
+            problems.append({
+                "type": "site_render_schema_stale",
+                "expected": "provisional-picks-v1",
+            })
         from bs4 import BeautifulSoup
         document = BeautifulSoup(content, "html.parser")
         entries = pd.read_csv(TODAY_CSV, dtype={"race_id": str, "player_id": str})
@@ -756,7 +761,7 @@ def repair(problems=None):
         "prediction_quality_audit_failed", "stale_predictions",
     }
     result_kinds = {"results_missing", "results_overdue", "results_unreadable"}
-    site_kinds = {"site_output_missing_or_too_small", "site_missing_race", "site_race_has_no_valid_cars", "site_player_name_mismatch", "site_output_unreadable"}
+    site_kinds = {"site_output_missing_or_too_small", "site_missing_race", "site_race_has_no_valid_cars", "site_player_name_mismatch", "site_render_schema_stale", "site_output_unreadable"}
     bet_kinds = {"race_budget_mismatch", "budget_audit_failed", "authorized_bets_missing"}
 
     actions = []
