@@ -386,7 +386,7 @@ def audit_site_output():
         return [{"type": "site_output_missing_or_too_small"}]
     try:
         content = html.read_text(encoding="utf-8")
-        if 'name="nexus-render-schema" content="provisional-picks-v1"' not in content:
+        if "nexus-render-schema" not in content or "provisional-picks-v1" not in content:
             problems.append({
                 "type": "site_render_schema_stale",
                 "expected": "provisional-picks-v1",

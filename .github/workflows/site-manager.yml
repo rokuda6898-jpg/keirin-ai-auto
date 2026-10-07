@@ -21,7 +21,7 @@ concurrency:
   # Keep the manager independent from the shared writer pending queue.
   # Only manager runs compete with each other; the latest pending cycle may
   # replace an older pending cycle without being evicted by settle/daily jobs.
-  group: keirin-site-manager-picks-v2
+  group: keirin-site-manager-picks-v3
   # History-based prediction regeneration can exceed the five-minute tick.
   # Let the active repair finish; newer scheduled runs replace only pending
   # work. The job timeout bounds failures, and publication below regenerates
