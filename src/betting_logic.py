@@ -8,7 +8,7 @@ from itertools import permutations
 import numpy as np
 import pandas as pd
 
-STRATEGY_VERSION = "position_prob_v9_calibration_guard_20261007"
+STRATEGY_VERSION = "position_prob_v10_balanced_risk_20261007"
 MAIN_EV = 1.10
 HOLE_EV = 1.25
 FIXED_MIN_WIN_PROBABILITY = 0.60
@@ -160,11 +160,9 @@ def race_plan(riders):
     fixed = bool(provisional_fixed and not risk_fixed_block)
     risk_level = "低" if chaos < 30 else "中" if chaos < 50 else "高" if chaos < 70 else "極高"
     base_main_limit = main_limit(first, third)
-    governed_main_limit = (
-        max(base_main_limit, 12) if chaos >= 70
-        else max(base_main_limit, 10) if chaos >= 50
-        else base_main_limit
-    )
+    # Risk may broaden the candidate pool, not increase the buying budget.
+    # Keep the owner's first-gap/third-boundary point-count rule authoritative.
+    governed_main_limit = base_main_limit
     return {
         "first_gap": first, "third_boundary_gap": third if np.isfinite(third) else None,
         "main_limit": governed_main_limit, "first_fixed": fixed,
@@ -178,6 +176,7 @@ def race_plan(riders):
         "risk_score": chaos, "risk_level": risk_level,
         "risk_fixed_block": risk_fixed_block, "risk_veto_fixed": risk_veto_fixed,
         "risk_policy": "risk_department_overrides_flow",
+        "risk_budget_policy": "candidate_spread_without_extra_tickets",
         "scenario_policy": "3展開分散" if chaos >= 50 else "本命展開中心",
         "popularity_source": riders.popularity_source.iloc[0],
         "probability_method": "position_sequential",

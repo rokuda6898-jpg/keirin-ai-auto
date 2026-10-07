@@ -286,7 +286,7 @@ class BettingLogicTests(unittest.TestCase):
         self.assertGreaterEqual(plan["risk_score"], 60)
         self.assertTrue(plan["risk_veto_fixed"])
         self.assertFalse(plan["first_fixed"])
-        self.assertGreaterEqual(plan["main_limit"], 10)
+        self.assertEqual(plan["main_limit"], main_limit(plan["first_gap"], plan["third_boundary_gap"]))
         generate_formations(riders, plan)
         self.assertGreater(len(plan["formation"]["first"]), 1)
         self.assertGreaterEqual(len(plan["formation"]["second"]), 5)
@@ -303,8 +303,9 @@ class BettingLogicTests(unittest.TestCase):
         chosen, plan = select_race(riders, odds)
         main = chosen[chosen.ticket_group.eq("本線")]
         self.assertGreaterEqual(plan["risk_score"], 60)
-        self.assertGreaterEqual(main["second"].nunique(), 5)
-        self.assertGreaterEqual(main["third"].nunique(), 5)
+        self.assertLessEqual(len(main), plan["main_limit"])
+        self.assertGreaterEqual(main["second"].nunique(), 3)
+        self.assertGreaterEqual(main["third"].nunique(), 3)
         self.assertIn("本命展開", set(main["scenario"]) | set(plan["selected_scenarios"]))
 
 

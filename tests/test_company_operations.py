@@ -13,6 +13,11 @@ class OperationsTests(unittest.TestCase):
             self.assertFalse(report['target_validated'])
             self.assertFalse(report['release_policy']['automatic_promotion'])
             self.assertEqual(len(report['roles']),4)
+            review = report['strategy_review']
+            self.assertEqual(sum(review['weights'].values()), 100)
+            self.assertFalse(review['optimality_validated'])
+            self.assertEqual(len(review['agenda']), 3)
+            self.assertIn('点数を増やさない', review['risk_budget_policy'])
 
     def test_future_quote_evidence_flags_data_quality(self):
         with tempfile.TemporaryDirectory() as directory:
