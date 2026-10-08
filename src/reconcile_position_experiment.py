@@ -9,9 +9,13 @@ from pathlib import Path
 
 from department_position_experiment import LEDGER, build_report
 from department_experiment_v2 import LEDGER as V2_LEDGER, ATTEMPTS, OUTCOMES, build_report as build_v2_report
+from equation_lab import (LEDGER as EQUATION_LEDGER, MODELS as EQUATION_MODELS,
+                          ATTEMPTS as EQUATION_ATTEMPTS, PATHS as EQUATION_PATHS,
+                          build_report as build_equation_report)
 
 ROOT = Path(__file__).resolve().parents[1]
-LEDGERS = (LEDGER, 'annual_position_experiment_outcomes.jsonl', V2_LEDGER, ATTEMPTS, OUTCOMES)
+LEDGERS = (LEDGER, 'annual_position_experiment_outcomes.jsonl', V2_LEDGER, ATTEMPTS, OUTCOMES,
+           EQUATION_LEDGER, EQUATION_MODELS, EQUATION_ATTEMPTS, EQUATION_PATHS)
 
 
 def reconcile(root=ROOT, ref=None):
@@ -43,6 +47,7 @@ def reconcile(root=ROOT, ref=None):
     v2 = build_v2_report(root / 'outputs')
     if v2['invalid_records'] or v2['invalid_attempts'] or v2['outcome_conflicts']:
         raise ValueError('position v2 evidence integrity requires review before publication')
+    build_equation_report(root / 'outputs')
     return build_report(root / 'outputs')
 
 

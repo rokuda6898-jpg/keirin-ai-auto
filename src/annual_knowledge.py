@@ -461,8 +461,21 @@ def forecast_departments(pred, odds, report, now, output_dir=OUTPUT_DIR):
                 from department_experiment_v2 import make_record, append_record, record_attempt
                 bundle, reason = make_record(race, experiment_inputs, market, completed, report, provenance)
                 completed = now + timedelta(seconds=time.monotonic() - started)
-                if bundle is not None and not append_record(bundle, completed, output_dir):
-                    reason = 'expired_during_calculation'
+                if bundle is not None:
+                    saved = append_record(bundle, completed, output_dir)
+                    if not saved:
+                        reason = 'expired_during_calculation'
+                    else:
+                        # Independent laboratory: no change to any department's
+                        # tickets, CEO judgment, or existing position experiment.
+                        from equation_lab import capture as capture_equations, record_attempt as equation_attempt
+                        try:
+                            equation_reason = capture_equations(bundle['input_sha256'], completed.isoformat(),
+                                                                output_dir, completed)
+                        except (ValueError, KeyError, TypeError, IndexError) as exc:
+                            equation_reason = f'calculation_unavailable:{type(exc).__name__}'
+                        equation_attempt(race_id, equation_reason, output_dir,
+                                         now + timedelta(seconds=time.monotonic() - started))
                 record_attempt(race, reason, completed, output_dir,
                                quote_quality=bundle.get('quote_quality') if bundle else None)
             else:
@@ -504,6 +517,8 @@ def audit_department_predictions(output_dir=OUTPUT_DIR):
     build_report(output_dir)
     from department_experiment_v2 import build_report as build_v2_report
     build_v2_report(output_dir)
+    from equation_lab import build_report as build_equation_report
+    build_equation_report(output_dir)
     from verified_live_audit import build_verified_live_audit
     verified_live = build_verified_live_audit(output_dir)
     folder = output_dir / "company"

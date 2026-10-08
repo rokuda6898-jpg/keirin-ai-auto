@@ -28,6 +28,8 @@ SOURCES = (
     "src/department_ticket_v2.py",
     "src/department_context.py",
     "src/department_experiment_v2.py",
+    "src/equation_models.py",
+    "src/equation_lab.py",
     "src/official_outcomes.py",
     "src/settle_results.py",
     "src/release_guard.py",
