@@ -35,3 +35,17 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_mark_performance.py' -v
       - name: Test every-race and seven-department forecast coverage
         run: python -m unittest discover -s tests -p 'test_department_coverage.py' -v
+      - name: Audit checked-in real race snapshot for false integrity alarms
+        run: |
+          PYTHONPATH=src python - <<'PY'
+          from site_manager import audit_entries, audit_site_output
+          entries, _ = audit_entries()
+          site = audit_site_output()
+          bad = [p for p in entries + site
+                 if p.get("type") in {"missing_riders", "site_player_name_mismatch"}]
+          print(f"Race source incidents: {len(entries)}, site incidents: {len(site)}")
+          print(f"Unresolved entry/identity incidents: {len(bad)}")
+          if bad:
+              print("Examples:", bad[:5])
+              raise SystemExit(1)
+          PY
