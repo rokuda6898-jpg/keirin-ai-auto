@@ -565,6 +565,42 @@ def audit_prediction_outputs():
                 problems.append({"type": "prediction_missing_riders", "race_id": str(race_id), "missing_cars": missing})
     except Exception as exc:
         problems.append({"type": "prediction_unreadable", "detail": str(exc)})
+    # Company department forecasts are an independently checked publication
+    # contract; an empty/old 7-department matrix is not a healthy prediction.
+    try:
+        from department_coverage import DEPARTMENTS
+        coverage_path = OUTPUT_DIR / "company" / "all_department_predictions.json"
+        if not coverage_path.exists():
+            problems.append({"type": "department_forecast_missing"})
+        else:
+            coverage = json.loads(coverage_path.read_text(encoding="utf-8"))
+            grouped = {}
+            for item in coverage.get("predictions", []):
+                key = str(item.get("race_id"))
+                dept = item.get("department")
+                grouped.setdefault(key, {}).setdefault(dept, []).append(item)
+            input_races = set(entries["race_id"].astype(str))
+            for rid in input_races:
+                matches = grouped.get(rid, {})
+                missing = [
+                    d for d in DEPARTMENTS if len(matches.get(d, [])) != 1
+                ]
+                if missing:
+                    problems.append({"type": "department_forecast_missing",
+                                     "race_id": rid, "departments": missing})
+                    continue
+                close = pd.to_numeric(
+                    entries.loc[entries["race_id"].astype(str).eq(rid), "close_at"],
+                    errors="coerce",
+                ) if "close_at" in entries.columns else pd.Series(dtype=float)
+                if close.notna().any() and float(close.dropna().iloc[0]) > datetime.now(ZoneInfo("Asia/Tokyo")).timestamp():
+                    unavailable = [d for d in DEPARTMENTS
+                                   if not matches[d][0].get("forecast_available")]
+                    if unavailable:
+                        problems.append({"type": "department_forecast_missing",
+                                         "race_id": rid, "departments": unavailable})
+    except Exception as exc:
+        problems.append({"type": "department_forecast_unreadable", "detail": str(exc)})
     return problems
 
 
@@ -759,6 +795,7 @@ def repair(problems=None):
         "prediction_strategy_schema_stale",
         "invalid_prediction_probability", "prediction_probability_not_normalized",
         "prediction_quality_audit_failed", "stale_predictions",
+        "department_forecast_missing", "department_forecast_unreadable",
     }
     result_kinds = {"results_missing", "results_overdue", "results_unreadable"}
     site_kinds = {"site_output_missing_or_too_small", "site_missing_race", "site_race_has_no_valid_cars", "site_player_name_mismatch", "site_render_schema_stale", "site_output_unreadable"}
