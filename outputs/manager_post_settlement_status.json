@@ -1,6 +1,6 @@
 {
-  "checked_at_jst": "2026-10-08T11:09:00+09:00",
-  "status": "unhealthy",
+  "checked_at_jst": "2026-10-08T11:22:02+09:00",
+  "status": "waiting_results",
   "repaired": false,
   "check_source": "post_settlement_read_only_audit",
   "attempts": [
@@ -8,16 +8,17 @@
       "attempt": 0,
       "problems": [
         {
-          "type": "site_release_stale",
-          "count": 1,
-          "details": [
-            "code changed since generation: src/release_guard.py"
+          "type": "results_waiting",
+          "race_ids": [
+            "022520261008"
           ]
         }
       ],
       "health": {
-        "severity": "ok",
-        "problem_types": [],
+        "severity": "warning",
+        "problem_types": [
+          "results_waiting"
+        ],
         "race_count": 72,
         "expected_riders": 497,
         "actual_riders": 497,
@@ -1103,8 +1104,10 @@
     }
   },
   "health": {
-    "severity": "ok",
-    "problem_types": [],
+    "severity": "warning",
+    "problem_types": [
+      "results_waiting"
+    ],
     "race_count": 72,
     "expected_riders": 497,
     "actual_riders": 497,
