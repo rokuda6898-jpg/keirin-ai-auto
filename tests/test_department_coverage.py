@@ -11,7 +11,7 @@ from zoneinfo import ZoneInfo
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from department_coverage import DEPARTMENTS, build_all_department_coverage, position_scenario
+from department_coverage import DEPARTMENTS, build_all_department_coverage, build_department_scoreboard, position_scenario
 from annual_knowledge import forecast_departments
 
 JST = ZoneInfo("Asia/Tokyo")
@@ -71,6 +71,24 @@ class DepartmentCoverageTest(unittest.TestCase):
         hole = next(row for row in report["predictions"] if row["department"] == "high_payout_department")
         self.assertEqual(hole["display_status"], "unpriced_upset_scenario_not_100plus_bet")
         self.assertTrue((self.output / "company" / "all_department_predictions.html").exists())
+
+    def test_all_seven_are_frozen_and_scored_on_identical_official_results(self):
+        report = build_all_department_coverage(
+            self.race, self.plans, specialist_rows(self.race, self.now), self.now, self.output
+        )
+        ledger = (self.output / "company" / "all_department_prediction_ledger.jsonl")
+        frozen = [json.loads(line) for line in ledger.read_text().splitlines() if line]
+        self.assertEqual(len(frozen), 7)
+        main = next(x for x in report["predictions"] if x["department"] == "prediction_department")
+        actual = "-".join(map(str, main["top3_cars"]))
+        (self.output / "latest_results.json").write_text(
+            json.dumps([{"race_id": "017420261008", "actual_trifecta": actual,
+                         "official_result_available": True}]), encoding="utf-8"
+        )
+        scores = build_department_scoreboard(self.output)
+        self.assertEqual(scores["departments"]["prediction_department"]["exact_trifecta"], 1)
+        self.assertEqual({scores["departments"][d]["races"] for d in DEPARTMENTS}, {1})
+        self.assertEqual(build_department_scoreboard(self.output)["settled_predictions"], 7)
 
     def test_missing_specialist_is_failure_not_a_green_coverage_state(self):
         rows = specialist_rows(self.race, self.now)[:3]
