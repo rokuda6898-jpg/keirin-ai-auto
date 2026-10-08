@@ -150,7 +150,12 @@ def build_mark_report(output_dir=OUTPUT_DIR):
             for rid, race in evaluated.groupby("race_id"):
                 stamped = pd.to_datetime(race["snapshot_created_at_jst"], errors="coerce", utc=True)
                 closing = pd.to_numeric(race["close_at"], errors="coerce")
-                snap_seconds = stamped.astype("int64") / 1e9
+                # Pandas 3 uses microsecond-backed datetimes in some paths,
+                # while Pandas 2 may use nanoseconds. Do not divide raw int64
+                # datetime storage by a hard-coded nanosecond conversion.
+                snap_seconds = stamped.map(
+                    lambda value: value.timestamp() if pd.notna(value) else float("nan")
+                )
                 distinct = set(race["mark"].astype(str))
                 if (len(race) >= 5 and race["car_no"].nunique() == len(race)
                         and distinct.issuperset(MARKS)
