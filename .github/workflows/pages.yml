@@ -34,6 +34,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Reject stale or partial generated site
+        run: python src/release_guard.py
+
       - name: Stamp deployment fingerprint
         run: |
           printf '%s\n' "$(git rev-parse HEAD)" > outputs/deploy_fingerprint.txt
@@ -96,12 +99,12 @@ jobs:
 
               missing = {race_id for race_id in expected if race_id not in html}
               fingerprint_ok = published_fingerprint == expected_fingerprint
-              render_schema_ok = "nexus-render-schema" in html and "provisional-picks-v1" in html
+              render_schema_ok = "nexus-render-schema" in html and "nexus-departments-v2" in html
               if not missing and fingerprint_ok and render_schema_ok:
                   print(
                       f"published-site verified: races={len(expected)} "
                       f"fingerprint={expected_fingerprint[:12]} "
-                      f"render_schema=provisional-picks-v1"
+                      f"render_schema=nexus-departments-v2"
                   )
                   sys.exit(0)
 
