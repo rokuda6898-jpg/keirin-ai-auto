@@ -203,7 +203,7 @@ class DepartmentCoverageTest(unittest.TestCase):
             "tickets": [],
         }
         path = folder / "annual_department_prediction_ledger.jsonl"
-        path.write_text(json.dumps(stored, ensure_ascii=False) + "\\n", encoding="utf-8")
+        path.write_text(json.dumps(stored, ensure_ascii=False) + chr(10), encoding="utf-8")
         knowledge = {
             "window_end_exclusive": "2026-10-08", "asof_date": "2026-10-08",
             "annual_races": 0, "profiles": {},
