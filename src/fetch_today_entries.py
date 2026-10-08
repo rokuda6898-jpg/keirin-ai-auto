@@ -284,9 +284,13 @@ def parse_race_page(url, completeness_attempts=5, completeness_retry_sec=5.0):
 
         raw_entries = race_data.get("entries", []) or []
         declared = int(race.get("entriesNumber") or len(raw_entries) or 0)
+        # Some source snapshots carry a cancelled non-rider placeholder with
+        # car number 0. Ignore ONLY an explicitly absent zero; never ignore
+        # any positive car slot, duplicate or non-absent invalid starter.
         raw_cars = sorted(
             int(entry.get("number")) for entry in raw_entries
             if entry.get("number") is not None
+            and not (entry.get("absent") and int(entry.get("number")) == 0)
         )
         if declared <= 0 or len(raw_cars) != declared or set(raw_cars) != set(range(1, declared + 1)):
             raise ValueError(
