@@ -27,6 +27,18 @@ RECURRENCE_WINDOW_MINUTES = 120
 RECURRENCE_RESET_GAP_MINUTES = 30
 
 
+def normalized_player_id(value):
+    """Compare numeric player identities despite CSV's optional leading zeros.
+
+    Names must still match exactly; numeric normalization is not a license to
+    match different players or ignore a missing rider.
+    """
+    token = str(value or "").strip()
+    if token.isdecimal():
+        return str(int(token))
+    return token
+
+
 class RiderButtonParser(HTMLParser):
     """Extract rendered rider identity without depending on HTML attribute order."""
 
@@ -45,7 +57,7 @@ class RiderButtonParser(HTMLParser):
         classes = set(values.get("class", "").split())
         if "rider" not in classes:
             return
-        player_id = values.get("data-player-id", "")
+        player_id = normalized_player_id(values.get("data-player-id", ""))
         player_name = values.get("data-name", "")
         if player_id and player_name:
             self.riders[player_id] = player_name
@@ -430,7 +442,7 @@ def audit_site_output():
                     player_id = str(rider.get("player_id", "")).strip()
                     if not name or name in {"nan", "None"}:
                         continue
-                    actual_name = rider_attrs.get(player_id)
+                    actual_name = rider_attrs.get(normalized_player_id(player_id))
                     if actual_name != name:
                         problems.append({
                             "type": "site_player_name_mismatch",
