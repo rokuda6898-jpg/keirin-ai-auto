@@ -170,7 +170,7 @@ jobs:
             git merge --no-edit -X ours origin/main || return 2
             python src/reconcile_position_experiment.py --ref origin/main || return 2
             python src/release_guard.py || return 2
-            git add outputs/company/annual_position_* || return 2
+            git add outputs/company/annual_position_* outputs/company/annual_equation_* || return 2
             git diff --staged --quiet || git commit -m "Manager: reconcile prospective position evidence"
           }
 
