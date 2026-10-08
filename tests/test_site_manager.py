@@ -237,6 +237,8 @@ class SiteManagerTests(unittest.TestCase):
             ), mock.patch.object(
                 site_manager, "audit_site_output", return_value=[]
             ), mock.patch.object(
+                site_manager, "audit_release_artifacts", return_value=[]
+            ), mock.patch.object(
                 site_manager, "audit_results", return_value=waiting
             ), mock.patch.object(
                 site_manager, "repair"

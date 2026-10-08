@@ -25,7 +25,7 @@ class ResultIntegrityTests(unittest.TestCase):
         from unittest.mock import patch
         from contextlib import ExitStack
         import site_manager
-        audits=['audit_race_coverage','audit_prediction_outputs','audit_identity_and_prediction_quality','audit_freshness','audit_budget','audit_live_bets','audit_site_output','audit_results']
+        audits=['audit_race_coverage','audit_prediction_outputs','audit_identity_and_prediction_quality','audit_freshness','audit_budget','audit_live_bets','audit_site_output','audit_release_artifacts','audit_results']
         with tempfile.TemporaryDirectory() as tmp, ExitStack() as stack:
             path=Path(tmp)/'manager_status.json'
             path.write_text(json.dumps({'status':'waiting_results'}))
