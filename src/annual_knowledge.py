@@ -533,15 +533,15 @@ function renderPlayers() {
 document.getElementById('player-search').addEventListener('input',renderPlayers);
 fetch('annual_rider_knowledge.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('load');return r.json()}).then(d=>{riderKnowledge=d.profiles||{};renderPlayers()}).catch(()=>{document.getElementById('player-list').textContent='成績を読み込めませんでした。ページを更新してください。'});
 </script>"""
-    forecast_view = """<h2>部署ごとの最新予想（検証用）</h2><p>取得時点の予想です。締切後も記録を残します。買い目が空の場合は見送りです。</p><div id="department-forecasts">読み込み中</div><script>
+    forecast_view = """<h2>部署ごとの最新予想（検証用）</h2><p><a href="all_department_predictions.html">全レース7部署の予想・提出状況を見る</a></p><p>取得時点の予想です。締切後に後付けせず、事前予想がないレースは未成立と表示します。購入候補がなくても着順予想は別途提出します。</p><div id="department-forecasts">読み込み中</div><script>
 fetch('annual_department_predictions.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('load');return r.json()}).then(d=>{
  const target=document.getElementById('department-forecasts');target.replaceChildren();
  const labels={data_department:'データ部署',pace_department:'展開部署',line_department:'ライン部署',risk_department:'リスク部署'};
  for(const p of d.proposals||[]){
   const article=document.createElement('article');article.style.borderBottom='1px solid #ddd';
   const title=document.createElement('h3');title.textContent=p.venue+' '+p.race_no+'R ／ '+labels[p.department];
-  const content=document.createElement('p');content.textContent='1着候補 '+p.winner_car+'番 ／ 本線 '+p.main_count+'点・穴 '+p.hole_count+'点';
-  const tickets=document.createElement('p');tickets.textContent=(p.tickets||[]).map(t=>((t.group==='main'||t.group==='本線')?'本線':'穴')+' '+t.buy+'（期待値 '+t.ev.toFixed(2)+'）').join(' ／ ')||'期待値条件を満たす買い目なし・見送り';
+  const content=document.createElement('p');content.textContent=p.forecast_available===false?'事前予想未成立：'+(p.display_status||'時刻・出走情報未確認'):'着順予想 '+((p.top3_cars||[p.winner_car]).join('-'))+' ／ 本線候補 '+p.main_count+'点・穴候補 '+p.hole_count+'点'+(p.missing_reference_riders?'（一部選手はモデル補完）':'');
+  const tickets=document.createElement('p');tickets.textContent=(p.tickets||[]).map(t=>((t.group==='main'||t.group==='本線')?'本線':'穴')+' '+t.buy+'（期待値 '+t.ev.toFixed(2)+'）').join(' ／ ')||'着順予想は提出済み・購入候補はなし（買い目見送り）';
   article.append(title,content,tickets);target.append(article);
  }
  if(!(d.proposals||[]).length)target.textContent='対象の発走前レースがありません。';
