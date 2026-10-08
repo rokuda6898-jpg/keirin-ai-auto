@@ -139,6 +139,31 @@ def filter_trifecta_candidates_by_confidence(candidates, race_df):
     return out
 
 
+def race_prediction_marks(group):
+    """One mark per rider, with blank marks for riders outside the top five.
+
+    The score blends first-place strength and second/third-place coverage;
+    it does not imply calibrated probabilities or purchase authorization.
+    """
+    scored = group.copy()
+    for field in ("p_win", "p_second", "p_third"):
+        scored[field] = pd.to_numeric(scored.get(field, 0), errors="coerce").fillna(0).clip(lower=0)
+        maximum = scored[field].max()
+        scored[field + "_relative"] = scored[field] / maximum if maximum > 0 else 0.0
+    scored["_mark_score"] = (
+        0.60 * scored["p_win_relative"]
+        + 0.25 * scored["p_second_relative"]
+        + 0.15 * scored["p_third_relative"]
+    )
+    scored = scored.sort_values(
+        ["_mark_score", "p_win", "p_second", "p_third", "car_no"],
+        ascending=[False, False, False, False, True], kind="mergesort",
+    )
+    return {int(row.car_no): mark for row, mark in zip(
+        scored.itertuples(), ("◎", "○", "▲", "△", "☆")
+    )}
+
+
 def rider_display_name(row):
     value = getattr(row, "player_name", "")
     try:
@@ -1616,9 +1641,10 @@ def main():
             result_html = f'<div class="race-result decided" data-result-for="{race_id}">確定 {trifecta}{odds_text}</div>'
         else:
             result_html = f'<div class="race-result" data-result-for="{race_id}">結果取得待ち</div>'
+        prediction_marks = race_prediction_marks(group)
         leaders = group.sort_values("rank_in_race").head(3)
         picks = " / ".join(
-            f'<span class="car car-{int(row.car_no)}">{int(row.car_no)}</span> {float(row.p_win):.1%}'
+            f'<b>{prediction_marks.get(int(row.car_no), "印なし")}</b> <span class="car car-{int(row.car_no)}">{int(row.car_no)}</span> {float(row.p_win):.1%}'
             for row in leaders.itertuples()
         )
         race_bets = shadow_bets[shadow_bets["race_id"].astype(str).eq(str(race_id))] if len(shadow_bets) else shadow_bets
@@ -1666,7 +1692,7 @@ def main():
             display_plan["skip_reason"] = "暫定買い目を表示中（締切前オッズで自動更新）"
         bet_html = render_strategy_summary(display_plan, bool(profit_gate["target_passed"])) + bet_html
         riders_html = "".join(
-            f'<button class="rider" type="button" data-car="{int(row.car_no)}" data-player-id="{html_lib.escape(str(row.player_id), quote=True)}" data-name="{rider_display_name(row)}" data-score="{float(row.score) if pd.notna(row.score) else 0:.1f}" data-win="{float(row.p_win)*100:.1f}" onclick="compareRider(this)"><i class="car car-{int(row.car_no)}">{int(row.car_no)}</i><span>{rider_display_name(row)}</span></button>'
+            f'<button class="rider" type="button" data-car="{int(row.car_no)}" data-player-id="{html_lib.escape(str(row.player_id), quote=True)}" data-name="{rider_display_name(row)}" data-score="{float(row.score) if pd.notna(row.score) else 0:.1f}" data-win="{float(row.p_win)*100:.1f}" onclick="compareRider(this)"><b class="prediction-mark">{prediction_marks.get(int(row.car_no), "印なし")}</b><i class="car car-{int(row.car_no)}">{int(row.car_no)}</i><span>{rider_display_name(row)}</span></button>'
             for row in group.sort_values("car_no").itertuples()
         )
         race_cards.append(
