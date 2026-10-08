@@ -225,6 +225,39 @@ class DepartmentCoverageTest(unittest.TestCase):
         (self.output / "latest_results.json").write_text("[]", encoding="utf-8")
         self.assertEqual(build_high_payout_axis_report(self.output)["settled_races"], 1)
 
+    def test_longshot_settled_evidence_survives_corrupted_results_file(self):
+        views = specialist_rows(self.race, self.now)
+        build_all_department_coverage(
+            self.race, self.plans, views, self.now, self.output
+        )
+        folder = self.output / "company"
+        frozen = json.loads((folder / "high_payout_axis_shadow_ledger.jsonl").read_text().splitlines()[0])
+        winner = int(frozen["variants"]["current_hole"])
+        second, third = [car for car in range(1, 8) if car != winner][:2]
+        results_file = self.output / "latest_results.json"
+        results_file.write_text(json.dumps([{
+            "race_id": "017420261008",
+            "official_result_available": True,
+            "actual_trifecta": f"{winner}-{second}-{third}",
+        }]), encoding="utf-8")
+        first = build_high_payout_axis_report(self.output)
+        self.assertEqual(first["settled_races"], 1)
+        settled_path = folder / "high_payout_axis_shadow_settled.json"
+        original = settled_path.read_bytes()
+        # Result downloads can be temporarily truncated: do not destroy
+        # immutable official settlements just because a source read failed.
+        results_file.write_text("{broken-json", encoding="utf-8")
+        again = build_high_payout_axis_report(self.output)
+        self.assertEqual(again["settled_races"], 1)
+        self.assertEqual(settled_path.read_bytes(), original)
+
+        # If the saved settlement itself is corrupt, stop instead of
+        # replacing existing evidence with an empty sample.
+        settled_path.write_text("{broken-json", encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "refusing overwrite"):
+            build_high_payout_axis_report(self.output)
+        self.assertEqual(settled_path.read_text(encoding="utf-8"), "{broken-json")
+
     def test_longshot_axis_has_no_hindsight_backfill(self):
         past = entries(self.now, minutes_to_close=-1)
         report = build_all_department_coverage(past, self.plans, [], self.now, self.output)
