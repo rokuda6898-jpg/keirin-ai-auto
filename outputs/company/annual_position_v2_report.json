@@ -1,6 +1,6 @@
 {
   "version": "department_positions_v2",
-  "updated_at": "2026-10-08T20:49:56.391531+09:00",
+  "updated_at": "2026-10-08T21:03:54.333757+09:00",
   "rules": {
     "fixed_tickets_per_group": 6,
     "stake_per_ticket": 100,
@@ -48,7 +48,7 @@
   "cohorts": {
     "b402c0ed5550f321284ddd4a1fe7458a62781c32a43f294bba69231c32eed670": {
       "frozen_races": 7,
-      "settled_races": 0,
+      "settled_races": 2,
       "comparisons": {
         "data_department:本線:fixed_six:baseline:preserve": {
           "department": "data_department",
@@ -3856,7 +3856,182 @@
         }
       },
       "risk_hole_return_share": null,
-      "probability_calibration": {},
+      "probability_calibration": {
+        "data_department:baseline": {
+          "races": 2,
+          "mean_log_loss": 4.958470885671048,
+          "mean_brier": 1.014888335933442,
+          "bins": {
+            "0.1_to_1%": {
+              "tickets": 166,
+              "mean_prediction": 0.003464775194589722,
+              "observed_hit_rate": 0.012048192771084338
+            },
+            "1_to_5%": {
+              "tickets": 48,
+              "mean_prediction": 0.02148770622142176,
+              "observed_hit_rate": 0.0
+            },
+            "under_0.1%": {
+              "tickets": 51,
+              "mean_prediction": 0.0005225717751467623,
+              "observed_hit_rate": 0.0
+            },
+            "5%_plus": {
+              "tickets": 5,
+              "mean_prediction": 0.07335725170747523,
+              "observed_hit_rate": 0.0
+            }
+          },
+          "calibration_passed": false,
+          "note": "Descriptive prospective audit, not automatic certification"
+        },
+        "data_department:preserve": {
+          "races": 2,
+          "mean_log_loss": 5.0225850332996576,
+          "mean_brier": 1.0135410329657,
+          "bins": {
+            "0.1_to_1%": {
+              "tickets": 185,
+              "mean_prediction": 0.004464210735417587,
+              "observed_hit_rate": 0.010810810810810811
+            },
+            "1_to_5%": {
+              "tickets": 38,
+              "mean_prediction": 0.020614065380975384,
+              "observed_hit_rate": 0.0
+            },
+            "under_0.1%": {
+              "tickets": 42,
+              "mean_prediction": 0.0005714350222215479,
+              "observed_hit_rate": 0.0
+            },
+            "5%_plus": {
+              "tickets": 5,
+              "mean_prediction": 0.07335725170747523,
+              "observed_hit_rate": 0.0
+            }
+          },
+          "calibration_passed": false,
+          "note": "Descriptive prospective audit, not automatic certification"
+        },
+        "pace_department:baseline": {
+          "races": 2,
+          "mean_log_loss": 4.840833448028846,
+          "mean_brier": 1.0126829193023856,
+          "bins": {
+            "0.1_to_1%": {
+              "tickets": 173,
+              "mean_prediction": 0.0032326937010122747,
+              "observed_hit_rate": 0.005780346820809248
+            },
+            "1_to_5%": {
+              "tickets": 49,
+              "mean_prediction": 0.021395608306201547,
+              "observed_hit_rate": 0.02040816326530612
+            },
+            "under_0.1%": {
+              "tickets": 43,
+              "mean_prediction": 0.0005947191670610336,
+              "observed_hit_rate": 0.0
+            },
+            "5%_plus": {
+              "tickets": 5,
+              "mean_prediction": 0.07335725170747523,
+              "observed_hit_rate": 0.0
+            }
+          },
+          "calibration_passed": false,
+          "note": "Descriptive prospective audit, not automatic certification"
+        },
+        "pace_department:preserve": {
+          "races": 2,
+          "mean_log_loss": 5.006161183229166,
+          "mean_brier": 1.0133695165913963,
+          "bins": {
+            "0.1_to_1%": {
+              "tickets": 190,
+              "mean_prediction": 0.003878236187293545,
+              "observed_hit_rate": 0.010526315789473684
+            },
+            "under_0.1%": {
+              "tickets": 29,
+              "mean_prediction": 0.0007539910962275331,
+              "observed_hit_rate": 0.0
+            },
+            "1_to_5%": {
+              "tickets": 46,
+              "mean_prediction": 0.019010502697527198,
+              "observed_hit_rate": 0.0
+            },
+            "5%_plus": {
+              "tickets": 5,
+              "mean_prediction": 0.07335725170747523,
+              "observed_hit_rate": 0.0
+            }
+          },
+          "calibration_passed": false,
+          "note": "Descriptive prospective audit, not automatic certification"
+        },
+        "line_department:baseline": {
+          "races": 2,
+          "mean_log_loss": 5.031538967783324,
+          "mean_brier": 1.0162940157246316,
+          "bins": {
+            "0.1_to_1%": {
+              "tickets": 165,
+              "mean_prediction": 0.0034977524606092307,
+              "observed_hit_rate": 0.012121212121212121
+            },
+            "1_to_5%": {
+              "tickets": 46,
+              "mean_prediction": 0.02243404956953568,
+              "observed_hit_rate": 0.0
+            },
+            "under_0.1%": {
+              "tickets": 54,
+              "mean_prediction": 0.0004466352826566455,
+              "observed_hit_rate": 0.0
+            },
+            "5%_plus": {
+              "tickets": 5,
+              "mean_prediction": 0.07335725170747523,
+              "observed_hit_rate": 0.0
+            }
+          },
+          "calibration_passed": false,
+          "note": "Descriptive prospective audit, not automatic certification"
+        },
+        "line_department:preserve": {
+          "races": 2,
+          "mean_log_loss": 5.237205159887408,
+          "mean_brier": 1.0165916469908005,
+          "bins": {
+            "0.1_to_1%": {
+              "tickets": 179,
+              "mean_prediction": 0.004053284997122203,
+              "observed_hit_rate": 0.0111731843575419
+            },
+            "1_to_5%": {
+              "tickets": 45,
+              "mean_prediction": 0.019804560782219777,
+              "observed_hit_rate": 0.0
+            },
+            "under_0.1%": {
+              "tickets": 41,
+              "mean_prediction": 0.00040171931165509527,
+              "observed_hit_rate": 0.0
+            },
+            "5%_plus": {
+              "tickets": 5,
+              "mean_prediction": 0.07335725170747523,
+              "observed_hit_rate": 0.0
+            }
+          },
+          "calibration_passed": false,
+          "note": "Descriptive prospective audit, not automatic certification"
+        }
+      },
       "quote_coverage": {
         "partial": 5,
         "complete": 2
