@@ -1553,8 +1553,11 @@ def main():
         shadow_bets["odds_snapshot"] = odds_snapshot_label
     save_snapshots(strategy_plans, shadow_bets, datetime.now(ZoneInfo("Asia/Tokyo")), position_rows=pred, candidate_rows=candidates)
     from annual_knowledge import build_annual_profiles, forecast_departments
+    from department_coverage import build_all_department_coverage
     annual = build_annual_profiles(now_jst.date())
-    forecast_departments(pred, today_odds, annual, datetime.now(ZoneInfo("Asia/Tokyo")))
+    department_now = datetime.now(ZoneInfo("Asia/Tokyo"))
+    department_proposals = forecast_departments(pred, today_odds, annual, department_now)
+    build_all_department_coverage(pred, strategy_plans, department_proposals, department_now)
     shadow_path = OUTPUT_DIR / f"shadow_bets_{output_tag}.csv"
     latest_shadow_path = OUTPUT_DIR / "latest_shadow_bets.csv"
     prediction_ledger_path = OUTPUT_DIR / "prediction_ledger.csv"
@@ -1704,7 +1707,7 @@ main{{max-width:920px;margin:auto;padding:22px 15px 90px}}nav{{display:grid;grid
 footer{{text-align:center;padding:24px;color:#7b899b;font-size:11px}}@media(max-width:520px){{main{{padding:12px 12px 90px}}.race-head{{align-items:flex-start;flex-direction:column}}.brand{{font-size:22px;min-width:220px}}.hero{{align-items:flex-start;flex-direction:column}}.trust{{width:100%}}}}
 </style></head><body><header><div class="brand">NEXUS</div><div class="tag">KEIRIN PREDICTION SYSTEM</div></header><main>
 <nav><a href="index.html">今日の予想</a><a href="history.html">買い目履歴</a><a href="performance.html">成績と数字の見方</a><a href="company/mark_performance.html">印別成績</a></nav>
-<section class="hero"><div><span class="eyebrow">TODAY’S KEIRIN</span><h1>今日のレース</h1><p>更新 {generated} JST ｜ 本線6〜12点・穴0〜12点を期待値で選定</p><p>選手横の％はAI推定の1着確率です。過去の的中率ではありません。</p><p><a style="color:#b9ddff" href="company/ticket_return_department.html">買い目・回収率検証部の報告</a> ／ <a style="color:#b9ddff" href="company/annual_department_report.html">選手別1〜3年の部署予想</a></p></div><div class="trust"><b>予想は事前保存</b><small>的中・不的中を結果確定後に記録</small></div></section>
+<section class="hero"><div><span class="eyebrow">TODAY’S KEIRIN</span><h1>今日のレース</h1><p>更新 {generated} JST ｜ 本線6〜12点・穴0〜12点を期待値で選定</p><p>選手横の％はAI推定の1着確率です。過去の的中率ではありません。</p><p><a style="color:#b9ddff" href="company/all_department_predictions.html">全レース7部署予想</a> ／ <a style="color:#b9ddff" href="company/ticket_return_department.html">買い目・回収率検証部の報告</a> ／ <a style="color:#b9ddff" href="company/annual_department_report.html">選手別1〜3年の部署予想</a></p></div><div class="trust"><b>予想は事前保存</b><small>的中・不的中を結果確定後に記録</small></div></section>
 <section class="venue-jump"><b>開催場を選択</b><div id="venueJump"></div></section>
 {"".join(race_cards) if race_cards else '<div class="race">本日の予想データを取得中です。</div>'}
 </main><script>
