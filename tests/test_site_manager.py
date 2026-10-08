@@ -28,6 +28,26 @@ class FrozenDateTime(datetime):
 
 
 class SiteManagerTests(unittest.TestCase):
+    def test_release_gate_disagreement_blocks_healthy_manager_status(self):
+        with mock.patch("release_guard.validate_release", return_value=[
+            "code changed since generation: src/predict.py",
+            "department matrix missing/corrupt"
+        ]):
+            issues = site_manager.audit_release_artifacts()
+        self.assertEqual(len(issues), 1)
+        self.assertEqual(issues[0]["type"], "site_release_stale")
+        self.assertEqual(issues[0]["count"], 2)
+
+    def test_release_mismatch_triggers_prediction_and_site_regeneration(self):
+        with mock.patch.object(site_manager, "run", return_value=0) as process, \
+             mock.patch.object(site_manager, "escalation_level", return_value=(0, {})):
+            ok, action = site_manager.repair([{
+                "type": "site_release_stale", "details": ["source code changed"]
+            }])
+        self.assertTrue(ok)
+        self.assertEqual(action, "prediction_regeneration")
+        process.assert_called_once_with([site_manager.sys.executable, "src/predict.py"])
+
     def test_result_timing_distinguishes_normal_waiting_and_overdue(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
@@ -216,6 +236,8 @@ class SiteManagerTests(unittest.TestCase):
                 site_manager, "audit_live_bets", return_value=[]
             ), mock.patch.object(
                 site_manager, "audit_site_output", return_value=[]
+            ), mock.patch.object(
+                site_manager, "audit_release_artifacts", return_value=[]
             ), mock.patch.object(
                 site_manager, "audit_results", return_value=waiting
             ), mock.patch.object(

@@ -3,9 +3,9 @@ name: keirin-manager-watchdog
 on:
   workflow_dispatch:
   schedule:
-    # Independent supervisor. Offset from the manager so it can detect a missed
-    # or failed manager cycle instead of sharing the same execution path.
-    - cron: "5,25,45 22-23,0-13 * * *"
+    # Sole automatic scheduler for the manager, once per five minutes.
+    # It checks in-progress and pending runs before dispatching a replacement.
+    - cron: "*/5 22-23,0-13 * * *"
 
 permissions:
   actions: write
@@ -69,7 +69,16 @@ jobs:
             }
 
             if (latest.conclusion !== "success") {
-              await dispatch("Latest completed manager "+latest.id+" ended "+latest.conclusion);
+              const minutesSinceLastAttempt = (now - new Date(latest.created_at).getTime()) / 60000;
+              // Back off persistent failures; a broken source should not
+              // create an endless five-minute dispatch and cancellation storm.
+              if (minutesSinceLastAttempt < 15) {
+                core.info("Latest manager ended "+latest.conclusion+
+                          "; failure cooldown "+minutesSinceLastAttempt.toFixed(1)+"m / 15m.");
+                return;
+              }
+              await dispatch("Latest completed manager "+latest.id+" ended "+latest.conclusion+
+                             "; retry after failure cooldown");
               return;
             }
 
