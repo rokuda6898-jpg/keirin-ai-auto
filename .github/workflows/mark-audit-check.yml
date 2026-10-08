@@ -1,4 +1,4 @@
-name: Prediction mark audit tests
+name: Prediction and department coverage tests
 
 on:
   push:
@@ -8,6 +8,10 @@ on:
       - "src/predict.py"
       - "src/settle_results.py"
       - "src/public_performance.py"
+      - "src/annual_knowledge.py"
+      - "src/department_coverage.py"
+      - "src/site_manager.py"
+      - "tests/test_department_coverage.py"
       - "tests/test_mark_performance.py"
   workflow_dispatch:
 
@@ -26,6 +30,8 @@ jobs:
       - name: Install lightweight audit dependencies
         run: python -m pip install numpy pandas
       - name: Compile integration modules
-        run: python -m py_compile src/mark_performance.py src/predict.py src/settle_results.py src/public_performance.py
+        run: python -m py_compile src/mark_performance.py src/department_coverage.py src/annual_knowledge.py src/site_manager.py src/predict.py src/settle_results.py src/public_performance.py
       - name: Test prospective-only mark accuracy
         run: python -m unittest discover -s tests -p 'test_mark_performance.py' -v
+      - name: Test every-race and seven-department forecast coverage
+        run: python -m unittest discover -s tests -p 'test_department_coverage.py' -v

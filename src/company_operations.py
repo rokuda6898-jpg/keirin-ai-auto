@@ -57,7 +57,7 @@ def build_company_operations(output_dir=OUTPUT_DIR):
     (folder/'operations.json').write_text(json.dumps(report,ensure_ascii=False,indent=2,allow_nan=False),encoding='utf-8')
     esc=lambda value:html.escape(str(value))
     body='<h1>会社の運用・改善状況</h1><p>サイト稼働状況：'+esc(report['site_status'])+'</p><p>稼働が正常でも、予想精度・回収率の改善は別に検証します。</p>'
-    links=[('annual_department_report.html','4部署の予想と選手別1〜3年の成績'),('annual_strategist_report.html','軍師の分析と比較'),
+    links=[('all_department_predictions.html','全レース7部署の着順予想・未提出監査'),('all_department_results.html','7部署の事前予想と公式着順の比較成績'),('annual_department_report.html','4専門部署の予想と選手別1〜3年の成績'),('annual_strategist_report.html','軍師の分析と比較'),
            ('high_payout_department.html','高配当戦略部の穴判定・独立成績'),
            ('selection_research.html','買い目・確率補正の比較検証'),('validation_coverage.html','検証の抜けと条件別成績'),
            ('ticket_return_department.html','本線・穴の的中率と回収率')]

@@ -226,105 +226,209 @@ def build_annual_profiles(asof=None, history_path=HISTORY_CSV, output_dir=OUTPUT
 
 
 def forecast_departments(pred, odds, report, now, output_dir=OUTPUT_DIR):
-    """Each specialist creates its own 1/2/3-place proposal from the shared year."""
+    """Publish one explicit response per race and specialist, even without annual data.
+
+    The decision to forecast is distinct from the decision to issue a wager.
+    Closed races can only display an existing pre-close snapshot; there is no
+    retrospective prediction derived from the final result.
+    """
     cutoff = pd.to_datetime(report.get("window_end_exclusive"), errors="coerce")
     asof = pd.to_datetime(report.get("asof_date"), errors="coerce")
-    if pd.isna(cutoff) or pd.isna(asof) or cutoff != asof or cutoff.date() > now.astimezone(ZoneInfo("Asia/Tokyo")).date():
+    today = now.astimezone(ZoneInfo("Asia/Tokyo")).date()
+    if pd.isna(cutoff) or pd.isna(asof) or cutoff != asof or cutoff.date() > today:
         raise ValueError("Annual reference cutoff is missing, inconsistent or later than prediction date")
+
+    departments = ("data_department", "pace_department", "line_department", "risk_department")
+    feature_map = {
+        "data_department": ["annual_place_rates", "model_fallback_if_missing"],
+        "pace_department": ["annual_place_rates", "recent90", "observed_behavior_result_associations"],
+        "line_department": ["annual_place_rates", "line_position_rates"],
+        "risk_department": ["annual_place_rates", "sample_reliability", "unplaced_rate"],
+    }
+    folder = output_dir / "company"
+    folder.mkdir(parents=True, exist_ok=True)
+    ledger = folder / "annual_department_prediction_ledger.jsonl"
+    saved = {}
+    if ledger.exists():
+        with ledger.open(encoding="utf-8") as handle:
+            for line in handle:
+                try:
+                    old = json.loads(line)
+                    key = (str(old["race_id"]), old["department"])
+                    if (old.get("forecast_available", True) and old.get("winner_car") is not None
+                            and datetime.fromisoformat(old["snapshot_at"]).timestamp() < float(old["close_at"])
+                            and (key not in saved or old["snapshot_at"] > saved[key]["snapshot_at"])):
+                        saved[key] = old
+                except (KeyError, ValueError, TypeError, json.JSONDecodeError):
+                    continue
+
     proposals = []
+    fresh = []
     for race_id, race in pred.groupby("race_id", sort=False):
+        race_id = str(race_id)
         close = pd.to_numeric(race.iloc[0].get("close_at"), errors="coerce")
-        if pd.isna(close) or close <= now.timestamp() + 300:
-            continue
         race_date = pd.to_datetime(race.iloc[0].get("date"), errors="coerce")
-        if pd.isna(race_date) or cutoff.date() > race_date.date():
+        valid_close = bool(pd.notna(close) and np.isfinite(close))
+        valid_date = bool(pd.notna(race_date) and race_date.date() >= cutoff.date())
+        valid_riders = (len(race) >= 3 and race["car_no"].nunique() == len(race)
+                        and pd.to_numeric(race["car_no"], errors="coerce").between(1, 9).all())
+        can_forecast = valid_close and close > now.timestamp() and valid_date and valid_riders
+        if not can_forecast:
+            if not valid_riders:
+                status = "invalid_rider_entries"
+            elif not valid_close:
+                status = "closing_time_unverified"
+            elif not valid_date:
+                status = "historical_race_no_new_forecast"
+            else:
+                status = "closed_without_preclose_forecast"
+            for department in departments:
+                prior = saved.get((race_id, department))
+                if prior:
+                    proposals.append({**prior, "display_status": "preclose_forecast_preserved"})
+                else:
+                    proposals.append({
+                        "department": department, "race_id": race_id,
+                        "venue": str(race.iloc[0].get("venue", "")),
+                        "race_no": int(race.iloc[0].get("race_no", 0)),
+                        "close_at": float(close) if valid_close else None,
+                        "snapshot_at": now.isoformat(timespec="seconds"),
+                        "winner_car": None, "top3_cars": [],
+                        "forecast_available": False, "display_status": status,
+                        "tickets": [], "main_count": 0, "hole_count": 0,
+                        "ticket_decision": "not_evaluated",
+                        "purchase_authorized": False,
+                    })
             continue
-        profiles = [report["profiles"].get(str(pid)) for pid in race.player_id]
-        if not any(profiles):
-            continue
-        market = odds[odds.race_id.astype(str).eq(str(race_id))] if not odds.empty else odds
+
+        profiles = [report.get("profiles", {}).get(str(pid)) for pid in race.player_id]
+        missing_reference = sum(not bool(p) for p in profiles)
+        market = odds[odds.race_id.astype(str).eq(race_id)] if not odds.empty and "race_id" in odds else pd.DataFrame()
         from quote_quality import validate_quotes
         if not market.empty:
-            market=validate_quotes(market,now.timestamp(),float(close))
-        for department in ["data_department", "pace_department", "line_department", "risk_department"]:
+            market = validate_quotes(market, now.timestamp(), float(close))
+        fallback = np.stack([
+            np.maximum(pd.to_numeric(race.get(col, pd.Series(0, index=race.index)), errors="coerce").fillna(0).to_numpy(dtype=float), 0)
+            for col in ("p_win", "p_second", "p_third")
+        ], axis=1)
+        for column in range(3):
+            if fallback[:, column].sum() <= 0:
+                fallback[:, column] = 1.0 / len(race)
+            else:
+                fallback[:, column] /= fallback[:, column].sum()
+
+        for department in departments:
             values = []
-            for (_, rider), profile in zip(race.iterrows(), profiles):
-                baseline = np.repeat(1 / len(race), 3)
+            for row_index, ((_, rider), profile) in enumerate(zip(race.iterrows(), profiles)):
+                baseline = fallback[row_index].copy()
                 if not profile:
                     values.append(baseline)
                     continue
                 evaluation = profile.get("evaluation", profile)
-                n = evaluation.get("effective_races", evaluation["races"])
-                rates = (np.array(evaluation["rates"]) * n + baseline * 20) / (n + 20)
+                count = float(evaluation.get("effective_races", evaluation.get("races", 0)))
+                rates = (np.array(evaluation["rates"], dtype=float) * count + baseline * 20) / (count + 20)
                 context = None
                 if department == "pace_department":
-                    context = profile["recent90"]
+                    context = profile.get("recent90")
                 if department == "line_department":
                     position = pd.to_numeric(rider.get("line_position"), errors="coerce")
-                    context = profile["line_positions"].get(str(int(position))) if pd.notna(position) else None
-                if context and context["races"]:
-                    mass = context.get("effective_races", context["races"])
+                    context = profile.get("line_positions", {}).get(str(int(position))) if pd.notna(position) else None
+                if context and context.get("races", 0):
+                    mass = float(context.get("effective_races", context["races"]))
                     weight = mass / (mass + 20)
                     rates = rates * (1 - weight) + np.array(context["rates"]) * weight
                 if department == "pace_department":
-                    # Historical behavior associations are provisional shadow features.
-                    # Require observed samples; absent flags never mean false.
-                    associations = []
-                    weights = []
+                    associations, weights = [], []
                     for event in profile.get("events", {}).values():
                         result = event.get("true_results", {})
-                        count = result.get("effective_races", result.get("races", 0))
-                        if event.get("observed", 0) >= 10 and count >= 5:
-                            associations.append((np.array(result["rates"]) * count + rates * 20) / (count + 20))
-                            weights.append(event.get("effective_true", event["true"]) / event.get("effective_observed", event["observed"]))
+                        observed = float(event.get("observed", 0))
+                        n = float(result.get("effective_races", result.get("races", 0)))
+                        if observed >= 10 and n >= 5:
+                            associations.append((np.array(result["rates"]) * n + rates * 20) / (n + 20))
+                            weights.append(float(event.get("effective_true", event.get("true", 0))) /
+                                           max(1.0, float(event.get("effective_observed", observed))))
                     if weights and sum(weights) > 0:
-                        behavior = np.average(associations, axis=0, weights=weights)
-                        strength = min(.25, sum(weights) / len(weights) * n / (n + 40))
-                        rates = rates * (1 - strength) + behavior * strength
+                        strength = min(.25, sum(weights) / len(weights) * count / (count + 40))
+                        rates = rates * (1 - strength) + np.average(associations, axis=0, weights=weights) * strength
                 if department == "risk_department":
-                    reliability = n / (n + 40) * (1 - evaluation.get("effective_unplaced", evaluation["unplaced_rows"]) / evaluation.get("effective_entries", evaluation["entries"]))
+                    entries = max(float(evaluation.get("effective_entries", evaluation.get("entries", 0))), 1)
+                    unplaced = float(evaluation.get("effective_unplaced", evaluation.get("unplaced_rows", 0)))
+                    reliability = count / (count + 40) * max(0, 1 - unplaced / entries)
                     rates = rates * reliability + baseline * (1 - reliability)
-                values.append(rates)
-            matrix = np.array(values)
-            matrix /= matrix.sum(axis=0)
+                values.append(np.maximum(np.nan_to_num(rates, nan=0, posinf=0, neginf=0), 0))
+            matrix = np.array(values, dtype=float)
+            for column in range(3):
+                total = matrix[:, column].sum()
+                matrix[:, column] = matrix[:, column] / total if total > 0 else fallback[:, column]
             temp = race.copy()
             temp["p_win"] = matrix[:, 0]
-            riders = score_riders(temp, market)
-            for index, name in enumerate(["first", "second", "third"]):
-                riders[f"score_{name}"] = matrix[:, index] * 100
-                riders[f"rank_{name}"] = riders[f"score_{name}"].rank(ascending=False, method="first").astype(int)
-            riders["position_score_source"] = "annual_empirical_shadow"
-            candidates, plan = select_race(riders, market)
-            selected = candidates[candidates.is_selected]
-            proposals.append({"department": department, "race_id": str(race_id),
+            for j, name in enumerate(("first", "second", "third")):
+                temp[f"score_{name}"] = matrix[:, j] * 100
+                temp[f"rank_{name}"] = temp[f"score_{name}"].rank(ascending=False, method="first").astype(int)
+            temp["position_score_source"] = ("annual_empirical_shadow" if missing_reference == 0
+                                              else "annual_shadow_with_model_fallback")
+            # Optimise a three-position scenario with distinct cars. This is
+            # advisory, not a calibrated trifecta probability.
+            from itertools import permutations
+            best = max(
+                permutations(range(len(race)), 3),
+                key=lambda indices: (
+                    sum(np.log(max(matrix[index, pos], 1e-12)) for pos, index in enumerate(indices)),
+                    tuple(-int(race.iloc[index]["car_no"]) for index in indices),
+                ),
+            )
+            top3 = [int(race.iloc[index]["car_no"]) for index in best]
+            try:
+                riders = score_riders(temp, market)
+                candidates, plan = select_race(riders, market)
+                selected = candidates[candidates.is_selected]
+                tickets = [
+                    {"buy": str(t.buy), "group": str(t.ticket_group),
+                     "prob": float(t.prob), "ev": float(t.ev)}
+                    for t in selected.itertuples()
+                ]
+                main_count, hole_count = int(plan["main_count"]), int(plan["hole_count"])
+                ticket_decision = "eligible" if tickets else "skipped_by_ev_or_odds"
+            except (ValueError, KeyError, TypeError, IndexError) as exc:
+                tickets, main_count, hole_count = [], 0, 0
+                ticket_decision = f"ticket_calculation_unavailable:{type(exc).__name__}"
+            proposal = {
+                "department": department, "race_id": race_id,
                 "venue": str(race.iloc[0].get("venue", "")), "race_no": int(race.iloc[0].get("race_no", 0)),
                 "close_at": float(close), "snapshot_at": now.isoformat(timespec="seconds"),
-                "winner_car": int(riders.loc[riders.rank_first.eq(1), "car_no"].iloc[0]),
-                "rider_year_races": {str(int(car)): p["races"] if p else 0 for car, p in zip(race.car_no, profiles)},
-                "rider_reference": {str(int(car)): {"years": p.get("reference_years", 1),
-                    "races": p.get("evaluation", p)["races"],
-                    "effective_races": p.get("evaluation", p).get("effective_races", p["races"])}
-                    if p else {"years": 3, "races": 0, "effective_races": 0}
+                "winner_car": top3[0], "top3_cars": top3,
+                "forecast_available": True,
+                "display_status": ("model_fallback_reference_missing" if missing_reference
+                                   else "independent_annual_reference"),
+                "missing_reference_riders": missing_reference,
+                "rider_year_races": {str(int(car)): (p.get("races", 0) if p else 0)
+                                     for car, p in zip(race.car_no, profiles)},
+                "rider_reference": {str(int(car)): {
+                    "years": p.get("reference_years", 1) if p else 0,
+                    "races": p.get("evaluation", p).get("races", 0) if p else 0,
+                    "effective_races": p.get("evaluation", p).get("effective_races", p.get("races", 0)) if p else 0}
                     for car, p in zip(race.car_no, profiles)},
-                "tickets": [{"buy": str(t.buy), "group": str(t.ticket_group), "prob": float(t.prob), "ev": float(t.ev)}
-                            for t in selected.itertuples()],
-                "main_count": plan["main_count"], "hole_count": plan["hole_count"],
+                "tickets": tickets, "main_count": main_count, "hole_count": hole_count,
+                "ticket_decision": ticket_decision,
                 "probability_status": "provisional_annual_shadow",
                 "reference_cutoff_exclusive": report["window_end_exclusive"],
-                "features_used": {"data_department": ["annual_place_rates"],
-                                  "pace_department": ["annual_place_rates", "recent90", "observed_behavior_result_associations"],
-                                  "line_department": ["annual_place_rates", "line_position_rates"],
-                                  "risk_department": ["annual_place_rates", "sample_reliability", "unplaced_rate"]}[department],
-                "purchase_authorized": False})
-    folder = output_dir / "company"
-    folder.mkdir(parents=True, exist_ok=True)
+                "features_used": feature_map[department],
+                "purchase_authorized": False,
+            }
+            proposals.append(proposal)
+            fresh.append(proposal)
     (folder / "annual_department_predictions.json").write_text(
-        json.dumps({"updated_at_jst": now.isoformat(timespec="seconds"),
-                    "annual_races": report["annual_races"], "proposals": proposals}, ensure_ascii=False,
-                   indent=2, allow_nan=False), encoding="utf-8")
-    if proposals:
-        with (folder / "annual_department_prediction_ledger.jsonl").open("a", encoding="utf-8") as handle:
-            for proposal in proposals:
+        json.dumps({
+            "updated_at_jst": now.isoformat(timespec="seconds"),
+            "annual_races": report["annual_races"],
+            "coverage_policy": "every known race x four departments; no post-close backfill",
+            "required_departments": list(departments), "race_count": int(pred["race_id"].nunique()),
+            "forecast_count": sum(bool(p["forecast_available"]) for p in proposals),
+            "proposals": proposals,
+        }, ensure_ascii=False, indent=2, allow_nan=False), encoding="utf-8")
+    if fresh:
+        with ledger.open("a", encoding="utf-8") as handle:
+            for proposal in fresh:
                 handle.write(json.dumps(proposal, ensure_ascii=False, allow_nan=False) + "\n")
     from strategist_validation import build_strategist_validation
     build_strategist_validation(output_dir, now)
@@ -429,15 +533,15 @@ function renderPlayers() {
 document.getElementById('player-search').addEventListener('input',renderPlayers);
 fetch('annual_rider_knowledge.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('load');return r.json()}).then(d=>{riderKnowledge=d.profiles||{};renderPlayers()}).catch(()=>{document.getElementById('player-list').textContent='成績を読み込めませんでした。ページを更新してください。'});
 </script>"""
-    forecast_view = """<h2>部署ごとの最新予想（検証用）</h2><p>取得時点の予想です。締切後も記録を残します。買い目が空の場合は見送りです。</p><div id="department-forecasts">読み込み中</div><script>
+    forecast_view = """<h2>部署ごとの最新予想（検証用）</h2><p><a href="all_department_predictions.html">全レース7部署の予想・提出状況を見る</a></p><p>取得時点の予想です。締切後に後付けせず、事前予想がないレースは未成立と表示します。購入候補がなくても着順予想は別途提出します。</p><div id="department-forecasts">読み込み中</div><script>
 fetch('annual_department_predictions.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('load');return r.json()}).then(d=>{
  const target=document.getElementById('department-forecasts');target.replaceChildren();
  const labels={data_department:'データ部署',pace_department:'展開部署',line_department:'ライン部署',risk_department:'リスク部署'};
  for(const p of d.proposals||[]){
   const article=document.createElement('article');article.style.borderBottom='1px solid #ddd';
   const title=document.createElement('h3');title.textContent=p.venue+' '+p.race_no+'R ／ '+labels[p.department];
-  const content=document.createElement('p');content.textContent='1着候補 '+p.winner_car+'番 ／ 本線 '+p.main_count+'点・穴 '+p.hole_count+'点';
-  const tickets=document.createElement('p');tickets.textContent=(p.tickets||[]).map(t=>((t.group==='main'||t.group==='本線')?'本線':'穴')+' '+t.buy+'（期待値 '+t.ev.toFixed(2)+'）').join(' ／ ')||'期待値条件を満たす買い目なし・見送り';
+  const content=document.createElement('p');content.textContent=p.forecast_available===false?'事前予想未成立：'+(p.display_status||'時刻・出走情報未確認'):'着順予想 '+((p.top3_cars||[p.winner_car]).join('-'))+' ／ 本線候補 '+p.main_count+'点・穴候補 '+p.hole_count+'点'+(p.missing_reference_riders?'（一部選手はモデル補完）':'');
+  const tickets=document.createElement('p');tickets.textContent=(p.tickets||[]).map(t=>((t.group==='main'||t.group==='本線')?'本線':'穴')+' '+t.buy+'（期待値 '+t.ev.toFixed(2)+'）').join(' ／ ')||'着順予想は提出済み・購入候補はなし（買い目見送り）';
   article.append(title,content,tickets);target.append(article);
  }
  if(!(d.proposals||[]).length)target.textContent='対象の発走前レースがありません。';
