@@ -455,12 +455,21 @@ def build_high_payout_axis_report(output_dir=OUTPUT_DIR):
     frozen = _frozen_axis_experiments(folder)
     settled_path = folder / "high_payout_axis_shadow_settled.json"
     results_path = output_dir / "latest_results.json"
+    # These files have different durability requirements. A transient failure
+    # while reading today's results must never erase previously settled races.
     try:
         previous = json.loads(settled_path.read_text(encoding="utf-8")) if settled_path.exists() else []
+    except (OSError, ValueError, TypeError) as exc:
+        raise ValueError("Previously settled axis evidence unreadable; refusing overwrite") from exc
+    if not isinstance(previous, list):
+        raise ValueError("Previously settled axis evidence is not a list; refusing overwrite")
+    try:
         results = json.loads(results_path.read_text(encoding="utf-8")) if results_path.exists() else []
     except (OSError, ValueError, TypeError):
-        previous, results = [], []
-    settled = {str(r["race_id"]): r for r in previous if r.get("version") == AXIS_VERSION}
+        results = []
+    settled = {str(r["race_id"]): r for r in previous
+               if isinstance(r, dict) and r.get("version") == AXIS_VERSION
+               and r.get("race_id") is not None}
     if not isinstance(results, list):
         results = []
     for result in results:
