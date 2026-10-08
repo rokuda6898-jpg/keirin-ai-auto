@@ -214,6 +214,7 @@ def build_entry_rows(race_data, race_date, venue, race_no, race_id, source_url, 
     cancelled_cars = sorted(
         int(entry.get("number")) for entry in raw_entries
         if entry.get("absent") and entry.get("number") is not None
+        and 1 <= int(entry.get("number")) <= int(race.get("entriesNumber") or 9)
     )
     field_size = len(entries)
     lines, number_of_lines, line_type = line_features(race_data.get("linePrediction"))
