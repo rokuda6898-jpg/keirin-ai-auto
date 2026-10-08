@@ -99,7 +99,14 @@ jobs:
                               "company/annual_equation_ledger.jsonl",
                               "company/annual_equation_models.jsonl",
                               "company/annual_equation_attempts.jsonl",
-                              "company/annual_equation_observed_paths.jsonl"]
+                              "company/annual_equation_observed_paths.jsonl",
+                              "company/annual_fusion_report.json",
+                              "company/annual_fusion_report.html",
+                              "company/annual_fusion_inputs.jsonl",
+                              "company/annual_fusion_models.jsonl",
+                              "company/annual_fusion_ledger.jsonl",
+                              "company/annual_fusion_attempts.jsonl",
+                              "company/annual_fusion_confirmations.jsonl"]
           comparison_hashes = {
               name: hashlib.sha256((Path("outputs") / name).read_bytes()).hexdigest()
               for name in comparison_files if (Path("outputs") / name).is_file()
