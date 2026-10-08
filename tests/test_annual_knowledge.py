@@ -120,7 +120,12 @@ class AnnualKnowledgeTests(unittest.TestCase):
         self.assertTrue(all(d["races"] == 1 for d in audit["departments"]))
         (self.root / "latest_results.json").write_text("[]")
         self.assertTrue(all(d["races"] == 1 for d in audit_department_predictions(self.root)["departments"]))
-        self.assertEqual(forecast_departments(race, odds, report, now + timedelta(hours=1), self.root), [])
+        # Closed races still receive an explicit per-department status, but
+        # never a new hindsight forecast. Previously frozen forecasts remain.
+        closed = forecast_departments(race, odds, report, now + timedelta(hours=1), self.root)
+        self.assertEqual(len(closed), 4)
+        self.assertTrue(all(item.get("display_status") == "preclose_forecast_preserved"
+                            for item in closed))
         report['asof_date']='2026-10-07'
         report['window_end_exclusive']='2026-10-07'
         with self.assertRaisesRegex(ValueError,'cutoff'):
