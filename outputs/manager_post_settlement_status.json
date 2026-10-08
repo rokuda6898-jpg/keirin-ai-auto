@@ -1,15 +1,34 @@
 {
-  "checked_at_jst": "2026-10-08T17:25:16+09:00",
-  "status": "healthy",
+  "checked_at_jst": "2026-10-08T17:48:59+09:00",
+  "status": "unhealthy",
   "repaired": false,
   "check_source": "post_settlement_read_only_audit",
   "attempts": [
     {
       "attempt": 0,
-      "problems": [],
+      "problems": [
+        {
+          "type": "site_release_stale",
+          "count": 3,
+          "details": [
+            "code changed since generation: src/annual_knowledge.py",
+            "code changed since generation: src/department_coverage.py",
+            "code changed since generation: src/betting_logic.py"
+          ]
+        },
+        {
+          "type": "results_waiting",
+          "race_ids": [
+            "054820261008"
+          ]
+        }
+      ],
       "health": {
-        "severity": "ok",
-        "problem_types": [],
+        "severity": "warning",
+        "problem_types": [
+          "results_waiting",
+          "site_release_stale"
+        ],
         "race_count": 72,
         "expected_riders": 497,
         "actual_riders": 497,
@@ -1095,8 +1114,11 @@
     }
   },
   "health": {
-    "severity": "ok",
-    "problem_types": [],
+    "severity": "warning",
+    "problem_types": [
+      "results_waiting",
+      "site_release_stale"
+    ],
     "race_count": 72,
     "expected_riders": 497,
     "actual_riders": 497,
