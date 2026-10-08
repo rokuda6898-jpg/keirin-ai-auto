@@ -294,6 +294,66 @@ def render_all_department_coverage(report, folder):
     (folder / "all_department_predictions.html").write_text(page, encoding="utf-8")
 
 
+
+def diagnose_position_misses(rows):
+    """Describe observable misses without assigning unverified causal explanations.
+
+    Only frozen, officially settled top-three forecasts are accepted. These
+    diagnostics are not ticket hit rates and do not authorize model promotion.
+    """
+    fields = (
+        "winner_not_in_top3", "winner_selected_for_second_or_third",
+        "first_and_second_right_third_wrong", "actual_second_not_in_top3",
+        "actual_third_not_in_top3", "all_three_right_wrong_order",
+        "second_third_swapped", "top3_set_right",
+    )
+    report = {}
+    for department in DEPARTMENTS:
+        selected = [r for r in rows if r.get("department") == department]
+        cases = []
+        counts = {key: 0 for key in fields}
+        for item in selected:
+            predicted = [str(c) for c in item.get("predicted", [])]
+            actual = [str(c) for c in item.get("actual", [])]
+            if (len(predicted) != 3 or len(actual) != 3
+                    or len(set(predicted)) != 3 or len(set(actual)) != 3):
+                continue
+            matches = [predicted[i] == actual[i] for i in range(3)]
+            flags = {
+                "winner_not_in_top3": actual[0] not in predicted,
+                "winner_selected_for_second_or_third": (
+                    not matches[0] and actual[0] in predicted[1:]),
+                "first_and_second_right_third_wrong": (
+                    matches[0] and matches[1] and not matches[2]),
+                "actual_second_not_in_top3": actual[1] not in predicted,
+                "actual_third_not_in_top3": actual[2] not in predicted,
+                "all_three_right_wrong_order": (
+                    set(actual) == set(predicted) and predicted != actual),
+                "second_third_swapped": (
+                    matches[0] and predicted[1] == actual[2]
+                    and predicted[2] == actual[1]),
+                "top3_set_right": set(actual) == set(predicted),
+            }
+            for key, passed in flags.items():
+                counts[key] += int(passed)
+            cases.append({
+                "race_id": str(item["race_id"]),
+                "venue": str(item.get("venue", "")),
+                "race_no": item.get("race_no", ""),
+                "predicted": predicted, "actual": actual,
+                "positions_correct": matches,
+                "patterns": [key for key in fields if flags[key]],
+            })
+        report[department] = {
+            "evaluated_races": len(cases),
+            "pattern_counts": counts,
+            "evidence_status": "exploratory_small_sample" if len(cases) < 100
+                               else "descriptive_only_not_causal",
+            "cases": cases,
+        }
+    return report
+
+
 def build_department_scoreboard(output_dir=OUTPUT_DIR):
     """Compare only pre-close frozen top-three forecasts with verified results.
 
@@ -365,6 +425,8 @@ def build_department_scoreboard(output_dir=OUTPUT_DIR):
         "note": "Independent advisory 1-2-3 scenario accuracy only. Not purchased tickets or real ROI.",
         "departments": by_department,
         "settled_predictions": len(rows),
+        "miss_diagnostics": diagnose_position_misses(rows),
+        "strategy_change_authorized": False,
     }
     (folder / "all_department_results.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     def percent(rate):
@@ -394,7 +456,27 @@ def build_department_scoreboard(output_dir=OUTPUT_DIR):
         '<th>1着的中</th><th>2着的中</th><th>3着的中</th><th>3連単の並び一致</th></tr>'
         + "".join(lines) + '</table></div>'
         '<p>各レースの予想提出状況は別画面で確認できます。'
-        'サンプル数が少ない成績で自動的に買い目を変更しません。</p></section></main></body></html>'
+        'サンプル数が少ない成績で自動的に買い目を変更しません。</p>'
+        '<h2>どの着順を外したか</h2>'
+        '<p>「1・2着的中→3着違い」は3着候補の検証対象。'
+        '「1着選手が候補3人にいない」は軸候補の不足。'
+        '原因の断定や実購入の回収率とは区別します。</p>'
+        '<div class="scroll"><table><tr><th>部署</th><th>検証数</th>'
+        '<th>1・2着正解→3着違い</th><th>勝者が3人の候補外</th>'
+        '<th>同じ3人・着順違い</th><th>候補3人に2着不在</th><th>候補3人に3着不在</th></tr>'
+        + "".join(
+            "<tr><td>" + html.escape(LABELS[d]) + "</td>"
+            + "<td>" + str(report["miss_diagnostics"][d]["evaluated_races"]) + "</td>"
+            + "".join("<td>" + str(report["miss_diagnostics"][d]["pattern_counts"][key]) + "</td>"
+                      for key in ("first_and_second_right_third_wrong",
+                                  "winner_not_in_top3", "all_three_right_wrong_order",
+                                  "actual_second_not_in_top3", "actual_third_not_in_top3"))
+            + "</tr>" for d in DEPARTMENTS
+        ) + '</table></div>'
+        '<p>検証100レース未満は参考記録。高配当部の着順仮説は'
+        '100倍以上の実オッズ付き買い目とは異なります。'
+        '<a href="all_department_results.json">レース別の詳細・検証用JSON</a></p>'
+        '</section></main></body></html>'
     )
     (folder / "all_department_results.html").write_text(page, encoding="utf-8")
     return report
