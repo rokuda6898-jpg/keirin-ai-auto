@@ -20,6 +20,11 @@ LEDGERS = ["outputs/company/ticket_return_snapshots.jsonl",
            "outputs/company/annual_equation_models.jsonl",
            "outputs/company/annual_equation_attempts.jsonl",
            "outputs/company/annual_equation_observed_paths.jsonl",
+           "outputs/company/annual_fusion_inputs.jsonl",
+           "outputs/company/annual_fusion_models.jsonl",
+           "outputs/company/annual_fusion_ledger.jsonl",
+           "outputs/company/annual_fusion_attempts.jsonl",
+           "outputs/company/annual_fusion_confirmations.jsonl",
            "outputs/company/annual_strategist_ledger.jsonl"]
 OBSERVATIONS = "outputs/company/rider_official_observations.csv"
 CACHES = ["data/raw/live_feature_base.csv", "data/raw/live_feature_base.meta.json",

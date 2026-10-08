@@ -30,6 +30,8 @@ SOURCES = (
     "src/department_experiment_v2.py",
     "src/equation_models.py",
     "src/equation_lab.py",
+    "src/fusion_equations.py",
+    "src/fusion_lab.py",
     "src/official_outcomes.py",
     "src/settle_results.py",
     "src/release_guard.py",

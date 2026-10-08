@@ -519,6 +519,8 @@ def audit_department_predictions(output_dir=OUTPUT_DIR):
     build_v2_report(output_dir)
     from equation_lab import build_report as build_equation_report
     build_equation_report(output_dir)
+    from fusion_lab import build_report as build_fusion_report
+    build_fusion_report(output_dir)
     from verified_live_audit import build_verified_live_audit
     verified_live = build_verified_live_audit(output_dir)
     folder = output_dir / "company"

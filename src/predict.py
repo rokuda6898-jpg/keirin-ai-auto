@@ -1564,7 +1564,12 @@ def main():
                    if path.exists()},
     }
     department_proposals = forecast_departments(pred, today_odds, annual, department_now)
-    build_all_department_coverage(pred, strategy_plans, department_proposals, department_now, odds=today_odds)
+    department_report = build_all_department_coverage(pred, strategy_plans, department_proposals, department_now, odds=today_odds)
+    from fusion_lab import capture_cycle as capture_fusion_cycle
+    try:
+        capture_fusion_cycle(pred, department_report, department_now, OUTPUT_DIR)
+    except (ValueError, KeyError, TypeError, IndexError) as exc:
+        print(f'Fusion research unavailable: {type(exc).__name__}: {exc}')
     build_department_scoreboard(OUTPUT_DIR)
     shadow_path = OUTPUT_DIR / f"shadow_bets_{output_tag}.csv"
     latest_shadow_path = OUTPUT_DIR / "latest_shadow_bets.csv"
