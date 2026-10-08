@@ -1,6 +1,6 @@
 {
   "version": "fusion_research_v1",
-  "updated_at": "2026-10-09T08:32:30.778092+09:00",
+  "updated_at": "2026-10-09T08:58:36.179068+09:00",
   "rules": {
     "version": "fusion_research_v1",
     "maximum_tickets": 12,
@@ -127,16 +127,16 @@
     "ceo_integration": false,
     "record_sha256": "1cb3386e9c0ee8d3a00183abcce8972da4865d7df19f3f8c3bf5196248ed3b8e"
   },
-  "input_snapshots": 6,
-  "forecast_snapshots": 6,
-  "latest_race_cohort_forecasts": 4,
-  "unique_races": 4,
+  "input_snapshots": 10,
+  "forecast_snapshots": 10,
+  "latest_race_cohort_forecasts": 6,
+  "unique_races": 6,
   "excluded_older_forecasts_after_missing_latest_capture": 0,
-  "canonical_source_snapshots": 55,
+  "canonical_source_snapshots": 59,
   "sources_without_fusion_input": 49,
   "collection_attempt_reasons": {
-    "no_fresh_current_cycle_source": 389,
-    "captured_components_waiting_for_training": 6
+    "no_fresh_current_cycle_source": 464,
+    "captured_components_waiting_for_training": 10
   },
   "missing_department_opinions": {},
   "snapshot_strata": [
@@ -144,128 +144,359 @@
       "field_size": 7,
       "race_class": "A級",
       "complete_market": false,
-      "snapshots": 1
+      "snapshots": 2
     },
     {
       "field_size": 7,
       "race_class": "A級",
       "complete_market": true,
-      "snapshots": 2
+      "snapshots": 4
     },
     {
       "field_size": 7,
       "race_class": "L級",
       "complete_market": false,
-      "snapshots": 3
+      "snapshots": 4
     }
   ],
   "quote_exclusions": {
-    "invalid_or_missing_quote": 256
+    "invalid_or_missing_quote": 468
   },
   "selection_reasons": {
     "本線": {
       "fusion": {
-        "model_unavailable": 4
+        "model_unavailable": 5,
+        "risk_abstained_or_invalid_count": 1
       },
       "market": {
         "model_unavailable": 2,
-        "matched": 2
+        "matched": 3,
+        "risk_abstained_or_invalid_count": 1
       },
       "original": {
-        "matched": 4
+        "matched": 5,
+        "risk_abstained_or_invalid_count": 1
       },
       "joint": {
-        "model_unavailable": 4
+        "model_unavailable": 5,
+        "risk_abstained_or_invalid_count": 1
       },
       "market_residual": {
-        "model_unavailable": 4
+        "model_unavailable": 5,
+        "risk_abstained_or_invalid_count": 1
       },
       "pairwise_order": {
-        "model_unavailable": 4
+        "model_unavailable": 5,
+        "risk_abstained_or_invalid_count": 1
       },
       "state_paths": {
-        "model_unavailable": 4
+        "model_unavailable": 5,
+        "risk_abstained_or_invalid_count": 1
       },
       "conditional_process": {
-        "model_unavailable": 4
+        "model_unavailable": 5,
+        "risk_abstained_or_invalid_count": 1
       },
       "without_departments": {
-        "model_unavailable": 4
+        "model_unavailable": 5,
+        "risk_abstained_or_invalid_count": 1
       },
       "without_market": {
-        "model_unavailable": 4
+        "model_unavailable": 5,
+        "risk_abstained_or_invalid_count": 1
       },
       "without_pairwise": {
-        "model_unavailable": 4
+        "model_unavailable": 5,
+        "risk_abstained_or_invalid_count": 1
       },
       "without_paths": {
-        "model_unavailable": 4
+        "model_unavailable": 5,
+        "risk_abstained_or_invalid_count": 1
       },
       "without_joint_context": {
-        "model_unavailable": 4
+        "model_unavailable": 5,
+        "risk_abstained_or_invalid_count": 1
       }
     },
     "穴": {
       "fusion": {
-        "risk_abstained_or_invalid_count": 2,
-        "model_unavailable": 2
+        "risk_abstained_or_invalid_count": 3,
+        "model_unavailable": 3
       },
       "market": {
-        "risk_abstained_or_invalid_count": 2,
-        "matched": 2
+        "risk_abstained_or_invalid_count": 3,
+        "matched": 3
       },
       "original": {
-        "risk_abstained_or_invalid_count": 2,
-        "matched": 2
+        "risk_abstained_or_invalid_count": 3,
+        "matched": 3
       },
       "joint": {
-        "risk_abstained_or_invalid_count": 2,
-        "model_unavailable": 2
+        "risk_abstained_or_invalid_count": 3,
+        "model_unavailable": 3
       },
       "market_residual": {
-        "risk_abstained_or_invalid_count": 2,
-        "model_unavailable": 2
+        "risk_abstained_or_invalid_count": 3,
+        "model_unavailable": 3
       },
       "pairwise_order": {
-        "risk_abstained_or_invalid_count": 2,
-        "model_unavailable": 2
+        "risk_abstained_or_invalid_count": 3,
+        "model_unavailable": 3
       },
       "state_paths": {
-        "risk_abstained_or_invalid_count": 2,
-        "model_unavailable": 2
+        "risk_abstained_or_invalid_count": 3,
+        "model_unavailable": 3
       },
       "conditional_process": {
-        "risk_abstained_or_invalid_count": 2,
-        "model_unavailable": 2
+        "risk_abstained_or_invalid_count": 3,
+        "model_unavailable": 3
       },
       "without_departments": {
-        "risk_abstained_or_invalid_count": 2,
-        "model_unavailable": 2
+        "risk_abstained_or_invalid_count": 3,
+        "model_unavailable": 3
       },
       "without_market": {
-        "risk_abstained_or_invalid_count": 2,
-        "model_unavailable": 2
+        "risk_abstained_or_invalid_count": 3,
+        "model_unavailable": 3
       },
       "without_pairwise": {
-        "risk_abstained_or_invalid_count": 2,
-        "model_unavailable": 2
+        "risk_abstained_or_invalid_count": 3,
+        "model_unavailable": 3
       },
       "without_paths": {
-        "risk_abstained_or_invalid_count": 2,
-        "model_unavailable": 2
+        "risk_abstained_or_invalid_count": 3,
+        "model_unavailable": 3
       },
       "without_joint_context": {
-        "risk_abstained_or_invalid_count": 2,
-        "model_unavailable": 2
+        "risk_abstained_or_invalid_count": 3,
+        "model_unavailable": 3
       }
     }
   },
   "risk_abstained_forecasts": {
-    "本線": 0,
-    "穴": 2
+    "本線": 1,
+    "穴": 3
   },
-  "comparisons": [],
-  "probability_comparisons": [],
+  "comparisons": [
+    {
+      "cohort": "e82f3cbf452b7ca4291a644ddb104dc83be6d2160a5e6f6504411ad9004b87c3",
+      "method": "market",
+      "group": "本線",
+      "status": "exploratory_not_adoption_evidence",
+      "race_ids": [
+        "017420261009"
+      ],
+      "challenger": {
+        "races": 1,
+        "hits": 1,
+        "hit_rate": 1.0,
+        "stake_yen": 800,
+        "return_yen": 2400.0,
+        "return_rate": 3.0,
+        "largest_hit_share": 1.0,
+        "return_rate_without_largest_hit": 0.0
+      },
+      "risk": {
+        "races": 1,
+        "hits": 0,
+        "hit_rate": 0.0,
+        "stake_yen": 800,
+        "return_yen": 0.0,
+        "return_rate": 0.0,
+        "largest_hit_share": null,
+        "return_rate_without_largest_hit": 0.0
+      },
+      "error_locations": {
+        "hit": 1
+      },
+      "forecast_coverage_mass_mean": 0.3658540321319448
+    },
+    {
+      "cohort": "e82f3cbf452b7ca4291a644ddb104dc83be6d2160a5e6f6504411ad9004b87c3",
+      "method": "market",
+      "group": "穴",
+      "status": "exploratory_not_adoption_evidence",
+      "race_ids": [
+        "017420261009"
+      ],
+      "challenger": {
+        "races": 1,
+        "hits": 0,
+        "hit_rate": 0.0,
+        "stake_yen": 500,
+        "return_yen": 0.0,
+        "return_rate": 0.0,
+        "largest_hit_share": null,
+        "return_rate_without_largest_hit": 0.0
+      },
+      "risk": {
+        "races": 1,
+        "hits": 0,
+        "hit_rate": 0.0,
+        "stake_yen": 500,
+        "return_yen": 0.0,
+        "return_rate": 0.0,
+        "largest_hit_share": null,
+        "return_rate_without_largest_hit": 0.0
+      },
+      "error_locations": {
+        "winner_missed": 1
+      },
+      "forecast_coverage_mass_mean": 0.03364606052748656
+    },
+    {
+      "cohort": "e82f3cbf452b7ca4291a644ddb104dc83be6d2160a5e6f6504411ad9004b87c3",
+      "method": "original",
+      "group": "本線",
+      "status": "exploratory_not_adoption_evidence",
+      "race_ids": [
+        "018420261009",
+        "017420261009"
+      ],
+      "challenger": {
+        "races": 2,
+        "hits": 0,
+        "hit_rate": 0.0,
+        "stake_yen": 1100,
+        "return_yen": 0.0,
+        "return_rate": 0.0,
+        "largest_hit_share": null,
+        "return_rate_without_largest_hit": 0.0
+      },
+      "risk": {
+        "races": 2,
+        "hits": 0,
+        "hit_rate": 0.0,
+        "stake_yen": 1100,
+        "return_yen": 0.0,
+        "return_rate": 0.0,
+        "largest_hit_share": null,
+        "return_rate_without_largest_hit": 0.0
+      },
+      "error_locations": {
+        "third_only_missed": 1,
+        "winner_missed": 1
+      },
+      "forecast_coverage_mass_mean": 0.313899564921046
+    },
+    {
+      "cohort": "e82f3cbf452b7ca4291a644ddb104dc83be6d2160a5e6f6504411ad9004b87c3",
+      "method": "original",
+      "group": "穴",
+      "status": "exploratory_not_adoption_evidence",
+      "race_ids": [
+        "017420261009"
+      ],
+      "challenger": {
+        "races": 1,
+        "hits": 0,
+        "hit_rate": 0.0,
+        "stake_yen": 500,
+        "return_yen": 0.0,
+        "return_rate": 0.0,
+        "largest_hit_share": null,
+        "return_rate_without_largest_hit": 0.0
+      },
+      "risk": {
+        "races": 1,
+        "hits": 0,
+        "hit_rate": 0.0,
+        "stake_yen": 500,
+        "return_yen": 0.0,
+        "return_rate": 0.0,
+        "largest_hit_share": null,
+        "return_rate_without_largest_hit": 0.0
+      },
+      "error_locations": {
+        "winner_missed": 1
+      },
+      "forecast_coverage_mass_mean": 0.09234872018203244
+    }
+  ],
+  "probability_comparisons": [
+    {
+      "cohort": "e82f3cbf452b7ca4291a644ddb104dc83be6d2160a5e6f6504411ad9004b87c3",
+      "method": "market",
+      "baseline": "original",
+      "scope": "all_forecasts_including_risk_abstentions_same_snapshot",
+      "race_ids": [
+        "017420261009"
+      ],
+      "challenger": {
+        "races": 1,
+        "nll": 3.416274682919288,
+        "first_nll": 0.8967023772968937,
+        "second_given_first_nll": 0.6850368221355544,
+        "third_given_pair_nll": 1.8345354834868395,
+        "brier": 0.9604913906370064,
+        "top_ticket_reliability": [
+          {
+            "upper": "0.1",
+            "races": 1,
+            "mean_prediction": 0.09722431195295116,
+            "observed_hit_rate": 0.0
+          }
+        ]
+      },
+      "reference": {
+        "races": 1,
+        "nll": 3.9968584116782178,
+        "first_nll": 1.419160969467989,
+        "second_given_first_nll": 1.3499268759111378,
+        "third_given_pair_nll": 1.2277705662990912,
+        "brier": 0.9879929525676066,
+        "top_ticket_reliability": [
+          {
+            "upper": "0.1",
+            "races": 1,
+            "mean_prediction": 0.07212027089997936,
+            "observed_hit_rate": 0.0
+          }
+        ]
+      }
+    },
+    {
+      "cohort": "e82f3cbf452b7ca4291a644ddb104dc83be6d2160a5e6f6504411ad9004b87c3",
+      "method": "original",
+      "baseline": "market",
+      "scope": "all_forecasts_including_risk_abstentions_same_snapshot",
+      "race_ids": [
+        "017420261009"
+      ],
+      "challenger": {
+        "races": 1,
+        "nll": 3.9968584116782178,
+        "first_nll": 1.419160969467989,
+        "second_given_first_nll": 1.3499268759111378,
+        "third_given_pair_nll": 1.2277705662990912,
+        "brier": 0.9879929525676066,
+        "top_ticket_reliability": [
+          {
+            "upper": "0.1",
+            "races": 1,
+            "mean_prediction": 0.07212027089997936,
+            "observed_hit_rate": 0.0
+          }
+        ]
+      },
+      "reference": {
+        "races": 1,
+        "nll": 3.416274682919288,
+        "first_nll": 0.8967023772968937,
+        "second_given_first_nll": 0.6850368221355544,
+        "third_given_pair_nll": 1.8345354834868395,
+        "brier": 0.9604913906370064,
+        "top_ticket_reliability": [
+          {
+            "upper": "0.1",
+            "races": 1,
+            "mean_prediction": 0.09722431195295116,
+            "observed_hit_rate": 0.0
+          }
+        ]
+      }
+    }
+  ],
   "confirmations": [],
   "confirmation_state": "not_registered_exploratory_only",
   "component_removal_is_not_causal_attribution": true,
