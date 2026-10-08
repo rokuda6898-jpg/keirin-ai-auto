@@ -141,7 +141,7 @@ class DepartmentCoverageTest(unittest.TestCase):
         }]).to_csv(source, index=False)
         site = self.output / "index.html"
         site.write_text(
-            '<!doctype html><!-- nexus-render-schema provisional-picks-v1 -->'
+            '<!doctype html><!-- nexus-render-schema nexus-departments-v2 -->'
             '<article id="race-012220261008"><button class="rider" '
             'data-player-id="15667" data-name="戸田瑞姫"></button></article>'
             + "<!--" + "padding" * 150 + "-->", encoding="utf-8",
@@ -159,7 +159,7 @@ class DepartmentCoverageTest(unittest.TestCase):
         ]).to_csv(source, index=False)
         site = self.output / "index.html"
         site.write_text(
-            '<!doctype html><!-- nexus-render-schema provisional-picks-v1 -->'
+            '<!doctype html><!-- nexus-render-schema nexus-departments-v2 -->'
             '<article id="race-012220261008">'
             '<button class="rider" data-player-id="15667" data-name="別人"></button>'
             '<button class="rider" data-player-id="15149" data-name="別人"></button>'
