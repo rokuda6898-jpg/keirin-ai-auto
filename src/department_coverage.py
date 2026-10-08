@@ -455,12 +455,21 @@ def build_high_payout_axis_report(output_dir=OUTPUT_DIR):
     frozen = _frozen_axis_experiments(folder)
     settled_path = folder / "high_payout_axis_shadow_settled.json"
     results_path = output_dir / "latest_results.json"
+    # These files have different durability requirements. A transient failure
+    # while reading today's results must never erase previously settled races.
     try:
         previous = json.loads(settled_path.read_text(encoding="utf-8")) if settled_path.exists() else []
+    except (OSError, ValueError, TypeError) as exc:
+        raise ValueError("Previously settled axis evidence unreadable; refusing overwrite") from exc
+    if not isinstance(previous, list):
+        raise ValueError("Previously settled axis evidence is not a list; refusing overwrite")
+    try:
         results = json.loads(results_path.read_text(encoding="utf-8")) if results_path.exists() else []
     except (OSError, ValueError, TypeError):
-        previous, results = [], []
-    settled = {str(r["race_id"]): r for r in previous if r.get("version") == AXIS_VERSION}
+        results = []
+    settled = {str(r["race_id"]): r for r in previous
+               if isinstance(r, dict) and r.get("version") == AXIS_VERSION
+               and r.get("race_id") is not None}
     if not isinstance(results, list):
         results = []
     for result in results:
@@ -493,12 +502,32 @@ def build_high_payout_axis_report(output_dir=OUTPUT_DIR):
     # The paired gain/loss is a descriptive count, not statistically validated.
     gain = sum(row["hits"]["six_department_consensus"] and not row["hits"]["current_hole"] for row in rows)
     loss = sum(row["hits"]["current_hole"] and not row["hits"]["six_department_consensus"] for row in rows)
+    # Four named variants are not necessarily four distinct predictions.
+    # Make correlated or duplicated axes visible before interpreting results.
+    distinct_axes_per_race = {str(n): 0 for n in range(1, len(AXIS_VARIANTS) + 1)}
+    unanimous_six = 0
+    consensus_risk_veto_same = 0
+    for row in rows:
+        variants = row["variants"]
+        distinct_axes_per_race[str(len(set(variants.values())))] += 1
+        votes = row.get("other_department_first_votes", {})
+        if (len(votes) == 1 and sum(int(count) for count in votes.values()) == 6):
+            unanimous_six += 1
+        if (variants["six_department_consensus"] == variants["risk_axis"]
+                == variants["consensus_veto"]):
+            consensus_risk_veto_same += 1
     report = {
         "updated_at_jst": datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(timespec="seconds"),
         "version": AXIS_VERSION, "frozen_races": len(frozen), "settled_races": len(rows),
         "variants": stats, "consensus_vs_current": {
             "different_axis_races": disagreements,
             "consensus_only_winner_hits": gain, "current_only_winner_hits": loss,
+        },
+        "axis_diversity": {
+            "distinct_axes_per_race": distinct_axes_per_race,
+            "six_department_unanimous_races": unanimous_six,
+            "consensus_risk_veto_identical_races": consensus_risk_veto_same,
+            "note": "Four labels can represent fewer distinct axes; shared model dependence is not independent confirmation.",
         },
         "minimum_paired_races_before_review": 300,
         "ready_for_review": len(rows) >= 300 and disagreements >= 100,
@@ -530,7 +559,13 @@ def build_high_payout_axis_report(output_dir=OUTPUT_DIR):
         + trs + '</table>'
         f'<p>現行穴軸と他6部署の軸が違ったレース：{disagreements}件'
         f'／他6部署だけ正解：{gain}件／現行穴軸だけ正解：{loss}件</p>'
-        '<p>結果が出る前に提出した4案のみ比較。購入候補ではなく、100倍以上の実オッズや期待値を満たす車券とも異なる。'
+        f'<p>実際の軸の種類数（1・2・3・4種類）：'
+        f'{distinct_axes_per_race["1"]}・{distinct_axes_per_race["2"]}・'
+        f'{distinct_axes_per_race["3"]}・{distinct_axes_per_race["4"]}レース。'
+        f'他6部署が全員一致：{unanimous_six}レース、'
+        f'多数支持・リスク部・条件変更が同じ軸：{consensus_risk_veto_same}レース。</p>'
+        '<p>同じモデルに依存する部署の全員一致は独立した証拠ではありません。'
+        '結果が出る前に提出した4案のみ比較。購入候補ではなく、100倍以上の実オッズや期待値を満たす車券とも異なる。'
         '同一レース300件以上かつ軸の相違100件以上まで改良案の採用審査を保留。'
         '現在の高配当買い目・購入停止ルールは変更しない。</p></main></html>'
     )
