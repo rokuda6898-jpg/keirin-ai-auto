@@ -482,14 +482,18 @@ def build_high_payout_axis_report(output_dir=OUTPUT_DIR):
         row = frozen.get(rid)
         if rid in settled or row is None or str(result.get("official_result_available", "")).lower() not in {"true", "1"}:
             continue
-        actual = str(result.get("actual_trifecta", "")).split("-")
+        from official_outcomes import winning_ticket_values
+        winning_buys = winning_ticket_values(result)
+        actual = winning_buys[0].split('-')
         if len(actual) != 3 or len(set(actual)) != 3 or not all(
                 x.isdigit() and 1 <= int(x) <= 9 for x in actual):
             continue
         winner = int(actual[0])
+        winners = {int(b.split('-')[0]) for b in winning_buys}
         settled[rid] = {
             **row, "official_winner": winner,
-            "hits": {key: int(car) == winner for key, car in row["variants"].items()},
+            "official_winners": sorted(winners),
+            "hits": {key: int(car) in winners for key, car in row["variants"].items()},
         }
     rows = sorted(settled.values(), key=lambda row: row["race_id"])
     settled_path.write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -607,7 +611,9 @@ def build_department_scoreboard(output_dir=OUTPUT_DIR):
         if not isinstance(outcome, dict) or str(outcome.get("official_result_available", "")).lower() not in ("true", "1"):
             continue
         rid = str(outcome.get("race_id", ""))
-        actual = str(outcome.get("actual_trifecta", "")).split("-")
+        from official_outcomes import winning_ticket_values
+        winning_buys = winning_ticket_values(outcome)
+        actual = winning_buys[0].split('-')
         if len(actual) != 3 or len(set(actual)) != 3 or not all(x.isdigit() and 1 <= int(x) <= 9 for x in actual):
             continue
         for department in DEPARTMENTS:
@@ -622,10 +628,11 @@ def build_department_scoreboard(output_dir=OUTPUT_DIR):
                 "snapshot_at": prediction["snapshot_at"],
                 "predicted": predicted,
                 "actual": actual,
-                "first_correct": predicted[0] == actual[0],
-                "second_correct": predicted[1] == actual[1],
-                "third_correct": predicted[2] == actual[2],
-                "exact_trifecta": predicted == actual,
+                "winning_buys": winning_buys,
+                "first_correct": any(predicted[0] == b.split('-')[0] for b in winning_buys),
+                "second_correct": any(predicted[1] == b.split('-')[1] for b in winning_buys),
+                "third_correct": any(predicted[2] == b.split('-')[2] for b in winning_buys),
+                "exact_trifecta": '-'.join(predicted) in winning_buys,
                 "purchase_authorized": False,
             }
     rows = sorted(settled.values(), key=lambda row: (row["race_id"], row["department"]))
@@ -648,7 +655,7 @@ def build_department_scoreboard(output_dir=OUTPUT_DIR):
         "updated_at_jst": now,
         "note": "Independent advisory 1-2-3 scenario accuracy only. Not purchased tickets or real ROI.",
         "snapshot_policy": "legacy_first_preclose_per_department_not_matched",
-        "controlled_comparison": "annual_position_experiment_report.json",
+        "controlled_comparison": "annual_position_v2_report.json",
         "departments": by_department,
         "settled_predictions": len(rows),
         "miss_diagnostics": diagnose_position_misses(rows),
@@ -677,7 +684,7 @@ def build_department_scoreboard(output_dir=OUTPUT_DIR):
         '<p><a href="all_department_predictions.html">全レース7部署の予想へ戻る</a> ／ <a href="high_payout_axis_shadow_report.html">高配当部の1着軸比較</a></p>'
         '<section><h1>7部署の着順予想・事後検証</h1>'
         '<p>この従来集計は初回の事前予想です。締切前最新の予想とは混ぜません。'
-        '<a href="annual_position_experiment_report.html">2・3着改善案の同時点・同点数比較</a></p>'
+        '<a href="annual_position_v2_report.html">2・3着改善案の同時点・同点数比較 v2</a></p>'
         '<p>各部署が締切前に提出した1着・2着・3着の並びを公式結果で検証。'
         '未提出や未確定のレースは成績に含めません。実購入した車券の的中率や回収率ではありません。</p>'
         '<div class="scroll"><table><tr><th>部署</th><th>検証レース</th>'
@@ -711,5 +718,7 @@ def build_department_scoreboard(output_dir=OUTPUT_DIR):
     from market_axis_shadow import build_market_report
     build_market_report(output_dir)
     from department_position_experiment import build_report
+    from department_experiment_v2 import build_report as build_v2_report
+    build_v2_report(output_dir)
     build_report(output_dir)
     return report

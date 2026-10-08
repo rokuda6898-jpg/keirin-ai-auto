@@ -1556,6 +1556,13 @@ def main():
     from department_coverage import build_all_department_coverage, build_department_scoreboard
     annual = build_annual_profiles(now_jst.date())
     department_now = datetime.now(ZoneInfo("Asia/Tokyo"))
+    pred.attrs['department_provenance'] = {
+        'producer': 'predict_canonical_v2', 'model_source': model_source,
+        'position_source': sorted(pred.position_model_source.astype(str).unique().tolist()),
+        'models': {str(path.relative_to(MODEL_PATH.parent)): file_sha256(path)
+                   for path in (MODEL_PATH, MODEL_PATH.parent / 'last_good_win_model.joblib', POSITION_MODEL_PATH)
+                   if path.exists()},
+    }
     department_proposals = forecast_departments(pred, today_odds, annual, department_now)
     build_all_department_coverage(pred, strategy_plans, department_proposals, department_now, odds=today_odds)
     build_department_scoreboard(OUTPUT_DIR)

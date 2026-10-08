@@ -49,7 +49,7 @@ jobs:
           if races < 30000:
               raise SystemExit("specialist archive below required 30000 races")
           PY
-      - name: Fetch fresh entries and create independent year-based proposals
+      - name: Refresh historical knowledge and audit canonical forecasts
         run: |
           python src/fetch_upcoming_entries.py --min-minutes 5 --max-minutes 240
           python src/annual_knowledge.py
@@ -63,7 +63,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           python src/preserve_validation.py save /tmp/annual_validation
-          cp outputs/company/annual_department_predictions.json /tmp/annual_predictions.json
           publish_reports() {
             git add outputs/company/annual_* outputs/company/verified_live_audit.json
             if [ -f outputs/company/rider_official_observations.csv ]; then
@@ -77,7 +76,8 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
             python src/preserve_validation.py restore /tmp/annual_validation
-            cp /tmp/annual_predictions.json outputs/company/annual_department_predictions.json
+            # Forecasts are written only by predict.py; never overwrite newer
+            # canonical predictions with a standalone uniform-input forecast.
             # Keep the original pre-close evidence rather than inventing a new
             # timestamp after results. Reconcile it with the newest results.
             python -c "from annual_knowledge import audit_department_predictions; audit_department_predictions()"
