@@ -13,7 +13,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from department_coverage import DEPARTMENTS, build_all_department_coverage, build_department_scoreboard, position_scenario
 from annual_knowledge import forecast_departments
-from site_manager import RiderButtonParser, audit_entries, normalized_player_id
+from site_manager import RiderButtonParser, audit_entries, audit_site_output, normalized_player_id
 
 JST = ZoneInfo("Asia/Tokyo")
 
@@ -131,6 +131,46 @@ class DepartmentCoverageTest(unittest.TestCase):
         self.assertEqual(normalized_player_id("015667"), "15667")
         self.assertEqual(parser.riders[normalized_player_id("015667")], "戸田瑞姫")
         self.assertNotIn(normalized_player_id("015668"), parser.riders)
+
+    def test_site_audit_matches_real_name_with_zero_padded_source_player_id(self):
+        source = self.output / "entries.csv"
+        pd.DataFrame([{
+            "race_id": "012220261008", "venue": "前橋", "race_no": 1,
+            "car_no": 1, "player_id": "015667", "player_name": "戸田瑞姫",
+            "entries_number": 1,
+        }]).to_csv(source, index=False)
+        site = self.output / "index.html"
+        site.write_text(
+            '<!doctype html><!-- nexus-render-schema provisional-picks-v1 -->'
+            '<article id="race-012220261008"><button class="rider" '
+            'data-player-id="15667" data-name="戸田瑞姫"></button></article>'
+            + "<!--" + "padding" * 150 + "-->", encoding="utf-8",
+        )
+        with patch("site_manager.TODAY_CSV", source), \
+             patch("site_manager.OUTPUT_DIR", self.output):
+            self.assertEqual(audit_site_output(), [])
+
+    def test_site_audit_merges_actual_name_mismatches_by_race(self):
+        source = self.output / "entries.csv"
+        pd.DataFrame([
+            {"race_id": "012220261008", "venue": "前橋", "race_no": 1,
+             "car_no": car, "player_id": pid, "player_name": name}
+            for car, pid, name in ((1, "015667", "戸田瑞姫"), (2, "015149", "中野咲"))
+        ]).to_csv(source, index=False)
+        site = self.output / "index.html"
+        site.write_text(
+            '<!doctype html><!-- nexus-render-schema provisional-picks-v1 -->'
+            '<article id="race-012220261008">'
+            '<button class="rider" data-player-id="15667" data-name="別人"></button>'
+            '<button class="rider" data-player-id="15149" data-name="別人"></button>'
+            '</article>' + "<!--" + "padding" * 150 + "-->", encoding="utf-8",
+        )
+        with patch("site_manager.TODAY_CSV", source), \
+             patch("site_manager.OUTPUT_DIR", self.output):
+            problems = audit_site_output()
+        self.assertEqual(len(problems), 1)
+        self.assertEqual(problems[0]["type"], "site_player_name_mismatch")
+        self.assertEqual(problems[0]["mismatch_count"], 2)
 
     def test_cancelled_car_zero_does_not_create_phantom_missing_rider(self):
         entries_path = self.output / "source_entries.csv"
