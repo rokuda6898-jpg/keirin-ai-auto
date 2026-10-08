@@ -18,6 +18,7 @@ SOURCES = (
     "src/predict.py",
     "src/annual_knowledge.py",
     "src/department_coverage.py",
+    "src/market_axis_shadow.py",
     "src/mark_performance.py",
     "src/site_ui.py",
     "src/betting_logic.py",
