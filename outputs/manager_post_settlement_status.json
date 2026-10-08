@@ -1,5 +1,5 @@
 {
-  "checked_at_jst": "2026-10-08T09:48:46+09:00",
+  "checked_at_jst": "2026-10-08T09:57:47+09:00",
   "status": "unhealthy",
   "repaired": false,
   "check_source": "post_settlement_read_only_audit",
@@ -13,12 +13,20 @@
         {
           "type": "site_render_schema_stale",
           "expected": "nexus-departments-v2"
+        },
+        {
+          "type": "site_release_stale",
+          "count": 1,
+          "details": [
+            "manifest missing/unreadable: [Errno 2] No such file or directory: '/home/runner/work/keirin-ai-auto/keirin-ai-auto/outputs/release_manifest.json'"
+          ]
         }
       ],
       "health": {
         "severity": "warning",
         "problem_types": [
           "department_forecast_missing",
+          "site_release_stale",
           "site_render_schema_stale"
         ],
         "race_count": 72,
@@ -1109,6 +1117,7 @@
     "severity": "warning",
     "problem_types": [
       "department_forecast_missing",
+      "site_release_stale",
       "site_render_schema_stale"
     ],
     "race_count": 72,
