@@ -13,6 +13,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from department_coverage import DEPARTMENTS, build_all_department_coverage, build_department_scoreboard, position_scenario
 from annual_knowledge import forecast_departments
+from site_manager import audit_entries
 
 JST = ZoneInfo("Asia/Tokyo")
 
@@ -122,6 +123,22 @@ class DepartmentCoverageTest(unittest.TestCase):
             self.assertEqual(entry["display_status"], "model_fallback_reference_missing")
             self.assertEqual(len(set(entry["top3_cars"])), 3)
             self.assertEqual(len(entry["tickets"]), 0)
+
+    def test_cancelled_car_zero_does_not_create_phantom_missing_rider(self):
+        entries_path = self.output / "source_entries.csv"
+        pd.DataFrame([
+            {
+                "race_id": "052520261008", "venue": "試験場",
+                "race_no": 5, "car_no": car,
+                "entries_number": 6, "declared_entries_number": 7,
+                "cancelled_car_numbers": "0,2",
+            }
+            for car in (1, 3, 4, 5, 6, 7)
+        ]).to_csv(entries_path, index=False)
+        with patch("site_manager.TODAY_CSV", entries_path):
+            problems, stats = audit_entries()
+        self.assertEqual(problems, [])
+        self.assertEqual(stats["052520261008"]["cancelled_cars"], [2])
 
     def test_four_specialists_never_backfill_postclose(self):
         knowledge = {
