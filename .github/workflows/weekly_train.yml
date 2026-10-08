@@ -3,29 +3,6 @@ name: weekly-keirin-train
 
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - "src/train.py"
-      - "src/common.py"
-      - "src/train_top1_candidate.py"
-      - "src/train_recency_challenger.py"
-      - "src/production_replay_backtest.py"
-      - "src/trifecta_reranker.py"
-      - "src/train_trifecta_reranker.py"
-      - "src/commander_selector.py"
-      - "src/train_commander_selector.py"
-      - "src/live_snapshot_store.py"
-      - "src/live_snapshot_model.py"
-      - "src/train_live_snapshot_model.py"
-      - "src/build_production_feature_baseline.py"
-      - "src/model_drift_audit.py"
-      - "src/multi_bet_backtest.py"
-      - "src/predict.py"
-      - "src/race_features.py"
-      - "src/settle_results.py"
-      - "src/company_knowledge.py"
-      - "tests/**"
-      - ".github/workflows/weekly_train.yml"
   schedule:
     # Monday 05:30 JST
     - cron: "30 20 * * 0"
