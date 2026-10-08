@@ -2,23 +2,19 @@ name: keirin-site-manager
 
 on:
   workflow_dispatch:
-  schedule:
-    # Every 5 minutes during the active Japanese racing window.
-    - cron: "*/5 22-23,0-13 * * *"
+  # The independent watchdog is the sole automatic scheduler. No direct
+  # cron here: every scheduled run can replace an older pending run.
 
 permissions:
   contents: write
   actions: write
 
 concurrency:
-  # Keep the manager independent from the shared writer pending queue.
-  # Only manager runs compete with each other; the latest pending cycle may
-  # replace an older pending cycle without being evicted by settle/daily jobs.
-  group: keirin-site-manager-picks-v5
-  # History-based prediction regeneration can exceed the five-minute tick.
-  # Let the active repair finish; newer scheduled runs replace only pending
-  # work. The job timeout bounds failures, and publication below regenerates
-  # against latest main if the repository advances during this repair.
+  # A single dispatch at a time is enforced by the watchdog's run-state checks.
+  # Preserve an active recovery instead of cancelling it for a newer request.
+  group: keirin-site-manager-picks-v6
+  # GitHub can replace a pending run even with cancel-in-progress=false.
+  # The watchdog avoids competing dispatches while any run is active/pending.
   cancel-in-progress: false
 
 jobs:
