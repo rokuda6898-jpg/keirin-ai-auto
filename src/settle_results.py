@@ -939,6 +939,13 @@ def run_settlement(args):
     )
     summary.to_csv(SETTLEMENT_SUMMARY_CSV, index=False)
     REPORT_MD.write_text(build_report(selected, summary), encoding="utf-8")
+    # Keep the independent rider-mark audit in sync when official results arrive.
+    # This does not change wager settlement or purchase authorization.
+    try:
+        from mark_performance import build_mark_report
+        build_mark_report(OUTPUT_DIR)
+    except Exception as exc:
+        print(f"Prediction-mark result audit update failed: {exc}", flush=True)
     history = update_prediction_history(settled)
     HISTORY_HTML.write_text(build_history_html(history), encoding="utf-8")
     print(f"history rows: {len(history)}")
