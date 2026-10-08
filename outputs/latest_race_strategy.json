@@ -1576,7 +1576,7 @@
     "close_at": 1791425220.0
   },
   {
-    "first_gap": 21.305501423703404,
+    "first_gap": 21.30550142370341,
     "third_boundary_gap": 3.4699249043268523,
     "main_limit": 6,
     "first_fixed": false,
@@ -3473,38 +3473,39 @@
     "close_at": 1791435720.0
   },
   {
-    "first_gap": 9.729767165228047,
-    "third_boundary_gap": 2.6018893625460837,
+    "first_gap": 17.423507741506732,
+    "third_boundary_gap": 0.1312354651533223,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.49428351798001596,
+    "top_win_probability": 0.5256681901634657,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 42.13,
-    "chaos_label": "やや荒れ",
+    "chaos_index": 56.87,
+    "chaos_label": "荒れ",
     "chaos_components": {
-      "first_closeness": 0.81,
+      "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 9.13,
-      "third_closeness": 7.19,
+      "second_closeness": 17.26,
+      "third_closeness": 14.61,
       "market_divergence": 0
     },
     "line_count": 3,
-    "risk_score": 42.13,
-    "risk_level": "中",
+    "risk_score": 56.87,
+    "risk_level": "高",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
     "risk_policy": "risk_department_overrides_flow",
     "risk_budget_policy": "candidate_spread_without_extra_tickets",
-    "scenario_policy": "本命展開中心",
+    "scenario_policy": "3展開分散",
     "popularity_source": "unavailable",
     "probability_method": "position_sequential",
     "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
     "formation": {
       "first": [
+        1,
         5,
         7
       ],
@@ -3521,6 +3522,324 @@
         3,
         4,
         5,
+        6,
+        7
+      ]
+    },
+    "high_payout_department": {
+      "version": "high_payout_v1",
+      "rating": "見送り",
+      "expectation_score": 0,
+      "recommended_count": 0,
+      "patterns": [],
+      "tickets": [],
+      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
+      "unknowns": [
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
+        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+      ],
+      "probability_method": "geometric_model_market_estimate_uncalibrated",
+      "minimum_probability": 0.001,
+      "minimum_ev": 1.25,
+      "automatic_purchase": false,
+      "analysts": [
+        {
+          "role": "高配当専用軍師",
+          "status": "検証中",
+          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
+        },
+        {
+          "role": "1着波乱担当",
+          "status": "検証中",
+          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
+        },
+        {
+          "role": "2着突っ込み担当",
+          "status": "検証中",
+          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
+        },
+        {
+          "role": "3着紛れ担当",
+          "status": "検証中",
+          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
+        },
+        {
+          "role": "ライン崩壊担当",
+          "status": "検証中",
+          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
+        },
+        {
+          "role": "細切れ戦担当",
+          "status": "検証中",
+          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
+        },
+        {
+          "role": "単騎担当",
+          "status": "検証中",
+          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
+        },
+        {
+          "role": "人気過剰担当",
+          "status": "検証中",
+          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
+        },
+        {
+          "role": "高配当期待値担当",
+          "status": "検証中",
+          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
+        },
+        {
+          "role": "データ確認担当",
+          "status": "検証中",
+          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
+        },
+        {
+          "role": "比較検証担当",
+          "status": "検証中",
+          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
+        }
+      ],
+      "comparison": {
+        "version": "third_focus_v1",
+        "automatic_promotion": false,
+        "variants": {
+          "current": [],
+          "third_focus": []
+        }
+      },
+      "risk_coordination": {
+        "chaos_index": 56.87,
+        "risk_level": "高",
+        "line_collapse_probability": null,
+        "scenario_probability": null,
+        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
+      },
+      "analysis_rating": "見送り"
+    },
+    "hole_limit": 0,
+    "selected_scenarios": [],
+    "main_count": 0,
+    "hole_count": 0,
+    "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
+    "main_ev": 1.1,
+    "hole_ev": 1.25,
+    "race_id": "083820261008",
+    "venue": "静岡",
+    "race_no": 8,
+    "timing_eligible": false,
+    "date": "2026-10-08",
+    "strategy_version": "position_prob_v11_high_payout_20261007",
+    "close_at": 1791436620.0
+  },
+  {
+    "first_gap": 34.46574739259799,
+    "third_boundary_gap": 0.837830585468641,
+    "main_limit": 8,
+    "first_fixed": false,
+    "top_win_probability": 0.5551787327192416,
+    "fixed_min_probability": 0.6,
+    "fixed_min_gap": 10.0,
+    "fixed_policy_status": "calibration_unverified",
+    "fixed_axis_calibration_passed": false,
+    "fixed_car": null,
+    "chaos_index": 56.79,
+    "chaos_label": "荒れ",
+    "chaos_components": {
+      "first_closeness": 0.0,
+      "line_competition": 25,
+      "second_closeness": 19.3,
+      "third_closeness": 12.49,
+      "market_divergence": 0
+    },
+    "line_count": 3,
+    "risk_score": 56.79,
+    "risk_level": "高",
+    "risk_fixed_block": true,
+    "risk_veto_fixed": false,
+    "risk_policy": "risk_department_overrides_flow",
+    "risk_budget_policy": "candidate_spread_without_extra_tickets",
+    "scenario_policy": "3展開分散",
+    "popularity_source": "unavailable",
+    "probability_method": "position_sequential",
+    "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
+    "formation": {
+      "first": [
+        1,
+        2,
+        4
+      ],
+      "second": [
+        1,
+        2,
+        3,
+        4,
+        7
+      ],
+      "third": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    "high_payout_department": {
+      "version": "high_payout_v1",
+      "rating": "見送り",
+      "expectation_score": 0,
+      "recommended_count": 0,
+      "patterns": [],
+      "tickets": [],
+      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
+      "unknowns": [
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
+        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+      ],
+      "probability_method": "geometric_model_market_estimate_uncalibrated",
+      "minimum_probability": 0.001,
+      "minimum_ev": 1.25,
+      "automatic_purchase": false,
+      "analysts": [
+        {
+          "role": "高配当専用軍師",
+          "status": "検証中",
+          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
+        },
+        {
+          "role": "1着波乱担当",
+          "status": "検証中",
+          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
+        },
+        {
+          "role": "2着突っ込み担当",
+          "status": "検証中",
+          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
+        },
+        {
+          "role": "3着紛れ担当",
+          "status": "検証中",
+          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
+        },
+        {
+          "role": "ライン崩壊担当",
+          "status": "検証中",
+          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
+        },
+        {
+          "role": "細切れ戦担当",
+          "status": "検証中",
+          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
+        },
+        {
+          "role": "単騎担当",
+          "status": "検証中",
+          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
+        },
+        {
+          "role": "人気過剰担当",
+          "status": "検証中",
+          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
+        },
+        {
+          "role": "高配当期待値担当",
+          "status": "検証中",
+          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
+        },
+        {
+          "role": "データ確認担当",
+          "status": "検証中",
+          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
+        },
+        {
+          "role": "比較検証担当",
+          "status": "検証中",
+          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
+        }
+      ],
+      "comparison": {
+        "version": "third_focus_v1",
+        "automatic_promotion": false,
+        "variants": {
+          "current": [],
+          "third_focus": []
+        }
+      },
+      "risk_coordination": {
+        "chaos_index": 56.79,
+        "risk_level": "高",
+        "line_collapse_probability": null,
+        "scenario_probability": null,
+        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
+      },
+      "analysis_rating": "見送り"
+    },
+    "hole_limit": 0,
+    "selected_scenarios": [],
+    "main_count": 0,
+    "hole_count": 0,
+    "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
+    "main_ev": 1.1,
+    "hole_ev": 1.25,
+    "race_id": "092520261008",
+    "venue": "大宮",
+    "race_no": 9,
+    "timing_eligible": false,
+    "date": "2026-10-08",
+    "strategy_version": "position_prob_v11_high_payout_20261007",
+    "close_at": 1791437520.0
+  },
+  {
+    "first_gap": 12.753504180853245,
+    "third_boundary_gap": 0.016273254359719047,
+    "main_limit": 8,
+    "first_fixed": false,
+    "top_win_probability": 0.3398431779492158,
+    "fixed_min_probability": 0.6,
+    "fixed_min_gap": 10.0,
+    "fixed_policy_status": "calibration_unverified",
+    "fixed_axis_calibration_passed": false,
+    "fixed_car": null,
+    "chaos_index": 49.63,
+    "chaos_label": "やや荒れ",
+    "chaos_components": {
+      "first_closeness": 0.0,
+      "line_competition": 25,
+      "second_closeness": 9.68,
+      "third_closeness": 14.95,
+      "market_divergence": 0
+    },
+    "line_count": 3,
+    "risk_score": 49.63,
+    "risk_level": "中",
+    "risk_fixed_block": true,
+    "risk_veto_fixed": false,
+    "risk_policy": "risk_department_overrides_flow",
+    "risk_budget_policy": "candidate_spread_without_extra_tickets",
+    "scenario_policy": "本命展開中心",
+    "popularity_source": "unavailable",
+    "probability_method": "position_sequential",
+    "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
+    "formation": {
+      "first": [
+        2,
+        3,
+        5
+      ],
+      "second": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "third": [
+        1,
+        3,
+        4,
+        5,
+        6,
         7
       ]
     },
@@ -3606,7 +3925,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 42.13,
+        "chaos_index": 49.63,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -3619,453 +3938,41 @@
       "本命展開",
       "縦脚逆転"
     ],
-    "main_count": 5,
+    "main_count": 4,
     "hole_count": 0,
     "skip_reason": "",
-    "main_ev": 1.1,
-    "hole_ev": 1.25,
-    "race_id": "083820261008",
-    "venue": "静岡",
-    "race_no": 8,
-    "timing_eligible": true,
-    "date": "2026-10-08",
-    "strategy_version": "position_prob_v11_high_payout_20261007",
-    "close_at": 1791436620.0
-  },
-  {
-    "first_gap": 40.05726215913367,
-    "third_boundary_gap": 1.354153778243857,
-    "main_limit": 8,
-    "first_fixed": false,
-    "top_win_probability": 0.6013463055864658,
-    "fixed_min_probability": 0.6,
-    "fixed_min_gap": 10.0,
-    "fixed_policy_status": "calibration_unverified",
-    "fixed_axis_calibration_passed": false,
-    "fixed_car": null,
-    "chaos_index": 42.95,
-    "chaos_label": "やや荒れ",
-    "chaos_components": {
-      "first_closeness": 0.0,
-      "line_competition": 25,
-      "second_closeness": 7.01,
-      "third_closeness": 10.94,
-      "market_divergence": 0
-    },
-    "line_count": 3,
-    "risk_score": 42.95,
-    "risk_level": "中",
-    "risk_fixed_block": true,
-    "risk_veto_fixed": true,
-    "risk_policy": "risk_department_overrides_flow",
-    "risk_budget_policy": "candidate_spread_without_extra_tickets",
-    "scenario_policy": "本命展開中心",
-    "popularity_source": "full_trifecta_market_proxy",
-    "probability_method": "position_sequential",
-    "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
-    "formation": {
-      "first": [
-        1,
-        2
-      ],
-      "second": [
-        1,
-        2,
-        3,
-        4,
-        7
-      ],
-      "third": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ]
-    },
-    "high_payout_department": {
-      "version": "high_payout_v1",
-      "rating": "B",
-      "expectation_score": 61,
-      "recommended_count": 4,
-      "patterns": [
-        "2着荒れ",
-        "3着荒れ"
-      ],
-      "tickets": [
-        {
-          "buy": "2-7-6",
-          "odds": 204.2,
-          "probability": 0.008361177566595731,
-          "ev": 1.7073524590988483,
-          "patterns": [
-            "2着荒れ"
-          ]
-        },
-        {
-          "buy": "2-4-5",
-          "odds": 167.2,
-          "probability": 0.009314953984134906,
-          "ev": 1.5574603061473562,
-          "patterns": [
-            "3着荒れ"
-          ]
-        },
-        {
-          "buy": "2-4-3",
-          "odds": 105.8,
-          "probability": 0.014183674092486458,
-          "ev": 1.5006327189850672,
-          "patterns": [
-            "3着荒れ"
-          ]
-        },
-        {
-          "buy": "1-7-6",
-          "odds": 403.8,
-          "probability": 0.003577694093560168,
-          "ev": 1.4446728749795958,
-          "patterns": [
-            "2着荒れ"
-          ]
-        }
-      ],
-      "skip_reason": "",
-      "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。"
-      ],
-      "probability_method": "geometric_model_market_estimate_uncalibrated",
-      "minimum_probability": 0.001,
-      "minimum_ev": 1.25,
-      "automatic_purchase": false,
-      "analysts": [
-        {
-          "role": "高配当専用軍師",
-          "status": "検証中",
-          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
-        },
-        {
-          "role": "1着波乱担当",
-          "status": "検証中",
-          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
-        },
-        {
-          "role": "2着突っ込み担当",
-          "status": "検証中",
-          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
-        },
-        {
-          "role": "3着紛れ担当",
-          "status": "検証中",
-          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
-        },
-        {
-          "role": "ライン崩壊担当",
-          "status": "検証中",
-          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
-        },
-        {
-          "role": "細切れ戦担当",
-          "status": "検証中",
-          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
-        },
-        {
-          "role": "単騎担当",
-          "status": "検証中",
-          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
-        },
-        {
-          "role": "人気過剰担当",
-          "status": "検証中",
-          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
-        },
-        {
-          "role": "高配当期待値担当",
-          "status": "検証中",
-          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
-        },
-        {
-          "role": "データ確認担当",
-          "status": "検証中",
-          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
-        },
-        {
-          "role": "比較検証担当",
-          "status": "検証中",
-          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
-        }
-      ],
-      "comparison": {
-        "version": "third_focus_v1",
-        "automatic_promotion": false,
-        "variants": {
-          "current": [
-            {
-              "buy": "2-7-6",
-              "odds": 204.2,
-              "probability": 0.008361177566595731,
-              "ev": 1.7073524590988483
-            },
-            {
-              "buy": "2-4-5",
-              "odds": 167.2,
-              "probability": 0.009314953984134906,
-              "ev": 1.5574603061473562
-            },
-            {
-              "buy": "2-4-3",
-              "odds": 105.8,
-              "probability": 0.014183674092486458,
-              "ev": 1.5006327189850672
-            },
-            {
-              "buy": "1-7-6",
-              "odds": 403.8,
-              "probability": 0.003577694093560168,
-              "ev": 1.4446728749795958
-            }
-          ],
-          "third_focus": [
-            {
-              "buy": "2-4-3",
-              "odds": 105.8,
-              "probability": 0.014183674092486458,
-              "ev": 1.5006327189850672
-            },
-            {
-              "buy": "2-4-5",
-              "odds": 167.2,
-              "probability": 0.009314953984134906,
-              "ev": 1.5574603061473562
-            }
-          ]
-        },
-        "decision": "本番は現在方式。3着重点方式は同じ上限点数・同じ最低EVで成立確率順に比較。"
-      },
-      "risk_coordination": {
-        "chaos_index": 42.95,
-        "risk_level": "中",
-        "line_collapse_probability": null,
-        "scenario_probability": null,
-        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "specialist_analysis": {
-        "細切れ戦": {
-          "status": "分析可能",
-          "line_count": 3
-        },
-        "単騎": {
-          "status": "分析可能",
-          "cars": []
-        }
-      },
-      "strong_ev_candidate_count": 3,
-      "twelve_point_min_ev": 1.5
-    },
-    "hole_limit": 4,
-    "selected_scenarios": [
-      "崩れ展開",
-      "本命展開",
-      "高配当独立分析"
-    ],
-    "main_count": 7,
-    "hole_count": 4,
-    "skip_reason": "",
-    "main_ev": 1.1,
-    "hole_ev": 1.25,
-    "race_id": "092520261008",
-    "venue": "大宮",
-    "race_no": 9,
-    "timing_eligible": true,
-    "date": "2026-10-08",
-    "strategy_version": "position_prob_v11_high_payout_20261007",
-    "close_at": 1791437520.0
-  },
-  {
-    "first_gap": 0.9756912639654551,
-    "third_boundary_gap": 2.3025612778160838,
-    "main_limit": 12,
-    "first_fixed": false,
-    "top_win_probability": 0.2603191652179291,
-    "fixed_min_probability": 0.6,
-    "fixed_min_gap": 10.0,
-    "fixed_policy_status": "calibration_unverified",
-    "fixed_axis_calibration_passed": false,
-    "fixed_car": null,
-    "chaos_index": 60.16,
-    "chaos_label": "荒れ",
-    "chaos_components": {
-      "first_closeness": 27.07,
-      "line_competition": 25,
-      "second_closeness": 0.0,
-      "third_closeness": 8.09,
-      "market_divergence": 0
-    },
-    "line_count": 3,
-    "risk_score": 60.16,
-    "risk_level": "高",
-    "risk_fixed_block": true,
-    "risk_veto_fixed": false,
-    "risk_policy": "risk_department_overrides_flow",
-    "risk_budget_policy": "candidate_spread_without_extra_tickets",
-    "scenario_policy": "3展開分散",
-    "popularity_source": "unavailable",
-    "probability_method": "position_sequential",
-    "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
-    "formation": {
-      "first": [
-        2,
-        3,
-        5
-      ],
-      "second": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "third": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ]
-    },
-    "high_payout_department": {
-      "version": "high_payout_v1",
-      "rating": "見送り",
-      "expectation_score": 0,
-      "recommended_count": 0,
-      "patterns": [],
-      "tickets": [],
-      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
-      "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
-      ],
-      "probability_method": "geometric_model_market_estimate_uncalibrated",
-      "minimum_probability": 0.001,
-      "minimum_ev": 1.25,
-      "automatic_purchase": false,
-      "analysts": [
-        {
-          "role": "高配当専用軍師",
-          "status": "検証中",
-          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
-        },
-        {
-          "role": "1着波乱担当",
-          "status": "検証中",
-          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
-        },
-        {
-          "role": "2着突っ込み担当",
-          "status": "検証中",
-          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
-        },
-        {
-          "role": "3着紛れ担当",
-          "status": "検証中",
-          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
-        },
-        {
-          "role": "ライン崩壊担当",
-          "status": "検証中",
-          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
-        },
-        {
-          "role": "細切れ戦担当",
-          "status": "検証中",
-          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
-        },
-        {
-          "role": "単騎担当",
-          "status": "検証中",
-          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
-        },
-        {
-          "role": "人気過剰担当",
-          "status": "検証中",
-          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
-        },
-        {
-          "role": "高配当期待値担当",
-          "status": "検証中",
-          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
-        },
-        {
-          "role": "データ確認担当",
-          "status": "検証中",
-          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
-        },
-        {
-          "role": "比較検証担当",
-          "status": "検証中",
-          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
-        }
-      ],
-      "comparison": {
-        "version": "third_focus_v1",
-        "automatic_promotion": false,
-        "variants": {
-          "current": [],
-          "third_focus": []
-        }
-      },
-      "risk_coordination": {
-        "chaos_index": 60.16,
-        "risk_level": "高",
-        "line_collapse_probability": null,
-        "scenario_probability": null,
-        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "analysis_rating": "見送り"
-    },
-    "hole_limit": 0,
-    "selected_scenarios": [],
-    "main_count": 0,
-    "hole_count": 0,
-    "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
     "main_ev": 1.1,
     "hole_ev": 1.25,
     "race_id": "093820261008",
     "venue": "静岡",
     "race_no": 9,
-    "timing_eligible": false,
+    "timing_eligible": true,
     "date": "2026-10-08",
     "strategy_version": "position_prob_v11_high_payout_20261007",
     "close_at": 1791438420.0
   },
   {
-    "first_gap": 81.97504728638884,
-    "third_boundary_gap": 0.6217004374684283,
+    "first_gap": 84.60247659223165,
+    "third_boundary_gap": 1.832633070829556,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.879907272352749,
+    "top_win_probability": 0.8973425677068881,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 38.28,
+    "chaos_index": 34.5,
     "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 0.15,
-      "third_closeness": 13.13,
+      "second_closeness": 0.0,
+      "third_closeness": 9.5,
       "market_divergence": 0
     },
     "line_count": 4,
-    "risk_score": 38.28,
+    "risk_score": 34.5,
     "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
@@ -4085,6 +3992,8 @@
         2,
         3,
         4,
+        5,
+        6,
         7
       ],
       "third": [
@@ -4093,6 +4002,7 @@
         3,
         4,
         5,
+        6,
         7
       ]
     },
@@ -4103,7 +4013,7 @@
       "recommended_count": 0,
       "patterns": [],
       "tickets": [],
-      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
+      "skip_reason": "このレースは穴予想見送り",
       "unknowns": [
         "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
         "全組み合わせの有効オッズが不足。市場確率との比較不可。"
@@ -4178,52 +4088,54 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 38.28,
+        "chaos_index": 34.5,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "analysis_rating": "見送り"
+      }
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
-    "main_count": 0,
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開"
+    ],
+    "main_count": 7,
     "hole_count": 0,
-    "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
+    "skip_reason": "",
     "main_ev": 1.1,
     "hole_ev": 1.25,
     "race_id": "102520261008",
     "venue": "大宮",
     "race_no": 10,
-    "timing_eligible": false,
+    "timing_eligible": true,
     "date": "2026-10-08",
     "strategy_version": "position_prob_v11_high_payout_20261007",
     "close_at": 1791439320.0
   },
   {
-    "first_gap": 52.35277164322652,
-    "third_boundary_gap": 2.565177370828245,
+    "first_gap": 58.3693488172804,
+    "third_boundary_gap": 6.638748757943976,
     "main_limit": 6,
     "first_fixed": false,
-    "top_win_probability": 0.702073331784228,
+    "top_win_probability": 0.7429610291961287,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 46.52,
-    "chaos_label": "やや荒れ",
+    "chaos_index": 25.0,
+    "chaos_label": "固め",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 14.22,
-      "third_closeness": 7.3,
+      "second_closeness": 0.0,
+      "third_closeness": 0.0,
       "market_divergence": 0
     },
     "line_count": 3,
-    "risk_score": 46.52,
-    "risk_level": "中",
+    "risk_score": 25.0,
+    "risk_level": "低",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
     "risk_policy": "risk_department_overrides_flow",
@@ -4239,15 +4151,20 @@
       ],
       "second": [
         1,
+        2,
+        3,
         4,
         5,
+        6,
         7
       ],
       "third": [
         1,
         2,
+        3,
         4,
         5,
+        6,
         7
       ]
     },
@@ -4258,7 +4175,7 @@
       "recommended_count": 0,
       "patterns": [],
       "tickets": [],
-      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
+      "skip_reason": "このレースは穴予想見送り",
       "unknowns": [
         "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
         "全組み合わせの有効オッズが不足。市場確率との比較不可。"
@@ -4333,25 +4250,26 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 46.52,
-        "risk_level": "中",
+        "chaos_index": 25.0,
+        "risk_level": "低",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "analysis_rating": "見送り"
+      }
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
-    "main_count": 0,
+    "selected_scenarios": [
+      "崩れ展開"
+    ],
+    "main_count": 5,
     "hole_count": 0,
-    "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
+    "skip_reason": "",
     "main_ev": 1.1,
     "hole_ev": 1.25,
     "race_id": "103820261008",
     "venue": "静岡",
     "race_no": 10,
-    "timing_eligible": false,
+    "timing_eligible": true,
     "date": "2026-10-08",
     "strategy_version": "position_prob_v11_high_payout_20261007",
     "close_at": 1791440220.0
@@ -5617,7 +5535,7 @@
     "close_at": 1791444360.0
   },
   {
-    "first_gap": 31.446348333863853,
+    "first_gap": 31.446348333863856,
     "third_boundary_gap": 1.7725918862211199,
     "main_limit": 8,
     "first_fixed": false,
@@ -7031,7 +6949,7 @@
     "close_at": 1791450840.0
   },
   {
-    "first_gap": 1.8051274190633109,
+    "first_gap": 1.8051274190633038,
     "third_boundary_gap": 0.722806946635167,
     "main_limit": 12,
     "first_fixed": false,
@@ -9396,7 +9314,7 @@
     "close_at": 1791461700.0
   },
   {
-    "first_gap": 8.15822508525288,
+    "first_gap": 8.158225085252884,
     "third_boundary_gap": 1.605858551971755,
     "main_limit": 10,
     "first_fixed": false,
@@ -10501,7 +10419,7 @@
     "close_at": 1791465900.0
   },
   {
-    "first_gap": 19.065127105843573,
+    "first_gap": 19.065127105843565,
     "third_boundary_gap": 0.9638081730651855,
     "main_limit": 8,
     "first_fixed": false,
