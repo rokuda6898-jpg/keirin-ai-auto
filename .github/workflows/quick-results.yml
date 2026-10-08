@@ -88,7 +88,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add outputs/latest_results.json outputs/index.html outputs/manager_status.json
+          git add outputs/latest_results.json outputs/index.html outputs/manager_post_settlement_status.json
           if [ -f outputs/company/rider_official_observations.csv ]; then
             git add outputs/company/rider_official_observations.csv
           fi
@@ -133,7 +133,7 @@ jobs:
               python src/fetch_today_entries.py || true
             fi
             python src/settle_results.py
-            git add outputs/latest_results.json outputs/index.html outputs/manager_status.json
+            git add outputs/latest_results.json outputs/index.html outputs/manager_post_settlement_status.json
           if [ -f outputs/company/rider_official_observations.csv ]; then
             git add outputs/company/rider_official_observations.csv
           fi
