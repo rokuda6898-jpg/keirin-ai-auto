@@ -155,7 +155,7 @@ class SiteManagerTests(unittest.TestCase):
             ]).to_csv(today_csv, index=False)
 
             html = (
-                '<html><head><meta name="nexus-render-schema" content="provisional-picks-v1"/></head><body>'
+                '<html><head><meta name="nexus-render-schema" content="nexus-departments-v2"/></head><body>'
                 '<article data-start="1" id="race-race1" class="race venue-visible">'
                 '<button class="rider selected" data-name="選手A" '
                 'data-car="1" data-extra="x" data-player-id="p100">'
@@ -179,7 +179,7 @@ class SiteManagerTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             root=Path(temp_dir)
             pd.DataFrame([{"race_id":"race1","player_id":"p100","car_no":1,"player_name":"選手A"}]).to_csv(root/"today.csv",index=False)
-            document='<meta name="nexus-render-schema" content="provisional-picks-v1"/><article id="race-race1" class="race"></article><article class="race" id="race-race2"><button class="rider" data-name="選手A" data-player-id="p100"></button></article>'+" "*1500
+            document='<meta name="nexus-render-schema" content="nexus-departments-v2"/><article id="race-race1" class="race"></article><article class="race" id="race-race2"><button class="rider" data-name="選手A" data-player-id="p100"></button></article>'+" "*1500
             (root/"index.html").write_text(document,encoding="utf-8")
             with mock.patch.multiple(site_manager,TODAY_CSV=root/"today.csv",OUTPUT_DIR=root):
                 problems=site_manager.audit_site_output()
