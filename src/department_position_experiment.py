@@ -7,9 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from betting_logic import score_riders, select_race
-from common import OUTPUT_DIR
-from market_axis_shadow import inspect_quotes
+OUTPUT_DIR = Path(__file__).resolve().parents[1] / 'outputs'
 
 VERSION = 'department_positions_v1'
 LEDGER = 'annual_position_experiment_ledger.jsonl'
@@ -28,6 +26,7 @@ def load_json(path, default):
 
 
 def portfolios(temp, market, preserve=False, conditional=False):
+    from betting_logic import score_riders, select_race
     riders = score_riders(temp, market, preserve_position_scores=preserve)
     frame, plan = select_race(riders, market, conditional_positions=conditional)
     tickets = [{'buy': str(t.buy), 'group': str(t.ticket_group), 'stake_yen': 100,
@@ -42,6 +41,7 @@ def portfolios(temp, market, preserve=False, conditional=False):
 
 def make_bundle(race, department_inputs, market, now, cutoff):
     """No historical replay path. All hypotheses consume this one input bundle."""
+    from market_axis_shadow import inspect_quotes
     close = float(race.iloc[0]['close_at'])
     if now.tzinfo is None or not math.isfinite(close) or not 300 < close - now.timestamp() <= 2400:
         return None, 'outside_40_to_5_minute_window'

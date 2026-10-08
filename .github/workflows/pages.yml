@@ -37,6 +37,9 @@ jobs:
       - name: Reject stale or partial generated site
         run: python src/release_guard.py
 
+      - name: Rebuild comparison from the evidence being published
+        run: python src/reconcile_position_experiment.py
+
       - name: Stamp deployment fingerprint
         run: |
           printf '%s\n' "$(git rev-parse HEAD)" > outputs/deploy_fingerprint.txt
@@ -60,7 +63,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           python - <<'PY'
-          import csv, os, sys, time, urllib.request
+          import csv, hashlib, os, sys, time, urllib.request
           from pathlib import Path
 
           page_url = os.environ["PAGE_URL"].rstrip("/") + "/"
@@ -81,6 +84,14 @@ jobs:
 
           last_missing = expected
           last_fingerprint = ""
+          comparison_files = ["company/annual_position_experiment_report.json",
+                              "company/annual_position_experiment_report.html",
+                              "company/annual_position_experiment_ledger.jsonl",
+                              "company/annual_position_experiment_outcomes.jsonl"]
+          comparison_hashes = {
+              name: hashlib.sha256((Path("outputs") / name).read_bytes()).hexdigest()
+              for name in comparison_files if (Path("outputs") / name).is_file()
+          }
           for attempt in range(6):
               nonce = int(time.time())
               req = urllib.request.Request(
@@ -100,11 +111,17 @@ jobs:
               missing = {race_id for race_id in expected if race_id not in html}
               fingerprint_ok = published_fingerprint == expected_fingerprint
               render_schema_ok = "nexus-render-schema" in html and "nexus-departments-v2" in html
-              if not missing and fingerprint_ok and render_schema_ok:
+              comparison_ok = True
+              for name, expected_hash in comparison_hashes.items():
+                  request = urllib.request.Request(page_url + name + f"?verify={nonce}",
+                      headers={"Cache-Control": "no-cache"})
+                  with urllib.request.urlopen(request, timeout=30) as response:
+                      comparison_ok &= hashlib.sha256(response.read()).hexdigest() == expected_hash
+              if not missing and fingerprint_ok and render_schema_ok and comparison_ok:
                   print(
                       f"published-site verified: races={len(expected)} "
                       f"fingerprint={expected_fingerprint[:12]} "
-                      f"render_schema=nexus-departments-v2"
+                      f"render_schema=nexus-departments-v2 comparison_evidence=matched"
                   )
                   sys.exit(0)
 
@@ -115,6 +132,7 @@ jobs:
                   f"missing={len(missing)} "
                   f"fingerprint_ok={fingerprint_ok} "
                   f"render_schema_ok={render_schema_ok} "
+                  f"comparison_ok={comparison_ok} "
                   f"expected_fp={expected_fingerprint[:12]} "
                   f"published_fp={published_fingerprint[:12]} "
                   f"sample={sorted(missing)[:10]}"
