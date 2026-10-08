@@ -98,6 +98,46 @@ class DepartmentCoverageTest(unittest.TestCase):
         report = json.loads((self.output / "company" / "all_department_predictions.json").read_text())
         self.assertEqual(report["coverage_status"], "incomplete")
 
+    def test_forecasts_are_frozen_once_and_preserved_after_close(self):
+        first = build_all_department_coverage(
+            self.race, self.plans, specialist_rows(self.race, self.now), self.now, self.output
+        )
+        ledger = self.output / "company/all_department_prediction_ledger.jsonl"
+        frozen_bytes = ledger.read_bytes()
+        changed = self.race.copy()
+        changed["p_win"] = list(reversed(changed["p_win"].tolist()))
+        updated = self.now + timedelta(minutes=2)
+        build_all_department_coverage(
+            changed, self.plans, specialist_rows(changed, updated), updated, self.output
+        )
+        self.assertEqual(ledger.read_bytes(), frozen_bytes)
+        after_close = build_all_department_coverage(
+            changed, self.plans, [], self.now + timedelta(minutes=20), self.output
+        )
+        original = {p["department"]: p["top3_cars"] for p in first["predictions"]}
+        preserved = {p["department"]: p["top3_cars"] for p in after_close["predictions"]}
+        self.assertEqual(preserved, original)
+        self.assertEqual(len(ledger.read_text().splitlines()), len(DEPARTMENTS))
+
+    def test_frozen_department_ledger_survives_git_reset_checkpoint(self):
+        import shutil
+        from preserve_validation import save, restore
+        build_all_department_coverage(
+            self.race, self.plans, specialist_rows(self.race, self.now), self.now, self.output
+        )
+        original = self.output / "company/all_department_prediction_ledger.jsonl"
+        root = self.output / "working"
+        target = root / "outputs/company/all_department_prediction_ledger.jsonl"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(original, target)
+        checkpoint = self.output / "checkpoint"
+        save(checkpoint, root)
+        target.unlink()
+        restore(checkpoint, root)
+        self.assertEqual(target.read_bytes(), original.read_bytes())
+        restore(checkpoint, root)
+        self.assertEqual(len(target.read_text().splitlines()), len(DEPARTMENTS))
+
     def test_closed_race_is_not_falsely_predicted(self):
         past = entries(self.now, minutes_to_close=-1)
         report = build_all_department_coverage(past, self.plans, [], self.now, self.output)
