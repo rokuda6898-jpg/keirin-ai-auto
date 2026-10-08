@@ -11,7 +11,7 @@ from zoneinfo import ZoneInfo
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from department_coverage import DEPARTMENTS, build_all_department_coverage, build_department_scoreboard, diagnose_position_misses, position_scenario
+from department_coverage import DEPARTMENTS, build_all_department_coverage, build_department_scoreboard, build_high_payout_axis_report, diagnose_position_misses, freeze_high_payout_axis_experiments, position_scenario
 from annual_knowledge import forecast_departments
 from site_manager import RiderButtonParser, audit_entries, audit_site_output, normalized_player_id
 
@@ -160,6 +160,77 @@ class DepartmentCoverageTest(unittest.TestCase):
         self.assertEqual(report["high_payout_department"]["pattern_counts"]["second_third_swapped"], 1)
         self.assertEqual(report["pace_department"]["evidence_status"], "exploratory_small_sample")
         self.assertEqual(report["line_department"]["evaluated_races"], 0)
+
+    def test_longshot_first_axis_comparison_is_preclose_frozen_and_unpriced(self):
+        views = specialist_rows(self.race, self.now)
+        # Six reference offices back car 1, except risk which backs car 3.
+        for item in views:
+            if item["department"] == "risk_department":
+                item["winner_car"] = 3
+                item["top3_cars"] = [3, 1, 2]
+        report = build_all_department_coverage(
+            self.race, self.plans, views, self.now, self.output
+        )
+        ledger = self.output / "company/high_payout_axis_shadow_ledger.jsonl"
+        frozen = [json.loads(x) for x in ledger.read_text().splitlines()]
+        self.assertEqual(len(frozen), 1)
+        row = frozen[0]
+        self.assertEqual(row["version"], "high_payout_first_axis_shadow_v1")
+        self.assertFalse(row["purchase_authorized"])
+        self.assertEqual(row["variants"]["six_department_consensus"], 1)
+        self.assertEqual(row["variants"]["risk_axis"], 3)
+        self.assertEqual(row["variants"]["consensus_veto"], 1)
+        self.assertGreater(float(row["close_at"]), self.now.timestamp() + 300)
+        snapshot_bytes = ledger.read_bytes()
+        # Updating the live ranking cannot rewrite the frozen A/B hypotheses.
+        changed = self.race.copy()
+        changed["p_win"] = list(reversed(changed["p_win"].tolist()))
+        build_all_department_coverage(
+            changed, self.plans, views, self.now + timedelta(minutes=2), self.output
+        )
+        self.assertEqual(ledger.read_bytes(), snapshot_bytes)
+        self.assertEqual(report["coverage_status"], "complete")
+
+    def test_longshot_axis_comparison_only_scores_official_postfreeze_outcomes(self):
+        views = specialist_rows(self.race, self.now)
+        for item in views:
+            if item["department"] == "risk_department":
+                item["winner_car"] = 3
+                item["top3_cars"] = [3, 1, 2]
+        build_all_department_coverage(
+            self.race, self.plans, views, self.now, self.output
+        )
+        folder = self.output / "company"
+        ledger = folder / "high_payout_axis_shadow_ledger.jsonl"
+        row = json.loads(ledger.read_text().splitlines()[0])
+        consensus = row["variants"]["six_department_consensus"]
+        (self.output / "latest_results.json").write_text(json.dumps([{
+            "race_id": "017420261008",
+            "official_result_available": False,
+            "actual_trifecta": f"{consensus}-2-3" if consensus != 2 else "2-3-4",
+        }]), encoding="utf-8")
+        self.assertEqual(build_high_payout_axis_report(self.output)["settled_races"], 0)
+        actual = f"{consensus}-2-3" if consensus != 2 else "2-3-4"
+        (self.output / "latest_results.json").write_text(json.dumps([{
+            "race_id": "017420261008",
+            "official_result_available": True,
+            "actual_trifecta": actual,
+        }]), encoding="utf-8")
+        summary = build_high_payout_axis_report(self.output)
+        self.assertEqual(summary["settled_races"], 1)
+        self.assertEqual(summary["variants"]["six_department_consensus"]["winner_hits"], 1)
+        self.assertFalse(summary["auto_promotion"])
+        self.assertFalse(summary["ready_for_review"])
+        self.assertTrue((folder / "high_payout_axis_shadow_report.html").exists())
+        (self.output / "latest_results.json").write_text("[]", encoding="utf-8")
+        self.assertEqual(build_high_payout_axis_report(self.output)["settled_races"], 1)
+
+    def test_longshot_axis_has_no_hindsight_backfill(self):
+        past = entries(self.now, minutes_to_close=-1)
+        report = build_all_department_coverage(past, self.plans, [], self.now, self.output)
+        self.assertEqual(report["upcoming_missing_forecasts"], 0)
+        self.assertEqual(build_high_payout_axis_report(self.output)["frozen_races"], 0)
+        self.assertFalse((self.output / "company/high_payout_axis_shadow_ledger.jsonl").exists())
 
     def test_closed_race_is_not_falsely_predicted(self):
         past = entries(self.now, minutes_to_close=-1)
