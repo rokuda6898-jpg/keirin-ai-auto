@@ -1,0 +1,31 @@
+name: Prediction mark audit tests
+
+on:
+  push:
+    paths:
+      - ".github/workflows/mark-audit-check.yml"
+      - "src/mark_performance.py"
+      - "src/predict.py"
+      - "src/settle_results.py"
+      - "src/public_performance.py"
+      - "tests/test_mark_performance.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install lightweight audit dependencies
+        run: python -m pip install numpy pandas
+      - name: Compile integration modules
+        run: python -m py_compile src/mark_performance.py src/predict.py src/settle_results.py src/public_performance.py
+      - name: Test prospective-only mark accuracy
+        run: python -m unittest discover -s tests -p 'test_mark_performance.py' -v
