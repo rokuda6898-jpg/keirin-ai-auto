@@ -1557,7 +1557,7 @@ def main():
     annual = build_annual_profiles(now_jst.date())
     department_now = datetime.now(ZoneInfo("Asia/Tokyo"))
     department_proposals = forecast_departments(pred, today_odds, annual, department_now)
-    build_all_department_coverage(pred, strategy_plans, department_proposals, department_now)
+    build_all_department_coverage(pred, strategy_plans, department_proposals, department_now, odds=today_odds)
     build_department_scoreboard(OUTPUT_DIR)
     shadow_path = OUTPUT_DIR / f"shadow_bets_{output_tag}.csv"
     latest_shadow_path = OUTPUT_DIR / "latest_shadow_bets.csv"
