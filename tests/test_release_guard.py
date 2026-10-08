@@ -66,6 +66,24 @@ class ReleaseGateTests(unittest.TestCase):
         self.assertTrue(any("missing/duplicate department" in error for error in
                             validate_release(self.root, self.now)))
 
+    def test_serialized_html_with_reversed_attributes_is_valid(self):
+        (self.root / "outputs/index.html").write_text(
+            '<!doctype html><html><head>'
+            '<meta content="' + SCHEMA + '" name="nexus-render-schema"/>'
+            '</head><body><article class="race" id="race-000001"></article>'
+            '</body></html>', encoding="utf-8"
+        )
+        self.assertEqual(validate_release(self.root, self.now), [])
+
+    def test_reordered_attributes_do_not_hide_a_missing_race(self):
+        (self.root / "outputs/index.html").write_text(
+            '<meta content="' + SCHEMA + '" name="nexus-render-schema">'
+            '<article class="race" id="race-unrelated"></article>',
+            encoding="utf-8"
+        )
+        self.assertTrue(any("race absent from site HTML" in error
+                            for error in validate_release(self.root, self.now)))
+
     def test_stale_site_html_cannot_be_published(self):
         (self.root / "outputs/index.html").write_text(
             '<meta name="nexus-render-schema" content="provisional-picks-v1">',
