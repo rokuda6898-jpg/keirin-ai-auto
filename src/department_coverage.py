@@ -647,6 +647,8 @@ def build_department_scoreboard(output_dir=OUTPUT_DIR):
     report = {
         "updated_at_jst": now,
         "note": "Independent advisory 1-2-3 scenario accuracy only. Not purchased tickets or real ROI.",
+        "snapshot_policy": "legacy_first_preclose_per_department_not_matched",
+        "controlled_comparison": "annual_position_experiment_report.json",
         "departments": by_department,
         "settled_predictions": len(rows),
         "miss_diagnostics": diagnose_position_misses(rows),
@@ -674,6 +676,8 @@ def build_department_scoreboard(output_dir=OUTPUT_DIR):
         '.scroll{overflow:auto}p{line-height:1.8}a{color:#0965c7}</style></head><body><main>'
         '<p><a href="all_department_predictions.html">全レース7部署の予想へ戻る</a> ／ <a href="high_payout_axis_shadow_report.html">高配当部の1着軸比較</a></p>'
         '<section><h1>7部署の着順予想・事後検証</h1>'
+        '<p>この従来集計は初回の事前予想です。締切前最新の予想とは混ぜません。'
+        '<a href="annual_position_experiment_report.html">2・3着改善案の同時点・同点数比較</a></p>'
         '<p>各部署が締切前に提出した1着・2着・3着の並びを公式結果で検証。'
         '未提出や未確定のレースは成績に含めません。実購入した車券の的中率や回収率ではありません。</p>'
         '<div class="scroll"><table><tr><th>部署</th><th>検証レース</th>'
@@ -706,4 +710,6 @@ def build_department_scoreboard(output_dir=OUTPUT_DIR):
     build_high_payout_axis_report(output_dir)
     from market_axis_shadow import build_market_report
     build_market_report(output_dir)
+    from department_position_experiment import build_report
+    build_report(output_dir)
     return report

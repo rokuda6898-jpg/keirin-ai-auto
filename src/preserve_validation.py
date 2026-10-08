@@ -11,6 +11,8 @@ LEDGERS = ["outputs/company/ticket_return_snapshots.jsonl",
            "outputs/company/high_payout_axis_shadow_ledger.jsonl",
            "outputs/company/market_first_shadow_ledger.jsonl",
            "outputs/company/annual_department_prediction_ledger.jsonl",
+           "outputs/company/annual_position_experiment_ledger.jsonl",
+           "outputs/company/annual_position_experiment_outcomes.jsonl",
            "outputs/company/annual_strategist_ledger.jsonl"]
 OBSERVATIONS = "outputs/company/rider_official_observations.csv"
 CACHES = ["data/raw/live_feature_base.csv", "data/raw/live_feature_base.meta.json",

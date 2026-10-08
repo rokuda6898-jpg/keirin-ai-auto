@@ -2,6 +2,11 @@ name: keirin-fast-ci
 
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - "src/**"
+      - "tests/**"
+      - ".github/workflows/fast-ci.yml"
   push:
     branches: [main]
     paths:
@@ -13,7 +18,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: keirin-fast-ci
+  group: keirin-fast-ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
