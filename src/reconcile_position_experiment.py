@@ -48,6 +48,17 @@ def reconcile(root=ROOT, ref=None):
     if v2['invalid_records'] or v2['invalid_attempts'] or v2['outcome_conflicts']:
         raise ValueError('position v2 evidence integrity requires review before publication')
     build_equation_report(root / 'outputs')
+    # A concurrent manager may retain an older generated operations page.
+    # Refresh its research navigation without generating any forecasts.
+    navigation = root / 'outputs/company/operations.html'
+    if navigation.exists():
+        page = navigation.read_text(encoding='utf-8')
+        if 'href="annual_equation_report.html"' not in page:
+            if '</nav>' not in page:
+                raise ValueError('company navigation missing; equation link cannot be published')
+            page = page.replace('</nav>', '<p><a href="annual_equation_report.html">'
+                                '３つの方程式の比較研究・社長への採用は検証後</a></p></nav>', 1)
+            navigation.write_text(page, encoding='utf-8')
     return build_report(root / 'outputs')
 
 
