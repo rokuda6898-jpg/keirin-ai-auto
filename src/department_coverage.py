@@ -102,9 +102,16 @@ def _load_preserved(folder):
                 t = datetime.fromisoformat(entry["snapshot_at"])
                 close = float(entry["close_at"])
                 key = (str(entry["race_id"]), entry["department"])
-                if (entry.get("forecast_available") and t.tzinfo is not None and
-                        math.isfinite(close) and t.timestamp() < close and
-                        (key not in result or entry["snapshot_at"] > result[key]["snapshot_at"])):
+                order = entry.get("top3_cars")
+                valid_order = (isinstance(order, list) and len(order) == 3
+                               and len({str(car) for car in order}) == 3)
+                if (entry.get("forecast_available") and valid_order
+                        and t.tzinfo is not None and math.isfinite(close)
+                        and t.timestamp() < close
+                        and (key not in result or t.timestamp() <
+                             datetime.fromisoformat(result[key]["snapshot_at"]).timestamp())):
+                    # Retain the first valid pre-close prediction as the
+                    # immutable baseline, not later overwritten rankings.
                     result[key] = entry
             except (ValueError, KeyError, TypeError, json.JSONDecodeError):
                 continue
@@ -143,7 +150,8 @@ def build_all_department_coverage(pred, plans, specialist_rows, now, output_dir=
                 records.append(normalized)
                 if (forecast_eligible and normalized.get("forecast_available")
                         and normalized.get("close_at") is not None
-                        and now.timestamp() < float(normalized["close_at"])):
+                        and now.timestamp() < float(normalized["close_at"])
+                        and (rid, d) not in preserved):
                     fresh.append(normalized)
             else:
                 old = preserved.get((rid, d))
@@ -204,7 +212,7 @@ def build_all_department_coverage(pred, plans, specialist_rows, now, output_dir=
                 ),
             }
             records.append(entry)
-            if entry["forecast_available"] and in_time:
+            if entry["forecast_available"] and in_time and (rid, d) not in preserved:
                 fresh.append(entry)
 
     # Report coverage as a matrix, never treat a missing forecast as success.
