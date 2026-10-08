@@ -22,6 +22,14 @@ SOURCES = (
     "src/mark_performance.py",
     "src/site_ui.py",
     "src/betting_logic.py",
+    "src/high_payout_strategy.py",
+    "src/position_market.py",
+    "src/department_position_experiment.py",
+    "src/department_ticket_v2.py",
+    "src/department_context.py",
+    "src/department_experiment_v2.py",
+    "src/official_outcomes.py",
+    "src/settle_results.py",
     "src/release_guard.py",
 )
 DEPARTMENTS = {

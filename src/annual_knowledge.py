@@ -124,7 +124,7 @@ def build_annual_profiles(asof=None, history_path=HISTORY_CSV, output_dir=OUTPUT
         previous["history_refresh_status"] = "preserved_until_full_history_is_mounted"
         return previous
     digest = hashlib.sha256(str(asof.date()).encode())
-    for path in [history_path, observations, Path(__file__)]:
+    for path in [history_path, observations, Path(__file__), Path(__file__).with_name('department_context.py')]:
         if path.exists():
             with path.open("rb") as handle:
                 for block in iter(lambda: handle.read(1024 * 1024), b""):
@@ -210,6 +210,14 @@ def build_annual_profiles(asof=None, history_path=HISTORY_CSV, output_dir=OUTPUT
             names = group.get("player_name", pd.Series(dtype=str)).dropna().astype(str).loc[lambda value: value.ne("")]
             profile["name"] = str(names.iloc[-1]) if len(names) else ""
             profiles[str(player_id)] = profile
+    from department_context import opponent_profiles
+    context_history = history
+    if not history.empty and 'date' in history:
+        context_history = history[pd.to_datetime(history.date, errors='coerce').ge(start3)]
+    contexts, context_coverage = opponent_profiles(context_history, asof.date())
+    for pid, profile in profiles.items():
+        if pid in contexts:
+            profile['opponent_context'] = contexts[pid]
     report = {"updated_at_jst": datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(timespec="seconds"),
               "fingerprint": fingerprint, "asof_date": str(asof.date()), "window_start": str(start.date()),
               "window_end_exclusive": str(asof.date()), "reference_window_start": str(start3.date()),
@@ -217,7 +225,7 @@ def build_annual_profiles(asof=None, history_path=HISTORY_CSV, output_dir=OUTPUT
                                    "year_weights": [1.0, .5, .25]}, "total_archive_races": total_races,
               "annual_races": annual_races, "annual_archive_races": annual_archive_races,
               "supplemental_result_races": supplemental_races, "reference_races_including_supplemental": reference_races,
-              "players": len(profiles), "profiles": profiles,
+              "players": len(profiles), "profiles": profiles, "opponent_context_coverage": context_coverage,
               "observation_coverage": coverage, "status": "ready" if profiles else "history_unavailable",
               "policy": "full archive retained; adaptive previous 1/2/3 calendar years weighted 1/.5/.25 for all riders; same-day/future results excluded",
               "limitations": ["脚質と決まり手を区別。決まり手・行動の未取得分は推測しない。",
@@ -408,7 +416,13 @@ def forecast_departments(pred, odds, report, now, output_dir=OUTPUT_DIR):
                      "prob": float(t.prob), "ev": float(t.ev)}
                     for t in selected.itertuples()
                 ]
+                if department != 'risk_department':
+                    from department_ticket_v2 import public_preserved
+                    tickets = public_preserved(riders, market, candidates, plan)
                 main_count, hole_count = int(plan["main_count"]), int(plan["hole_count"])
+                if department != 'risk_department':
+                    main_count = sum(t['group'] == '本線' for t in tickets)
+                    hole_count = sum(t['group'] == '穴' for t in tickets)
                 ticket_decision = "eligible" if tickets else "skipped_by_ev_or_odds"
             except (ValueError, KeyError, TypeError, IndexError) as exc:
                 tickets, main_count, hole_count = [], 0, 0
@@ -432,7 +446,8 @@ def forecast_departments(pred, odds, report, now, output_dir=OUTPUT_DIR):
                 "tickets": tickets, "main_count": main_count, "hole_count": hole_count,
                 "ticket_decision": ticket_decision,
                 "probability_status": "provisional_annual_shadow",
-                "ticket_strategy": "risk_legacy_unchanged" if department == "risk_department" else "preserve_only_v1",
+                "ticket_strategy": "risk_legacy_unchanged" if department == "risk_department" else "preserve_scale_v2",
+                "producer": pred.attrs.get('department_provenance', {}).get('producer', 'legacy_unidentified'),
                 "reference_cutoff_exclusive": report["window_end_exclusive"],
                 "features_used": feature_map[department],
                 "purchase_authorized": False,
@@ -441,12 +456,26 @@ def forecast_departments(pred, odds, report, now, output_dir=OUTPUT_DIR):
             fresh.append(proposal)
         completed = now + timedelta(seconds=time.monotonic() - started)
         try:
-            bundle, reason = make_bundle(race, experiment_inputs, market, completed, report["window_end_exclusive"])
-            completed = now + timedelta(seconds=time.monotonic() - started)
-            if bundle is not None and not append_bundle(bundle, completed, output_dir):
-                reason = "expired_during_calculation"
+            provenance = pred.attrs.get('department_provenance', {})
+            if provenance:
+                from department_experiment_v2 import make_record, append_record, record_attempt
+                bundle, reason = make_record(race, experiment_inputs, market, completed, report, provenance)
+                completed = now + timedelta(seconds=time.monotonic() - started)
+                if bundle is not None and not append_record(bundle, completed, output_dir):
+                    reason = 'expired_during_calculation'
+                record_attempt(race, reason, completed, output_dir,
+                               quote_quality=bundle.get('quote_quality') if bundle else None)
+            else:
+                # Backward-compatible library calls/tests; production uses only
+                # predict_canonical_v2 and never appends more v1 predictions.
+                bundle, reason = make_bundle(race, experiment_inputs, market, completed, report["window_end_exclusive"])
+                completed = now + timedelta(seconds=time.monotonic() - started)
+                if bundle is not None and not append_bundle(bundle, completed, output_dir):
+                    reason = "expired_during_calculation"
         except (ValueError, KeyError, TypeError, IndexError) as exc:
             reason = f"calculation_unavailable:{type(exc).__name__}"
+            if provenance:
+                record_attempt(race, reason, completed, output_dir)
         comparison_decisions.append({"race_id": race_id, "reason": reason})
     (folder / "annual_position_experiment_capture.json").write_text(
         json.dumps({"updated_at_jst": now.isoformat(), "decisions": comparison_decisions},
@@ -470,8 +499,11 @@ def forecast_departments(pred, odds, report, now, output_dir=OUTPUT_DIR):
 
 
 def audit_department_predictions(output_dir=OUTPUT_DIR):
+    from official_outcomes import normalize_outcome, ticket_return
     from department_position_experiment import build_report
     build_report(output_dir)
+    from department_experiment_v2 import build_report as build_v2_report
+    build_v2_report(output_dir)
     from verified_live_audit import build_verified_live_audit
     verified_live = build_verified_live_audit(output_dir)
     folder = output_dir / "company"
@@ -494,22 +526,27 @@ def audit_department_predictions(output_dir=OUTPUT_DIR):
     for result in results:
         if str(result.get("official_result_available")).lower() not in {"true", "1"}:
             continue
-        actual = str(result.get("actual_trifecta") or "")
-        if len(actual.split("-")) != 3:
+        outcome = normalize_outcome(result)
+        if outcome is None:
             continue
+        actual = outcome['winning_buys'][0]
         for key, forecast in latest.items():
             if key[1] == str(result["race_id"]):
                 odds = pd.to_numeric(result.get("actual_trifecta_odds"), errors="coerce")
                 settled[key] = {**forecast, "actual": actual,
+                    "official_outcome": outcome,
                     "actual_odds": float(odds) if pd.notna(odds) and 0 < odds < float("inf") else None}
     saved.write_text(json.dumps(list(settled.values()), ensure_ascii=False, indent=2, allow_nan=False), encoding="utf-8")
     comparisons = []
     for department in ["data_department", "pace_department", "line_department", "risk_department"]:
         rows = [r for r in settled.values() if r["department"] == department]
-        top_hits = sum(str(r["winner_car"]) == r["actual"].split("-")[0] for r in rows)
-        valid = [r for r in rows if r["actual_odds"] is not None and r["tickets"]]
+        def official(row):
+            return row.get('official_outcome') or normalize_outcome({'official_result_available': True,
+                'actual_trifecta': row['actual'], 'actual_trifecta_odds': row.get('actual_odds')})
+        top_hits = sum(any(str(r['winner_car']) == b.split('-')[0] for b in official(r)['winning_buys']) for r in rows)
+        valid = [r for r in rows if official(r)['payout_complete'] and r['tickets']]
         stake = sum(len(r["tickets"]) * 100 for r in valid)
-        returned = sum(r["actual_odds"] * 100 for r in valid if any(t["buy"] == r["actual"] for t in r["tickets"]))
+        returned = sum(ticket_return([{**t, 'stake_yen': 100} for t in r['tickets']], official(r))[1] for r in valid)
         comparisons.append({"department": department, "races": len(rows), "top1_hits": top_hits,
             "top1_hit_rate": top_hits / len(rows) if rows else None,
             "portfolio_payout_races": len(valid), "flat_stake_yen": stake,
@@ -518,7 +555,7 @@ def audit_department_predictions(output_dir=OUTPUT_DIR):
     report = {"updated_at_jst": datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(timespec="seconds"),
               "departments": comparisons, "scope": "frozen-before-close independent annual department proposals",
               "snapshot_policy": "legacy_latest_preclose_per_department_not_matched",
-              "controlled_comparison": "annual_position_experiment_report.json"}
+              "controlled_comparison": "annual_position_v2_report.json"}
     (folder / "annual_department_audit.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     knowledge_path = folder / "annual_rider_knowledge.json"
     knowledge = json.loads(knowledge_path.read_text(encoding="utf-8")) if knowledge_path.exists() else {}
@@ -571,7 +608,7 @@ function renderPlayers() {
 document.getElementById('player-search').addEventListener('input',renderPlayers);
 fetch('annual_rider_knowledge.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('load');return r.json()}).then(d=>{riderKnowledge=d.profiles||{};renderPlayers()}).catch(()=>{document.getElementById('player-list').textContent='成績を読み込めませんでした。ページを更新してください。'});
 </script>"""
-    forecast_view = """<p><a href="annual_position_experiment_report.html">同じレース・時点・点数で2・3着評価の改善案を比較</a></p><p>この従来集計は各部署の締切前最新予想です。初回予想を使う7部署成績とは集計時点が異なり、今回の比較には混ぜません。</p><h2>部署ごとの最新予想（検証用）</h2><p><a href="all_department_predictions.html">全レース7部署の予想・提出状況を見る</a></p><p>取得時点の予想です。締切後に後付けせず、事前予想がないレースは未成立と表示します。購入候補がなくても着順予想は別途提出します。</p><div id="department-forecasts">読み込み中</div><script>
+    forecast_view = """<p><a href="annual_position_v2_report.html">同じレース・時点・点数で2・3着評価の改善案を比較</a></p><p>この従来集計は各部署の締切前最新予想です。初回予想を使う7部署成績とは集計時点が異なり、今回の比較には混ぜません。</p><h2>部署ごとの最新予想（検証用）</h2><p><a href="all_department_predictions.html">全レース7部署の予想・提出状況を見る</a></p><p>取得時点の予想です。締切後に後付けせず、事前予想がないレースは未成立と表示します。購入候補がなくても着順予想は別途提出します。</p><div id="department-forecasts">読み込み中</div><script>
 fetch('annual_department_predictions.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('load');return r.json()}).then(d=>{
  const target=document.getElementById('department-forecasts');target.replaceChildren();
  const labels={data_department:'データ部署',pace_department:'展開部署',line_department:'ライン部署',risk_department:'リスク部署'};
@@ -602,9 +639,8 @@ if __name__ == "__main__":
     market = frame_read(TODAY_ODDS_CSV)
     # Stamp after preparation; network enrichment must not backdate predictions.
     now = datetime.now(ZoneInfo("Asia/Tokyo"))
-    if not entries.empty:
-        entries["p_win"] = 1 / entries.groupby("race_id")["car_no"].transform("size")
-        forecast_departments(entries, market, knowledge, now)
+    # This job enriches historical knowledge only. Forecasts are produced by
+    # predict.py, with its real model inputs, rather than a uniform substitute.
     audit_department_predictions()
     print(json.dumps({"archive_races": knowledge["total_archive_races"], "annual_races": knowledge["annual_races"],
                       "players": knowledge["players"]}, ensure_ascii=False))

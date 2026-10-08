@@ -88,6 +88,9 @@ def append_bundle(bundle, completed_at, output_dir=OUTPUT_DIR):
 
 def valid_bundle(row):
     try:
+        if 'evidence' in row and row.get('input_sha256') != hashlib.sha256(
+                json.dumps(row['evidence'], sort_keys=True, ensure_ascii=False).encode()).hexdigest():
+            return False
         stamp = datetime.fromisoformat(row['snapshot_at'])
         quote = datetime.fromisoformat(row['quote_snapshot_at'])
         if (row['version'] != VERSION or row['snapshot_policy'] != POLICY
@@ -141,12 +144,16 @@ def performance(samples, arm, group):
     for row in samples:
         tickets = [t for t in row['arms'][arm]['tickets'] if t['group'] == group]
         cost = sum(t['stake_yen'] for t in tickets)
-        hit = any(t['buy'] == row['actual'] for t in tickets)
+        hit = any(t['buy'] in row.get('winning_buys', [row['actual']]) for t in tickets)
         hits += hit
         payout = row.get('payout_per_100yen')
+        if 'payouts' in row:
+            payout = 1 if row.get('payout_complete') else None
+            value = sum(row['payouts'].get(t['buy'], 0) * t['stake_yen'] / 100 for t in tickets)
+        else:
+            value = float(payout) if hit and payout is not None else 0
         if hit and payout is None:
             missing_payout += 1
-        value = float(payout) if hit and payout is not None else 0
         if payout is not None:  # identical payout-complete cohort for every arm
             stake += cost
             returned += value
@@ -185,8 +192,8 @@ def summarize(rows):
             comparisons[department + ':' + group] = {
                 'paired_races': len(samples), 'race_ids': [r['race_id'] for r in samples],
                 'excluded': dict(exclusions), 'arms': metrics, 'paired_differences': differences,
-                'risk_only_hits': sum(any(t['group'] == group and t['buy'] == r['actual'] for t in r['arms']['risk']['tickets'])
-                                      and not any(t['group'] == group and t['buy'] == r['actual']
+                'risk_only_hits': sum(any(t['group'] == group and t['buy'] in r.get('winning_buys', [r['actual']]) for t in r['arms']['risk']['tickets'])
+                                      and not any(t['group'] == group and t['buy'] in r.get('winning_buys', [r['actual']])
                                                   for a in keys[1:] for t in r['arms'][a]['tickets']) for r in samples)}
     # Descriptive risk-only view includes count-mismatched races, explicitly
     # separate from the fair comparison. Quantify dependence on isolated wins.
@@ -230,7 +237,9 @@ def build_report(output_dir=OUTPUT_DIR):
             payout = None
         if payout is None and outcomes.get(rid, {}).get('actual') == actual:
             payout = outcomes[rid].get('payout_per_100yen')
-        outcome = {'actual': actual, 'payout_per_100yen': payout}
+        from official_outcomes import normalize_outcome
+        normalized = normalize_outcome(result)
+        outcome = {'actual': actual, 'payout_per_100yen': payout, **(normalized or {})}
         if outcomes.get(rid) != outcome:
             additions.append({'race_id': rid, 'outcome': outcome,
                               'observed_at': datetime.now(ZoneInfo('Asia/Tokyo')).isoformat()})
@@ -279,7 +288,7 @@ def render_report(report, folder):
         'main{max-width:1050px;margin:auto}section{background:white;padding:20px;margin:16px 0;border-radius:12px}' +\
         'p{line-height:1.8}table{border-collapse:collapse;width:100%}th,td{padding:10px;text-align:left;border-bottom:1px solid #ddd}.scroll{overflow:auto}</style><main>' +\
         '<p><a href="annual_department_report.html">部署別予想へ</a> ／ <a href="operations.html">運用状況へ</a></p>' +\
-        '<h1>部署別2・3着評価の比較</h1><p>リスク部の現行ロジック・買い目を固定した比較です。' +\
+        '<h1>部署別2・3着評価の比較（旧v1）</h1><p><a href="annual_position_v2_report.html">改善後の比較 v2 へ</a>。このページは旧版の記録です。</p><p>リスク部の現行ロジック・買い目を固定した比較です。' +\
         '①部署評価の保持、②順位別の市場支持と1・2着に応じた3着評価、それぞれ単独と併用で検証します。</p>' +\
         '<p>締切40分〜5分前に全案を同時保存した最新記録のみ。同じレース・時点・本線と穴それぞれ同じ点数・1点100円。' +\
         '各最大12点、穴は取得時100倍以上。旧集計と過去の再予想を混ぜません。</p>' +\

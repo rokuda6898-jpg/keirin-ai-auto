@@ -10,6 +10,19 @@ import settle_results
 
 
 class SettleResultsTests(unittest.TestCase):
+    def test_tied_result_settles_both_winners_and_keeps_both_payoffs(self):
+        entries = pd.DataFrame([{'race_id':'test','car_no':car} for car in (1,2,3,4)])
+        page = 'レースが確定しました 1着 1 1 2着 2 2 3着 3 3 3着 4 4 ３連単 1>2>3 10,000円 1>2>4 30,000円 ３連複'
+        result = settle_results.parse_netkeirin_result_html(page,entries,'https://example.test/result')
+        self.assertEqual(result['actual_trifecta_buys'],['1-2-3','1-2-4'])
+        frame = settle_results.official_trifecta_frame(pd.DataFrame([result]))
+        self.assertEqual(frame.iloc[0].actual_trifecta,'1-2-3|1-2-4')
+        import json
+        self.assertEqual(json.loads(result['payouts_trifecta_json']),{'1-2-3':10000,'1-2-4':30000})
+        row = pd.DataFrame([{'actual_trifecta':'1-2-3|2-1-3','actual_winner_car_no':1,
+                             'predicted_winner_car_no':2}])
+        self.assertTrue(settle_results.top1_hits(row,'predicted_winner_car_no').iloc[0])
+
     def test_day_rollover_preserves_confirmation_and_accepts_new_results(self):
         prior = pd.DataFrame([
             {"race_id":"old", "bet_type":"trifecta", "buy":"1-2-3", "is_decided":True, "actual_return_yen":500},

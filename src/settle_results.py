@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 
 from common import OUTPUT_DIR, RAW_DIR, ensure_dirs
+from official_outcomes import winning_ticket_values
 from fetch_today_entries import extract_preloaded_state, find_query_data, http_get
 
 TODAY_CSV = RAW_DIR / "today_entries.csv"
@@ -63,12 +64,12 @@ def parse_netkeirin_result_html(page_html, race_entries, source_url):
     if "レースが確定しました" not in text:
         return None
 
-    top3 = []
-    for rank in (1, 2, 3):
-        m = re.search(rf"{rank}着\s*(\d+)\s+(\d+)\b", text)
-        if not m:
-            return None
-        top3.append(int(m.group(2)))
+    from official_outcomes import winning_orders
+    ordered = [(int(rank), int(car)) for rank, _, car in re.findall(r'([123])着\s*(\d+)\s+(\d+)\b', text)]
+    winning_buys = winning_orders(ordered)
+    if not winning_buys:
+        return None
+    top3 = list(map(int, winning_buys[0].split('-')))
 
     race_id = str(race_entries.iloc[0].get("race_id", "") or "")
     bracket_by_car = {}
@@ -81,19 +82,18 @@ def parse_netkeirin_result_html(page_html, race_entries, source_url):
 
     actual = actual_buy_sets(top3, bracket_by_car)
     winning_buy = "-".join(str(x) for x in top3)
-    payout_match = re.search(
-        r"３連単\s*([1-9])\s*[>＞]\s*([1-9])\s*[>＞]\s*([1-9])\s*([\d,]+)円",
-        text,
-    )
-    payout_yen = np.nan
-    if payout_match:
-        parsed_buy = "-".join(payout_match.group(i) for i in (1, 2, 3))
-        if parsed_buy == winning_buy:
-            payout_yen = float(payout_match.group(4).replace(",", ""))
+    section = re.search(r'３連単(.*?)(?:３連複|２車単|２車複|２枠|ワイド|$)', text)
+    payouts = {}
+    for a, b, c, price in re.findall(r'([1-9])\s*[>＞]\s*([1-9])\s*[>＞]\s*([1-9])\s*([\d,]+)円', section.group(1) if section else ''):
+        buy = f'{a}-{b}-{c}'
+        if buy in winning_buys:
+            payouts[buy] = int(price.replace(',', ''))
+    payout_yen = payouts.get(winning_buy, np.nan)
 
     result = {
         "race_id": race_id,
         "actual_trifecta": winning_buy,
+        "actual_trifecta_buys": winning_buys,
         "actual_trifecta_odds": (payout_yen / 100.0 if pd.notna(payout_yen) else np.nan),
         "race_status": "confirmed_secondary",
         "start_at": race_entries.iloc[0].get("start_at"),
@@ -103,14 +103,15 @@ def parse_netkeirin_result_html(page_html, race_entries, source_url):
         "source_url": str(race_entries.iloc[0].get("source_url", "") or ""),
         "result_source": "netkeirin_fallback",
         "secondary_result_url": source_url,
+        "result_observed_at_jst": datetime.now(ZoneInfo('Asia/Tokyo')).isoformat(),
     }
     for bet_type, buy in actual.items():
         result[f"actual_{bet_type}"] = buy
 
     for bet_type in PAYOUT_SPECS:
         payload = {}
-        if bet_type == "trifecta" and pd.notna(payout_yen):
-            payload[winning_buy] = int(payout_yen)
+        if bet_type == "trifecta":
+            payload = payouts
         result[f"payouts_{bet_type}_json"] = json.dumps(payload, ensure_ascii=False, sort_keys=True)
     return result
 
@@ -243,6 +244,8 @@ def parse_result_page(url):
         if isinstance(order, int) and car_no:
             ordered.append((order, car_no, player_id))
     ordered = sorted(ordered)
+    from official_outcomes import winning_orders
+    winning_buys = winning_orders(ordered)
     top3 = [car_no for order, car_no, player_id in ordered if order in [1, 2, 3]][:3]
     winning_buy = "-".join(str(x) for x in top3) if len(top3) == 3 else ""
     actual = actual_buy_sets(top3, bracket_by_car)
@@ -264,6 +267,7 @@ def parse_result_page(url):
     result = {
         "race_id": race_id,
         "actual_trifecta": winning_buy,
+        "actual_trifecta_buys": winning_buys,
         "actual_trifecta_odds": winning_odds,
         "race_status": race.get("status"),
         "start_at": race.get("startAt"),
@@ -271,7 +275,7 @@ def parse_result_page(url):
         "decided_at": race.get("decidedAt"),
         # Official completion is based on actual published finish order, never on
         # scheduled time or a provider status string alone.
-        "official_result_available": bool(len(top3) == 3),
+        "official_result_available": bool(winning_buys),
         "source_url": url,
         "result_source": "winticket",
         "secondary_result_url": "",
@@ -280,6 +284,7 @@ def parse_result_page(url):
         result[f"actual_{bet_type}"] = buy
     for bet_type, ticket_payouts in payouts.items():
         result[f"payouts_{bet_type}_json"] = json.dumps(ticket_payouts, ensure_ascii=False, sort_keys=True)
+    result['result_observed_at_jst'] = datetime.now(ZoneInfo('Asia/Tokyo')).isoformat()
     return result
 
 
@@ -501,6 +506,20 @@ def update_prediction_history(settled):
     combined.to_csv(PREDICTION_HISTORY_CSV, index=False)
     return combined
 
+def official_trifecta_frame(results):
+    actual = results[["race_id", "actual_trifecta", "official_result_available"]].copy()
+    actual['actual_trifecta'] = results.apply(lambda row: '|'.join(winning_ticket_values(row)), axis=1)
+    return actual
+
+
+def top1_hits(scored, prediction_column):
+    if 'actual_trifecta' not in scored:
+        return pd.to_numeric(scored[prediction_column], errors='coerce').eq(scored['actual_winner_car_no'])
+    return scored.apply(lambda row: any(str(int(row[prediction_column])) == b.split('-')[0]
+                        for b in str(row['actual_trifecta']).split('|'))
+                        if pd.notna(row[prediction_column]) else False, axis=1)
+
+
 def classify_top1_misses(scored):
     """Classify repeatable prediction failure patterns without inventing race events."""
     if scored.empty:
@@ -512,7 +531,7 @@ def classify_top1_misses(scored):
     second = pd.to_numeric(out.get("second_pick_car_no"), errors="coerce")
     line_pos = pd.to_numeric(out.get("line_position"), errors="coerce")
     pressure = pd.to_numeric(out.get("race_attack_pressure"), errors="coerce")
-    out["is_hit"] = pred.eq(actual)
+    out["is_hit"] = top1_hits(out, 'predicted_winner_car_no')
     out["miss_reason"] = "hit"
     miss = ~out["is_hit"]
     out.loc[miss & second.eq(actual), "miss_reason"] = "second_pick_won"
@@ -534,7 +553,7 @@ def update_trifecta_top10_accuracy(results):
     if "variant" not in ledger.columns:
         ledger["variant"] = "production_top10"
 
-    actual = results[["race_id", "actual_trifecta", "official_result_available"]].copy()
+    actual = official_trifecta_frame(results)
     actual["race_id"] = actual["race_id"].astype(str)
     actual = actual[
         actual["official_result_available"].fillna(False).astype(bool)
@@ -553,7 +572,7 @@ def update_trifecta_top10_accuracy(results):
     for (race_id, variant), group in merged.groupby(["race_id", "variant"], sort=False):
         actual_buy = str(group["actual_trifecta"].iloc[-1])
         tickets = group.sort_values("ticket_rank") if "ticket_rank" in group.columns else group
-        hit_rows = tickets[tickets["buy"].astype(str).eq(actual_buy)]
+        hit_rows = tickets[tickets["buy"].astype(str).isin(actual_buy.split('|'))]
         base = tickets.iloc[0]
         rows.append({
             "date": base.get("date", ""),
@@ -670,7 +689,7 @@ def update_final_trifecta_ticket_accuracy(results):
         tri = tri[tri["_snapshot_time"].eq(latest)].copy()
     tri["race_id"] = tri["race_id"].astype(str)
 
-    actual = results[["race_id", "actual_trifecta", "official_result_available"]].copy()
+    actual = official_trifecta_frame(results)
     actual["race_id"] = actual["race_id"].astype(str)
     actual = actual[
         actual["official_result_available"].fillna(False).astype(bool)
@@ -688,7 +707,7 @@ def update_final_trifecta_ticket_accuracy(results):
             group.sort_values(rank_col, kind="mergesort")
             if rank_col else group
         )
-        hit_rows = tickets[tickets["buy"].astype(str).eq(actual_buy)]
+        hit_rows = tickets[tickets["buy"].astype(str).isin(actual_buy.split('|'))]
         base = tickets.iloc[0]
         rows.append({
             "date": base.get("date", ""),
@@ -760,7 +779,7 @@ def update_top1_accuracy(results):
     # the current active slice, so using only this run's results resets accuracy
     # to zero or a tiny sample as races rotate out.
     cache_path = OUTPUT_DIR / "top1_settled_results.csv"
-    current_actual = results[["race_id", "actual_trifecta", "official_result_available"]].copy()
+    current_actual = official_trifecta_frame(results)
     if cache_path.exists():
         try:
             cached = pd.read_csv(cache_path, dtype={"race_id": str})
@@ -801,10 +820,10 @@ def update_top1_accuracy(results):
     if variant_path.exists():
         try:
             variants = pd.read_csv(variant_path, dtype={"race_id": str})
-            scored = variants.merge(actual[["race_id","actual_winner_car_no","official_result_available"]], on="race_id", how="inner")
+            scored = variants.merge(actual[["race_id","actual_winner_car_no","actual_trifecta","official_result_available"]], on="race_id", how="inner")
             scored = scored[scored["official_result_available"].fillna(False).astype(bool)].copy()
             scored["predicted_winner_car_no"] = pd.to_numeric(scored["predicted_winner_car_no"], errors="coerce")
-            scored["is_hit"] = scored["predicted_winner_car_no"].eq(scored["actual_winner_car_no"])
+            scored["is_hit"] = top1_hits(scored, 'predicted_winner_car_no')
             summary = scored.groupby("variant", as_index=False).agg(races=("race_id","size"), hits=("is_hit","sum"))
             summary["hit_rate"] = summary["hits"] / summary["races"]
             summary["updated_at_jst"] = datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(timespec="seconds")
@@ -821,7 +840,7 @@ def update_top1_accuracy(results):
         try:
             consensus = pd.read_csv(consensus_path, dtype={"race_id": str})
             scored_consensus = consensus.merge(
-                actual[["race_id","actual_winner_car_no","official_result_available"]],
+                actual[["race_id","actual_winner_car_no","actual_trifecta","official_result_available"]],
                 on="race_id", how="inner"
             )
             scored_consensus = scored_consensus[
@@ -830,9 +849,7 @@ def update_top1_accuracy(results):
             scored_consensus["consensus_winner_car_no"] = pd.to_numeric(
                 scored_consensus["consensus_winner_car_no"], errors="coerce"
             )
-            scored_consensus["is_hit"] = scored_consensus["consensus_winner_car_no"].eq(
-                scored_consensus["actual_winner_car_no"]
-            )
+            scored_consensus["is_hit"] = top1_hits(scored_consensus, 'consensus_winner_car_no')
             summary = scored_consensus.groupby("consensus_level", as_index=False).agg(
                 races=("race_id","size"), hits=("is_hit","sum")
             )
@@ -890,7 +907,7 @@ def run_settlement(args):
         settled = bets.merge(results, on="race_id", how="left")
         settled["is_selected"] = pd.to_numeric(settled["expected_profit_yen"], errors="coerce").fillna(-10**9) > args.min_expected_profit
         settled["actual_for_bet_type"] = settled.apply(
-            lambda row: row.get(f"actual_{row.get('bet_type', 'trifecta')}", row.get("actual_trifecta", "")),
+            lambda row: '|'.join(winning_ticket_values(row, row.get('bet_type', 'trifecta'))),
             axis=1,
         )
         official = settled.get("official_result_available", pd.Series(False, index=settled.index))

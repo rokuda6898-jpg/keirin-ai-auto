@@ -16,6 +16,7 @@ from build_history import extract_month_cups
 from common import MODEL_PATH, OUTPUT_DIR, ensure_dirs
 from fetch_today_entries import extract_preloaded_state, find_query_data, http_get
 from settle_results import parse_result_page, settled_return_yen
+from official_outcomes import winning_ticket_values
 
 SHADOW_GLOB = "shadow_bets_20*.csv"
 RESULT_CACHE_CSV = OUTPUT_DIR / "shadow_race_results.csv"
@@ -255,7 +256,7 @@ def settle_shadow_rows(bets, results):
     if "bet_type" not in settled.columns:
         settled["bet_type"] = "trifecta"
     settled["actual_for_bet_type"] = settled.apply(
-        lambda row: row.get(f"actual_{row.get('bet_type', 'trifecta')}", row.get("actual_trifecta", "")),
+        lambda row: '|'.join(winning_ticket_values(row, row.get('bet_type', 'trifecta'))),
         axis=1,
     )
     settled["is_decided"] = settled["actual_for_bet_type"].fillna("").astype(str).str.len().gt(0)

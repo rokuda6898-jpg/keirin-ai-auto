@@ -8,9 +8,10 @@ import subprocess
 from pathlib import Path
 
 from department_position_experiment import LEDGER, build_report
+from department_experiment_v2 import LEDGER as V2_LEDGER, ATTEMPTS, OUTCOMES, build_report as build_v2_report
 
 ROOT = Path(__file__).resolve().parents[1]
-LEDGERS = (LEDGER, 'annual_position_experiment_outcomes.jsonl')
+LEDGERS = (LEDGER, 'annual_position_experiment_outcomes.jsonl', V2_LEDGER, ATTEMPTS, OUTCOMES)
 
 
 def reconcile(root=ROOT, ref=None):
@@ -39,6 +40,9 @@ def reconcile(root=ROOT, ref=None):
                     seen.add(line)
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text('\n'.join(existing) + '\n', encoding='utf-8')
+    v2 = build_v2_report(root / 'outputs')
+    if v2['invalid_records'] or v2['invalid_attempts'] or v2['outcome_conflicts']:
+        raise ValueError('position v2 evidence integrity requires review before publication')
     return build_report(root / 'outputs')
 
 
