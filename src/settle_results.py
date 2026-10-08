@@ -939,6 +939,13 @@ def run_settlement(args):
     )
     summary.to_csv(SETTLEMENT_SUMMARY_CSV, index=False)
     REPORT_MD.write_text(build_report(selected, summary), encoding="utf-8")
+    # Compare the seven frozen department scenarios against verified official
+    # finishing orders, independently of actual wagers and portfolio ROI.
+    try:
+        from department_coverage import build_department_scoreboard
+        build_department_scoreboard(OUTPUT_DIR)
+    except Exception as exc:
+        print(f"Seven-department result audit update failed: {exc}", flush=True)
     # Keep the independent rider-mark audit in sync when official results arrive.
     # This does not change wager settlement or purchase authorization.
     try:
