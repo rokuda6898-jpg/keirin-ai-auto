@@ -437,6 +437,7 @@ def audit_site_output():
                 parser.feed(race_html)
                 rider_attrs = parser.riders
 
+                mismatches = []
                 for _, rider in group.iterrows():
                     name = str(rider.get("player_name", "")).strip()
                     player_id = str(rider.get("player_id", "")).strip()
@@ -444,13 +445,20 @@ def audit_site_output():
                         continue
                     actual_name = rider_attrs.get(normalized_player_id(player_id))
                     if actual_name != name:
-                        problems.append({
-                            "type": "site_player_name_mismatch",
-                            "race_id": race_id,
+                        mismatches.append({
                             "player_id": player_id,
                             "player_name": name,
                             "site_player_name": actual_name,
                         })
+                if mismatches:
+                    # A failed identity format should create one incident per
+                    # race rather than hundreds of duplicate alarm records.
+                    problems.append({
+                        "type": "site_player_name_mismatch",
+                        "race_id": race_id,
+                        "mismatch_count": len(mismatches),
+                        "samples": mismatches[:5],
+                    })
     except Exception as exc:
         problems.append({"type": "site_output_unreadable", "detail": str(exc)})
     return problems
