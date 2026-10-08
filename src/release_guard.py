@@ -8,6 +8,7 @@ import hashlib
 import json
 from collections import defaultdict
 from datetime import datetime
+from html.parser import HTMLParser
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -61,6 +62,22 @@ def write_release_manifest(root=ROOT):
     return report
 
 
+class ReleaseHtmlParser(HTMLParser):
+    """Check the parsed DOM, not the attribute order of the HTML serializer."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.schema = None
+        self.races = set()
+
+    def handle_starttag(self, tag, attrs):
+        values = dict(attrs)
+        if tag == "meta" and values.get("name") == "nexus-render-schema":
+            self.schema = values.get("content")
+        elif tag == "article" and str(values.get("id", "")).startswith("race-"):
+            self.races.add(str(values["id"])[5:])
+
+
 def validate_release(root=ROOT, now=None):
     root = Path(root)
     out = root / "outputs"
@@ -86,10 +103,12 @@ def validate_release(root=ROOT, now=None):
         actual = set()
     try:
         page = (out / "index.html").read_text(encoding="utf-8")
-        if f'name="nexus-render-schema" content="{SCHEMA}"' not in page:
+        parser = ReleaseHtmlParser()
+        parser.feed(page)
+        if parser.schema != SCHEMA:
             errors.append("NEXUS HTML schema is stale")
         for race in actual:
-            if f'id="race-{race}"' not in page:
+            if race not in parser.races:
                 errors.append(f"race absent from site HTML: {race}")
     except OSError:
         errors.append("index.html missing")
