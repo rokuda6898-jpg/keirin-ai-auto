@@ -508,7 +508,7 @@ def build_high_payout_axis_report(output_dir=OUTPUT_DIR):
     (folder / "high_payout_axis_shadow_report.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     labels = {
-        "current_hole": "現行・穴軸", "six_department_consensus": "他6部署の多数支持",
+        "current_hole": "既存の高配当部着順仮説", "six_department_consensus": "他6部署の多数支持",
         "risk_axis": "リスク部の軸", "consensus_veto": "支持不足なら軸変更",
     }
     def rate(value):
@@ -632,7 +632,7 @@ def build_department_scoreboard(output_dir=OUTPUT_DIR):
         'main{max-width:1000px;margin:auto}section{background:white;border-radius:14px;padding:20px}'
         'table{border-collapse:collapse;width:100%}td,th{padding:10px;border-bottom:1px solid #ddd;text-align:left}'
         '.scroll{overflow:auto}p{line-height:1.8}a{color:#0965c7}</style></head><body><main>'
-        '<p><a href="all_department_predictions.html">全レース7部署の予想へ戻る</a></p>'
+        '<p><a href="all_department_predictions.html">全レース7部署の予想へ戻る</a> ／ <a href="high_payout_axis_shadow_report.html">高配当部の1着軸比較</a></p>'
         '<section><h1>7部署の着順予想・事後検証</h1>'
         '<p>各部署が締切前に提出した1着・2着・3着の並びを公式結果で検証。'
         '未提出や未確定のレースは成績に含めません。実購入した車券の的中率や回収率ではありません。</p>'
