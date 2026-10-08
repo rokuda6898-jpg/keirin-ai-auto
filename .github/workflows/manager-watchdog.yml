@@ -32,53 +32,66 @@ jobs:
             });
             const runs = data.workflow_runs || [];
             const now = Date.now();
+            const running = runs.find(r => r.status === "in_progress");
+            const pending = runs.find(r => ["queued", "pending", "waiting"].includes(r.status));
             const latest = runs[0];
-
-            if (!latest) {
-              core.warning("No manager run found; dispatching one.");
+            const dispatch = async reason => {
+              core.warning(reason);
               await github.rest.actions.createWorkflowDispatch({
                 owner, repo, workflow_id, ref: "main"
               });
+            };
+
+            if (running) {
+              const age = (now - new Date(running.created_at).getTime()) / 60000;
+              if (age > 35) {
+                core.warning("Manager "+running.id+" exceeded 35 minutes; cancelling.");
+                try {
+                  await github.rest.actions.cancelWorkflowRun({ owner, repo, run_id: running.id });
+                } catch (error) {
+                  core.warning("Cancel request failed: "+error.message);
+                }
+                if (!pending) await dispatch("Manager stalled with no pending replacement.");
+              } else {
+                core.info("Manager "+running.id+" is active; age="+age.toFixed(1)+"m, not replacing.");
+              }
+              return;
+            }
+
+            if (pending) {
+              core.info("Manager "+pending.id+" already queued; no duplicate dispatch.");
+              return;
+            }
+
+            if (!latest) {
+              await dispatch("No manager run exists.");
+              return;
+            }
+
+            if (latest.conclusion !== "success") {
+              await dispatch("Latest completed manager "+latest.id+" ended "+latest.conclusion);
               return;
             }
 
             const ageMinutes = (now - new Date(latest.created_at).getTime()) / 60000;
-            const updatedAgeMinutes = (now - new Date(latest.updated_at).getTime()) / 60000;
-            core.info(`latest manager run=${latest.id} status=${latest.status} conclusion=${latest.conclusion} age=${ageMinutes.toFixed(1)}m updated=${updatedAgeMinutes.toFixed(1)}m`);
-
-            if (latest.status === "completed" && latest.conclusion !== "success") {
-              core.warning(
-                `Manager failed on run=${latest.id} sha=${latest.head_sha}; dispatching a fresh run from latest main instead of replaying stale failed jobs.`
-              );
-              await github.rest.actions.createWorkflowDispatch({
-                owner, repo, workflow_id, ref: "main"
-              });
-              return;
-            }
-
-            if (latest.status !== "completed" && updatedAgeMinutes > 30) {
-              core.warning("Manager appears stalled; cancelling it before dispatching the newest code.");
-              try {
-                await github.rest.actions.cancelWorkflowRun({
-                  owner, repo, run_id: latest.id
-                });
-              } catch (e) {
-                core.warning(`cancel failed for run ${latest.id}: ${e.message}`);
-              }
-              // Give GitHub a moment to release the shared writer concurrency lock.
-              await new Promise(resolve => setTimeout(resolve, 5000));
-              await github.rest.actions.createWorkflowDispatch({
-                owner, repo, workflow_id, ref: "main"
-              });
-              return;
-            }
-
             if (ageMinutes > 18) {
-              core.warning("Manager heartbeat is stale; dispatching a fresh run.");
-              await github.rest.actions.createWorkflowDispatch({
-                owner, repo, workflow_id, ref: "main"
-              });
+              await dispatch("Last manager completed "+ageMinutes.toFixed(1)+"m ago.");
               return;
             }
 
-            core.info("Manager heartbeat healthy.");
+            // Run success alone cannot certify healthy prediction outputs.
+            try {
+              const { data: file } = await github.rest.repos.getContent({
+                owner, repo, path: "outputs/manager_status.json", ref: "main"
+              });
+              const health = JSON.parse(Buffer.from(file.content, "base64").toString("utf8"));
+              const stamp = Date.parse(health.checked_at_jst || "");
+              const stateAge = (now - stamp) / 60000;
+              if (health.status === "unhealthy" || !Number.isFinite(stateAge) || stateAge > 25) {
+                await dispatch("Manager run green but health "+health.status+" age="+stateAge.toFixed(1)+"m");
+                return;
+              }
+              core.info("Verified manager run and application health: "+health.status);
+            } catch (error) {
+              await dispatch("Persisted manager health unreadable: "+error.message);
+            }
