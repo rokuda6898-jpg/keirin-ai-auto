@@ -118,7 +118,7 @@ def _load_preserved(folder):
     return result
 
 
-def build_all_department_coverage(pred, plans, specialist_rows, now, output_dir=OUTPUT_DIR):
+def build_all_department_coverage(pred, plans, specialist_rows, now, output_dir=OUTPUT_DIR, odds=None):
     folder = output_dir / "company"
     folder.mkdir(parents=True, exist_ok=True)
     plan_map = {str(p["race_id"]): p for p in plans}
@@ -249,6 +249,9 @@ def build_all_department_coverage(pred, plans, specialist_rows, now, output_dir=
                 handle.write(json.dumps(row, ensure_ascii=False, allow_nan=False) + "\n")
     render_all_department_coverage(report, folder)
     freeze_high_payout_axis_experiments(records, now, output_dir)
+    if odds is not None:
+        from market_axis_shadow import freeze_market_axis
+        freeze_market_axis(pred, odds, now, _frozen_axis_experiments(folder), output_dir)
     if uncovered:
         raise RuntimeError(f"Mandatory specialist forecasts missing for {len(uncovered)} upcoming race/department entries")
     return report
@@ -699,4 +702,6 @@ def build_department_scoreboard(output_dir=OUTPUT_DIR):
     )
     (folder / "all_department_results.html").write_text(page, encoding="utf-8")
     build_high_payout_axis_report(output_dir)
+    from market_axis_shadow import build_market_report
+    build_market_report(output_dir)
     return report
