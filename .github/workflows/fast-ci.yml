@@ -36,3 +36,19 @@ jobs:
         run: |
           python -m compileall -q src tests
           python -m unittest discover -s tests -p "test_*.py"
+      - name: Verify checked-in race and rider identity snapshot
+        env:
+          PYTHONPATH: src
+        run: |
+          python - <<'PY'
+          from site_manager import audit_entries, audit_site_output
+          entries, _ = audit_entries()
+          site = audit_site_output()
+          important = [p for p in entries + site if p["type"] in {
+              "missing_riders", "site_player_name_mismatch"
+          }]
+          print({"entry_problems": len(entries), "site_problems": len(site),
+                 "critical_identity": important[:5]})
+          if important:
+              raise SystemExit(1)
+          PY
