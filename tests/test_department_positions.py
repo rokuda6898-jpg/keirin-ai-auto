@@ -1,5 +1,7 @@
 import copy
 import json
+import subprocess
+import sys
 import tempfile
 import unittest
 from datetime import datetime, timedelta
@@ -181,6 +183,50 @@ class DepartmentPositionTests(unittest.TestCase):
         restore(backup, self.root)
         for name in (LEDGER, 'annual_position_experiment_outcomes.jsonl'):
             self.assertEqual(len((folder / name).read_text(encoding='utf-8').splitlines()), 2)
+
+    def test_merge_reconciliation_recovers_both_sides_and_rebuilds_stale_report(self):
+        from reconcile_position_experiment import reconcile
+        folder = self.root / 'outputs/company'
+        folder.mkdir(parents=True)
+        def git(*args):
+            return subprocess.check_output(['git', '-c', 'user.name=Test', '-c',
+                'user.email=test@example.test', *args], cwd=self.root, stderr=subprocess.STDOUT)
+        git('init')
+        local = self.simple_bundle()
+        remote = {**self.simple_bundle(), 'race_id': 'remote'}
+        remote_outcome = {'race_id': 'remote', 'observed_at': self.now.isoformat(),
+                          'outcome': {'actual': '1-2-3', 'payout_per_100yen': 20000}}
+        (folder / LEDGER).write_text(json.dumps(remote) + '\n', encoding='utf-8')
+        outcome_file = folder / 'annual_position_experiment_outcomes.jsonl'
+        outcome_file.write_text(json.dumps(remote_outcome) + '\n', encoding='utf-8')
+        git('add', '.')
+        git('commit', '-m', 'Remote evidence')
+        git('branch', 'incoming')
+        # Reproduce -X ours retaining the local conflicting file and stale report.
+        (folder / LEDGER).write_text(json.dumps(local) + '\n', encoding='utf-8')
+        local_outcome = {**remote_outcome, 'race_id': 'fixture'}
+        outcome_file.write_text(json.dumps(local_outcome) + '\n', encoding='utf-8')
+        self.assertEqual(build_report(self.root / 'outputs')['frozen_races'], 1)
+        report = reconcile(self.root, 'incoming')
+        self.assertEqual((report['frozen_races'], report['settled_races']), (2, 2))
+        for name in (LEDGER, outcome_file.name):
+            lines = (folder / name).read_bytes()
+            reconcile(self.root, 'incoming')
+            self.assertEqual((folder / name).read_bytes(), lines)
+            self.assertEqual(len(lines.splitlines()), 2)
+        html = (folder / 'annual_position_experiment_report.html').read_text(encoding='utf-8')
+        self.assertIn('事前保存 2レース ／ 公式結果照合 2レース', html)
+        with self.assertRaises(subprocess.CalledProcessError):
+            reconcile(self.root, 'missing-ref')
+
+    def test_pages_report_import_needs_no_forecast_dependencies(self):
+        source = Path(__file__).resolve().parents[1] / 'src'
+        subprocess.run([sys.executable, '-S', '-c',
+            'import sys; sys.path.insert(0, sys.argv[1]); '
+            'import reconcile_position_experiment; '
+            'assert "betting_logic" not in sys.modules; '
+            'assert "numpy" not in sys.modules; assert "pandas" not in sys.modules',
+            str(source)], check=True)
 
     def test_annual_forecast_keeps_risk_path_and_specialist_lower_places(self):
         profiles = {str(c): {'races': 50, 'rates': [0.2, .6 if c == 6 else .02, .6 if c == 7 else .02]}
