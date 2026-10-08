@@ -1,0 +1,62 @@
+name: fixed-year-research
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/fixed-year-research]
+    paths:
+      - src/fixed_year_*.py
+      - tests/test_fixed_year_research.py
+      - .github/workflows/fixed-year-research.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fixed-year-research
+  cancel-in-progress: false
+
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      PYTHONPATH: src
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '2'
+      MKL_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Verify frozen-year isolation and baseline equivalence
+        run: python -m unittest discover -s tests -p test_fixed_year_research.py
+      - name: Restore real central archive
+        uses: actions/cache/restore@v4
+        with:
+          path: data/raw/history.csv
+          key: keirin-central-history-v1-${{ github.run_id }}
+          restore-keys: |
+            keirin-central-history-v1-
+      - name: Inspect older history and recent-year coverage
+        run: python src/fixed_year_research.py --asof 2026-10-09
+      - name: Learn exclusively from before the held-out year
+        run: python src/fixed_year_research.py --asof 2026-10-09 --stage train
+      - name: Predict the entire recent year with one frozen model
+        run: python src/fixed_year_research.py --asof 2026-10-09 --stage predict
+      - name: Score saved forecasts after prediction has finished
+        run: python src/fixed_year_research.py --asof 2026-10-09 --stage assess
+      - name: Retain separate research evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fixed-year-research-${{ github.run_id }}
+          path: |
+            research/fixed_year_20261009/
+            !research/fixed_year_20261009/joint_design.f32
+            !research/fixed_year_20261009/profile_training.csv
+          if-no-files-found: warn
+          retention-days: 30
