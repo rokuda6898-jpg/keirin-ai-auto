@@ -1553,11 +1553,12 @@ def main():
         shadow_bets["odds_snapshot"] = odds_snapshot_label
     save_snapshots(strategy_plans, shadow_bets, datetime.now(ZoneInfo("Asia/Tokyo")), position_rows=pred, candidate_rows=candidates)
     from annual_knowledge import build_annual_profiles, forecast_departments
-    from department_coverage import build_all_department_coverage
+    from department_coverage import build_all_department_coverage, build_department_scoreboard
     annual = build_annual_profiles(now_jst.date())
     department_now = datetime.now(ZoneInfo("Asia/Tokyo"))
     department_proposals = forecast_departments(pred, today_odds, annual, department_now)
     build_all_department_coverage(pred, strategy_plans, department_proposals, department_now)
+    build_department_scoreboard(OUTPUT_DIR)
     shadow_path = OUTPUT_DIR / f"shadow_bets_{output_tag}.csv"
     latest_shadow_path = OUTPUT_DIR / "latest_shadow_bets.csv"
     prediction_ledger_path = OUTPUT_DIR / "prediction_ledger.csv"
