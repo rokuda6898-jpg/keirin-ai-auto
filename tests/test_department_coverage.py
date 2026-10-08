@@ -188,6 +188,38 @@ class DepartmentCoverageTest(unittest.TestCase):
         self.assertEqual(problems, [])
         self.assertEqual(stats["052520261008"]["cancelled_cars"], [2])
 
+    def test_legacy_winner_only_ledger_is_not_misread_as_three_place_forecast(self):
+        race = entries(self.now, minutes_to_close=-10)
+        folder = self.output / "company"
+        folder.mkdir(parents=True, exist_ok=True)
+        stored = {
+            "department": "data_department",
+            "race_id": "017420261008",
+            "venue": "高知",
+            "race_no": 1,
+            "winner_car": 4,
+            "snapshot_at": (self.now - timedelta(minutes=20)).isoformat(timespec="seconds"),
+            "close_at": float(race.iloc[0]["close_at"]),
+            "tickets": [],
+        }
+        path = folder / "annual_department_prediction_ledger.jsonl"
+        path.write_text(json.dumps(stored, ensure_ascii=False) + "\\n", encoding="utf-8")
+        knowledge = {
+            "window_end_exclusive": "2026-10-08", "asof_date": "2026-10-08",
+            "annual_races": 0, "profiles": {},
+        }
+        with patch("strategist_validation.build_strategist_validation", return_value={}):
+            proposals = forecast_departments(race, pd.DataFrame(), knowledge, self.now, self.output)
+        self.assertEqual(len(proposals), 4)
+        first = next(item for item in proposals if item["department"] == "data_department")
+        self.assertEqual(first["winner_car"], 4)
+        self.assertFalse(first["forecast_available"])
+        self.assertEqual(first["top3_cars"], [])
+        self.assertEqual(first["display_status"], "legacy_preclose_winner_only")
+        report = json.loads((folder / "annual_department_predictions.json").read_text())
+        self.assertEqual(report["forecast_count"], 0)
+        self.assertEqual(len(path.read_text().splitlines()), 1)
+
     def test_four_specialists_never_backfill_postclose(self):
         knowledge = {
             "window_end_exclusive": "2026-10-08", "asof_date": "2026-10-08",

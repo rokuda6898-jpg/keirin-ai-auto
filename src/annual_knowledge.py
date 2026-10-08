@@ -255,7 +255,18 @@ def forecast_departments(pred, odds, report, now, output_dir=OUTPUT_DIR):
                 try:
                     old = json.loads(line)
                     key = (str(old["race_id"]), old["department"])
-                    if (old.get("forecast_available", True) and old.get("winner_car") is not None
+                    order = old.get("top3_cars")
+                    valid_order = (isinstance(order, list) and len(order) == 3
+                                   and len({str(car) for car in order}) == 3)
+                    # Legacy pre-close ledgers stored only a winner and have no
+                    # forecast_available / top3_cars. Preserve their evidence
+                    # without falsely claiming they predicted the full order.
+                    if "forecast_available" not in old or (old["forecast_available"] and not valid_order):
+                        old["forecast_available"] = bool(valid_order)
+                        old["top3_cars"] = list(order) if valid_order else []
+                        old["display_status"] = ("legacy_preclose_full_order" if valid_order
+                                                 else "legacy_preclose_winner_only")
+                    if (old.get("winner_car") is not None
                             and datetime.fromisoformat(old["snapshot_at"]).timestamp() < float(old["close_at"])
                             and (key not in saved or old["snapshot_at"] > saved[key]["snapshot_at"])):
                         saved[key] = old
@@ -285,7 +296,9 @@ def forecast_departments(pred, odds, report, now, output_dir=OUTPUT_DIR):
             for department in departments:
                 prior = saved.get((race_id, department))
                 if prior:
-                    proposals.append({**prior, "display_status": "preclose_forecast_preserved"})
+                    proposals.append({**prior, "display_status":
+                                      ("preclose_forecast_preserved" if prior["forecast_available"]
+                                       else prior.get("display_status", "legacy_preclose_winner_only"))})
                 else:
                     proposals.append({
                         "department": department, "race_id": race_id,
@@ -423,7 +436,7 @@ def forecast_departments(pred, odds, report, now, output_dir=OUTPUT_DIR):
             "annual_races": report["annual_races"],
             "coverage_policy": "every known race x four departments; no post-close backfill",
             "required_departments": list(departments), "race_count": int(pred["race_id"].nunique()),
-            "forecast_count": sum(bool(p["forecast_available"]) for p in proposals),
+            "forecast_count": sum(bool(p.get("forecast_available", False)) for p in proposals),
             "proposals": proposals,
         }, ensure_ascii=False, indent=2, allow_nan=False), encoding="utf-8")
     if fresh:
