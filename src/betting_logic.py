@@ -31,7 +31,7 @@ def divergence_points(gap):
     return 10 if gap >= 5 else {4: 7, 3: 5, 2: 3}.get(int(max(gap, 0)), 0)
 
 
-def score_riders(race, odds=None):
+def score_riders(race, odds=None, *, preserve_position_scores=False):
     riders = race.copy().sort_values("car_no", kind="mergesort").reset_index(drop=True)
     cars = numbers(riders, "car_no")
     if len(riders) < 3 or not cars.between(1, 9).all() or not cars.mod(1).eq(0).all():
@@ -78,6 +78,15 @@ def score_riders(race, odds=None):
             riders["position_score_source"] = "coverage_validated_cumulative_scores_uncalibrated"
     else:
         riders["position_score_source"] = "provisional_rate_scores"
+    if preserve_position_scores:
+        # Explicit opt-in only: the risk baseline and every legacy caller keep
+        # their original scores. Invalid department scores fail closed.
+        for position in ("second", "third"):
+            values = numbers(riders, f"department_score_{position}")
+            if not np.isfinite(values).all() or values.lt(0).any() or values.sum() <= 0:
+                raise ValueError("department position scores must have finite nonnegative mass")
+            riders[f"score_{position}"] = values.clip(lower=0.01)
+        riders["position_score_source"] = "department_position_scores_v1_uncalibrated"
     for position in ["first", "second", "third"]:
         riders[f"rank_{position}"] = riders[f"score_{position}"].rank(ascending=False, method="first").astype(int)
     # An explicit rider popularity rank is preferred. Otherwise use the
@@ -190,7 +199,7 @@ def expanded_pool(riders, position, count):
     return set(ordered.loc[ordered[f"score_{position}"].ge(cutoff - 2), "car_no"].astype(int))
 
 
-def generate_formations(riders, plan):
+def generate_formations(riders, plan, position_context=None):
     cars = riders.car_no.astype(int).tolist()
     by_car = riders.set_index("car_no")
     risk_score = float(plan.get("risk_score", plan.get("chaos_index", 0)))
@@ -219,6 +228,8 @@ def generate_formations(riders, plan):
         second_mass = by_car.loc[[x for x in cars if x != a], "score_second"].sum()
         third_mass = by_car.loc[[x for x in cars if x not in (a, b)], "score_third"].sum()
         probability = float(by_car.at[a, "p_win"] * by_car.at[b, "score_second"] / second_mass * by_car.at[c, "score_third"] / third_mass)
+        if position_context is not None:
+            probability = position_context["probabilities"][a, b, c]
         core = a in heads and b in seconds and c in thirds
         value_rider = any(by_car.at[x, "undervalued_points"] >= 3 for x in (a, b, c))
         if a != top_car:
@@ -290,7 +301,7 @@ def select_main_with_risk(pool, limit, risk_score):
     return ordered.loc[chosen]
 
 
-def select_race(riders, odds, main_ev=MAIN_EV, hole_ev=HOLE_EV, force_no_fixed=False):
+def select_race(riders, odds, main_ev=MAIN_EV, hole_ev=HOLE_EV, force_no_fixed=False, *, conditional_positions=False):
     if not np.isfinite(main_ev) or not np.isfinite(hole_ev) or main_ev < 1 or hole_ev < main_ev:
         raise ValueError("EV thresholds must be finite and 1 <= main <= hole")
     plan = race_plan(riders)
@@ -300,7 +311,12 @@ def select_race(riders, odds, main_ev=MAIN_EV, hole_ev=HOLE_EV, force_no_fixed=F
             risk_veto_fixed=True, risk_fixed_block=True,
             risk_policy="manual_no_fixed_overrides_flow",
         )
-    candidates = generate_formations(riders, plan).merge(clean_odds(odds), on="buy", how="left", validate="one_to_one")
+    position_context = None
+    if conditional_positions:
+        from position_market import position_market
+        position_context = position_market(riders, clean_odds(odds))
+        plan["probability_method"] = position_context["method"]
+    candidates = generate_formations(riders, plan, position_context).merge(clean_odds(odds), on="buy", how="left", validate="one_to_one")
     candidates["ev"] = candidates.prob * candidates.odds_used
     candidates["expected_profit_100yen"] = 100 * (candidates.ev - 1)
     candidates["ticket_group"] = ""
@@ -319,7 +335,8 @@ def select_race(riders, odds, main_ev=MAIN_EV, hole_ev=HOLE_EV, force_no_fixed=F
 
     candidates.loc[main.index, "is_selected"] = True
     from high_payout_strategy import select_high_payout
-    independent, department = select_high_payout(riders, clean_odds(odds), plan, set(main.buy), hole_ev)
+    independent, department = select_high_payout(riders, clean_odds(odds), plan, set(main.buy), hole_ev,
+                                                position_context=position_context)
     candidates["hole_formation"] = False
     candidates["high_payout_selected"] = False
     for row in independent.to_dict('records'):

@@ -1,8 +1,9 @@
 """Rolling-year observed rider knowledge and independent department shadow forecasts."""
 import hashlib
 import json
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -232,6 +233,9 @@ def forecast_departments(pred, odds, report, now, output_dir=OUTPUT_DIR):
     Closed races can only display an existing pre-close snapshot; there is no
     retrospective prediction derived from the final result.
     """
+    started = time.monotonic()
+    from department_position_experiment import make_bundle, append_bundle
+    comparison_decisions = []
     cutoff = pd.to_datetime(report.get("window_end_exclusive"), errors="coerce")
     asof = pd.to_datetime(report.get("asof_date"), errors="coerce")
     today = now.astimezone(ZoneInfo("Asia/Tokyo")).date()
@@ -330,6 +334,7 @@ def forecast_departments(pred, odds, report, now, output_dir=OUTPUT_DIR):
             else:
                 fallback[:, column] /= fallback[:, column].sum()
 
+        experiment_inputs = {}
         for department in departments:
             values = []
             for row_index, ((_, rider), profile) in enumerate(zip(race.iterrows(), profiles)):
@@ -378,6 +383,9 @@ def forecast_departments(pred, odds, report, now, output_dir=OUTPUT_DIR):
             for j, name in enumerate(("first", "second", "third")):
                 temp[f"score_{name}"] = matrix[:, j] * 100
                 temp[f"rank_{name}"] = temp[f"score_{name}"].rank(ascending=False, method="first").astype(int)
+            for name in ("second", "third"):
+                temp[f"department_score_{name}"] = temp[f"score_{name}"]
+            experiment_inputs[department] = temp.copy()
             temp["position_score_source"] = ("annual_empirical_shadow" if missing_reference == 0
                                               else "annual_shadow_with_model_fallback")
             # Optimise a three-position scenario with distinct cars. This is
@@ -392,7 +400,7 @@ def forecast_departments(pred, odds, report, now, output_dir=OUTPUT_DIR):
             )
             top3 = [int(race.iloc[index]["car_no"]) for index in best]
             try:
-                riders = score_riders(temp, market)
+                riders = score_riders(temp, market, preserve_position_scores=department != "risk_department")
                 candidates, plan = select_race(riders, market)
                 selected = candidates[candidates.is_selected]
                 tickets = [
@@ -424,12 +432,25 @@ def forecast_departments(pred, odds, report, now, output_dir=OUTPUT_DIR):
                 "tickets": tickets, "main_count": main_count, "hole_count": hole_count,
                 "ticket_decision": ticket_decision,
                 "probability_status": "provisional_annual_shadow",
+                "ticket_strategy": "risk_legacy_unchanged" if department == "risk_department" else "preserve_only_v1",
                 "reference_cutoff_exclusive": report["window_end_exclusive"],
                 "features_used": feature_map[department],
                 "purchase_authorized": False,
             }
             proposals.append(proposal)
             fresh.append(proposal)
+        completed = now + timedelta(seconds=time.monotonic() - started)
+        try:
+            bundle, reason = make_bundle(race, experiment_inputs, market, completed, report["window_end_exclusive"])
+            completed = now + timedelta(seconds=time.monotonic() - started)
+            if bundle is not None and not append_bundle(bundle, completed, output_dir):
+                reason = "expired_during_calculation"
+        except (ValueError, KeyError, TypeError, IndexError) as exc:
+            reason = f"calculation_unavailable:{type(exc).__name__}"
+        comparison_decisions.append({"race_id": race_id, "reason": reason})
+    (folder / "annual_position_experiment_capture.json").write_text(
+        json.dumps({"updated_at_jst": now.isoformat(), "decisions": comparison_decisions},
+                   ensure_ascii=False, indent=2), encoding="utf-8")
     (folder / "annual_department_predictions.json").write_text(
         json.dumps({
             "updated_at_jst": now.isoformat(timespec="seconds"),
@@ -449,6 +470,8 @@ def forecast_departments(pred, odds, report, now, output_dir=OUTPUT_DIR):
 
 
 def audit_department_predictions(output_dir=OUTPUT_DIR):
+    from department_position_experiment import build_report
+    build_report(output_dir)
     from verified_live_audit import build_verified_live_audit
     verified_live = build_verified_live_audit(output_dir)
     folder = output_dir / "company"
@@ -493,7 +516,9 @@ def audit_department_predictions(output_dir=OUTPUT_DIR):
             "flat_return_yen": returned, "flat_return_rate": returned / stake if stake else None,
             "auto_promotion": False})
     report = {"updated_at_jst": datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(timespec="seconds"),
-              "departments": comparisons, "scope": "frozen-before-close independent annual department proposals"}
+              "departments": comparisons, "scope": "frozen-before-close independent annual department proposals",
+              "snapshot_policy": "legacy_latest_preclose_per_department_not_matched",
+              "controlled_comparison": "annual_position_experiment_report.json"}
     (folder / "annual_department_audit.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     knowledge_path = folder / "annual_rider_knowledge.json"
     knowledge = json.loads(knowledge_path.read_text(encoding="utf-8")) if knowledge_path.exists() else {}
@@ -546,7 +571,7 @@ function renderPlayers() {
 document.getElementById('player-search').addEventListener('input',renderPlayers);
 fetch('annual_rider_knowledge.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('load');return r.json()}).then(d=>{riderKnowledge=d.profiles||{};renderPlayers()}).catch(()=>{document.getElementById('player-list').textContent='成績を読み込めませんでした。ページを更新してください。'});
 </script>"""
-    forecast_view = """<h2>部署ごとの最新予想（検証用）</h2><p><a href="all_department_predictions.html">全レース7部署の予想・提出状況を見る</a></p><p>取得時点の予想です。締切後に後付けせず、事前予想がないレースは未成立と表示します。購入候補がなくても着順予想は別途提出します。</p><div id="department-forecasts">読み込み中</div><script>
+    forecast_view = """<p><a href="annual_position_experiment_report.html">同じレース・時点・点数で2・3着評価の改善案を比較</a></p><p>この従来集計は各部署の締切前最新予想です。初回予想を使う7部署成績とは集計時点が異なり、今回の比較には混ぜません。</p><h2>部署ごとの最新予想（検証用）</h2><p><a href="all_department_predictions.html">全レース7部署の予想・提出状況を見る</a></p><p>取得時点の予想です。締切後に後付けせず、事前予想がないレースは未成立と表示します。購入候補がなくても着順予想は別途提出します。</p><div id="department-forecasts">読み込み中</div><script>
 fetch('annual_department_predictions.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('load');return r.json()}).then(d=>{
  const target=document.getElementById('department-forecasts');target.replaceChildren();
  const labels={data_department:'データ部署',pace_department:'展開部署',line_department:'ライン部署',risk_department:'リスク部署'};

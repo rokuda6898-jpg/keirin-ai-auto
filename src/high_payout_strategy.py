@@ -7,7 +7,7 @@ VERSION = 'high_payout_v1'
 MIN_PROBABILITY = .001  # provisional: reject below 0.1%, even with huge odds
 
 
-def select_high_payout(riders, market, risk, main_buys=(), minimum_ev=1.25):
+def select_high_payout(riders, market, risk, main_buys=(), minimum_ev=1.25, *, position_context=None):
     minimum_ev=max(1.25,float(minimum_ev))
     columns=['buy','bet_type','prob','odds_used','ev','head','second','third','scenario','hole_pattern','high_payout_selected']
     rows=[]
@@ -46,6 +46,12 @@ def select_high_payout(riders, market, risk, main_buys=(), minimum_ev=1.25):
     # Full-market first-place marginals give a transparent popularity proxy.
     marginal={car:sum(1/o for buy,o in quotes.items() if int(buy.split('-')[0])==car) for car in cars}
     popularity={car:i+1 for i,car in enumerate(sorted(cars,key=lambda c:(-marginal[c],c)))}
+    popularity_second = popularity_third = popularity
+    if position_context is not None:
+        popularity, popularity_second, popularity_third = position_context['ranks']
+        report['probability_method'] = position_context['method']
+        report['version'] = VERSION + '_position_market_v1'
+        report['market_support_semantics'] = 'separate first/second/third inverse-trifecta-odds marginals'
     line_verified=('line_verification_status' in riders and riders.line_verification_status.eq('verified').all()
                    and 'line_id' in riders and riders.line_id.notna().all()
                    and riders.line_id.astype(str).str.strip().ne('').all())
@@ -58,8 +64,8 @@ def select_high_payout(riders, market, risk, main_buys=(), minimum_ev=1.25):
         if odds<100 or buy in main_buys:continue
         patterns=[]
         if popularity[a]>=4 and by.at[a,'rank_first']<=3 and risk['chaos_index']>=45:patterns.append('1着荒れ')
-        if popularity[a]<=3 and popularity[b]>=4 and by.at[b,'rank_second']<=4:patterns.append('2着荒れ')
-        if popularity[a]<=3 and popularity[b]<=3 and popularity[c]>=4 and by.at[c,'rank_third']<=4:patterns.append('3着荒れ')
+        if popularity[a]<=3 and popularity_second[b]>=4 and by.at[b,'rank_second']<=4:patterns.append('2着荒れ')
+        if popularity[a]<=3 and popularity_second[b]<=3 and popularity_third[c]>=4 and by.at[c,'rank_third']<=4:patterns.append('3着荒れ')
         if line_verified and 'line_id' in by and popularity[a]<=3 and by.at[a,'line_id']!=by.at[b,'line_id'] and risk['chaos_index']>=60:patterns.append('ライン崩壊')
         overpopular=[car for car in cars if popularity[car]<=2 and by.at[car,'rank_first']-popularity[car]>=2]
         if overpopular and a not in overpopular and by.at[a,'rank_first']<=3:patterns.append('人気過剰')
@@ -67,6 +73,8 @@ def select_high_payout(riders, market, risk, main_buys=(), minimum_ev=1.25):
         second_mass=sum(by.at[x,'score_second'] for x in cars if x!=a)
         third_mass=sum(by.at[x,'score_third'] for x in cars if x not in (a,b))
         model=float(by.at[a,'p_win']*by.at[b,'score_second']/second_mass*by.at[c,'score_third']/third_mass)
+        if position_context is not None:
+            model = position_context['probabilities'][a,b,c]
         market_prob=(1/odds)/inverse_sum
         # Shrink extreme model disagreement toward the complete market; never
         # normalize over the longshot pool or claim this is calibrated EV.
@@ -77,7 +85,7 @@ def select_high_payout(riders, market, risk, main_buys=(), minimum_ev=1.25):
         if line_verified:
             if len(line_sizes)>=4 and by.at[a,'line_id']!=by.at[b,'line_id'] and by.at[a,'rank_first']<=3 and by.at[b,'rank_second']<=4:
                 patterns.append('細切れ戦')
-            if any(line_sizes.get(by.at[car,'line_id'])==1 and popularity[car]>=4 and by.at[car,rank]<=4 for car,rank in [(a,'rank_first'),(b,'rank_second'),(c,'rank_third')]):
+            if any(line_sizes.get(by.at[car,'line_id'])==1 and support[car]>=4 and by.at[car,rank]<=4 for car,rank,support in [(a,'rank_first',popularity),(b,'rank_second',popularity_second),(c,'rank_third',popularity_third)]):
                 patterns.append('単騎')
         rows.append(dict(zip(columns,[buy,'trifecta',probability,odds,ev,a,b,c,'高配当独立分析',patterns,False])))
     frame=pd.DataFrame(rows,columns=columns)
