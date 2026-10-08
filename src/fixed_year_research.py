@@ -50,6 +50,7 @@ def main():
     parser.add_argument('--history',type=Path,default=Path('data/raw/history.csv'))
     parser.add_argument('--asof',default='2026-10-09')
     parser.add_argument('--output-dir',type=Path,default=Path('research/fixed_year_20261009'))
+    parser.add_argument('--stage',choices=('inventory','train','predict','assess'),default='inventory')
     args=parser.parse_args()
     if not args.history.is_file():raise SystemExit('Real historical archive missing; refusing synthetic replacement.')
     history=pd.read_csv(args.history,dtype={'race_id':str,'player_id':str},low_memory=False)
@@ -58,6 +59,16 @@ def main():
         p=args.history.with_name(name)
         report.setdefault('auxiliary_files',{})[name]={'exists':p.exists(),'bytes':p.stat().st_size if p.exists() else 0}
     args.output_dir.mkdir(parents=True,exist_ok=True)
+    if args.stage!='inventory':
+        prior=json.loads((args.output_dir/'inventory.json').read_text(encoding='utf-8'))
+        if (prior['history_sha256']!=report['history_sha256'] or prior['asof_exclusive']!=report['asof_exclusive']):
+            raise ValueError('archive or fixed boundary changed after inventory')
+        from fixed_year_study import train,predict,assess
+        older,target=split_history(history,args.asof)
+        if args.stage=='train':train(older,args.output_dir,report['training_cutoff_exclusive'])
+        elif args.stage=='predict':predict(target,args.output_dir)
+        else:assess(target,args.output_dir)
+        return
     (args.output_dir/'inventory.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
     print('FIXED_YEAR_INVENTORY '+json.dumps(report,ensure_ascii=False),flush=True)
 
