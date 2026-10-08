@@ -7,11 +7,13 @@ from zoneinfo import ZoneInfo
 import pandas as pd
 
 from common import RAW_DIR, ensure_dirs
-from fetch_today_entries import RACE_SCHEDULE_CSV, parse_race_page, save_today_frames
+from fetch_today_entries import RACE_SCHEDULE_CSV, parse_race_page, save_today_frames, _entry_rows_complete
+from market_axis_shadow import capture_after_fetch
 
 UPCOMING_COUNT_FILE = RAW_DIR / "upcoming_races_count.txt"
 UPCOMING_METADATA_FILE = RAW_DIR / "upcoming_entries_metadata.json"
 ODDS_HISTORY_FILE = RAW_DIR / "win_odds_history.csv"
+MAX_RACE_FETCH_ATTEMPTS = 3
 
 
 def select_upcoming_races(schedule, now_epoch, min_minutes=5, max_minutes=40):
@@ -33,20 +35,21 @@ def _race_entry_set(frame, race_id):
 
 
 def _entries_complete(frame, race_id):
-    """Require every official starter, including missing tail cars such as 8/9."""
-    race = frame.loc[frame["race_id"].astype(str).eq(str(race_id))].copy()
-    cars = _race_entry_set(frame, race_id)
-    if not cars or race.empty:
+    """Use the same declared-field/withdrawal contract as the full-day fetcher."""
+    if frame.empty or not {"race_id", "car_no"}.issubset(frame.columns):
         return False
-
-    expected_values = pd.to_numeric(race.get("entries_number"), errors="coerce").dropna()
-    if len(expected_values):
-        expected_count = int(expected_values.max())
-    else:
-        # Fallback only when the source omits entriesNumber.
-        expected_count = max(cars)
-
-    return cars == set(range(1, expected_count + 1))
+    race = frame.loc[frame["race_id"].astype(str).eq(str(race_id))].copy()
+    cars = pd.to_numeric(race["car_no"], errors="coerce")
+    if (race.empty or cars.isna().any() or cars.duplicated().any()
+            or not cars.between(1, 9).all() or not cars.eq(cars.round()).all()):
+        return False
+    # Retain the legacy no-size fallback, but never turn a real withdrawal
+    # (e.g. declared 7 cars, car 2 absent) into a demand for contiguous 1..6.
+    if "entries_number" not in race or pd.to_numeric(
+            race["entries_number"], errors="coerce").isna().all():
+        race["entries_number"] = int(cars.max())
+    complete, _, expected = _entry_rows_complete(race.to_dict("records"))
+    return bool(complete and len(race) == expected)
 
 
 def append_win_odds_history(entries, captured_at):
@@ -70,7 +73,7 @@ def append_win_odds_history(entries, captured_at):
         except (OSError, pd.errors.ParserError, pd.errors.EmptyDataError):
             old = pd.DataFrame()
         snap = pd.concat([old, snap], ignore_index=True, sort=False)
-    snap = snap.drop_duplicates(["race_id","car_no","captured_at"], keep="last")
+    snap = snap.drop_duplicates(["race_id", "car_no", "captured_at"], keep="last")
     snap.to_csv(ODDS_HISTORY_FILE, index=False)
 
 
@@ -80,10 +83,7 @@ def fetch_upcoming(min_minutes=5, max_minutes=40, sleep_sec=0.2, retry_sec=5.0):
     if RACE_SCHEDULE_CSV.exists():
         schedule = pd.read_csv(RACE_SCHEDULE_CSV, dtype={"race_id": str})
     else:
-        # The public schedule is generated into outputs and may not be present
-        # in every checkout. Reconstruct the minimum safe schedule from the
-        # committed full-day entry snapshot so near-close refresh and the
-        # learning snapshot collector can still run.
+        # Reconstruct only from the committed full-day snapshot, not a partial feed.
         from common import TODAY_CSV
         if not TODAY_CSV.exists():
             UPCOMING_COUNT_FILE.write_text("0", encoding="ascii")
@@ -100,48 +100,53 @@ def fetch_upcoming(min_minutes=5, max_minutes=40, sleep_sec=0.2, retry_sec=5.0):
         print(f"reconstructed near-close schedule from today_entries.csv races={len(schedule)}")
     schedule = schedule[schedule["date"].astype(str).eq(now.strftime("%Y-%m-%d"))]
     upcoming = select_upcoming_races(schedule, now.timestamp(), min_minutes, max_minutes)
+    upcoming = upcoming.sort_values("close_at", kind="mergesort")
     UPCOMING_COUNT_FILE.write_text(str(len(upcoming)), encoding="ascii")
     if upcoming.empty:
         print("no races in the near-close window")
         return 0
 
-    all_entries = []
-    all_odds = []
-    failures = []
+    all_entries, all_odds, failures = [], [], []
+    market_saved = 0
     for row in upcoming.to_dict("records"):
         url = row.get("source_url")
         race_id = str(row["race_id"])
         last_error = None
-        # Do not pass a partially fetched field (for example 1,2,5,6,7)
-        # into prediction. Retry every 5 seconds until the official field is
-        # complete or the race is too close to safely refresh.
-        while True:
+        fetched = False
+        # Bound outer retries. A permanently bad race must not keep subsequent
+        # races blocked until their deadlines, nor age all earlier quotes.
+        for attempt in range(MAX_RACE_FETCH_ATTEMPTS):
+            seconds_left = float(row.get("close_at", 0) or 0) - datetime.now(ZoneInfo("Asia/Tokyo")).timestamp()
+            if seconds_left <= 300:
+                last_error = last_error or "inside five-minute cutoff before request"
+                break
             try:
                 entries, odds = parse_race_page(url)
                 race_entries = [item for item in entries if str(item.get("race_id")) == race_id]
                 check = pd.DataFrame(race_entries)
                 if len(check) and _entries_complete(check, race_id):
+                    race_odds = [item for item in odds if str(item.get("race_id")) == race_id]
                     all_entries.extend(race_entries)
-                    all_odds.extend(item for item in odds if str(item.get("race_id")) == race_id)
+                    all_odds.extend(race_odds)
+                    # Actual clock, after the response: never backdate the
+                    # snapshot to job start. This precedes slow model work.
+                    market_saved += len(capture_after_fetch(race_entries, race_odds))
+                    fetched = True
                     break
                 last_error = f"incomplete field: {sorted(_race_entry_set(check, race_id)) if len(check) else []}"
             except Exception as error:
                 last_error = str(error)
-
-            seconds_left = float(row.get("close_at", 0) or 0) - datetime.now(ZoneInfo("Asia/Tokyo")).timestamp()
-            if seconds_left <= 300:
-                failures.append({"race_id": race_id, "url": url, "error": last_error or "incomplete field"})
-                break
-            time.sleep(retry_sec)
+            if attempt + 1 < MAX_RACE_FETCH_ATTEMPTS:
+                time.sleep(retry_sec)
+        if not fetched:
+            failures.append({"race_id": race_id, "url": url, "error": last_error or "incomplete field"})
         time.sleep(sleep_sec)
 
     if not all_entries:
         UPCOMING_COUNT_FILE.write_text("0", encoding="ascii")
         raise ValueError(f"failed to fetch upcoming entries: {failures[:3]}")
 
-    # Atomic near-close snapshot: never replace today's input with only the
-    # subset that happened to fetch successfully. That previously made whole
-    # races disappear from prediction/site output during transient source gaps.
+    # A failed refresh must not overwrite the full-day source with a subset.
     fetched_ids = {str(item.get("race_id")) for item in all_entries}
     scheduled_ids = {str(item.get("race_id")) for item in upcoming.to_dict("records")}
     missing_ids = sorted(scheduled_ids - fetched_ids)
@@ -152,9 +157,7 @@ def fetch_upcoming(min_minutes=5, max_minutes=40, sleep_sec=0.2, retry_sec=5.0):
             f"fetched={len(fetched_ids)} missing={missing_ids} failures={failures[:3]}"
         )
 
-    # Merge refreshed near-close races into the existing full-day snapshot.
-    # Never replace TODAY_CSV with only the current 5-40 minute window; doing so
-    # made entire races (and therefore their riders) disappear from the site.
+    # Preserve the rest of the day while replacing only refreshed races.
     from common import TODAY_CSV, TODAY_ODDS_CSV
     from fetch_today_entries import ODDS_COLUMNS
     fresh_entries = pd.DataFrame(all_entries)
@@ -164,19 +167,11 @@ def fetch_upcoming(min_minutes=5, max_minutes=40, sleep_sec=0.2, retry_sec=5.0):
     if TODAY_CSV.exists():
         try:
             base_entries = pd.read_csv(TODAY_CSV, dtype={"race_id": str})
-            # The near-close refresher is only allowed to patch an already
-            # complete daily snapshot. If whole races are absent, rebuilding
-            # from a small window would preserve the corruption indefinitely.
-            # A near-close refresh must not be blocked by unrelated races
-            # missing from the full-day snapshot. The manager owns full-day
-            # repair; here we only require the races being refreshed now.
             base_ids = set(base_entries["race_id"].dropna().astype(str))
             missing_target_ids = sorted(target_ids - base_ids)
             if missing_target_ids:
-                print(
-                    "warning: near-close target absent from base snapshot; "
-                    f"will insert refreshed race(s): {missing_target_ids}"
-                )
+                print("warning: near-close target absent from base snapshot; "
+                      f"will insert refreshed race(s): {missing_target_ids}")
             base_entries = base_entries[~base_entries["race_id"].astype(str).isin(target_ids)]
             merged_entries = pd.concat([base_entries, fresh_entries], ignore_index=True, sort=False)
         except (OSError, pd.errors.ParserError, pd.errors.EmptyDataError) as exc:
@@ -193,16 +188,22 @@ def fetch_upcoming(min_minutes=5, max_minutes=40, sleep_sec=0.2, retry_sec=5.0):
     else:
         merged_odds = fresh_odds
     entries, odds, _ = save_today_frames(merged_entries.to_dict("records"), merged_odds.to_dict("records"))
+    # A complete final diagnostic distinguishes already-frozen races from
+    # missing/reference/stale quotes. The per-race journal above stays fixed.
+    market_saved += len(capture_after_fetch(entries, odds))
     fetched_races = int(fresh_entries["race_id"].nunique())
     UPCOMING_COUNT_FILE.write_text(str(fetched_races), encoding="ascii")
     metadata = {
         "fetched_at_jst": now.isoformat(timespec="seconds"),
+        "completed_at_jst": datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(timespec="seconds"),
         "min_minutes_to_close": min_minutes,
         "max_minutes_to_close": max_minutes,
         "scheduled_races": int(len(upcoming)),
         "fetched_races": fetched_races,
         "entry_rows": int(len(entries)),
         "odds_rows": int(len(odds)),
+        "market_axes_saved": market_saved,
+        "max_race_fetch_attempts": MAX_RACE_FETCH_ATTEMPTS,
         "failures": failures,
     }
     UPCOMING_METADATA_FILE.write_text(json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8")

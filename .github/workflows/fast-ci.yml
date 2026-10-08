@@ -52,3 +52,15 @@ jobs:
           if important:
               raise SystemExit(1)
           PY
+      - name: Diagnose committed market snapshot without saving predictions
+        env:
+          PYTHONPATH: src
+        run: python src/market_axis_shadow.py --diagnose --output-dir "$RUNNER_TEMP/market-axis-diagnostics"
+      - name: Preserve market diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: market-axis-diagnostics-${{ github.run_id }}
+          path: ${{ runner.temp }}/market-axis-diagnostics/company/
+          if-no-files-found: warn
+          retention-days: 7
