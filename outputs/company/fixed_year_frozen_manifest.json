@@ -1,0 +1,391 @@
+{
+  "version": "fixed_older_training_recent_year_v1",
+  "training_cutoff_exclusive": "2025-10-09",
+  "training_exclusions": {
+    "ambiguous_or_missing_podium": 557
+  },
+  "phases": [
+    {
+      "name": "base",
+      "races": 24167,
+      "rows": 168757,
+      "first": "2020-10-30",
+      "last": "2023-10-17",
+      "days": 1081
+    },
+    {
+      "name": "equations",
+      "races": 8456,
+      "rows": 59832,
+      "first": "2023-10-18",
+      "last": "2024-10-12",
+      "days": 361
+    },
+    {
+      "name": "mixture",
+      "races": 6418,
+      "rows": 45450,
+      "first": "2024-10-13",
+      "last": "2025-04-10",
+      "days": 180
+    },
+    {
+      "name": "temperature",
+      "races": 6752,
+      "rows": 47883,
+      "first": "2025-04-11",
+      "last": "2025-10-08",
+      "days": 181
+    }
+  ],
+  "model_sha256": "926f4edff0cb5ad258719c764af6d8dab04430aad60d2cf5c42586fff8ca979f",
+  "source_hashes": {
+    "fixed_year_research.py": "2b2990c0e13675677804ecc068198ad2f0f421952942b0e261844e40ceb410fe",
+    "fixed_year_study.py": "781fe099759c4d2d2f10ea1cf1c30350bee6d83a1aff09edee409e3303fe8075",
+    "fixed_year_features.py": "433f050ebc9628db52687771a656a08f71767eba67195bea9d5422f55d8f82ad",
+    "fixed_year_models.py": "69abf37d02d4bd5a90fa241ebc324e069c861ad72a1bf4ffa0fd6b6df923d9ef",
+    "fusion_equations.py": "d51f448cec9f12a43692ab28fa3873d3ba4c1a59b5ae8e1f9b563f36184a7e30",
+    "equation_models.py": "61801f5934b177b6e3bf12a09d7109435d1446479e56eb58064144b53cf13640",
+    "annual_knowledge.py": "4dbd88d6c2b20bc7e52e3bdfb9caa6aa9597a97f0b4c4ba69e6cfc564f68514d",
+    "common.py": "665582dd53d9b9ce20c650b77f77e845fa12449818f82123853c48097b63971b",
+    "betting_logic.py": "0dc950cdf519ca29f941f1a77e5d70916fe746f4984cd5af66e3c2aa700034e2",
+    "department_ticket_v2.py": "9cc80f98c20443c3692a59f223480f397285cc5c34bcdd15b842193f87e054a2",
+    "department_experiment_v2.py": "15fb9067140319a5875e52216afb1f805409db2041da69e2e056a78281b857d9",
+    "department_context.py": "33003ed7d81d5617043c274f7d81d341f43a0f4ad29df410588b9fc8c270dc50"
+  },
+  "pool": {
+    "weights": {
+      "joint:prefix_context": 0.06178830762588503,
+      "legacy_positions:data_department:baseline": 0.05905550730668362,
+      "legacy_positions:line_department:baseline": 0.05733674116969128,
+      "legacy_positions:pace_department:baseline": 0.05679355963750771,
+      "original:model_positions": 0.12262495648120326,
+      "pairwise:pairwise_order": 0.34305636599061584,
+      "positions:data_department": 0.05387065448120729,
+      "positions:line_department": 0.05141919373025311,
+      "positions:pace_department": 0.05025737620827467,
+      "positions:risk_department": 0.07438608079088664,
+      "risk:current_logic": 0.06941125657779147
+    },
+    "aliases": {
+      "joint:prefix_context": [
+        "joint:prefix_context"
+      ],
+      "legacy_positions:data_department:baseline": [
+        "legacy_positions:data_department:baseline"
+      ],
+      "legacy_positions:line_department:baseline": [
+        "legacy_positions:line_department:baseline"
+      ],
+      "legacy_positions:pace_department:baseline": [
+        "legacy_positions:pace_department:baseline"
+      ],
+      "original:model_positions": [
+        "original:model_positions"
+      ],
+      "pairwise:pairwise_order": [
+        "pairwise:pairwise_order"
+      ],
+      "positions:data_department": [
+        "positions:data_department"
+      ],
+      "positions:line_department": [
+        "positions:line_department"
+      ],
+      "positions:pace_department": [
+        "positions:pace_department"
+      ],
+      "positions:risk_department": [
+        "positions:risk_department"
+      ],
+      "risk:current_logic": [
+        "risk:current_logic"
+      ]
+    },
+    "error_correlation": [
+      [
+        1.0000000000000056,
+        0.8374877942144379,
+        0.7828387899806886,
+        0.8136349786293741,
+        0.8579661937260267,
+        0.5881607008324437,
+        0.8382885456666203,
+        0.7414208671784568,
+        0.7751183258275409,
+        0.8914369191748629,
+        0.866806476839344
+      ],
+      [
+        0.8374877942144379,
+        0.9999999999999983,
+        0.9785355498103855,
+        0.9853347033722484,
+        0.8007925449633968,
+        0.5700104814048518,
+        0.9087969807441652,
+        0.847532057992987,
+        0.8572487595085444,
+        0.8866304277745232,
+        0.9706204856886353
+      ],
+      [
+        0.7828387899806886,
+        0.9785355498103855,
+        1.000000000000001,
+        0.9733204522915792,
+        0.7287597860641526,
+        0.5191837290437903,
+        0.8865256080061019,
+        0.86456130437564,
+        0.8460894991596835,
+        0.8316498319655389,
+        0.9165006701181713
+      ],
+      [
+        0.8136349786293741,
+        0.9853347033722484,
+        0.9733204522915792,
+        1.0000000000000036,
+        0.7643970024423454,
+        0.5425450366442374,
+        0.8938489176766373,
+        0.8414439022789568,
+        0.8686831085910888,
+        0.8573733301469029,
+        0.9420036305542935
+      ],
+      [
+        0.8579661937260267,
+        0.8007925449633968,
+        0.7287597860641526,
+        0.7643970024423454,
+        0.9999999999999993,
+        0.6998607036980641,
+        0.8230132235518992,
+        0.6891381245059983,
+        0.7396236195414888,
+        0.9640199647616954,
+        0.8776056273450353
+      ],
+      [
+        0.5881607008324437,
+        0.5700104814048518,
+        0.5191837290437903,
+        0.5425450366442374,
+        0.6998607036980641,
+        1.000000000000001,
+        0.5140182753048337,
+        0.40982729311857563,
+        0.45650840475572757,
+        0.6443022749278562,
+        0.6338310607671438
+      ],
+      [
+        0.8382885456666203,
+        0.9087969807441652,
+        0.8865256080061019,
+        0.8938489176766373,
+        0.8230132235518992,
+        0.5140182753048337,
+        0.9999999999999961,
+        0.9535624810828125,
+        0.957955628195488,
+        0.9396990967482293,
+        0.8862187836783517
+      ],
+      [
+        0.7414208671784568,
+        0.847532057992987,
+        0.86456130437564,
+        0.8414439022789568,
+        0.6891381245059983,
+        0.40982729311857563,
+        0.9535624810828125,
+        1.000000000000001,
+        0.9338836577419194,
+        0.834160840616337,
+        0.7953868714372413
+      ],
+      [
+        0.7751183258275409,
+        0.8572487595085444,
+        0.8460894991596835,
+        0.8686831085910888,
+        0.7396236195414888,
+        0.45650840475572757,
+        0.957955628195488,
+        0.9338836577419194,
+        1.0000000000000002,
+        0.8685644566091322,
+        0.821685655370182
+      ],
+      [
+        0.8914369191748629,
+        0.8866304277745232,
+        0.8316498319655389,
+        0.8573733301469029,
+        0.9640199647616954,
+        0.6443022749278562,
+        0.9396990967482293,
+        0.834160840616337,
+        0.8685644566091322,
+        1.0000000000000002,
+        0.9230077724658828
+      ],
+      [
+        0.866806476839344,
+        0.9706204856886353,
+        0.9165006701181713,
+        0.9420036305542935,
+        0.8776056273450353,
+        0.6338310607671438,
+        0.8862187836783517,
+        0.7953868714372413,
+        0.821685655370182,
+        0.9230077724658828,
+        1.0000000000000002
+      ]
+    ],
+    "correlation_order": [
+      "joint:prefix_context",
+      "legacy_positions:data_department:baseline",
+      "legacy_positions:line_department:baseline",
+      "legacy_positions:pace_department:baseline",
+      "original:model_positions",
+      "pairwise:pairwise_order",
+      "positions:data_department",
+      "positions:line_department",
+      "positions:pace_department",
+      "positions:risk_department",
+      "risk:current_logic"
+    ],
+    "fitted_races": 6418
+  },
+  "temperature": 0.8,
+  "calibration_fit_losses": {
+    "0.6": 4.636156455963208,
+    "0.8": 4.570651763088245,
+    "1.0": 4.597219362960147,
+    "1.25": 4.661403013903918,
+    "1.6": 4.752638796639754,
+    "2.0": 4.8393457539795675,
+    "3.0": 4.984193828383023
+  },
+  "features": [
+    "race_no",
+    "car_no",
+    "bracket_no",
+    "age",
+    "term",
+    "region_id",
+    "player_class",
+    "player_group",
+    "score",
+    "rider_strength",
+    "rider_strength_rank",
+    "rider_strength_gap_to_best",
+    "rider_strength_vs_field",
+    "score_rank",
+    "score_gap_to_best",
+    "score_vs_field",
+    "player_prior_races",
+    "player_prior_win_rate",
+    "player_prior_place2_rate",
+    "player_prior_place3_rate",
+    "player_prior_avg_finish",
+    "player_prior_days_since_last_race",
+    "win_rate",
+    "win_rate_rank",
+    "win_rate_gap_to_best",
+    "place2_rate",
+    "place2_rate_rank",
+    "place3_rate",
+    "place3_rate_rank",
+    "back_count",
+    "standing_count",
+    "front_runner_count",
+    "stalker_count",
+    "deep_closer_count",
+    "marker_count",
+    "gear_ratio",
+    "prediction_mark",
+    "recent_avg_finish",
+    "recent_avg_finish_rank",
+    "recent_races_count",
+    "current_cup_avg_finish",
+    "days_since_last_race",
+    "venue_win_rate",
+    "track_win_rate",
+    "track_place2_rate",
+    "track_place3_rate",
+    "track_races",
+    "weather_win_rate",
+    "weather_place2_rate",
+    "weather_place3_rate",
+    "weather_races",
+    "race_type_win_rate",
+    "race_type_place2_rate",
+    "race_type_place3_rate",
+    "race_type_races",
+    "hour_win_rate",
+    "hour_place2_rate",
+    "hour_place3_rate",
+    "hour_races",
+    "line_role_win_rate",
+    "line_role_place2_rate",
+    "line_role_place3_rate",
+    "line_role_races",
+    "line_id",
+    "line_position",
+    "line_size",
+    "is_line_leader",
+    "number_of_lines",
+    "line_leader_strength",
+    "line_second_strength",
+    "strength_vs_line_leader",
+    "strength_vs_line_second",
+    "line_strength_mean",
+    "line_strength_max",
+    "other_line_attack_pressure",
+    "race_attack_pressure",
+    "wind_speed",
+    "entries_number",
+    "field_size_7",
+    "field_size_9",
+    "lines_per_field",
+    "is_grade_race",
+    "start_hour",
+    "day_of_week",
+    "month",
+    "current_term_class",
+    "current_term_group",
+    "previous_term_class",
+    "previous_term_group",
+    "distance",
+    "track_style_code",
+    "class_change",
+    "is_promoted",
+    "is_demoted",
+    "style_code",
+    "venue_code",
+    "race_class_code",
+    "race_type_code",
+    "weather_code",
+    "line_type_code",
+    "prefecture_code",
+    "gender_code",
+    "player_id_code",
+    "line_information_missing"
+  ],
+  "model_update_during_holdout": false,
+  "profile_cutoff_exclusive": "2023-10-18",
+  "retrospective_only": true,
+  "ceo_integration": false,
+  "purchase_authorized": false,
+  "missing_families": [
+    "market_residual",
+    "rank_specific_market",
+    "observed_state_paths"
+  ]
+}
