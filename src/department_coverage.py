@@ -139,7 +139,12 @@ def build_all_department_coverage(pred, plans, specialist_rows, now, output_dir=
         forecast_eligible = in_time and valid_entries
         for d, entry in zip(DEPARTMENTS[:4], existing_four):
             if entry is not None:
-                records.append({**prefix, **entry})
+                normalized = {**prefix, **entry}
+                records.append(normalized)
+                if (forecast_eligible and normalized.get("forecast_available")
+                        and normalized.get("close_at") is not None
+                        and now.timestamp() < float(normalized["close_at"])):
+                    fresh.append(normalized)
             else:
                 old = preserved.get((rid, d))
                 records.append(old if not forecast_eligible and old else {
