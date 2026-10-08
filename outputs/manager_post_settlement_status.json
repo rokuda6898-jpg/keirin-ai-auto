@@ -6,10 +6,20 @@
   "attempts": [
     {
       "attempt": 0,
-      "problems": [],
+      "problems": [
+        {
+          "type": "site_release_stale",
+          "count": 1,
+          "details": [
+            "code changed since generation: src/department_coverage.py"
+          ]
+        }
+      ],
       "health": {
-        "severity": "ok",
-        "problem_types": [],
+        "severity": "warning",
+        "problem_types": [
+          "site_release_stale"
+        ],
         "race_count": 72,
         "expected_riders": 495,
         "actual_riders": 495,
@@ -1097,8 +1107,10 @@
     }
   },
   "health": {
-    "severity": "ok",
-    "problem_types": [],
+    "severity": "warning",
+    "problem_types": [
+      "site_release_stale"
+    ],
     "race_count": 72,
     "expected_riders": 495,
     "actual_riders": 495,
