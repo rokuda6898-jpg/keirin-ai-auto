@@ -10,6 +10,7 @@ from itertools import permutations
 from zoneinfo import ZoneInfo
 
 from ticket_return_department import save_snapshots
+from mark_performance import race_prediction_marks, record_preclose_marks, build_mark_report
 
 import joblib
 import numpy as np
@@ -137,31 +138,6 @@ def filter_trifecta_candidates_by_confidence(candidates, race_df):
     out = out.loc[keep].copy()
     out.loc[out["bet_type"].eq("trifecta"), "trifecta_portfolio_mode"] = mode
     return out
-
-
-def race_prediction_marks(group):
-    """One mark per rider, with blank marks for riders outside the top five.
-
-    The score blends first-place strength and second/third-place coverage;
-    it does not imply calibrated probabilities or purchase authorization.
-    """
-    scored = group.copy()
-    for field in ("p_win", "p_second", "p_third"):
-        scored[field] = pd.to_numeric(scored.get(field, 0), errors="coerce").fillna(0).clip(lower=0)
-        maximum = scored[field].max()
-        scored[field + "_relative"] = scored[field] / maximum if maximum > 0 else 0.0
-    scored["_mark_score"] = (
-        0.60 * scored["p_win_relative"]
-        + 0.25 * scored["p_second_relative"]
-        + 0.15 * scored["p_third_relative"]
-    )
-    scored = scored.sort_values(
-        ["_mark_score", "p_win", "p_second", "p_third", "car_no"],
-        ascending=[False, False, False, False, True], kind="mergesort",
-    )
-    return {int(row.car_no): mark for row, mark in zip(
-        scored.itertuples(), ("◎", "○", "▲", "△", "☆")
-    )}
 
 
 def rider_display_name(row):
@@ -1504,6 +1480,15 @@ def main():
     pred[cols].to_csv(pred_path, index=False)
     pred[cols].to_csv(latest_path, index=False)
 
+    # Record marks only from a genuine pre-close snapshot; never backfill from
+    # the result or substitute the current ranking for an older prediction.
+    # Audit/report failure must not stop live prediction production.
+    try:
+        record_preclose_marks(pred, datetime.now(ZoneInfo("Asia/Tokyo")), OUTPUT_DIR)
+        build_mark_report(OUTPUT_DIR)
+    except Exception as exc:
+        print(f"Prediction-mark audit update failed (picks unaffected): {exc}", flush=True)
+
     # Durable one-row-per-race ledger for measuring AI top-1 win accuracy.
     top1_ledger_path = OUTPUT_DIR / "top1_prediction_ledger.csv"
     top1_cols = [
@@ -1718,7 +1703,7 @@ main{{max-width:920px;margin:auto;padding:22px 15px 90px}}nav{{display:grid;grid
 .bet{{display:grid;grid-template-columns:60px 1fr auto;gap:8px;align-items:center;padding:12px 0 0}}.bet b{{font-size:12px;color:#0b5bd3}}.bet strong{{font-size:20px;letter-spacing:.04em}}.bet span{{font-weight:800}}.bet small{{grid-column:2/4;color:#718096}}.waiting{{padding-top:12px;color:#7a899d;font-size:13px}}.race-result{{font-size:12px;font-weight:800;color:#7a899d;padding:7px 2px}}.race-result.decided{{color:#0b6b3a}}.race-select{{width:100%;border:0;background:#fff;color:#10233f;display:flex;justify-content:space-between;align-items:center;padding:2px;cursor:pointer;text-align:left}}.race-select b{{font-size:19px}}.race-select small{{display:block;color:#8191a4;margin-top:4px}}.race-select em{{font-style:normal;color:#1679e8;font-size:32px}}.race-detail{{display:none;padding-top:12px}}.race.open .race-detail{{display:block}}.race-actions{{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}}.race-actions button{{border:1px solid #cfe1f4;background:#f7fbff;color:#1679e8;border-radius:12px;padding:11px;font-weight:800}}.race-panel{{display:none;margin-top:12px;border-top:1px solid #e6eef7;padding-top:10px}}.race-panel.active{{display:block}}.race-panel h3{{margin:0 0 8px;font-size:15px;color:#1679e8}}.riders{{display:flex;gap:7px;overflow-x:auto;padding:5px 0 12px}}.rider{{border:1px solid #d8e6f5;background:#fff;border-radius:12px;padding:7px;min-width:70px}}.rider span{{display:block;font-size:9px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}.compare-view{{display:flex;align-items:center;gap:18px;background:linear-gradient(135deg,#f8fbff,#eef6ff);border:1px solid #dbeafb;border-radius:18px;padding:16px;box-shadow:inset 0 1px #fff}}.donut{{--v:0;width:110px;height:110px;border-radius:50%;background:conic-gradient(#1679e8 calc(var(--v)*1%),#e7eff8 0);display:grid;place-items:center;position:relative}}.donut:after{{content:"";position:absolute;width:76px;height:76px;border-radius:50%;background:#fff}}.donut span{{z-index:1;font-size:18px;font-weight:900;color:#1679e8}}
 footer{{text-align:center;padding:24px;color:#7b899b;font-size:11px}}@media(max-width:520px){{main{{padding:12px 12px 90px}}.race-head{{align-items:flex-start;flex-direction:column}}.brand{{font-size:22px;min-width:220px}}.hero{{align-items:flex-start;flex-direction:column}}.trust{{width:100%}}}}
 </style></head><body><header><div class="brand">NEXUS</div><div class="tag">KEIRIN PREDICTION SYSTEM</div></header><main>
-<nav><a href="index.html">今日の予想</a><a href="history.html">買い目履歴</a><a href="performance.html">成績と数字の見方</a></nav>
+<nav><a href="index.html">今日の予想</a><a href="history.html">買い目履歴</a><a href="performance.html">成績と数字の見方</a><a href="company/mark_performance.html">印別成績</a></nav>
 <section class="hero"><div><span class="eyebrow">TODAY’S KEIRIN</span><h1>今日のレース</h1><p>更新 {generated} JST ｜ 本線6〜12点・穴0〜12点を期待値で選定</p><p>選手横の％はAI推定の1着確率です。過去の的中率ではありません。</p><p><a style="color:#b9ddff" href="company/ticket_return_department.html">買い目・回収率検証部の報告</a> ／ <a style="color:#b9ddff" href="company/annual_department_report.html">選手別1〜3年の部署予想</a></p></div><div class="trust"><b>予想は事前保存</b><small>的中・不的中を結果確定後に記録</small></div></section>
 <section class="venue-jump"><b>開催場を選択</b><div id="venueJump"></div></section>
 {"".join(race_cards) if race_cards else '<div class="race">本日の予想データを取得中です。</div>'}
