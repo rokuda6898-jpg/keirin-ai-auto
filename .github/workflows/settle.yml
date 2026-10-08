@@ -233,7 +233,7 @@ jobs:
             # -X ours must not discard concurrent frozen predictions/outcomes
             # or publish an aggregate built before those records arrived.
             python src/reconcile_position_experiment.py --ref origin/main
-            git add outputs/company/annual_position_*
+            git add outputs/company/annual_position_* outputs/company/annual_equation_*
             git diff --staged --quiet || git commit -m "Reconcile prospective position evidence"
 
             if git push origin HEAD:main; then
