@@ -283,3 +283,109 @@ def render_all_department_coverage(report, folder):
         + body + '</main></body></html>'
     )
     (folder / "all_department_predictions.html").write_text(page, encoding="utf-8")
+
+
+def build_department_scoreboard(output_dir=OUTPUT_DIR):
+    """Compare only pre-close frozen top-three forecasts with verified results.
+
+    Maintain settled evidence across daily overwrites of latest_results.json.
+    All seven departments are scored on the same available set of races.
+    """
+    folder = output_dir / "company"
+    folder.mkdir(parents=True, exist_ok=True)
+    frozen = _load_preserved(folder)
+    settled_path = folder / "all_department_settled.json"
+    try:
+        old = json.loads(settled_path.read_text(encoding="utf-8")) if settled_path.exists() else []
+    except (ValueError, OSError, TypeError):
+        old = []
+    settled = {
+        (str(row["race_id"]), row["department"]): row for row in old
+        if row.get("department") in DEPARTMENTS and "race_id" in row
+    }
+    results_path = output_dir / "latest_results.json"
+    try:
+        results = json.loads(results_path.read_text(encoding="utf-8")) if results_path.exists() else []
+    except (ValueError, OSError, TypeError):
+        results = []
+    if not isinstance(results, list):
+        results = []
+    for outcome in results:
+        if not isinstance(outcome, dict) or str(outcome.get("official_result_available", "")).lower() not in ("true", "1"):
+            continue
+        rid = str(outcome.get("race_id", ""))
+        actual = str(outcome.get("actual_trifecta", "")).split("-")
+        if len(actual) != 3 or len(set(actual)) != 3 or not all(x.isdigit() and 1 <= int(x) <= 9 for x in actual):
+            continue
+        for department in DEPARTMENTS:
+            prediction = frozen.get((rid, department))
+            if not prediction or len(prediction.get("top3_cars", [])) != 3:
+                continue
+            predicted = [str(car) for car in prediction["top3_cars"]]
+            settled[(rid, department)] = {
+                "race_id": rid, "department": department,
+                "venue": prediction.get("venue", ""),
+                "race_no": prediction.get("race_no", 0),
+                "snapshot_at": prediction["snapshot_at"],
+                "predicted": predicted,
+                "actual": actual,
+                "first_correct": predicted[0] == actual[0],
+                "second_correct": predicted[1] == actual[1],
+                "third_correct": predicted[2] == actual[2],
+                "exact_trifecta": predicted == actual,
+                "purchase_authorized": False,
+            }
+    rows = sorted(settled.values(), key=lambda row: (row["race_id"], row["department"]))
+    settled_path.write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
+    by_department = {}
+    for department in DEPARTMENTS:
+        samples = [row for row in rows if row["department"] == department]
+        n = len(samples)
+        by_department[department] = {
+            "races": n,
+            "first_correct": sum(bool(x["first_correct"]) for x in samples),
+            "second_correct": sum(bool(x["second_correct"]) for x in samples),
+            "third_correct": sum(bool(x["third_correct"]) for x in samples),
+            "exact_trifecta": sum(bool(x["exact_trifecta"]) for x in samples),
+            "first_hit_rate": (sum(bool(x["first_correct"]) for x in samples) / n if n else None),
+            "exact_trifecta_rate": (sum(bool(x["exact_trifecta"]) for x in samples) / n if n else None),
+        }
+    now = datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(timespec="seconds")
+    report = {
+        "updated_at_jst": now,
+        "note": "Independent advisory 1-2-3 scenario accuracy only. Not purchased tickets or real ROI.",
+        "departments": by_department,
+        "settled_predictions": len(rows),
+    }
+    (folder / "all_department_results.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    def percent(rate):
+        return "未集計" if rate is None else f"{rate * 100:.1f}%"
+    lines = []
+    for department in DEPARTMENTS:
+        d = by_department[department]
+        lines.append(
+            "<tr><td>" + html.escape(LABELS[department]) + "</td>"
+            + f'<td>{d["races"]}</td><td>{d["first_correct"]}件 ({percent(d["first_hit_rate"])})</td>'
+            + f'<td>{d["second_correct"]}件</td><td>{d["third_correct"]}件</td>'
+            + f'<td>{d["exact_trifecta"]}件 ({percent(d["exact_trifecta_rate"])})</td></tr>'
+        )
+    page = (
+        '<!doctype html><html lang="ja"><head><meta charset="utf-8">'
+        '<meta name="viewport" content="width=device-width,initial-scale=1">'
+        '<title>7部署の予想検証成績</title>'
+        '<style>body{font-family:system-ui;background:#f4f7fb;padding:18px;color:#172b45}'
+        'main{max-width:1000px;margin:auto}section{background:white;border-radius:14px;padding:20px}'
+        'table{border-collapse:collapse;width:100%}td,th{padding:10px;border-bottom:1px solid #ddd;text-align:left}'
+        '.scroll{overflow:auto}p{line-height:1.8}a{color:#0965c7}</style></head><body><main>'
+        '<p><a href="all_department_predictions.html">全レース7部署の予想へ戻る</a></p>'
+        '<section><h1>7部署の着順予想・事後検証</h1>'
+        '<p>各部署が締切前に提出した1着・2着・3着の並びを公式結果で検証。'
+        '未提出や未確定のレースは成績に含めません。実購入した車券の的中率や回収率ではありません。</p>'
+        '<div class="scroll"><table><tr><th>部署</th><th>検証レース</th>'
+        '<th>1着的中</th><th>2着的中</th><th>3着的中</th><th>3連単の並び一致</th></tr>'
+        + "".join(lines) + '</table></div>'
+        '<p>各レースの予想提出状況は別画面で確認できます。'
+        'サンプル数が少ない成績で自動的に買い目を変更しません。</p></section></main></body></html>'
+    )
+    (folder / "all_department_results.html").write_text(page, encoding="utf-8")
+    return report
