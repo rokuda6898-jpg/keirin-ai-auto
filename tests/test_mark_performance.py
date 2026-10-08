@@ -57,7 +57,8 @@ class MarkAuditTest(unittest.TestCase):
         }]), encoding="utf-8")
         report = build_mark_report(self.out)
         self.assertEqual(report["frozen_races"], 1)
-        self.assertEqual(report["settled_races"], 1)
+        self.assertEqual(report["settled_races"], 1,
+            msg=f"report={report} raw_frozen={ledger.to_dict('records')} results_file={(self.out / 'mark_verified_results.csv').read_text(encoding='utf-8') if (self.out / 'mark_verified_results.csv').exists() else 'ABSENT'}")
         self.assertEqual(report["marks"]["◎"]["first"], 1)
         self.assertEqual(report["marks"]["○"]["top2"], 1)
         self.assertEqual(report["marks"]["▲"]["top3"], 1)
