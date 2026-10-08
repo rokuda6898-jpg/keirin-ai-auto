@@ -13,7 +13,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from department_coverage import DEPARTMENTS, build_all_department_coverage, build_department_scoreboard, position_scenario
 from annual_knowledge import forecast_departments
-from site_manager import audit_entries
+from site_manager import RiderButtonParser, audit_entries, normalized_player_id
 
 JST = ZoneInfo("Asia/Tokyo")
 
@@ -123,6 +123,14 @@ class DepartmentCoverageTest(unittest.TestCase):
             self.assertEqual(entry["display_status"], "model_fallback_reference_missing")
             self.assertEqual(len(set(entry["top3_cars"])), 3)
             self.assertEqual(len(entry["tickets"]), 0)
+
+    def test_zero_padded_rider_ids_match_rendered_site_name(self):
+        parser = RiderButtonParser()
+        parser.feed('<article><button class="rider" data-player-id="15667" '
+                    'data-name="戸田瑞姫" type="button"></button></article>')
+        self.assertEqual(normalized_player_id("015667"), "15667")
+        self.assertEqual(parser.riders[normalized_player_id("015667")], "戸田瑞姫")
+        self.assertNotIn(normalized_player_id("015668"), parser.riders)
 
     def test_cancelled_car_zero_does_not_create_phantom_missing_rider(self):
         entries_path = self.output / "source_entries.csv"
