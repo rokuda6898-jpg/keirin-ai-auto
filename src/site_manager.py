@@ -254,7 +254,10 @@ def audit_entries():
         cancelled = set()
         if "cancelled_car_numbers" in group.columns:
             for value in group["cancelled_car_numbers"].dropna().astype(str).unique():
-                cancelled.update(int(x) for x in re.findall(r"\d+", value))
+                # 0 in some provider snapshots is a non-rider placeholder,
+                # not a second cancellation. Only declared car slots count.
+                cancelled.update(int(x) for x in re.findall(r"\d+", value)
+                                 if 1 <= int(x) <= declared)
         # Older cached snapshots may have active/declaration counts but an empty
         # cancelled_car_numbers field. If the active count is explicit and the
         # exact number of absent car slots equals declared-active, recover those
