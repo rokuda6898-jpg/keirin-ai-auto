@@ -16,6 +16,7 @@ import pandas as pd
 from common import TODAY_CSV, TODAY_ODDS_CSV, OUTPUT_DIR, RAW_DIR
 
 STATUS_PATH = OUTPUT_DIR / "manager_status.json"
+POST_SETTLEMENT_STATUS_PATH = OUTPUT_DIR / "manager_post_settlement_status.json"
 INCIDENT_HISTORY_PATH = OUTPUT_DIR / "manager_incident_history.jsonl"
 LAST_GOOD_DIR = RAW_DIR / "last_good"
 LAST_GOOD_ENTRIES = LAST_GOOD_DIR / "today_entries.csv"
@@ -401,10 +402,10 @@ def audit_site_output():
         return [{"type": "site_output_missing_or_too_small"}]
     try:
         content = html.read_text(encoding="utf-8")
-        if "nexus-render-schema" not in content or "provisional-picks-v1" not in content:
+        if "nexus-render-schema" not in content or "nexus-departments-v2" not in content:
             problems.append({
                 "type": "site_render_schema_stale",
-                "expected": "provisional-picks-v1",
+                "expected": "nexus-departments-v2",
             })
         from bs4 import BeautifulSoup
         document = BeautifulSoup(content, "html.parser")
@@ -927,7 +928,7 @@ def refresh_monitor_after_results():
                "status": status, "repaired": False, "check_source": "post_settlement_read_only_audit",
                "attempts": [{"attempt": 0, "problems": problems, "health": summarize_health(problems, stats)}],
                "race_stats": stats, "health": summarize_health(problems, stats)}
-    STATUS_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    POST_SETTLEMENT_STATUS_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     return payload
 
 
