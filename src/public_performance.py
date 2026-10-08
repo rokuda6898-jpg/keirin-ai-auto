@@ -35,7 +35,7 @@ body{{font-family:system-ui;background:#f4f7fb;color:#172b45;margin:0;padding:20
 <p>的中 {winners.get('hits', 0)} ／ 締切前時刻を確認できた {winner_count}レース。3連単が当たった割合ではなく、この数字から回収率は分かりません。</p>
 <p>従来記録のうち、締切前時刻を確認できない {winners.get('unverified_rows', 0)}件は除外。旧記録の時刻確認であり、変更できない事前保存の証明とは区別しています。上の買い目成績とは対象と期間が異なります。</p></section>
 <section><h2>予想画面の％・部署の成績</h2><p>選手横の％は、AIが推定する「今回1着になる確率」です。過去の的中率ではありません。<br>各部署の成績は検証用予想の比較です。上の成績に合算しません。<br>過去データでの再計算やモデルのテスト成績も、締切前に保存した買い目成績とは分けて扱います。</p>
-<a href="company/annual_department_report.html">各部署の検証用成績</a> ／ <a href="company/prediction_quality.html">外れ方とAI確率の検証</a></section>
+<a href="company/annual_department_report.html">各部署の検証用成績</a> ／ <a href="company/prediction_quality.html">外れ方とAI確率の検証</a> ／ <a href="company/mark_performance.html">◎○▲△☆の印別成績（発走前固定）</a></section>
 <p>回収率120%は目標です。達成を確認した成績ではありません。<br><small>買い目成績の更新 {updated}</small></p></main></body></html>"""
     from site_ui import continuous_section,CONTINUOUS_JS,assets
     assets()
