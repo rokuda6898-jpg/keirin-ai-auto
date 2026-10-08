@@ -1,6 +1,6 @@
 {
   "version": "high_payout_v1",
-  "updated_at_jst": "2026-10-08T20:18:33+09:00",
+  "updated_at_jst": "2026-10-08T20:27:40+09:00",
   "total": {
     "target_races": 61,
     "predicted_races": 16,
@@ -4939,7 +4939,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 33.67,
+        "chaos_index": 33.59,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -5032,7 +5032,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 37.55,
+        "chaos_index": 46.79,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -5050,7 +5050,7 @@
       "recommended_count": 0,
       "patterns": [],
       "tickets": [],
-      "skip_reason": "このレースは穴予想見送り",
+      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
       "unknowns": [
         "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
         "全組み合わせの有効オッズが不足。市場確率との比較不可。"
@@ -5125,12 +5125,13 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 36.23,
+        "chaos_index": 40.17,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      }
+      },
+      "analysis_rating": "見送り"
     },
     {
       "race_id": "014420261008",
@@ -5144,8 +5145,7 @@
       "tickets": [],
       "skip_reason": "このレースは穴予想見送り",
       "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。"
       ],
       "probability_method": "geometric_model_market_estimate_uncalibrated",
       "minimum_probability": 0.001,
@@ -5217,11 +5217,21 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 14.24,
-        "risk_level": "低",
+        "chaos_index": 37.95,
+        "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
+      },
+      "specialist_analysis": {
+        "細切れ戦": {
+          "status": "分析可能",
+          "line_count": 2
+        },
+        "単騎": {
+          "status": "分析可能",
+          "cars": []
+        }
       }
     },
     {
@@ -5229,15 +5239,75 @@
       "venue": "前橋",
       "race_no": 1,
       "version": "high_payout_v1",
-      "rating": "見送り",
-      "expectation_score": 0,
-      "recommended_count": 0,
-      "patterns": [],
-      "tickets": [],
-      "skip_reason": "このレースは穴予想見送り",
+      "rating": "B",
+      "expectation_score": 68,
+      "recommended_count": 5,
+      "patterns": [
+        "2着荒れ",
+        "3着荒れ",
+        "単騎",
+        "細切れ戦"
+      ],
+      "tickets": [
+        {
+          "buy": "2-4-5",
+          "odds": 397.4,
+          "probability": 0.004251679117073452,
+          "ev": 1.6896172811249897,
+          "patterns": [
+            "2着荒れ",
+            "細切れ戦",
+            "単騎"
+          ]
+        },
+        {
+          "buy": "2-4-6",
+          "odds": 394.2,
+          "probability": 0.0038262031151607688,
+          "ev": 1.508289267996375,
+          "patterns": [
+            "2着荒れ",
+            "細切れ戦",
+            "単騎"
+          ]
+        },
+        {
+          "buy": "1-4-5",
+          "odds": 164.9,
+          "probability": 0.008479666871900111,
+          "ev": 1.3982970671763284,
+          "patterns": [
+            "2着荒れ",
+            "細切れ戦",
+            "単騎"
+          ]
+        },
+        {
+          "buy": "2-3-5",
+          "odds": 114.0,
+          "probability": 0.011729917216351913,
+          "ev": 1.3372105626641182,
+          "patterns": [
+            "3着荒れ",
+            "細切れ戦",
+            "単騎"
+          ]
+        },
+        {
+          "buy": "1-4-6",
+          "odds": 173.1,
+          "probability": 0.007418096942283559,
+          "ev": 1.284072580709284,
+          "patterns": [
+            "2着荒れ",
+            "細切れ戦",
+            "単騎"
+          ]
+        }
+      ],
+      "skip_reason": "",
       "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。"
       ],
       "probability_method": "geometric_model_market_estimate_uncalibrated",
       "minimum_probability": 0.001,
@@ -5304,17 +5374,76 @@
         "version": "third_focus_v1",
         "automatic_promotion": false,
         "variants": {
-          "current": [],
-          "third_focus": []
-        }
+          "current": [
+            {
+              "buy": "2-4-5",
+              "odds": 397.4,
+              "probability": 0.004251679117073452,
+              "ev": 1.6896172811249897
+            },
+            {
+              "buy": "2-4-6",
+              "odds": 394.2,
+              "probability": 0.0038262031151607688,
+              "ev": 1.508289267996375
+            },
+            {
+              "buy": "1-4-5",
+              "odds": 164.9,
+              "probability": 0.008479666871900111,
+              "ev": 1.3982970671763284
+            },
+            {
+              "buy": "2-3-5",
+              "odds": 114.0,
+              "probability": 0.011729917216351913,
+              "ev": 1.3372105626641182
+            },
+            {
+              "buy": "1-4-6",
+              "odds": 173.1,
+              "probability": 0.007418096942283559,
+              "ev": 1.284072580709284
+            }
+          ],
+          "third_focus": [
+            {
+              "buy": "2-3-5",
+              "odds": 114.0,
+              "probability": 0.011729917216351913,
+              "ev": 1.3372105626641182
+            }
+          ]
+        },
+        "decision": "本番は現在方式。3着重点方式は同じ上限点数・同じ最低EVで成立確率順に比較。"
       },
       "risk_coordination": {
-        "chaos_index": 29.39,
-        "risk_level": "低",
+        "chaos_index": 56.87,
+        "risk_level": "高",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      }
+      },
+      "specialist_analysis": {
+        "細切れ戦": {
+          "status": "分析可能",
+          "line_count": 7
+        },
+        "単騎": {
+          "status": "分析可能",
+          "cars": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ]
+        }
+      },
+      "strong_ev_candidate_count": 2,
+      "twelve_point_min_ev": 1.5
     },
     {
       "race_id": "024420261008",
@@ -5401,8 +5530,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 26.55,
-        "risk_level": "低",
+        "chaos_index": 53.25,
+        "risk_level": "高",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
