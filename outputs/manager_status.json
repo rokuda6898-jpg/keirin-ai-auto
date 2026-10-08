@@ -1,10 +1,39 @@
 {
-  "checked_at_jst": "2026-10-08T19:05:14+09:00",
-  "status": "healthy",
-  "repaired": false,
+  "checked_at_jst": "2026-10-08T19:26:38+09:00",
+  "status": "repaired",
+  "repaired": true,
   "attempts": [
     {
       "attempt": 0,
+      "problems": [
+        {
+          "type": "results_waiting",
+          "race_ids": [
+            "094820261008"
+          ]
+        },
+        {
+          "type": "results_overdue",
+          "race_ids": [
+            "093520261008"
+          ]
+        }
+      ],
+      "health": {
+        "severity": "warning",
+        "problem_types": [
+          "results_overdue",
+          "results_waiting"
+        ],
+        "race_count": 72,
+        "expected_riders": 497,
+        "actual_riders": 497,
+        "rider_integrity_ok": true
+      },
+      "repair_action": "settlement_refresh"
+    },
+    {
+      "attempt": 1,
       "problems": [],
       "health": {
         "severity": "ok",
