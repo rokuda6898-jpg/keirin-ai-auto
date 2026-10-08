@@ -11,7 +11,7 @@ from zoneinfo import ZoneInfo
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from department_coverage import DEPARTMENTS, build_all_department_coverage, build_department_scoreboard, position_scenario
+from department_coverage import DEPARTMENTS, build_all_department_coverage, build_department_scoreboard, diagnose_position_misses, position_scenario
 from annual_knowledge import forecast_departments
 from site_manager import RiderButtonParser, audit_entries, audit_site_output, normalized_player_id
 
@@ -137,6 +137,29 @@ class DepartmentCoverageTest(unittest.TestCase):
         self.assertEqual(target.read_bytes(), original.read_bytes())
         restore(checkpoint, root)
         self.assertEqual(len(target.read_text().splitlines()), len(DEPARTMENTS))
+
+    def test_miss_diagnostics_distinguish_third_omission_from_order_error(self):
+        settled = [
+            {"race_id": "r1", "department": "pace_department",
+             "predicted": ["1", "2", "3"], "actual": ["1", "2", "4"]},
+            {"race_id": "r2", "department": "pace_department",
+             "predicted": ["3", "1", "2"], "actual": ["1", "2", "3"]},
+            {"race_id": "r3", "department": "risk_department",
+             "predicted": ["1", "2", "3"], "actual": ["4", "2", "3"]},
+            {"race_id": "r4", "department": "high_payout_department",
+             "predicted": ["1", "3", "2"], "actual": ["1", "2", "3"]},
+        ]
+        report = diagnose_position_misses(settled)
+        pace = report["pace_department"]
+        self.assertEqual(pace["evaluated_races"], 2)
+        self.assertEqual(pace["pattern_counts"]["first_and_second_right_third_wrong"], 1)
+        self.assertEqual(pace["pattern_counts"]["actual_third_not_in_top3"], 1)
+        self.assertEqual(pace["pattern_counts"]["all_three_right_wrong_order"], 1)
+        self.assertEqual(pace["pattern_counts"]["winner_selected_for_second_or_third"], 1)
+        self.assertEqual(report["risk_department"]["pattern_counts"]["winner_not_in_top3"], 1)
+        self.assertEqual(report["high_payout_department"]["pattern_counts"]["second_third_swapped"], 1)
+        self.assertEqual(report["pace_department"]["evidence_status"], "exploratory_small_sample")
+        self.assertEqual(report["line_department"]["evaluated_races"], 0)
 
     def test_closed_race_is_not_falsely_predicted(self):
         past = entries(self.now, minutes_to_close=-1)
