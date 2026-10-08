@@ -7,6 +7,7 @@ from pathlib import Path
 from common import ROOT
 
 LEDGERS = ["outputs/company/ticket_return_snapshots.jsonl",
+           "outputs/company/all_department_prediction_ledger.jsonl",
            "outputs/company/annual_department_prediction_ledger.jsonl",
            "outputs/company/annual_strategist_ledger.jsonl"]
 OBSERVATIONS = "outputs/company/rider_official_observations.csv"
