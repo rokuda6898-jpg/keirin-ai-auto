@@ -1,12 +1,21 @@
 {
-  "checked_at_jst": "2026-10-08T17:49:49+09:00",
-  "status": "waiting_results",
+  "checked_at_jst": "2026-10-08T17:50:14+09:00",
+  "status": "unhealthy",
   "repaired": false,
   "check_source": "post_settlement_read_only_audit",
   "attempts": [
     {
       "attempt": 0,
       "problems": [
+        {
+          "type": "site_release_stale",
+          "count": 3,
+          "details": [
+            "code changed since generation: src/annual_knowledge.py",
+            "code changed since generation: src/department_coverage.py",
+            "code changed since generation: src/betting_logic.py"
+          ]
+        },
         {
           "type": "results_waiting",
           "race_ids": [
@@ -17,11 +26,12 @@
       "health": {
         "severity": "warning",
         "problem_types": [
-          "results_waiting"
+          "results_waiting",
+          "site_release_stale"
         ],
         "race_count": 72,
-        "expected_riders": 497,
-        "actual_riders": 497,
+        "expected_riders": 495,
+        "actual_riders": 495,
         "rider_integrity_ok": true
       }
     }
@@ -64,13 +74,14 @@
         3,
         4,
         5,
-        6,
         7
       ],
-      "count": 7,
-      "expected_entries": 7,
+      "count": 6,
+      "expected_entries": 6,
       "declared_entries": 7,
-      "cancelled_cars": []
+      "cancelled_cars": [
+        6
+      ]
     },
     "013820261008": {
       "cars": [
@@ -1074,7 +1085,6 @@
     },
     "123520261008": {
       "cars": [
-        1,
         2,
         3,
         4,
@@ -1082,10 +1092,12 @@
         6,
         7
       ],
-      "count": 7,
-      "expected_entries": 7,
+      "count": 6,
+      "expected_entries": 6,
       "declared_entries": 7,
-      "cancelled_cars": []
+      "cancelled_cars": [
+        1
+      ]
     },
     "124820261008": {
       "cars": [
@@ -1106,11 +1118,12 @@
   "health": {
     "severity": "warning",
     "problem_types": [
-      "results_waiting"
+      "results_waiting",
+      "site_release_stale"
     ],
     "race_count": 72,
-    "expected_riders": 497,
-    "actual_riders": 497,
+    "expected_riders": 495,
+    "actual_riders": 495,
     "rider_integrity_ok": true
   }
 }
