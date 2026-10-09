@@ -3,7 +3,9 @@ name: fusion-shadow-live
 on:
   workflow_dispatch:
   workflow_run:
-    workflows: ["daily-keirin-predict"]
+    # The first forecast follows the daily card fetch. Repeat it after every
+    # intraday market refresh so afternoon/evening races are frozen too.
+    workflows: ["daily-keirin-predict", "intraday-keirin-odds"]
     types: [completed]
 
 permissions:
