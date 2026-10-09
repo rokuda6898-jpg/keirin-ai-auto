@@ -239,9 +239,14 @@ def build_report(rows, now):
     known = [r for r in hits if r.get('hit_odds')]
     active = [r for r in rows if not r.get('actual')]
     latest_snapshot = {}
+    training_cutoff = None
+    training_first = None
     if LATEST.exists():
         try:
-            latest_snapshot = json.loads(LATEST.read_text(encoding='utf-8')).get('coverage', {})
+            latest_document = json.loads(LATEST.read_text(encoding='utf-8'))
+            latest_snapshot = latest_document.get('coverage', {})
+            training_cutoff = latest_document.get('model_training_cutoff_exclusive')
+            training_first = latest_document.get('model_training_first')
         except (OSError, json.JSONDecodeError):
             latest_snapshot = {}
     summary = {
@@ -264,6 +269,8 @@ def build_report(rows, now):
         'latest_forecasted_races': latest_snapshot.get('forecasted_races', 0),
         'latest_skipped_races': latest_snapshot.get('skipped_races', 0),
         'latest_coverage': latest_snapshot,
+        'model_training_first': training_first,
+        'model_training_cutoff_exclusive': training_cutoff,
         'metrics_scope': 'ranked exact-order trifecta candidates per race: top1, top6 and top12; not main/hole tickets or ROI',
         'forecast_ledger_sha256': digest(LEDGER) if LEDGER.exists() else None,
     }
@@ -280,6 +287,7 @@ def build_report(rows, now):
         '<section class="stats">',
         f'<div>締切前に固定<b>{summary["forecast_races"]:,}</b>レース</div><div>結果確定<b>{summary["settled_races"]:,}</b>レース</div>',
         f'<div>直近対象日に確認<b>{summary["latest_input_races"]:,}</b>レース</div><div>直近対象日の予想<b>{summary["latest_forecasted_races"]:,}</b>レース</div><div>予想なし・理由表示<b>{summary["latest_skipped_races"]:,}</b>レース</div>',
+        f'<p>モデルの学習期間：{html.escape(str(summary["model_training_first"] or "未取得"))}〜{html.escape(str(summary["model_training_cutoff_exclusive"] or "未取得"))}の前日まで</p>',
         f'<div>1点的中率<b>{pct(summary["hit_rate_top1"])}</b>（{summary["hit_races_top1"]:,}）</div>',
         f'<div>6点的中率<b>{pct(summary["hit_rate_top6"])}</b>（{summary["hit_races_top6"]:,}）</div>',
         f'<div>12点的中率<b>{pct(summary["hit_rate_top12"])}</b>（{summary["hit_races_top12"]:,}）</div>',
@@ -418,6 +426,7 @@ def forecast(entries_path, results_path, asof=None):
         'skipped_races': sum(x['status'] == '予想なし' for x in coverage_races),
         'races': coverage_races}
     LATEST.write_text(json.dumps({'updated_at_jst': now.isoformat(timespec='seconds'),
+        'model_training_first': manifest['training_first'],
         'model_training_cutoff_exclusive': manifest['training_cutoff_exclusive'],
         'new_forecasts': active, 'coverage': coverage}, ensure_ascii=False, indent=2), encoding='utf-8')
     return build_report(rows, now)
