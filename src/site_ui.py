@@ -152,9 +152,21 @@ CONTINUOUS_JS="""
 document.querySelectorAll('.continuous-results').forEach(async box=>{try{const response=await fetch(box.dataset.report+'?t='+Date.now(),{cache:'no-store'});if(!response.ok)throw Error('取得失敗');const report=await response.json();function show(){const period=box.querySelector('.result-window').value,window=report.continuous&&report.continuous[period];const pct=value=>value===null||value===undefined?'未集計':(Number(value)*100).toFixed(1)+'%';const currentDate=new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Tokyo'}).format(new Date()),isTodayStale=period==='today'&&report.today_date!==currentDate;const rows=isTodayStale?{}:window||(period==='all'&&report.shadow?{total:report.shadow.total,main:report.shadow.main,hole:report.shadow.hole}:{});box.querySelector('.result-asof').textContent=(period==='today'?'対象日 '+currentDate+(isTodayStale?' · 今日の集計待ち':'')+' · ':'')+'更新 '+report.updated_at_jst+' · 現行戦略';const table=document.createElement('table');table.innerHTML='<thead><tr><th>対象</th><th>的中率</th><th>回収率</th><th>的中／確定</th></tr></thead>';const body=document.createElement('tbody');[['total','本線＋穴'],['main','本線'],['hole','穴']].forEach(([key,label])=>{const data=rows[key]||{};const tr=document.createElement('tr');[label,pct(data.hit_rate),pct(data.flat_100yen&&data.flat_100yen.return_rate),data.bet_races?(data.hits||0)+'／'+data.bet_races+'R':'条件成立なし（確定'+(data.eligible_settled_races||0)+'R）'].forEach(value=>{const td=document.createElement('td');td.textContent=value;tr.append(td)});body.append(tr)});table.append(body);box.querySelector('.result-table').replaceChildren(table)}box.querySelector('.result-window').addEventListener('change',show);show()}catch(error){box.querySelector('.result-table').textContent='成績を取得できません。再読み込みしてください。'}});
 """
 
+def add_equation_entry(document):
+    """Add a stable top-page entry without recomputing any race predictions."""
+    soup=BeautifulSoup(document,'html.parser')
+    if soup.select_one('#individual-equation-entry') or soup.main is None:
+        return document
+    entry=BeautifulSoup('<a id="individual-equation-entry" href="company/three_year_equations/index.html" style="display:block;margin:18px 0;padding:18px 20px;background:#1764bf;color:#fff;border-radius:16px;text-decoration:none"><strong style="font-size:20px">予想印付き・個別方程式予想 →</strong><br><span style="font-size:14px">レース場・発走時間帯から探す ／ 3点・6点・12点 ／ 各6,000円</span></a>','html.parser').a
+    hero=soup.main.select_one('.hero')
+    if hero:hero.insert_after(entry)
+    else:soup.main.insert(0,entry)
+    return str(soup)
+
+
 def enhance_today(document):
     assets()
-    soup=BeautifulSoup(document,"html.parser")
+    soup=BeautifulSoup(add_equation_entry(document),"html.parser")
     for reference in soup.select(".reference-picks"):
         reference.decompose()
     style_link=soup.select_one('link[href^="site-ui.css"]')

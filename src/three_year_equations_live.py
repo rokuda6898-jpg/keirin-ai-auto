@@ -1,7 +1,6 @@
 """Prospective three-year equations and independently frozen 6000-yen plans."""
 import argparse
 import hashlib
-import html
 import json
 from datetime import datetime
 from pathlib import Path
@@ -164,6 +163,7 @@ def forecast(folder=FOLDER, refresh_odds=False):
             item = race.iloc[0]
             meta = {'race_id':str(rid), 'date':day, 'venue':str(item.get('venue','')),
                 'race_no':int(item.race_no), 'close_at':float(item.close_at),
+                'start_at':float(item.start_at) if pd.notna(item.get('start_at')) else None,
                 'field_sha256':field_signature(clean[clean.race_id.eq(rid)]),
                 'producer_sha256':hashlib.sha256(Path(__file__).read_bytes().replace(b'\r\n',b'\n')).hexdigest(),
                 'input_sha256':hashlib.sha256(clean[clean.race_id.eq(rid)].to_json(orient='records').encode()).hexdigest()}
@@ -208,55 +208,10 @@ def report(folder=FOLDER):
 
 
 def render(folder,records,saved,outcomes,value):
-    esc=lambda x:html.escape(str(x))
-    pct=lambda p:'未集計' if p is None else f'{p:.1%}'
-    lookup={(r['race_id'],r['points'],r['equation']):r for r in saved}
-    visible_dates=set(sorted({r['date'] for r in records})[-2:])
-    visible_records=[r for r in records if r['date'] in visible_dates]
-    m=value['training']
-    page=['<!doctype html><html lang="ja"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">',
-        '<title>3年学習・個別方程式予想｜KEIRIN NEXUS</title><style>body{margin:0;background:#0b1322;color:#e8edf7;font:16px/1.7 system-ui}main{max-width:1150px;margin:auto;padding:24px 16px}a{color:#9bd8ff}section{background:#15243a;border-radius:12px;padding:18px;margin:20px 0}button,select{font:inherit;padding:12px;border-radius:8px;border:1px solid #7197bb;background:#213653;color:white;margin:5px 5px 5px 0}button[aria-pressed=true]{background:#235e67;border-color:#8be4d0}select{max-width:100%;width:640px}.scroll{overflow:auto}table{border-collapse:collapse;width:100%}th,td{text-align:left;padding:10px;border-bottom:1px solid #405068;vertical-align:top}td{min-width:85px}.picks{min-width:300px}.muted{color:#bbcadc}.warn{color:#f8d998}</style><main>',
-        '<p><a href="../../index.html">今日の予想</a> ／ <a href="../individual_equations/index.html">導入前の独立式</a> ／ <a href="../fusion_shadow_live_report.html">既存統合式</a></p><h1>3年学習・個別方程式予想</h1>',
-        '<p>各式が単独で三連単を選び、選択した1プランに6,000円を配分します。本線・穴とは別の仮想購入です。</p><p>予想印：◎本命・○対抗・▲単穴・△連下・☆注目。各式の保存済み上位12買い目から1着支持を合算した順です。同点は2着、3着の支持順。印は3点・6点・12点で共通です。</p>',
-        f'<p>学習：{esc(m.get("training_first","確認中"))}〜{esc(m.get("training_last","確認中"))} ／ {esc(m.get("training_races","—"))}レース。重みは直近1年：その前1年：さらに前1年＝<b>4：2：1</b>。</p>',
-        '<p class="muted">買い目は各式の確率順位。金額は当たる確率と締切前オッズを使って100円単位で配分します。表示する回収見込みは予測値で、実際の回収率と区別しています。過去3年の締切前三連単オッズ・途中隊列が不足するため、市場残差式・市場条件付き先着式・途中隊列式は3年学習済みとは表示しません。</p>',
-        '<label for="equation">個別の方程式</label><br><select id="equation" onchange="choose()">']
-    page.extend(f'<option value="{esc(n)}"'+(' selected' if n=='first_anchor' else '')+f'>{esc(label)}</option>' for n,label in NAMES.items())
-    page.append('</select><div id="commands">')
-    page.extend(f'<button type="button" data-choice="{n}" aria-pressed="'+('true' if n==3 else 'false')+f'" onclick="points={n};choose()">{n}点方程式予想・6,000円</button>' for n in budget.POINTS)
-    page.append('</div><p>3点・6点・12点は切替用です。合計18,000円の購入を意味しません。各プランは締切前に固定し、後から当たったプランへ変更しません。金額未配分のレースは6,000円プランの成績集計に含めません。締切まで60分以内のレースは更新時にオッズを取り直します。取得できない価格を仮の値で埋めることはありません。</p><p>買い目一覧は直近2開催日の全レース、成績は保存開始からの累計です。過去の固定記録はページ末尾から確認できます。</p>')
-    for name,label in NAMES.items():
-        page.append(f'<section data-equation="{esc(name)}"'+(' hidden' if name!='first_anchor' else '')+f'><h2>{esc(label)}</h2>')
-        for points in budget.POINTS:
-            s=value['statistics'][name][str(points)]
-            page.append(f'<div data-points="{points}"'+(' hidden' if points!=3 else '')+f'><h3>{points}点・6,000円プラン</h3><p>配分保存 {s["forecast_races"]}R ／ 的中 {s["hits"]} / 確定 {s["settled_races"]}R ／ 的中率 <b>{pct(s["hit_rate"])}</b> ／ 実績回収率 <b>{pct(s["roi"])}</b><br>仮想投資 {s["stake_yen"]:,}円 ／ 払戻し {s["return_yen"]:,.0f}円 ／ 払戻し未取得 {s["payout_pending_races"]}R<br>50倍超 {s["hits_over_50x"]}R ／ 100倍以上 {s["hits_at_least_100x"]}R</p><div class="scroll"><table><tr><th>開催・R</th><th>買い目・金額</th><th>回収見込み</th><th>公式結果</th><th>記録時刻</th></tr>')
-            for row in sorted(visible_records,key=lambda r:(r['date'],r['close_at']),reverse=True):
-                frozen=lookup.get((row['race_id'],points,name))
-                plan=frozen['methods'][name] if frozen else None
-                picks=plan['tickets'] if plan else row['methods'][name]['tickets'][:points]
-                descriptions=[f'{t["buy"]}：{t["stake_yen"]:,}円（{t["odds_at_capture"]:g}倍）' if plan else t['buy'] for t in picks]
-                if not plan:
-                    descriptions.append('金額未配分：必要な締切前オッズ待ち' if row['close_at']>common.clock().timestamp() else '金額未配分：締切前オッズ不足')
-                out=outcomes.get(row['race_id']); status='結果待ち'
-                if out:
-                    status='公式結果不一致・集計除外' if out.get('conflict') else ' ／ '.join(out['winning_buys'])
-                    if not out.get('conflict'):
-                        status+=' ／ '+('的中' if {t['buy'] for t in picks}&set(out['winning_buys']) else '不的中')
-                        if plan and out['payout_complete']:
-                            cash=sum(out['payouts'].get(t['buy'],0)*t['stake_yen']/100 for t in picks)
-                            status+=f' ／ {cash:,.0f}円'
-                expected=f'{plan["estimated_return_yen"]:,.0f}円（{plan["estimated_roi"]:.1%}）' if plan else 'オッズ未確定'
-                stamp=frozen['allocated_at_jst'] if frozen else row['snapshot_at_jst']
-                marks='　'.join(f'{m["mark"]}{m["car_no"]}番' for m in prediction_marks(row['methods'][name]))
-                page.append(f'<tr><td>{esc(row["date"])}<br>{esc(row["venue"])} {row["race_no"]}R</td><td class="picks"><b aria-label="予想印">{esc(marks)}</b><br>'+ '<br>'.join(esc(t) for t in descriptions)+f'</td><td>{esc(expected)}</td><td>{esc(status)}</td><td>{esc(stamp)}</td></tr>')
-            shared=value['common_comparison_statistics'][name][str(points)]
-            page.append(f'</table></div><p>20式の共通条件だけで比較：的中 {shared["hits"]} / 確定 {shared["settled_races"]}R ／ 的中率 {pct(shared["hit_rate"])} ／ 回収率 {pct(shared["roi"])}。この式の最大払戻への依存：{pct(s["largest_return_share"])}。</p></div>')
-        page.append('</section>')
-    page.append('<section><h2>全レースの確認状況</h2><p>締切後の予想や配分は作りません。個別成績と、20式すべての配分が同じレース・同じオッズ時点で揃った共通比較を分けて表示します。</p><div class="scroll"><table>')
-    for r in value['coverage'].get('races',[]):
-        page.append(f'<tr><td>{esc(r["venue"])} {r["race_no"]}R</td><td>{esc(r["reason"])}</td></tr>')
-    page.append('</table></div></section><p><a href="report.json">学習情報・集計</a> ／ <a href="forecasts.json">固定予想</a> ／ <a href="allocations.json">固定配分</a> ／ <a href="results.json">公式結果</a></p><script>let points=3;function choose(){const name=document.getElementById("equation").value;document.querySelectorAll("[data-equation]").forEach(e=>e.hidden=e.dataset.equation!==name);document.querySelectorAll("[data-points]").forEach(e=>e.hidden=Number(e.dataset.points)!==points);document.querySelectorAll("[data-choice]").forEach(e=>e.setAttribute("aria-pressed",String(Number(e.dataset.choice)===points)));}</script></main></html>')
-    (folder/'index.html').write_text(''.join(page),encoding='utf-8')
+    from three_year_equations_ui import document
+    page=document(records,saved,outcomes,value,NAMES,prediction_marks,
+                  ROOT/'outputs/latest_race_schedule.csv')
+    (folder/'index.html').write_text(page,encoding='utf-8')
 
 
 def merge(remote,folder=FOLDER):
