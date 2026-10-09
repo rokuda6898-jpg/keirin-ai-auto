@@ -115,7 +115,8 @@ def outcomes_asof(folder, cutoff):
         if rid in found:
             previous = found[rid]['outcome']
             if (set(previous['winning_buys']) != set(outcome['winning_buys']) or
-                    any(k in previous['payouts'] and previous['payouts'][k] != v
+                    any(k in previous['payouts'] and not math.isclose(
+                            float(previous['payouts'][k]), float(v), rel_tol=1e-12, abs_tol=1e-9)
                         for k,v in outcome['payouts'].items())):
                 conflicts.add(rid)
         if rid not in found or r['observed_at'] > found[rid]['observed_at']:

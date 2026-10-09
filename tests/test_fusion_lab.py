@@ -177,6 +177,13 @@ class FusionLedgerTests(unittest.TestCase):
         samples,_,info=lab.prior_packets(self.out,self.now+timedelta(days=1))
         self.assertEqual(samples,[]);self.assertEqual(info['conflicting_results'],['fixture'])
 
+    def test_rounding_noise_in_same_official_payout_is_not_a_conflict(self):
+        self.capture();self.outcome(payout=1739.9999999999998)
+        self.outcome(payout=1740,hours=2)
+        samples,_,info=lab.prior_packets(self.out,self.now+timedelta(days=1))
+        self.assertEqual(len(samples),1)
+        self.assertEqual(info['conflicting_results'],[])
+
     def test_daily_model_frozen_and_code_revision_separates(self):
         a=lab.prepare_model(self.out,self.now)
         with patch('fusion_lab.eq.train',side_effect=AssertionError('must not refit')):
