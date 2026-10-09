@@ -71,6 +71,23 @@ class ThreeYearLiveTests(unittest.TestCase):
             self.assertEqual(live.freeze_allocations(saved,self.forecast,pd.DataFrame(),pd.DataFrame(),self.now),57)
         self.assertTrue(all(r['equation']!='first_anchor' for r in saved))
 
+    def test_fresh_market_rejects_changed_field_or_close(self):
+        race=pd.DataFrame([{'race_id':'r1','car_no':n,'player_id':str(n),'close_at':self.forecast['close_at'],'source_url':'https://example.test/race'} for n in (1,2,3,4)])
+        fresh=race.to_dict('records')
+        for r in fresh:r['player_id']=r['player_id'].zfill(6)
+        with patch('fetch_today_entries.parse_race_page',return_value=(fresh,[{'buy':'1-2-3'}])):
+            self.assertEqual(live.fresh_market(race).iloc[0].buy,'1-2-3')
+        changed=copy.deepcopy(fresh);changed[0]['player_id']='other'
+        with patch('fetch_today_entries.parse_race_page',return_value=(changed,[])):
+            with self.assertRaises(ValueError):live.fresh_market(race)
+        changed=copy.deepcopy(fresh);changed[0]['close_at']-=60
+        with patch('fetch_today_entries.parse_race_page',return_value=(changed,[])):
+            with self.assertRaises(ValueError):live.fresh_market(race)
+
+    def test_capture_finishing_after_close_never_allocates(self):
+        with patch.object(live,'quote_view',return_value=(self.prices,self.stamps,{},[])), patch.object(live.common,'clock',return_value=self.now+timedelta(hours=1)):
+            self.assertEqual(live.freeze_allocations([],self.forecast,pd.DataFrame(),pd.DataFrame(),self.now),0)
+
     def test_common_comparison_excludes_unmatched_equation_cohort(self):
         saved=[]
         with patch.object(live,'quote_view',return_value=(self.prices,self.stamps,{},[])), patch.object(live.common,'clock',return_value=self.now):

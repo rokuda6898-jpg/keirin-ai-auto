@@ -2,6 +2,8 @@ name: three-year-equations-live
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '7,22,37,52 0-14 * * *'
   push:
     branches: [main]
     paths: ["src/three_year_equations_live.py", "models/individual_three_year/**", ".github/workflows/three-year-equations-live.yml"]
@@ -34,7 +36,12 @@ jobs:
         if: github.event_name != 'workflow_run' || (github.event.workflow_run.name != 'quick-keirin-results' && github.event.workflow_run.name != 'settle-keirin-results')
         env:
           PYTHONPATH: src
-        run: python src/three_year_equations_live.py forecast
+        run: python src/three_year_equations_live.py forecast --refresh-odds
+      - name: Refresh independent allocations on result updates
+        if: github.event_name == 'workflow_run' && (github.event.workflow_run.name == 'quick-keirin-results' || github.event.workflow_run.name == 'settle-keirin-results')
+        env:
+          PYTHONPATH: src
+        run: python src/three_year_equations_live.py allocate --refresh-odds
       - name: Update per-equation outcomes and reports
         env:
           PYTHONPATH: src

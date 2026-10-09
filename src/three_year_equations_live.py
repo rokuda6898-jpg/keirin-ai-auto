@@ -66,7 +66,56 @@ def freeze_allocations(saved, forecast, race, market, now):
     return count
 
 
-def forecast(folder=FOLDER):
+def field_signature(race):
+    return common.digest(sorted((int(r.car_no),str(r.player_id).lstrip('0') or '0') for r in race.itertuples()))
+
+
+def fresh_market(race):
+    from fetch_today_entries import parse_race_page
+    entries, odds = parse_race_page(str(race.iloc[0].source_url), completeness_attempts=1)
+    fresh = pd.DataFrame(entries)
+    if (fresh.empty or set(fresh.race_id.astype(str)) != {str(race.iloc[0].race_id)}
+            or field_signature(fresh) != field_signature(race)
+            or set(pd.to_numeric(fresh.close_at)) != {float(race.iloc[0].close_at)}):
+        raise ValueError('出走選手または締切が変更されたため配分停止')
+    return pd.DataFrame(odds)
+
+
+def allocate_pending(folder=FOLDER, refresh_odds=False):
+    records, saved = common.ledger(folder), allocations(folder)
+    now = common.clock()
+    entries = pd.read_csv(ROOT/'data/raw/today_entries.csv',dtype={'race_id':str,'player_id':str})
+    market = pd.read_csv(ROOT/'data/raw/today_odds.csv',dtype={'race_id':str})
+    by_id = {str(rid):r for rid,r in entries.groupby('race_id',sort=False)}
+    quotes = {str(rid):r for rid,r in market.groupby('race_id',sort=False)}
+    decided = {str(r.get('race_id')) for r in common.read_json(ROOT/'outputs/latest_results.json',[]) if normalize_outcome(r)}
+    diagnostics = []
+    for row in sorted(records,key=lambda r:r['close_at']):
+        rid=row['race_id']; now=common.clock()
+        if rid not in by_id or rid in decided or row['date']!=now.date().isoformat() or row['close_at']<=now.timestamp():
+            continue
+        if sum(r['race_id']==rid for r in saved)==len(NAMES)*len(budget.POINTS):
+            continue
+        race=by_id[rid]
+        if row.get('field_sha256') != field_signature(race):
+            diagnostics.append({'race_id':rid,'reason':'出走選手の固定記録と不一致'})
+            continue
+        quote=quotes.get(rid,pd.DataFrame())
+        if refresh_odds and row['close_at']-now.timestamp()<=3600:
+            try:
+                quote=fresh_market(race)
+            except Exception as exc:
+                diagnostics.append({'race_id':rid,'reason':str(exc)})
+                continue
+        added=freeze_allocations(saved,row,race,quote,common.clock())
+        diagnostics.append({'race_id':rid,'new_plans':added})
+        # Persist immediately after each capture, before fetching another race.
+        common.save(folder/'allocations.json',saved)
+    common.save(folder/'allocation_status.json',{'updated_at':common.clock().isoformat(),'races':diagnostics})
+    return report(folder)
+
+
+def forecast(folder=FOLDER, refresh_odds=False):
     records, saved = common.ledger(folder), allocations(folder)
     now = common.clock(); day = now.date().isoformat()
     entries = pd.read_csv(ROOT/'data/raw/today_entries.csv', dtype={'race_id':str, 'player_id':str})
@@ -100,6 +149,7 @@ def forecast(folder=FOLDER):
             item = race.iloc[0]
             meta = {'race_id':str(rid), 'date':day, 'venue':str(item.get('venue','')),
                 'race_no':int(item.race_no), 'close_at':float(item.close_at),
+                'field_sha256':field_signature(clean[clean.race_id.eq(rid)]),
                 'producer_sha256':hashlib.sha256(Path(__file__).read_bytes().replace(b'\r\n',b'\n')).hexdigest(),
                 'input_sha256':hashlib.sha256(clean[clean.race_id.eq(rid)].to_json(orient='records').encode()).hexdigest()}
             frozen = common.freeze(records, 'three_year_421', meta, methods,
@@ -108,15 +158,10 @@ def forecast(folder=FOLDER):
             for row in coverage:
                 if row['race_id']==rid:
                     row['reason'] = '保存済み' if frozen else '計算完了時点で締切後'
-    market = pd.read_csv(ROOT/'data/raw/today_odds.csv', dtype={'race_id':str})
-    by_id = {str(rid):r for rid,r in entries.groupby('race_id',sort=False)}
-    for row in records:
-        if row['race_id'] in by_id and row['race_id'] not in decided:
-            freeze_allocations(saved,row,by_id[row['race_id']],market,common.clock())
     common.save(folder/'forecasts.json',records)
     common.save(folder/'allocations.json',saved)
     common.save(folder/'coverage.json',{'date':day,'races':coverage,'updated_at':common.clock().isoformat()})
-    return report(folder)
+    return allocate_pending(folder,refresh_odds)
 
 
 def report(folder=FOLDER):
@@ -164,7 +209,7 @@ def render(folder,records,saved,outcomes,value):
     page.extend(f'<option value="{esc(n)}"'+(' selected' if n=='first_anchor' else '')+f'>{esc(label)}</option>' for n,label in NAMES.items())
     page.append('</select><div id="commands">')
     page.extend(f'<button type="button" data-choice="{n}" aria-pressed="'+('true' if n==3 else 'false')+f'" onclick="points={n};choose()">{n}点方程式予想・6,000円</button>' for n in budget.POINTS)
-    page.append('</div><p>3点・6点・12点は切替用です。合計18,000円の購入を意味しません。各プランは締切前に固定し、後から当たったプランへ変更しません。金額未配分のレースは6,000円プランの成績集計に含めません。</p><p>買い目一覧は直近2開催日の全レース、成績は保存開始からの累計です。過去の固定記録はページ末尾から確認できます。</p>')
+    page.append('</div><p>3点・6点・12点は切替用です。合計18,000円の購入を意味しません。各プランは締切前に固定し、後から当たったプランへ変更しません。金額未配分のレースは6,000円プランの成績集計に含めません。締切まで60分以内のレースは更新時にオッズを取り直します。取得できない価格を仮の値で埋めることはありません。</p><p>買い目一覧は直近2開催日の全レース、成績は保存開始からの累計です。過去の固定記録はページ末尾から確認できます。</p>')
     for name,label in NAMES.items():
         page.append(f'<section data-equation="{esc(name)}"'+(' hidden' if name!='first_anchor' else '')+f'><h2>{esc(label)}</h2>')
         for points in budget.POINTS:
@@ -223,7 +268,8 @@ def command(name,points,race_id,folder=FOLDER):
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command',choices=('forecast','report','merge','list','command'))
+    parser.add_argument('command',choices=('forecast','allocate','report','merge','list','command'))
+    parser.add_argument('--refresh-odds',action='store_true')
     parser.add_argument('--remote',type=Path)
     parser.add_argument('--equation',choices=list(NAMES))
     parser.add_argument('--points',type=int,choices=budget.POINTS,default=3)
@@ -234,5 +280,5 @@ if __name__=='__main__':
     elif args.command=='command':
         print(json.dumps(command(args.equation,args.points,args.race_id),ensure_ascii=False))
     else:
-        value=forecast() if args.command=='forecast' else merge(args.remote) if args.command=='merge' else report()
+        value=forecast(refresh_odds=args.refresh_odds) if args.command=='forecast' else allocate_pending(refresh_odds=args.refresh_odds) if args.command=='allocate' else merge(args.remote) if args.command=='merge' else report()
         print(json.dumps({k:value[k] for k in ('forecast_races','allocated_race_plans')},ensure_ascii=False))
