@@ -6,6 +6,7 @@ from unittest import mock
 
 import pandas as pd
 
+import fusion_shadow_live
 import settle_results
 
 
@@ -67,7 +68,9 @@ class SettleResultsTests(unittest.TestCase):
                 LATEST_RESULTS_JSON=latest_results,
             ), mock.patch.object(settle_results, "ensure_dirs"), mock.patch.object(
                 settle_results, "fetch_results"
-            ) as fetch_results:
+            ) as fetch_results, mock.patch.object(
+                fusion_shadow_live, "has_overdue_unsettled", return_value=False
+            ):
                 settle_results.run_settlement(argparse.Namespace(min_expected_profit=0.0))
 
             fetch_results.assert_not_called()
