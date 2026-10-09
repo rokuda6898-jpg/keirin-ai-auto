@@ -314,3 +314,6 @@ jobs:
           done
           # The final retry generated a new commit: actually publish it.
           git push origin HEAD:main
+
+      - name: Verify every upcoming race has a frozen company forecast
+        run: python src/coverage_refresh.py --verify

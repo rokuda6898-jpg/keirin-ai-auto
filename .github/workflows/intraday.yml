@@ -279,3 +279,6 @@ jobs:
           git push origin HEAD:main && exit 0
           echo "Failed to publish fresh prediction after 4 push retries" >&2
           exit 1
+
+      - name: Verify every upcoming race has a frozen company forecast
+        run: python src/coverage_refresh.py --verify

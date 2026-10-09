@@ -1,5 +1,6 @@
 """Recover full-day inputs when morning publication or company coverage failed."""
 import csv
+import argparse
 import json
 from datetime import datetime
 from pathlib import Path
@@ -28,6 +29,9 @@ def read_csv(path):
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--verify', action='store_true')
+    args = parser.parse_args()
     now = datetime.now(ZoneInfo('Asia/Tokyo'))
     path = ROOT/'outputs/company/company_decision_ledger.jsonl'
     saved = set()
@@ -40,6 +44,10 @@ def main():
     mode = refresh_mode(read_csv(ROOT/'outputs/latest_race_schedule.csv'),
                         read_csv(ROOT/'data/raw/today_entries.csv'), saved, now)
     print('Input refresh mode:', mode)
+    if args.verify:
+        if mode != 'near_close':
+            raise SystemExit('Upcoming company coverage incomplete: '+mode)
+        return
     if mode == 'daily':
         from fetch_today_entries import fetch_today_entries
         frame = fetch_today_entries()
