@@ -1,7 +1,7 @@
 """Auditable, prospective company decisions; legacy risk tickets stay intact.
 
 Every department submits its own order/tickets. The strategist aggregates
-equal-weight reciprocal ranks; the president freezes at most twelve unique
+evidence-family reciprocal ranks; the president freezes at most twelve unique
 proposals. Scores are votes, not calibrated probabilities or expected returns.
 """
 import json
@@ -60,7 +60,8 @@ def decide(group, cars, now, close):
     weights = {department:1/len(members) for members in families.values() for department in members}
     weights['strategist_department'] = 0.0
     for department, tickets in submissions.items():
-        # Each department has one vote in total regardless of ticket count.
+        # Each independent evidence family has one total vote, regardless of
+        # ticket count. A derived strategist summary has no additional vote.
         total = sum(1/(rank+1) for rank in range(len(tickets)))
         for rank, buy in enumerate(tickets):
             contribution = weights[department]*(1/(rank+1))/total
