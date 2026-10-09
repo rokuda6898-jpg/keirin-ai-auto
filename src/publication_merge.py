@@ -48,6 +48,7 @@ def reconcile(root, validate=None):
         if validate is None:
             from release_guard import write_release_manifest, validate_release
             write_release_manifest(root)
+            git(root, 'add', 'outputs/release_manifest.json')
             errors = validate_release(root)
         else:
             errors = validate(root)
