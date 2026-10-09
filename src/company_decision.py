@@ -14,7 +14,7 @@ from pathlib import Path
 from department_coverage import DEPARTMENTS, LABELS
 from forecast_coverage import reconcile_coverage, schedule_rows
 
-VERSION = 'company_equal_department_rrf_v1'
+VERSION = 'company_evidence_family_rrf_v2'
 
 
 def ticket_valid(buy, cars):
@@ -46,16 +46,33 @@ def decide(group, cars, now, close):
         raise ValueError('全部署の提出が必要')
     scores = defaultdict(float)
     evidence = defaultdict(dict)
+    origins = {r['department']:r.get('opinion_origin',r['department']) for r in group}
+    # Strategist is a synthesis of existing votes, not new evidence. Only
+    # explicitly shared fallbacks with exactly the same ranking share a vote;
+    # genuine independent agreement is not penalized or forced apart.
+    families = defaultdict(list)
+    for department, tickets in submissions.items():
+        if department == 'strategist_department':
+            continue
+        origin = origins[department]
+        key = ('shared_model_fallback', tuple(tickets)) if origin == 'shared_model_fallback' else (department,)
+        families[key].append(department)
+    weights = {department:1/len(members) for members in families.values() for department in members}
+    weights['strategist_department'] = 0.0
     for department, tickets in submissions.items():
         # Each department has one vote in total regardless of ticket count.
         total = sum(1/(rank+1) for rank in range(len(tickets)))
         for rank, buy in enumerate(tickets):
-            contribution = (1/(rank+1))/total
+            contribution = weights[department]*(1/(rank+1))/total
             scores[buy] += contribution
             evidence[buy][department] = contribution
-    ranked = sorted(scores, key=lambda buy: (-scores[buy], tuple(map(int, buy.split('-')))))[:12]
+    ranked = sorted((buy for buy in scores if scores[buy] > 0), key=lambda buy: (-scores[buy], tuple(map(int, buy.split('-')))))[:12]
     return {'version': VERSION, 'top12': ranked, 'department_submissions': submissions,
-            'strategist': {'rule': '各部署を同じ総重みで順位集約。軍師自身の提出も1部署分。',
+            'department_evidence': {r['department']: {'origin': origins[r['department']],
+                'context_status': r.get('specialist_evidence', {}).get('status'),
+                'vote_weight': weights[r['department']]} for r in group},
+            'strategist': {'rule': '独立した根拠を1票として順位集約。同じ共通補完は分割し、軍師の集約結果を再加算しない。',
+                           'department_vote_weights': weights,
                            'scores': {buy: scores[buy] for buy in ranked}},
             'president': {'decision': '全部署提出・締切前・有効車番を確認し上位最大12点を確定',
                           'adopted': ranked},

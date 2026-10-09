@@ -11,6 +11,26 @@ from annual_knowledge import build_annual_profiles, forecast_departments, audit_
 
 
 class AnnualKnowledgeTests(unittest.TestCase):
+    def test_live_context_changes_specialist_order_without_touching_risk(self):
+        from unittest.mock import patch
+        now=datetime(2026,10,6,12,tzinfo=ZoneInfo('Asia/Tokyo'))
+        race=pd.DataFrame([{'race_id':'r','date':'2026-10-06','venue':'test','race_no':1,
+            'player_id':str(c),'car_no':c,'p_win':.25,'p_second':.25,'p_third':.25,
+            'close_at':(now+timedelta(minutes=20)).timestamp()} for c in range(1,5)])
+        report={'window_end_exclusive':'2026-10-06','asof_date':'2026-10-06',
+                'profiles':{},'annual_races':0}
+        def context(department, frame, profiles):
+            preferred={'data_department':4,'pace_department':3,'line_department':2}[department]
+            return (lambda a,b,c,p: 1.2 if p==3 and c==preferred else 1), {'status':'available'}
+        with patch('department_context.context_for',side_effect=context):
+            changed=forecast_departments(race,pd.DataFrame(),report,now,self.root/'new')
+        with patch('department_context.context_for',return_value=(None,{'status':'missing'})):
+            baseline=forecast_departments(race,pd.DataFrame(),report,now,self.root/'old')
+        before={r['department']:r for r in baseline};after={r['department']:r for r in changed}
+        self.assertEqual(before['risk_department'],after['risk_department'])
+        self.assertNotEqual(before['data_department']['top3_cars'],after['data_department']['top3_cars'])
+        self.assertEqual(after['data_department']['top3_cars'][-1],4)
+
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)

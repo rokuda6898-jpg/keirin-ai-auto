@@ -204,6 +204,7 @@ def build_all_department_coverage(pred, plans, specialist_rows, now, output_dir=
                 **prefix, "department": d, "forecast_available": len(top3) == 3,
                 "winner_car": top3[0] if top3 else None,
                 "top3_cars": top3,
+                "opinion_origin": "shared_model_fallback" if d == "prediction_department" else d,
                 "display_status": status,
                 "tickets": [], "ticket_decision": "not_authorized_no_auto_purchase",
                 "information_limitations": (

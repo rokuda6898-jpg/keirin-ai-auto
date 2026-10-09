@@ -109,7 +109,7 @@ def take(portfolio, group, count):
     return portfolio['pools'][group][:count]
 
 
-def public_preserved(riders, market, legacy_frame, policy):
+def public_preserved(riders, market, legacy_frame, policy, *, context=None):
     """Live specialist repair, with no increase to either legacy ticket count."""
     from betting_logic import clean_odds, score_riders, race_plan
     # Hold the unmodified evaluator's risk policy fixed across challengers.
@@ -119,7 +119,7 @@ def public_preserved(riders, market, legacy_frame, policy):
               if math.isfinite(float(r.odds_used)) and 1 <= float(r.odds_used) < 9999.9}
     scores = [{'car_no': int(r.car_no), 'first': float(r.score_first),
                'second': float(r.score_second), 'third': float(r.score_third)} for r in riders.itertuples()]
-    portfolio = candidate_portfolios(scores, prices, policy)
+    portfolio = candidate_portfolios(scores, prices, policy, context=context)
     tickets = []
     for group in ('本線', '穴'):
         cap = int((legacy_frame.is_selected & legacy_frame.ticket_group.eq(group)).sum())

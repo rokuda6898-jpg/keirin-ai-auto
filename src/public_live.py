@@ -76,7 +76,8 @@ def forecast_view(row):
         if len(parts) != 3 or len(set(parts)) != 3 or any(p not in '123456789' or len(p) != 1 for p in parts):
             raise ValueError('Invalid trifecta')
     return {'tickets': tickets, 'marks': marks(row), 'snapshot_at': row['snapshot_at_jst'],
-            'opinions': [{'department': LABELS.get(name,name), 'tickets': buys}
+            'opinions': [{'department': LABELS.get(name,name), 'tickets': buys,
+                          'evidence': row.get('department_evidence', {}).get(name, {})}
                          for name, buys in row.get('department_submissions', {}).items()],
             'rule': row.get('strategist', {}).get('rule', '')}
 

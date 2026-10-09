@@ -40,6 +40,23 @@ class CompanyDecisionTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             decide(self.rows, {'1','2','3'}, self.now, self.close)
 
+    def test_shared_fallback_votes_do_not_multiply_and_strategist_does_not_revote(self):
+        for row in self.rows[:4]:
+            row['opinion_origin']='shared_model_fallback'
+        before=copy.deepcopy(self.rows)
+        result=decide(self.rows,{'1','2','3'},self.now,self.close)
+        weights=result['strategist']['department_vote_weights']
+        self.assertAlmostEqual(sum(weights[d] for d in DEPARTMENTS[:4]),1)
+        self.assertEqual(weights['strategist_department'],0)
+        self.assertEqual(self.rows,before)
+        self.assertEqual(result['top12'],['1-2-3'])
+
+    def test_independent_agreement_keeps_its_weight(self):
+        result=decide(self.rows,{'1','2','3'},self.now,self.close)
+        weights=result['strategist']['department_vote_weights']
+        self.assertEqual(weights['data_department'],1)
+        self.assertEqual(weights['line_department'],1)
+
     def test_schedule_only_race_is_counted_as_missing(self):
         schedule = [dict(race_id='missing', date='2026-10-10', venue='場', race_no=2, close_at=self.close)]
         report = reconcile_coverage([], schedule, set(), self.now)
