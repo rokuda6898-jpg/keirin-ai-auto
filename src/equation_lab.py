@@ -42,8 +42,8 @@ def clock():
 
 
 def code_id():
-    names = ('equation_lab.py', 'equation_models.py', 'department_experiment_v2.py',
-             'official_outcomes.py')
+    names = ('equation_lab.py', 'equation_models.py', 'equation_preview.py',
+             'department_experiment_v2.py', 'official_outcomes.py')
     return digest({'rules': RULES, 'training': CONFIG, 'sources': {
         n: hashlib.sha256(Path(__file__).with_name(n).read_bytes().replace(b'\r\n', b'\n')).hexdigest()
         for n in names}})
