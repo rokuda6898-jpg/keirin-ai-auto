@@ -26,18 +26,23 @@ def export(root=ROOT):
                 races[row['race_id']]['meta'] = row
     target=root/'outputs/company/historical_race_archive.csv'
     fields=['race_id','date','venue','race_no','winner_car_no','second_car_no','third_car_no']
-    count=0
+    retained = {}
+    if target.exists():
+        with target.open(encoding='utf-8-sig',newline='') as stream:
+            retained = {r['race_id']: {k:r.get(k,'') for k in fields} for r in csv.DictReader(stream)}
+    for rid, race in sorted(races.items()):
+        if not all(len(race.get(p, set())) == 1 for p in (1,2,3)):
+            continue
+        cars = [next(iter(race[p])) for p in (1,2,3)]
+        if len(set(cars)) != 3:
+            continue
+        row=race['meta'];record={k:row.get(k,'') for k in fields[:4]}
+        record.update(zip(fields[4:], cars))
+        retained[rid] = record
     with target.open('w',encoding='utf-8',newline='') as stream:
         writer=csv.DictWriter(stream,fieldnames=fields);writer.writeheader()
-        for rid, race in sorted(races.items()):
-            if not all(len(race.get(p, set())) == 1 for p in (1,2,3)):
-                continue
-            cars = [next(iter(race[p])) for p in (1,2,3)]
-            if len(set(cars)) != 3:
-                continue
-            row=race['meta'];record={k:row.get(k,'') for k in fields[:4]}
-            record.update(zip(fields[4:], cars))
-            writer.writerow(record);count+=1
+        writer.writerows(retained[rid] for rid in sorted(retained))
+    count = len(retained)
     print(f'Historical result archive: {count} races')
     return count
 
