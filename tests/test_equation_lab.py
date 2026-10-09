@@ -114,7 +114,9 @@ class EquationLedgerTests(unittest.TestCase):
 
     def test_shadow_waits_without_touching_risk_or_backfilling(self):
         before=(self.folder/lab.INPUTS).read_bytes()
-        self.assertEqual(self.capture(),'collecting_training_data')
+        # Keep the no-trained-model fixture independent of installed archives.
+        with patch.object(lab, 'load_archive_model', return_value=None, create=True):
+            self.assertEqual(self.capture(),'collecting_training_data')
         self.assertEqual((self.folder/lab.INPUTS).read_bytes(),before)
         rows,_=lab.validated_rows(self.folder)
         self.assertEqual(len(rows),1)
@@ -127,7 +129,7 @@ class EquationLedgerTests(unittest.TestCase):
             self.assertTrue(independent['picks']['本線'] or independent['picks']['穴'])
         report = lab.build_report(self.out, self.now)
         self.assertEqual(len(report['standalone_by_race']), 1)
-        page = (self.folder / 'annual_equation_report.html').read_text()
+        page = (self.folder / 'annual_equation_report.html').read_text(encoding='utf-8')
         self.assertIn('方程式ごとの単独買い目', page)
         for g in lab.GROUPS:
             expected=[t for t in self.row['risk_tickets'] if t['group']==g]
