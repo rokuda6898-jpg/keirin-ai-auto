@@ -8,7 +8,7 @@ on:
       - ".github/workflows/pages.yml"
   workflow_dispatch:
   workflow_run:
-    workflows: ["daily-keirin-predict", "intraday-keirin-odds", "settle-keirin-results", "quick-keirin-results", "keirin-site-manager", "annual-department-forecast"]
+    workflows: ["daily-keirin-predict", "intraday-keirin-odds", "settle-keirin-results", "quick-keirin-results", "keirin-site-manager", "annual-department-forecast", "individual-equations"]
     types: [completed]
 
 permissions:
@@ -106,7 +106,11 @@ jobs:
                               "company/annual_fusion_models.jsonl",
                               "company/annual_fusion_ledger.jsonl",
                               "company/annual_fusion_attempts.jsonl",
-                              "company/annual_fusion_confirmations.jsonl"]
+                              "company/annual_fusion_confirmations.jsonl",
+                              "company/individual_equations/index.html",
+                              "company/individual_equations/forecasts.json",
+                              "company/individual_equations/results.json",
+                              "company/individual_equations/report.json"]
           comparison_hashes = {
               name: hashlib.sha256((Path("outputs") / name).read_bytes()).hexdigest()
               for name in comparison_files if (Path("outputs") / name).is_file()
