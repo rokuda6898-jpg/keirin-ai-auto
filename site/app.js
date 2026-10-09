@@ -1,0 +1,42 @@
+'use strict';
+const DATA_URL=['localhost','127.0.0.1'].includes(location.hostname)?'../outputs/public_live.json':'https://raw.githubusercontent.com/rokuda6898-jpg/keirin-ai-auto/main/outputs/public_live.json';
+const $=selector=>document.querySelector(selector);
+const state={mode:'company',data:null,busy:false};
+const el=(tag,text,className)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(className)node.className=className;return node;};
+const jstDate=()=>new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Tokyo'}).format(new Date());
+const time=value=>value?new Intl.DateTimeFormat('ja-JP',{timeZone:'Asia/Tokyo',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(value*1000)):'未確認';
+const band=r=>{if(!r.start_at)return '時刻未確認';const hour=Number(time(r.start_at).split(':')[0]);return hour<12?'朝':hour<17?'昼':hour<21?'夜':'深夜';};
+const percent=value=>value===null?'—':(value*100).toFixed(1)+'%';
+function choices(select,items,value){select.replaceChildren(...items.map(([key,label])=>{const option=el('option',label);option.value=key;return option;}));if(items.some(([key])=>key===value))select.value=value;}
+function selected(){return state.data.races.filter(r=>r.date===$('#day').value&&(!$('#venue').value||r.venue===$('#venue').value)&&(!$('#band').value||band(r)===$('#band').value));}
+function stats(races){
+const saved=races.filter(r=>r[state.mode]?.tickets.length),settled=saved.filter(r=>r.actual.length),hits=settled.filter(r=>r[state.mode].tickets.some(t=>r.actual.includes(t)));
+let paid=0,stake=0,known=true;
+for(const r of settled){stake+=r[state.mode].tickets.length*100;for(const buy of r[state.mode].tickets.filter(t=>r.actual.includes(t))){if(r.payouts[buy]===null||r.payouts[buy]===undefined)known=false;else paid+=r.payouts[buy];}}
+return {saved:saved.length,settled:settled.length,hits:hits.length,hitRate:settled.length?hits.length/settled.length:null,roi:stake&&known?paid/stake:null};
+}
+function showStats(races){const s=stats(races);$('#stats').replaceChildren();for(const [label,value,note] of [['対象レース',races.length,'R'],['予想済み / 未作成',s.saved+' / '+(races.length-s.saved),'R'],['的中率',percent(s.hitRate),s.hits+'/'+s.settled+'R'],['回収率',percent(s.roi),'各点100円']]){const box=el('div',undefined,'stat');box.append(el('span',label),el('strong',value),el('small',note));$('#stats').append(box);}$('#scope').textContent='選択中の開催日・レース場・時間帯の集計。的中率の分母は、締切前予想があり結果が確定した '+s.settled+' レース。';}
+function car(value){return el('span',value,'car c'+value);}
+function raceCard(r,opened){
+const prediction=r[state.mode],buys=prediction?.tickets||[],hit=buys.some(t=>r.actual.includes(t));
+const card=el('details',undefined,'race');card.dataset.raceId=r.id;card.open=opened;
+const summary=el('summary');summary.append(el('span',r.number+'R','race-number'));const times=el('span',time(r.start_at)+' 発走','race-time');times.append(el('small','締切 '+time(r.close_at)));summary.append(times);
+let status=!buys.length?'予想未作成':r.actual.length?(hit?'的中':'不的中'):r.close_at&&Date.now()<r.close_at*1000?'締切前':'結果待ち';summary.append(el('span',status,'badge '+(hit?'hit':!buys.length?'missing':'')));card.append(summary);
+const body=el('div',undefined,'race-body');
+if(prediction&&buys.length){const marks=el('div',undefined,'marks');for(const item of prediction.marks){const mark=el('span',undefined,'mark');mark.append(el('strong',item.mark),car(item.car));const rider=r.riders.find(p=>String(p.car)===String(item.car));if(rider)mark.append(el('small',rider.name));marks.append(mark);}body.append(marks);
+const tickets=el('div',undefined,'tickets');buys.forEach((buy,i)=>{const ticket=el('div',undefined,'ticket '+(r.actual.includes(buy)?'hit':''));ticket.setAttribute('aria-label','買い目 '+buy);ticket.append(el('small',String(i+1)));buy.split('-').forEach((value,index)=>{if(index)ticket.append(el('span','-'));ticket.append(car(value));});tickets.append(ticket);});body.append(tickets);
+body.append(el('p','予想保存 '+prediction.snapshot_at.replace('T',' ').replace('+09:00','')+' ／ '+buys.length+'点','saved'));
+body.append(el('p','予想印は、この予想の買い目における1着支持を優先。同点時は2着・3着支持で決めています。','saved'));
+if(prediction.opinions?.length){const opinions=el('details',undefined,'opinion');opinions.append(el('summary','全部署の意見・軍師の集約'));prediction.opinions.forEach(p=>opinions.append(el('p',p.department+'：'+p.tickets.join(' ／ '))));opinions.append(el('p',prediction.rule+' 社長が有効な買い目を最大12点に確定。集約点は確率ではありません。'));body.append(opinions);}}
+else body.append(el('p',r.close_at&&Date.now()>=r.close_at*1000?'締切前の予想記録がありません。後付け予想は作成しません。':'全レースを予想対象にしています。このレースの予想はまだ保存されていません。'));
+if(r.actual.length)body.append(el('p','公式結果 '+r.actual.join(' ／ '),'result'));
+card.append(body);return card;
+}
+function render(){if(!state.data)return;const races=selected();showStats(races);const oldOpen=new Set([...$('#races').querySelectorAll('details.race[open]')].map(n=>n.dataset.raceId));$('#races').replaceChildren();if(!races.length){$('#races').append(el('p','この条件の開催データはまだありません。開催日・レース場・時間帯を確認してください。','empty'));return;}
+const groups=new Map();races.forEach(r=>{if(!groups.has(r.venue))groups.set(r.venue,[]);groups.get(r.venue).push(r);});
+for(const [venue,items] of groups){items.sort((a,b)=>a.number-b.number);const heading=el('h2',venue,'venue-title');heading.append(el('small',items.length+'レース ／ '+time(items[0].start_at)+'〜'+time(items.at(-1).start_at)));$('#races').append(heading);const next=items.find(r=>r.close_at*1000>Date.now());items.forEach(r=>$('#races').append(raceCard(r,oldOpen.has(r.id)||(!oldOpen.size&&r===next))));}}
+function changeDay(){const selectedVenue=$('#venue').value;const venues=[...new Set(state.data.races.filter(r=>r.date===$('#day').value).map(r=>r.venue))];choices($('#venue'),[['','全レース場'],...venues.map(v=>[v,v])],selectedVenue);render();}
+async function refresh(){if(state.busy)return;state.busy=true;$('#refresh').disabled=true;try{const response=await fetch(DATA_URL+'?t='+Math.floor(Date.now()/60000),{cache:'no-store'});if(!response.ok)throw Error('HTTP '+response.status);const data=await response.json();if(data.schema!==1||!Array.isArray(data.races)||!data.races.length)throw Error('データ形式不正');state.data=data;const value=$('#day').value||jstDate();const dates=[...new Set([jstDate(),...data.races.map(r=>r.date)])].sort().reverse();choices($('#day'),dates.map(d=>[d,d]),value);changeDay();$('#updated').textContent=new Intl.DateTimeFormat('ja-JP',{timeZone:'Asia/Tokyo',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(data.updated_at||data.generated_at));const stale=!data.updated_at||Date.now()-Date.parse(data.updated_at)>45*60000;$('#notice').className=stale?'error':'';$('#notice').textContent=stale?'データの更新から45分以上経過しています。保存済み予想を表示中です。':data.schedule_date!==jstDate()?'本日の開催データは更新待ちです。日付を選ぶと保存済みの予想を確認できます。':'全開催レースを対象に表示しています。未作成のレースも対象数に含めています。';}catch(error){$('#notice').className='error';$('#notice').textContent='最新データを取得できません。'+(state.data?'直前に取得した保存済み予想を表示しています。':'「最新の予想に更新」で再試行してください。');}finally{state.busy=false;$('#refresh').disabled=false;}}
+document.querySelectorAll('[data-mode]').forEach(button=>button.addEventListener('click',()=>{state.mode=button.dataset.mode;document.querySelectorAll('[data-mode]').forEach(b=>{b.classList.toggle('selected',b===button);b.setAttribute('aria-pressed',String(b===button));});render();}));
+$('#day').addEventListener('change',changeDay);$('#venue').addEventListener('change',render);$('#band').addEventListener('change',render);$('#refresh').addEventListener('click',refresh);refresh();setInterval(()=>{if(!document.hidden)refresh();},60000);
+

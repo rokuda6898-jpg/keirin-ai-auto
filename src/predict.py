@@ -1565,6 +1565,8 @@ def main():
     }
     department_proposals = forecast_departments(pred, today_odds, annual, department_now)
     department_report = build_all_department_coverage(pred, strategy_plans, department_proposals, department_now, odds=today_odds)
+    from company_decision import build_company_decisions
+    build_company_decisions(pred, department_report, datetime.now(ZoneInfo('Asia/Tokyo')), OUTPUT_DIR)
     from fusion_lab import capture_cycle as capture_fusion_cycle
     try:
         capture_fusion_cycle(pred, department_report, department_now, OUTPUT_DIR)
