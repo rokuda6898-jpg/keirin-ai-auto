@@ -106,7 +106,7 @@ def fetch_upcoming(min_minutes=5, max_minutes=40, sleep_sec=0.2, retry_sec=5.0):
         print("no races in the near-close window")
         return 0
 
-    all_entries, all_odds, failures = [], [], []
+    all_entries, all_odds, failures, cutoff_skipped = [], [], [], []
     market_saved = 0
     for row in upcoming.to_dict("records"):
         url = row.get("source_url")
@@ -118,7 +118,7 @@ def fetch_upcoming(min_minutes=5, max_minutes=40, sleep_sec=0.2, retry_sec=5.0):
         for attempt in range(MAX_RACE_FETCH_ATTEMPTS):
             seconds_left = float(row.get("close_at", 0) or 0) - datetime.now(ZoneInfo("Asia/Tokyo")).timestamp()
             if seconds_left <= 300:
-                last_error = last_error or "inside five-minute cutoff before request"
+                cutoff_skipped.append(race_id)
                 break
             try:
                 entries, odds = parse_race_page(url)
@@ -138,18 +138,21 @@ def fetch_upcoming(min_minutes=5, max_minutes=40, sleep_sec=0.2, retry_sec=5.0):
                 last_error = str(error)
             if attempt + 1 < MAX_RACE_FETCH_ATTEMPTS:
                 time.sleep(retry_sec)
-        if not fetched:
+        if not fetched and race_id not in cutoff_skipped:
             failures.append({"race_id": race_id, "url": url, "error": last_error or "incomplete field"})
         time.sleep(sleep_sec)
 
     if not all_entries:
         UPCOMING_COUNT_FILE.write_text("0", encoding="ascii")
+        if not failures:
+            print(json.dumps({'cutoff_skipped': cutoff_skipped, 'fetched_races': 0}))
+            return 0
         raise ValueError(f"failed to fetch upcoming entries: {failures[:3]}")
 
     # A failed refresh must not overwrite the full-day source with a subset.
     fetched_ids = {str(item.get("race_id")) for item in all_entries}
     scheduled_ids = {str(item.get("race_id")) for item in upcoming.to_dict("records")}
-    missing_ids = sorted(scheduled_ids - fetched_ids)
+    missing_ids = sorted(scheduled_ids - fetched_ids - set(cutoff_skipped))
     if failures or missing_ids:
         UPCOMING_COUNT_FILE.write_text("0", encoding="ascii")
         raise ValueError(
@@ -205,6 +208,7 @@ def fetch_upcoming(min_minutes=5, max_minutes=40, sleep_sec=0.2, retry_sec=5.0):
         "market_axes_saved": market_saved,
         "max_race_fetch_attempts": MAX_RACE_FETCH_ATTEMPTS,
         "failures": failures,
+        "cutoff_skipped_race_ids": cutoff_skipped,
     }
     UPCOMING_METADATA_FILE.write_text(json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(metadata, ensure_ascii=False, indent=2))

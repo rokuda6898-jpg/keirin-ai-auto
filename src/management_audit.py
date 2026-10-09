@@ -76,7 +76,7 @@ def audit(feed, now):
     ids = [r.get('id') for r in feed.get('races', [])]
     if len(set(ids)) != len(ids):
         add('data', 'duplicate_races', '公開データにレースIDの重複があります。')
-    missing, late, invalid, unpaid, overdue = {}, [], [], [], []
+    missing, late, invalid, unpaid, overdue, withdrawn = {}, [], [], [], [], []
     coverage = {}
     for mode in ('company', 'shadow'):
         missing[mode] = []
@@ -103,8 +103,11 @@ def audit(feed, now):
                 continue
             tickets = p.get('tickets', [])
             cars = {str(x.get('car')) for x in r.get('riders', [])}
+            cancelled = set(r.get('cancelled_cars', []))
+            if any(set(b.split('-')) & cancelled for b in tickets):
+                withdrawn.append(r['id'])
             if not tickets or len(tickets) > 12 or len(set(tickets)) != len(tickets) or any(
-                not valid_ticket(b) or (cars and not set(b.split('-')) <= cars) for b in tickets
+                not valid_ticket(b) or (cars and not set(b.split('-')) <= cars | cancelled) for b in tickets
             ):
                 invalid.append(r['id'])
             stamp, close = timestamp(p.get('snapshot_at')), number(r.get('close_at'))
@@ -117,6 +120,8 @@ def audit(feed, now):
             overdue.append(r['id'])
     if invalid:
         add('coverage', 'invalid_tickets', '車番・重複・点数・締切時刻に不正があります。', invalid)
+    if withdrawn:
+        add('settlement', 'withdrawn_tickets', '公式データの欠車が保存済み買い目に含まれます。元の予想を保持し、返還を含む精算確認まで比較集計から除外します。', withdrawn, 'warning')
     if late:
         add('timing', 'late_snapshot', '締切前保存を証明できない予想があります。成績比較に使用しないでください。', late)
     if unpaid:
@@ -124,7 +129,7 @@ def audit(feed, now):
     if overdue:
         add('settlement', 'results_overdue', '発走から2時間以上経過しても結果未確認です。中止・延期も確認してください。', overdue, 'warning')
     # Matched cohort prevents a method from benefiting from easier/missing races.
-    excluded = set(late) | set(invalid)
+    excluded = set(late) | set(invalid) | set(withdrawn)
     common = [r for r in current if r['id'] not in excluded and r.get('actual') and all(r.get(m, {}).get('tickets') if r.get(m) else False for m in ('company','shadow'))]
     comparison = {}
     for mode in ('company', 'shadow'):
