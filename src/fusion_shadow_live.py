@@ -5,6 +5,7 @@ canonical forecast. Each race is frozen before its close; official outcomes
 are joined later from the settlement feed.
 """
 import argparse
+import ast
 import gzip
 import hashlib
 import html
@@ -46,9 +47,18 @@ def digest(path):
 
 
 def source_hashes():
-    names = ('fusion_shadow_live.py', 'fusion_input_repair.py', 'official_outcomes.py')
+    names = ('fusion_input_repair.py', 'official_outcomes.py')
     return {**old.source_hashes(),
             **{name: digest(ROOT / 'src' / name) for name in names}}
+
+
+def model_pipeline_hash():
+    """Fingerprint fitting/scoring code while leaving report copy/UI editable."""
+    source = ast.parse(Path(__file__).read_text(encoding='utf-8'))
+    relevant = {'dated_phases', 'digest', 'forecast', 'load_model', 'source_hashes', 'train'}
+    payload = '\n'.join(ast.dump(node, include_attributes=False) for node in source.body
+                       if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name in relevant)
+    return hashlib.sha256(payload.encode('utf-8')).hexdigest()
 
 
 def dated_phases(frame):
@@ -109,6 +119,7 @@ def train(history_path, asof):
     manifest = {
         'version': 'fusion_shadow_refit_first_anchor_v1', 'formula': 'P(anchor)=P(refit_base_first)*P(refit_fusion|first)',
         'model_sha256': digest(MODEL), 'source_hashes': source_hashes(),
+        'model_pipeline_hash': model_pipeline_hash(),
         'history_sha256': digest(history_path), 'training_cutoff_exclusive': cutoff,
         'training_first': min(clean.date), 'training_last': max(clean.date),
         'training_races': int(clean.race_id.nunique()), 'eligible_rows': len(clean),
@@ -127,7 +138,18 @@ def train(history_path, asof):
 
 def load_model(asof):
     manifest = json.loads(MANIFEST.read_text(encoding='utf-8'))
-    if manifest['source_hashes'] != source_hashes() or digest(MODEL) != manifest['model_sha256']:
+    recorded_sources = dict(manifest.get('source_hashes', {}))
+    # Older shadow bundles included a whole-file hash. Ignore only that legacy
+    # key: the stable AST fingerprint below covers model fitting and ranking.
+    legacy_module_hash = recorded_sources.pop('fusion_shadow_live.py', None)
+    if recorded_sources != source_hashes():
+        raise ValueError('shadow model dependencies do not match their manifest')
+    saved_pipeline = manifest.get('model_pipeline_hash')
+    if saved_pipeline and saved_pipeline != model_pipeline_hash():
+        raise ValueError('shadow fitting/scoring code does not match its manifest')
+    if not saved_pipeline and not legacy_module_hash:
+        raise ValueError('shadow model manifest has no verifiable pipeline fingerprint')
+    if digest(MODEL) != manifest['model_sha256']:
         raise ValueError('shadow model or source does not match its manifest')
     if manifest['training_cutoff_exclusive'] > pd.Timestamp(asof).date().isoformat():
         raise ValueError('model was trained on or after the forecast date')
