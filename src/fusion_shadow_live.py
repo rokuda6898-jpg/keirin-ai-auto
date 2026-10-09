@@ -11,8 +11,9 @@ import hashlib
 import html
 import json
 import math
+import time
 from collections import Counter
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -347,6 +348,7 @@ def restore_race_metadata(predicted, entries):
 
 
 def forecast(entries_path, results_path, asof=None):
+    started = time.monotonic()
     now = datetime.now(ZoneInfo('Asia/Tokyo'))
     if asof:
         now = datetime.fromisoformat(asof).astimezone(ZoneInfo('Asia/Tokyo'))
@@ -411,12 +413,16 @@ def forecast(entries_path, results_path, asof=None):
         if not ranked:
             valid_rows.append((rid, race, '予想なし', '有効な三連単候補なし'))
             continue
+        completed = now + timedelta(seconds=time.monotonic() - started)
+        if completed.timestamp() >= close_at:
+            valid_rows.append((rid, race, '予想なし', '計算中に締切を経過'))
+            continue
         item = race.iloc[0]
         race_no = pd.to_numeric(item.get('race_no'), errors='coerce')
         new.append({
             'race_id': rid, 'date': str(item.date), 'venue': str(item.get('venue') or ''),
             'race_no': int(race_no) if pd.notna(race_no) else 0, 'close_at': close_at,
-            'snapshot_at_jst': now.isoformat(timespec='seconds'), 'top12': ranked[:12],
+            'snapshot_at_jst': completed.isoformat(timespec='seconds'), 'top12': ranked[:12],
             'probabilities': [float(anchored[key]) for key in ranked[:12]],
             'training_cutoff_exclusive': manifest['training_cutoff_exclusive'],
             'model_sha256': manifest['model_sha256'], 'actual': None,
@@ -435,11 +441,16 @@ def forecast(entries_path, results_path, asof=None):
         race_no = pd.to_numeric(item.get('race_no'), errors='coerce')
         coverage_races.append({'race_id': str(rid), 'date': str(item.get('date', '')),
             'venue': str(item.get('venue') or ''), 'race_no': int(race_no) if pd.notna(race_no) else 0,
+            'close_at': float(item.close_at) if pd.notna(item.close_at) else None,
             'status': status, 'reason': reason})
     coverage = {'date': now.strftime('%Y-%m-%d'), 'input_races': int(len(entry_ids)),
         'forecasted_races': sum(x['status'] == '買い目固定済み' for x in coverage_races),
         'skipped_races': sum(x['status'] == '予想なし' for x in coverage_races),
         'races': coverage_races}
+    from forecast_coverage import reconcile_coverage, schedule_rows
+    coverage = reconcile_coverage(coverage_races,
+        schedule_rows(ROOT/'outputs/latest_race_schedule.csv', now.date().isoformat()),
+        {str(row['race_id']) for row in rows}, now)
     LATEST.write_text(json.dumps({'updated_at_jst': now.isoformat(timespec='seconds'),
         'model_training_first': manifest['training_first'],
         'model_training_cutoff_exclusive': manifest['training_cutoff_exclusive'],

@@ -157,12 +157,8 @@ def add_equation_entry(document):
     from shadow_home import add_shadow_home
     document = add_shadow_home(document)
     soup=BeautifulSoup(document,'html.parser')
-    if soup.select_one('#individual-equation-entry') or soup.main is None:
-        return document
-    entry=BeautifulSoup('<a id="individual-equation-entry" href="company/three_year_equations/index.html" style="display:block;margin:18px 0;padding:18px 20px;background:#1764bf;color:#fff;border-radius:16px;text-decoration:none"><strong style="font-size:20px">予想印付き・個別方程式予想 →</strong><br><span style="font-size:14px">レース場・発走時間帯から探す ／ 3点・6点・12点 ／ 各6,000円</span></a>','html.parser').a
-    hero=soup.main.select_one('.hero')
-    if hero:hero.insert_after(entry)
-    else:soup.main.insert(0,entry)
+    for entry in soup.select('#individual-equation-entry, a[href="company/annual_equation_report.html#standalone"]'):
+        entry.decompose()
     return add_shadow_home(str(soup))
 
 
@@ -275,6 +271,8 @@ def enhance_today(document):
         note='<details class="odds-audit"><summary>オッズ取得・不一致の確認記録</summary><p>最新の取得記録 '+html.escape(str(report.get('captured_at_jst','未取得')))+'。各買い目の価格取得時刻とは区別して表示します。</p><p>使用可能 '+str(report.get('usable_count',0))+'組 ／ サイト間の価格不一致 '+str(conflict_count)+'組（価格として使用しません）。</p></details>'
         panel=race.select_one('.picks-panel')
         if panel:panel.append(BeautifulSoup(note,'html.parser'))
+    from company_decision import add_company_decisions
+    add_company_decisions(soup, OUTPUT_DIR)
     for script in soup.find_all('script'):
         if script.get('id')=='site-navigation' or 'function activatePicks()' in (script.string or ''):script.extract()
     script=soup.new_tag('script',id='site-navigation')

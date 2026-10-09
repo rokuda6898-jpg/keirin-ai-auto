@@ -1,182 +1,32 @@
 name: deploy-pages
-
 on:
   push:
     branches: [main]
-    paths:
-      - "outputs/**"
-      - ".github/workflows/pages.yml"
+    paths: ['site/**', '.github/workflows/pages.yml']
   workflow_dispatch:
-  workflow_run:
-    workflows: ["daily-keirin-predict", "intraday-keirin-odds", "settle-keirin-results", "quick-keirin-results", "keirin-site-manager", "annual-department-forecast", "individual-equations", "three-year-equations-live"]
-    types: [completed]
-
 permissions:
   contents: read
   pages: write
   id-token: write
-  actions: write
-
-# A skipped/failed upstream event must not cancel a valid push deployment.
 concurrency:
-  group: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.conclusion != 'success' && format('pages-skipped-{0}', github.run_id) || 'pages' }}
-  cancel-in-progress: true
-
+  group: pages
+  cancel-in-progress: false
 jobs:
   deploy:
-    # Never publish artifacts from a failed/cancelled upstream workflow.
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Reject stale or partial generated site
-        run: python src/release_guard.py
-
-      - name: Rebuild comparison from the evidence being published
-        run: python src/reconcile_position_experiment.py
-
-      - name: Stamp deployment fingerprint
+      - uses: actions/checkout@v4
+      - name: Check public app
         run: |
-          printf '%s\n' "$(git rev-parse HEAD)" > outputs/deploy_fingerprint.txt
-          echo "deployment fingerprint: $(cat outputs/deploy_fingerprint.txt)"
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload site
-        uses: actions/upload-pages-artifact@v3
+          node --check site/app.js
+          test -s site/index.html
+          test -s site/style.css
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
         with:
-          path: outputs
-
-      - name: Deploy to GitHub Pages
+          path: site
+      - uses: actions/deploy-pages@v4
         id: deployment
-        uses: actions/deploy-pages@v4
-
-      - name: Verify the actually published site
-        env:
-          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          python - <<'PY'
-          import csv, hashlib, os, sys, time, urllib.request
-          from pathlib import Path
-
-          page_url = os.environ["PAGE_URL"].rstrip("/") + "/"
-          fingerprint_path = Path("outputs/deploy_fingerprint.txt")
-          expected_fingerprint = fingerprint_path.read_text(encoding="utf-8").strip()
-          if not expected_fingerprint:
-              print("Deployment fingerprint is empty; refusing to certify published site.")
-              sys.exit(2)
-
-          expected = set()
-          schedule = Path("outputs/latest_race_schedule.csv")
-          if schedule.exists():
-              with schedule.open(encoding="utf-8-sig", newline="") as f:
-                  expected = {str(r.get("race_id", "")).strip() for r in csv.DictReader(f) if str(r.get("race_id", "")).strip()}
-          if not expected:
-              print("No expected race ids; refusing to certify published site.")
-              sys.exit(2)
-
-          last_missing = expected
-          last_fingerprint = ""
-          comparison_files = ["company/operations.html",
-                              "company/annual_position_experiment_report.json",
-                              "company/annual_position_experiment_report.html",
-                              "company/annual_position_experiment_ledger.jsonl",
-                              "company/annual_position_experiment_outcomes.jsonl",
-                              "company/annual_position_v2_report.json",
-                              "company/annual_position_v2_report.html",
-                              "company/annual_position_v2_ledger.jsonl",
-                              "company/annual_position_v2_outcomes.jsonl",
-                              "company/annual_position_v2_attempts.jsonl",
-                              "company/annual_equation_report.json",
-                              "company/annual_equation_report.html",
-                              "company/annual_equation_ledger.jsonl",
-                              "company/annual_equation_models.jsonl",
-                              "company/annual_equation_attempts.jsonl",
-                              "company/annual_equation_observed_paths.jsonl",
-                              "company/annual_fusion_report.json",
-                              "company/annual_fusion_report.html",
-                              "company/annual_fusion_inputs.jsonl",
-                              "company/annual_fusion_models.jsonl",
-                              "company/annual_fusion_ledger.jsonl",
-                              "company/annual_fusion_attempts.jsonl",
-                              "company/annual_fusion_confirmations.jsonl",
-                              "company/individual_equations/index.html",
-                              "company/individual_equations/forecasts.json",
-                              "company/individual_equations/results.json",
-                              "company/individual_equations/report.json",
-                              "company/three_year_equations/index.html",
-                              "company/three_year_equations/forecasts.json",
-                              "company/three_year_equations/allocations.json",
-                              "company/three_year_equations/results.json",
-                              "company/three_year_equations/report.json"]
-          comparison_hashes = {
-              name: hashlib.sha256((Path("outputs") / name).read_bytes()).hexdigest()
-              for name in comparison_files if (Path("outputs") / name).is_file()
-          }
-          for attempt in range(6):
-              nonce = int(time.time())
-              req = urllib.request.Request(
-                  page_url + f"?verify={nonce}",
-                  headers={"Cache-Control":"no-cache","User-Agent":"keirin-site-verifier/2.0"},
-              )
-              with urllib.request.urlopen(req, timeout=30) as res:
-                  html = res.read().decode("utf-8", errors="replace")
-
-              fp_req = urllib.request.Request(
-                  page_url + f"deploy_fingerprint.txt?verify={nonce}",
-                  headers={"Cache-Control":"no-cache","User-Agent":"keirin-site-verifier/2.0"},
-              )
-              with urllib.request.urlopen(fp_req, timeout=30) as res:
-                  published_fingerprint = res.read().decode("utf-8", errors="replace").strip()
-
-              missing = {race_id for race_id in expected if race_id not in html}
-              fingerprint_ok = published_fingerprint == expected_fingerprint
-              render_schema_ok = "nexus-render-schema" in html and "nexus-departments-v2" in html
-              comparison_ok = True
-              for name, expected_hash in comparison_hashes.items():
-                  request = urllib.request.Request(page_url + name + f"?verify={nonce}",
-                      headers={"Cache-Control": "no-cache"})
-                  with urllib.request.urlopen(request, timeout=30) as response:
-                      comparison_ok &= hashlib.sha256(response.read()).hexdigest() == expected_hash
-              if not missing and fingerprint_ok and render_schema_ok and comparison_ok:
-                  print(
-                      f"published-site verified: races={len(expected)} "
-                      f"fingerprint={expected_fingerprint[:12]} "
-                      f"render_schema=nexus-departments-v2 comparison_evidence=matched"
-                  )
-                  sys.exit(0)
-
-              last_missing = missing
-              last_fingerprint = published_fingerprint
-              print(
-                  f"published-site mismatch attempt={attempt+1}/6 "
-                  f"missing={len(missing)} "
-                  f"fingerprint_ok={fingerprint_ok} "
-                  f"render_schema_ok={render_schema_ok} "
-                  f"comparison_ok={comparison_ok} "
-                  f"expected_fp={expected_fingerprint[:12]} "
-                  f"published_fp={published_fingerprint[:12]} "
-                  f"sample={sorted(missing)[:10]}"
-              )
-              time.sleep(10)
-
-          print(
-              f"published-site verification FAILED missing={len(last_missing)} "
-              f"expected_fp={expected_fingerprint} published_fp={last_fingerprint}"
-          )
-          sys.exit(2)
-          PY
-
-      - name: Trigger manager recovery if published site verification fails
-        if: failure()
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh workflow run site-manager.yml --ref main
