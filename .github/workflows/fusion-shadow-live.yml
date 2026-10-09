@@ -87,6 +87,7 @@ jobs:
               raise SystemExit('history archive below the 30000-race minimum')
           PY
       - name: Refit weekly when needed
+        id: model
         env:
           PYTHONPATH: src
         run: |
@@ -116,6 +117,7 @@ jobs:
             echo 'recent verified shadow model is still current'
           fi
       - name: Cache verified model before generating race picks
+        if: steps.model.outputs.needed == 'true'
         uses: actions/cache/save@v4
         with:
           path: |
