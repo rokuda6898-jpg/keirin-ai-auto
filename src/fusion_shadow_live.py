@@ -36,6 +36,7 @@ LEDGER = COMPANY / 'fusion_shadow_live_ledger.jsonl'
 LATEST = COMPANY / 'fusion_shadow_live_predictions.json'
 REPORT_JSON = COMPANY / 'fusion_shadow_live_report.json'
 REPORT_HTML = COMPANY / 'fusion_shadow_live_report.html'
+LATEST_RESULTS_JSON = ROOT / 'outputs/latest_results.json'
 DROPPED = repair.ARMS['refit']
 
 

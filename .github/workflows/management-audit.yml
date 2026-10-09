@@ -1,0 +1,69 @@
+name: nexus-management-audit
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/20 * * * *'
+  push:
+    branches: [main]
+    paths: ['src/management_*.py', '.github/workflows/management-audit.yml']
+  workflow_run:
+    workflows: ['keirin-site-manager', 'keirin-manager-watchdog', 'daily-keirin-predict', 'intraday-keirin-odds', 'fusion-shadow-live', 'quick-keirin-results', 'settle-keirin-results', 'public-live-data', 'deploy-pages']
+    types: [completed]
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: nexus-management-audit
+  cancel-in-progress: false
+jobs:
+  audit:
+    if: github.event_name != 'workflow_run' || (github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.conclusion != 'success' && github.event.workflow_run.conclusion != 'skipped')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      SMTP_HOST: ${{ secrets.SMTP_HOST }}
+      SMTP_PORT: ${{ secrets.SMTP_PORT }}
+      SMTP_USER: ${{ secrets.SMTP_USER }}
+      SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+      ALERT_FROM: ${{ secrets.ALERT_FROM }}
+      ALERT_TO: ${{ secrets.ALERT_TO }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/cache/restore@v4
+        with:
+          path: .alert-state
+          key: management-alert-state-${{ github.run_id }}
+          restore-keys: management-alert-state-
+      - name: Independent management checks
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python src/management_audit.py
+      - name: Email new incident or recovery
+        run: python src/management_notify.py
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: .alert-state
+          key: management-alert-state-${{ github.run_id }}
+      - name: Preserve audit report even when notification fails
+        if: always()
+        run: |
+          test -s outputs/management_status.json || exit 1
+          cp outputs/management_status.json /tmp/nexus-management-status.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for attempt in 1 2 3 4; do
+            git fetch origin main
+            git reset --hard origin/main
+            cp /tmp/nexus-management-status.json outputs/management_status.json
+            git add outputs/management_status.json
+            git diff --cached --quiet && exit 0
+            git commit -m 'Record independent management audit'
+            git push origin HEAD:main && exit 0
+          done
+          exit 1

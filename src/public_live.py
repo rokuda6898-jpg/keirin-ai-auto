@@ -6,6 +6,7 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
+from official_outcomes import normalize_outcome
 
 ROOT = Path(__file__).resolve().parents[1]
 LABELS = {'data_department':'データ部','pace_department':'展開部','line_department':'ライン部',
@@ -100,22 +101,21 @@ def build(root=ROOT, now=None):
     races = []
     for rid, row in race_map.items():
         result = results.get(rid, {})
-        actual = result.get('actual_trifecta_buys') or ([result['actual_trifecta']] if result.get('actual_trifecta') else [])
-        if not result.get('official_result_available'):
-            actual = []
-        payouts = result.get('payouts_trifecta_json') or '{}'
-        payouts = json.loads(payouts) if isinstance(payouts, str) else payouts
-        if not actual and shadow.get(rid, {}).get('actual'):
+        outcome = normalize_outcome(result)
+        actual = outcome['winning_buys'] if outcome else []
+        payouts = outcome['payouts'] if outcome else {}
+        if not outcome and rid not in results and shadow.get(rid, {}).get('actual'):
             old = shadow[rid]
-            actual = [old['actual']]
-            price = finite(old.get('actual_odds'))
-            if price is not None:
-                payouts = {old['actual']: price*100}
-        for buy in actual:
-            if buy not in payouts and len(actual) == 1:
-                price = finite(result.get('actual_trifecta_odds'))
-                if price is not None:
-                    payouts[buy] = price*100
+            # Ledger actual may contain several tied orders. Its legacy odds
+            # is the maximum *hit* payout, never the payout for every winner.
+            recovered = normalize_outcome({'official_result_available': bool(old.get('result_source')),
+                                           'actual_trifecta': old['actual']})
+            if recovered:
+                actual = recovered['winning_buys']
+                hits, odds = old.get('hit_tickets', []), old.get('hit_odds', [])
+                if len(hits) == len(odds):
+                    payouts = {buy: finite(price)*100 for buy, price in zip(hits, odds)
+                               if buy in actual and finite(price) is not None and finite(price) > 0}
         races.append({'id':rid, 'date':row['date'], 'venue':row['venue'],
                       'number':int(float(row['race_no'])), 'start_at':finite(row.get('start_at')),
                       'close_at':finite(row.get('close_at')), 'riders':riders.get(rid, []),
@@ -138,7 +138,9 @@ def build(root=ROOT, now=None):
                'schedule_date':max(r['date'] for r in schedule), 'races':races,
                'historical_reference':{'shadow_top12_rate':.3877,'scope':'過去一年の検証値。今後の的中率ではありません。'}}
     target = out/'public_live.json'
-    target.write_text(json.dumps(payload, ensure_ascii=False, separators=(',',':'), allow_nan=False), encoding='utf-8')
+    temporary = target.with_suffix('.json.tmp')
+    temporary.write_text(json.dumps(payload, ensure_ascii=False, separators=(',',':'), allow_nan=False), encoding='utf-8')
+    temporary.replace(target)
     print(f'Public feed: {len(races)} races; {target.stat().st_size} bytes')
     return payload
 
