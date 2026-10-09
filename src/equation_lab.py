@@ -18,6 +18,7 @@ from zoneinfo import ZoneInfo
 from department_experiment_v2 import (LEDGER as INPUTS, OUTCOMES, append, digest,
                                      read_lines, seal, valid_record, outcomes_for)
 from equation_models import METHODS, LABELS, CONFIG, fit, predict
+from equation_preview import provisional_distribution, standalone_tickets
 from official_outcomes import ticket_return
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -186,6 +187,20 @@ def choose(distribution, prices, group, count):
     return tickets[:count] if len(tickets) >= count else None
 
 
+def independent_views(distributions, riders, prices):
+    """One independently ranked ticket list per equation, never pooled or voted."""
+    results = {}
+    for method in METHODS:
+        trained = distributions[method] is not None
+        probabilities = (distributions[method] if trained else
+                         provisional_distribution(method, riders, prices))
+        results[method] = {
+            'basis': 'trained_shadow' if trained else 'untrained_preclose_proxy',
+            'picks': standalone_tickets(probabilities, prices),
+        }
+    return results
+
+
 def capture(input_hash, source_time, output_dir=ROOT / 'outputs', now=None):
     """Called only after v2 append succeeds; includes elapsed fit/inference time."""
     now = now or clock()
@@ -207,6 +222,7 @@ def capture(input_hash, source_time, output_dir=ROOT / 'outputs', now=None):
         reasons[method] = models['training']['reasons'][method]
         if model and distributions[method] is None:
             reasons[method] = 'no_observed_paths_for_field_size'
+    standalone = independent_views(distributions, source['evidence']['inputs']['risk_department'], prices)
     for group in GROUPS:
         risk = [t for t in source['risk_tickets'] if t['group'] == group]
         valid_risk = (0 < len(risk) <= 12 and all(t['odds'] == prices.get(t['buy']) and t['stake_yen'] == 100 for t in risk))
@@ -226,6 +242,7 @@ def capture(input_hash, source_time, output_dir=ROOT / 'outputs', now=None):
         'code': models['code'], 'cohort': digest([models['code'], source['code']['sha256']]),
         'model_record': models['record_sha256'], 'rules': RULES,
         'distributions': distributions, 'views': views, 'reasons': reasons,
+        'standalone': standalone,
         'purchase_authorized': False, 'ceo_integration': False})
     # Keep waiting states as evidence of availability, never as zero-hit forecasts.
     append(folder / LEDGER, row)
@@ -271,6 +288,9 @@ def validated_rows(folder):
                 abs(actual[k]-p) > 1e-12 for k,p in expected_distribution.items()):
                 raise ValueError('distribution does not match frozen equation model')
         prices = source['evidence']['usable_quotes']
+        if 'standalone' in row and row['standalone'] != independent_views(
+                row['distributions'], source['evidence']['inputs']['risk_department'], prices):
+            raise ValueError('independent equation picks disagree with frozen input')
         for group in GROUPS:
             risk = [t for t in source['risk_tickets'] if t['group'] == group]
             expected = risk if 0 < len(risk) <= 12 and all(t['odds'] == prices.get(t['buy']) and t['stake_yen'] == 100 for t in risk) else None
@@ -384,6 +404,21 @@ def build_report(output_dir=ROOT / 'outputs', now=None):
                             'status':'descriptive_only_not_a_promotion_test',
                             'race_ids':[r['race_id'] for r in pairs],
                             'left_metrics':performance(pairs,left,group),'right_metrics':performance(pairs,right,group)})
+    # Only immutable pre-close forecasts, never predictions regenerated after results.
+    standalone_latest = {}
+    today = now.astimezone(JST).date().isoformat()
+    for row in rows:
+        if row['date'] != today or not row.get('standalone'):
+            continue
+        rid = row['race_id']
+        if rid not in standalone_latest or row['snapshot_at'] > standalone_latest[rid]['snapshot_at']:
+            standalone_latest[rid] = {
+                'race_id': rid, 'venue': row['venue'], 'race_no': row['race_no'],
+                'snapshot_at': row['snapshot_at'], 'close_at': row['close_at'],
+                'methods': row['standalone'],
+            }
+    standalone_by_race = sorted(standalone_latest.values(),
+        key=lambda x: (x['close_at'], x['venue'], x['race_no']))
     latest_model = max(models.values(), key=lambda m: m['created_at']) if models else None
     samples, paths, diagnostics = prior_samples(folder, now.astimezone(JST).date())
     report = {'version': VERSION, 'updated_at': now.isoformat(), 'rules': RULES, 'training_rules': CONFIG,
@@ -393,7 +428,8 @@ def build_report(output_dir=ROOT / 'outputs', now=None):
         'recorded_races': len({r['race_id'] for r in rows}), 'snapshots': len(rows),
         'attempt_reasons': dict(Counter(r['reason'] for r in attempts)),
         'availability': {m: dict(Counter(r['reasons'][m] for r in rows)) for m in METHODS},
-        'comparisons': comparisons, 'head_to_head': head_to_head, 'diagnostics': diagnostics}
+        'comparisons': comparisons, 'head_to_head': head_to_head, 'diagnostics': diagnostics,
+        'standalone_by_race': standalone_by_race}
     (folder/'annual_equation_report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
     def pct(v): return '—' if v is None else f'{v*100:.1f}%'
     table = []
@@ -404,6 +440,24 @@ def build_report(output_dir=ROOT / 'outputs', now=None):
     page = '<!doctype html><html lang="ja"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>方程式の比較研究</title><style>body{font:16px/1.7 system-ui;background:#f4f6fa;color:#172235;margin:0}main{max-width:1100px;margin:auto;padding:28px}section{background:white;padding:20px;border-radius:12px;margin:18px 0}table{border-collapse:collapse;min-width:850px}td,th{padding:10px;border-bottom:1px solid #ddd;text-align:left}.scroll{overflow:auto}a{color:#2459ae}</style><main><h1>３つの方程式を、同じ条件で検証</h1><p><b>研究用です。社長の最終判断・購入判断には未組み込みです。</b>リスク部の現行買い目を比較基準として保持します。学習・的中率改善・本番採用は別の段階です。</p>'
     page += f'<section><h2>準備状況</h2><p>前日までの完全な保存入力と結果：{len(samples)}レース・{len({s["date"] for s in samples})}日。途中隊列の確認済み記録：{len(paths)}件。学習開始条件：50レース以上・7日以上。</p><p>新しい式の事前記録：{report["recorded_races"]}レース。データ不足の式には予想を捏造せず、待機理由を保存します。</p></section>'
     page += '<section><h2>比較する式</h2><p><b>① 市場の見落とし</b>：P(t) ∝ 市場支持(t) × exp(学習した選手・組み合わせ補正)。</p><p><b>② 先着関係</b>：各選手の先着確率から、上位３人の順番と残りの選手への優位性をまとめ、全３連単で正規化。</p><p><b>③ 途中隊列の遷移</b>：序盤→打鐘→最終バック→確定着順の、観測された上位３人の隊列変化を学習。精密な速度や残脚を再現するモデルではありません。途中隊列の記録が不足している間は未学習です。</p></section>'
+    page += '<section id="standalone"><h2>方程式ごとの単独買い目（本線・穴）</h2><p>３つの式を独立に計算し、各式の本線・穴を別々に最大12点掲載。リスク部や他の式の買い目で並びを変更しません。<b>未学習</b>は事前特徴量から作る固定式の暫定参考値で、学習済み方程式の予測ではありません。隊列の暫定値は実際の打鐘・バック記録を用いた遷移予測ではありません。的中率・期待値の優位性は未検証。実購入・社長予想には未採用です。</p>'
+    for race in standalone_by_race:
+        header = f"{race['venue']} {race['race_no']}R｜保存 {race['snapshot_at'][11:16]}"
+        page += '<details><summary>'+html.escape(header)+'</summary>'
+        for method in METHODS:
+            item = race['methods'][method]
+            basis = '学習済み・実験用' if item['basis'] == 'trained_shadow' else '未学習・暫定参考'
+            page += '<h3>'+html.escape(LABELS[method])+' ／ '+basis+'</h3>'
+            for group in GROUPS:
+                items = item['picks'][group]
+                page += '<p><b>'+group+' '+str(len(items))+'点</b>：'
+                page += ('、'.join(html.escape(t['buy'])+' ('+f"{t['odds']:.1f}"+'倍)' for t in items)
+                         if items else '該当するオッズ帯の買い目なし')
+                page += '</p>'
+        page += '</details>'
+    if not standalone_by_race:
+        page += '<p>保存済みの発走前独立予想はまだありません。次回の適格な発走前スナップショットから掲載します。締切後の後付け生成はしません。</p>'
+    page += '</section>'
     page += '<section><h2>同時点・同点数・同金額の成績</h2><p>本線・穴を別々に、リスク部と同じ点数・１点100円で比較。各最大12点、穴100倍以上。候補不足は比較から除外します。各行の対象レースが異なるため、行同士の単純な順位付けはしません。</p><div class="scroll"><table><tr><th>式</th><th>区分</th><th>比較R</th><th>的中：式／リスク</th><th>式の的中率</th><th>リスク的中率</th><th>式の回収率</th><th>リスク回収率</th><th>状態</th></tr>'+(''.join(table) or '<tr><td colspan="9">比較に必要な事前記録を収集中です。改善はまだ確認していません。</td></tr>')+'</table></div></section>'
     page += '<section><h2>社長への採用条件</h2><p>式と条件を固定した56日間で評価し、比較500レース・28日未満なら証拠不足です。複数の式を試した影響を補正し、的中率・回収率・最大払戻への依存を別々に確認します。期限を延ばして当たりを待つ運用や、自動採用はありません。十分な証拠が揃った後に、社長への組み込みを別の変更として審査します。</p></section><p><a href="annual_equation_report.json">詳細・不足理由・学習履歴</a> ／ <a href="annual_position_v2_report.html">２・３着改善の別実験</a> ／ <a href="operations.html">会社の運営状況</a></p></main></html>'
     (folder/'annual_equation_report.html').write_text(page,encoding='utf-8')
