@@ -1,0 +1,93 @@
+name: archive-50k-independent-learning
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - src/archive_50000.py
+      - src/archive_50000_train.py
+      - tests/test_archive_50000.py
+      - .github/workflows/archive-50k.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: archive-50k-independent-learning
+  cancel-in-progress: false
+
+jobs:
+  learn:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      PYTHONPATH: src
+      OPENBLAS_NUM_THREADS: '2'
+      OMP_NUM_THREADS: '2'
+      MKL_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Validate archive learning boundaries and standalone inference
+        run: python -m unittest discover -s tests -p 'test_archive_50000.py' -v
+      - name: Restore real historic results from central archive cache
+        uses: actions/cache/restore@v4
+        with:
+          path: data/raw/history.csv
+          key: keirin-central-history-v1-${{ github.run_id }}
+          restore-keys: |
+            keirin-central-history-v1-
+      - name: Reject missing or synthetic archive
+        run: |
+          test -s data/raw/history.csv || { echo "Verified real historical archive not restored"; exit 1; }
+      - name: Learn from exactly 50000 historical race results
+        run: |
+          python src/archive_50000_train.py --asof 2026-10-09
+      - name: Independently verify frozen coefficients and counts
+        run: |
+          python - <<'PY'
+          import json
+          from archive_50000 import validated_model
+          from pathlib import Path
+          m=json.loads(Path('models/archive_50000.json').read_text())
+          r=json.loads(Path('outputs/company/archive_50000_report.json').read_text())
+          assert validated_model(m,'2026-10-09')
+          assert r['trained_races']==50000
+          assert r['heldout_evaluated_races']>=1000
+          assert r['train_end']<r['holdout_start']
+          assert m['model_sha256']==r['model_sha256']
+          print('ARCHIVE_50K_VERIFIED',r['trained_races'],r['heldout_evaluated_races'])
+          PY
+      - name: Save frozen non-production model and independent report
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add models/archive_50000.json outputs/company/archive_50000_report.json
+          if git diff --cached --quiet; then
+            echo "No changes to frozen model"
+            exit 0
+          fi
+          git commit -m "Freeze independent 50000-race historical study"
+          for attempt in 1 2 3 4; do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          echo "Could not publish 50k training evidence; retained in workflow artifact"
+          exit 1
+      - name: Upload reproducible 50k training output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: archive-50k-training-${{ github.run_id }}
+          path: |
+            models/archive_50000.json
+            outputs/company/archive_50000_report.json
+          if-no-files-found: warn
+          retention-days: 30
