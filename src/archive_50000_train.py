@@ -57,6 +57,7 @@ def eligible_races(frame, asof):
         good.loc[good.index.isin(bad_ids)] = False
     valid = summary.loc[good,['day']].copy()
     valid['race_id'] = valid.index.astype(str)
+    valid = valid.reset_index(drop=True)
     valid.sort_values(['day','race_id'],inplace=True)
     valid_ids = set(valid['race_id'])
     return frame[frame.race_id.isin(valid_ids)].copy(),valid
