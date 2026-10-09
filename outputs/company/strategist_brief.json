@@ -1,8 +1,8 @@
 {
-  "updated_at_jst": "2026-10-09T10:56:06+09:00",
+  "updated_at_jst": "2026-10-09T11:20:16+09:00",
   "role": "strategist",
-  "central_races_available": 60105,
-  "official_evaluated_races": 575,
+  "central_races_available": 60108,
+  "official_evaluated_races": 578,
   "warnings": [],
   "recommended_actions": [
     {
@@ -10,10 +10,31 @@
       "type": "final_trifecta_product_kpi",
       "action": "treat latest selected trifecta tickets as the primary product KPI; keep model Top10 coverage as a diagnostic KPI",
       "evidence": {
-        "races": 193,
-        "hit_rate": 0.08808290155440414,
+        "races": 196,
+        "hit_rate": 0.08673469387755102,
         "recent_50_hit_rate": 0.14,
-        "avg_ticket_count": 8.694300518134716
+        "avg_ticket_count": 8.683673469387756
+      }
+    },
+    {
+      "priority": 1,
+      "type": "challenger_validation",
+      "action": "send the leading shadow challenger to external validation; do not auto-promote",
+      "evidence": {
+        "variant": "core_model",
+        "department": "model_audit_office",
+        "races": 302,
+        "production_hits": 138,
+        "challenger_hits": 150,
+        "production_hit_rate": 0.45695364238410596,
+        "challenger_hit_rate": 0.4966887417218543,
+        "delta_hit_rate": 0.039735099337748325,
+        "delta_pp": 3.9735099337748325,
+        "changed_races": 43,
+        "flip_gains": 20,
+        "flip_losses": 8,
+        "net_hits": 12,
+        "promotion_status": "eligible_for_external_validation"
       }
     },
     {
@@ -21,30 +42,9 @@
       "type": "trifecta_top10_kpi",
       "action": "optimize ticket logic against live 10-point hit rate as a separate KPI from Top1 accuracy",
       "evidence": {
-        "races": 181,
-        "hit_rate": 0.13812154696132597,
+        "races": 184,
+        "hit_rate": 0.1358695652173913,
         "recent_50_hit_rate": 0.1
-      }
-    },
-    {
-      "priority": 2,
-      "type": "shadow_leader_watch",
-      "action": "keep the current best challenger in shadow until the 300-race promotion floor is reached",
-      "evidence": {
-        "variant": "core_model",
-        "department": "model_audit_office",
-        "races": 299,
-        "production_hits": 137,
-        "challenger_hits": 149,
-        "production_hit_rate": 0.45819397993311034,
-        "challenger_hit_rate": 0.4983277591973244,
-        "delta_hit_rate": 0.040133779264214076,
-        "delta_pp": 4.013377926421407,
-        "changed_races": 43,
-        "flip_gains": 20,
-        "flip_losses": 8,
-        "net_hits": 12,
-        "promotion_status": "insufficient_sample"
       }
     },
     {
@@ -54,15 +54,15 @@
       "evidence": {
         "rule": "switch_to_second_when_margin<=0.05",
         "margin_threshold": 0.05,
-        "switched_races": 63,
+        "switched_races": 64,
         "production_hits_in_switched_races": 18,
-        "second_pick_hits_in_switched_races": 22,
-        "net_hits": 4,
-        "baseline_total_hits": 252,
-        "hypothetical_total_hits": 256,
-        "baseline_hit_rate": 0.43826086956521737,
-        "hypothetical_hit_rate": 0.44521739130434784,
-        "global_delta_pp": 0.6956521739130435,
+        "second_pick_hits_in_switched_races": 23,
+        "net_hits": 5,
+        "baseline_total_hits": 253,
+        "hypothetical_total_hits": 258,
+        "baseline_hit_rate": 0.43771626297577854,
+        "hypothetical_hit_rate": 0.4463667820069204,
+        "global_delta_pp": 0.8650519031141869,
         "status": "shadow_candidate_only",
         "promotion_requirement": "must beat production prospectively on >=300 settled races and pass external validation"
       }
@@ -73,14 +73,31 @@
       "action": "keep multi-head coverage for near-tie races; do not collapse to a single head",
       "evidence": {
         "segment": "near_tie_<=0.03",
-        "races": 42,
+        "races": 43,
         "hits": 10,
-        "hit_rate": 0.238095
+        "hit_rate": 0.232558
       }
     }
   ],
   "model_audit_status": "unmatched_cohort_gap",
-  "promotion_candidates": [],
+  "promotion_candidates": [
+    {
+      "variant": "core_model",
+      "department": "model_audit_office",
+      "races": 302,
+      "production_hits": 138,
+      "challenger_hits": 150,
+      "production_hit_rate": 0.45695364238410596,
+      "challenger_hit_rate": 0.4966887417218543,
+      "delta_hit_rate": 0.039735099337748325,
+      "delta_pp": 3.9735099337748325,
+      "changed_races": 43,
+      "flip_gains": 20,
+      "flip_losses": 8,
+      "net_hits": 12,
+      "promotion_status": "eligible_for_external_validation"
+    }
+  ],
   "production_change_authority": "ceo_only_after_validation",
   "engine_lab": {
     "production_replay": {},
@@ -117,7 +134,7 @@
     "live_snapshot_model": {}
   },
   "prospective_comparison": {
-    "updated_at_jst": "2026-10-09T10:56:06+09:00",
+    "updated_at_jst": "2026-10-09T11:20:16+09:00",
     "version": "strategist_consensus_v1",
     "status": "collecting",
     "production_effect": "advisory_and_shadow_only",
@@ -24419,38 +24436,38 @@
       }
     ],
     "settled": {
-      "settled_races": 159,
-      "bet_races": 109,
+      "settled_races": 162,
+      "bet_races": 111,
       "hits": 1,
-      "hit_rate": 0.009174311926605505,
-      "stake_yen": 94400,
+      "hit_rate": 0.009009009009009009,
+      "stake_yen": 96300,
       "return_yen": 8770,
-      "return_rate": 0.09290254237288136
+      "return_rate": 0.09106957424714435
     },
-    "paired_races": 94,
+    "paired_races": 97,
     "paired_strategist": {
-      "settled_races": 94,
-      "bet_races": 57,
+      "settled_races": 97,
+      "bet_races": 59,
       "hits": 0,
       "hit_rate": 0.0,
-      "stake_yen": 35600,
+      "stake_yen": 37500,
       "return_yen": 0,
       "return_rate": 0.0
     },
     "paired_production": {
-      "settled_races": 94,
-      "bet_races": 86,
+      "settled_races": 97,
+      "bet_races": 89,
       "hits": 7,
-      "hit_rate": 0.08139534883720931,
-      "stake_yen": 60700,
+      "hit_rate": 0.07865168539325842,
+      "stake_yen": 63100,
       "return_yen": 33140,
-      "return_rate": 0.5459637561779243
+      "return_rate": 0.5251980982567354
     },
     "production_miss_reasons": {
-      "ev_filter_skip": 39,
+      "ev_filter_skip": 41,
       "skip": 8,
       "odds_missing": 9,
-      "formation_omission": 31,
+      "formation_omission": 32,
       "hit": 7
     }
   }
