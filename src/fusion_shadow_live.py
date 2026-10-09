@@ -5,6 +5,7 @@ canonical forecast. Each race is frozen before its close; official outcomes
 are joined later from the settlement feed.
 """
 import argparse
+import ast
 import gzip
 import hashlib
 import html
@@ -46,9 +47,19 @@ def digest(path):
 
 
 def source_hashes():
-    names = ('fusion_shadow_live.py', 'fusion_input_repair.py', 'official_outcomes.py')
+    names = ('fusion_input_repair.py', 'official_outcomes.py')
     return {**old.source_hashes(),
             **{name: digest(ROOT / 'src' / name) for name in names}}
+
+
+def model_pipeline_hash():
+    """Fingerprint fitting/scoring code while leaving report copy/UI editable."""
+    source = ast.parse(Path(__file__).read_text(encoding='utf-8'))
+    relevant = {'dated_phases', 'digest', 'load_model', 'rank_race_candidates',
+                'source_hashes', 'train'}
+    payload = '\n'.join(ast.dump(node, include_attributes=False) for node in source.body
+                       if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name in relevant)
+    return hashlib.sha256(payload.encode('utf-8')).hexdigest()
 
 
 def dated_phases(frame):
@@ -109,6 +120,7 @@ def train(history_path, asof):
     manifest = {
         'version': 'fusion_shadow_refit_first_anchor_v1', 'formula': 'P(anchor)=P(refit_base_first)*P(refit_fusion|first)',
         'model_sha256': digest(MODEL), 'source_hashes': source_hashes(),
+        'model_pipeline_hash': model_pipeline_hash(),
         'history_sha256': digest(history_path), 'training_cutoff_exclusive': cutoff,
         'training_first': min(clean.date), 'training_last': max(clean.date),
         'training_races': int(clean.race_id.nunique()), 'eligible_rows': len(clean),
@@ -127,7 +139,18 @@ def train(history_path, asof):
 
 def load_model(asof):
     manifest = json.loads(MANIFEST.read_text(encoding='utf-8'))
-    if manifest['source_hashes'] != source_hashes() or digest(MODEL) != manifest['model_sha256']:
+    recorded_sources = dict(manifest.get('source_hashes', {}))
+    # Older shadow bundles included a whole-file hash. Ignore only that legacy
+    # key: the stable AST fingerprint below covers model fitting and ranking.
+    legacy_module_hash = recorded_sources.pop('fusion_shadow_live.py', None)
+    if recorded_sources != source_hashes():
+        raise ValueError('shadow model dependencies do not match their manifest')
+    saved_pipeline = manifest.get('model_pipeline_hash')
+    if saved_pipeline and saved_pipeline != model_pipeline_hash():
+        raise ValueError('shadow fitting/scoring code does not match its manifest')
+    if not saved_pipeline and not legacy_module_hash:
+        raise ValueError('shadow model manifest has no verifiable pipeline fingerprint')
+    if digest(MODEL) != manifest['model_sha256']:
         raise ValueError('shadow model or source does not match its manifest')
     if manifest['training_cutoff_exclusive'] > pd.Timestamp(asof).date().isoformat():
         raise ValueError('model was trained on or after the forecast date')
@@ -215,6 +238,17 @@ def build_report(rows, now):
     hits = [r for r in decided if r.get('top12_hit')]
     known = [r for r in hits if r.get('hit_odds')]
     active = [r for r in rows if not r.get('actual')]
+    latest_snapshot = {}
+    training_cutoff = None
+    training_first = None
+    if LATEST.exists():
+        try:
+            latest_document = json.loads(LATEST.read_text(encoding='utf-8'))
+            latest_snapshot = latest_document.get('coverage', {})
+            training_cutoff = latest_document.get('model_training_cutoff_exclusive')
+            training_first = latest_document.get('model_training_first')
+        except (OSError, json.JSONDecodeError):
+            latest_snapshot = {}
     summary = {
         'updated_at_jst': now.isoformat(timespec='seconds'),
         'status': 'ready' if rows else 'waiting_for_first_frozen_forecast',
@@ -231,6 +265,12 @@ def build_report(rows, now):
         'hit_payout_over_100x': sum(any(odds > 100 for odds in r['hit_odds']) for r in known),
         'payout_unknown_hits': len(hits)-len(known),
         'open_races': len(active), 'purchase_authorized': False,
+        'latest_input_races': latest_snapshot.get('input_races', 0),
+        'latest_forecasted_races': latest_snapshot.get('forecasted_races', 0),
+        'latest_skipped_races': latest_snapshot.get('skipped_races', 0),
+        'latest_coverage': latest_snapshot,
+        'model_training_first': training_first,
+        'model_training_cutoff_exclusive': training_cutoff,
         'metrics_scope': 'ranked exact-order trifecta candidates per race: top1, top6 and top12; not main/hole tickets or ROI',
         'forecast_ledger_sha256': digest(LEDGER) if LEDGER.exists() else None,
     }
@@ -246,10 +286,12 @@ def build_report(rows, now):
         '<p>三連単の順位上位1点・6点・12点それぞれの的中率を表示します。過去検証の38.77%は12点時の値なので、将来の12点欄と比較してください。現行の本線・穴の選別、購入点数・投資額、実購入成績、回収率とは別集計です。高配当回数は、保存候補が的中したレースの公式払戻倍率で数えます。</p>',
         '<section class="stats">',
         f'<div>締切前に固定<b>{summary["forecast_races"]:,}</b>レース</div><div>結果確定<b>{summary["settled_races"]:,}</b>レース</div>',
+        f'<div>直近対象日に確認<b>{summary["latest_input_races"]:,}</b>レース</div><div>直近対象日の予想<b>{summary["latest_forecasted_races"]:,}</b>レース</div><div>予想なし・理由表示<b>{summary["latest_skipped_races"]:,}</b>レース</div>',
         f'<div>1点的中率<b>{pct(summary["hit_rate_top1"])}</b>（{summary["hit_races_top1"]:,}）</div>',
         f'<div>6点的中率<b>{pct(summary["hit_rate_top6"])}</b>（{summary["hit_races_top6"]:,}）</div>',
         f'<div>12点的中率<b>{pct(summary["hit_rate_top12"])}</b>（{summary["hit_races_top12"]:,}）</div>',
         f'<div>的中かつ50倍超<b>{summary["hit_payout_over_50x"]:,}</b>レース</div><div>的中かつ100倍超<b>{summary["hit_payout_over_100x"]:,}</b>レース</div></section>',
+        f'<p>モデルの学習期間：{html.escape(str(summary["model_training_first"] or "未取得"))}〜{html.escape(str(summary["model_training_cutoff_exclusive"] or "未取得"))}の前日まで。</p>',
         f'<p>的中のうち公式倍率未取得：{summary["payout_unknown_hits"]}レース。買い目候補は各レースの確率上位12通りです。</p>',
         '<h2>最近の確定結果と、締切前に保存した候補</h2><div class="scroll"><table><thead><tr><th>日付</th><th>場・R</th><th>締切前候補（上位12）</th><th>実際の3連単</th><th>結果（1点・6点・12点）</th><th>公式払戻倍率</th><th>予想時刻</th></tr></thead><tbody>']
     for row in sorted(rows, key=lambda r: (r.get('date',''), r.get('race_id','')), reverse=True)[:250]:
@@ -262,11 +304,34 @@ def build_report(rows, now):
         body.append(f'<tr><td>{html.escape(str(row.get("date", "")))}</td><td>{venue} {row.get("race_no", "")}R</td><td>{picks}</td><td>{actual}</td><td>{status}</td><td>{odds}</td><td>{created}</td></tr>')
     if not rows:
         body.append('<tr><td colspan="7">最初の締切前予想を保存する準備中です。</td></tr>')
+    coverage = summary['latest_coverage']
+    body.extend(['</tbody></table></div>', '<h2>直近対象日の全レース確認</h2>',
+        '<p>開催情報に載ったレースを、買い目を固定したものと予想できなかったものに分けて表示します。締切後に初めて検出したレースは予想を捏造せず、理由を記録します。</p>',
+        '<div class="scroll"><table><thead><tr><th>日付</th><th>場・R</th><th>状態</th><th>理由</th></tr></thead><tbody>'])
+    for item in coverage.get('races', []):
+        body.append('<tr><td>{}</td><td>{} {}R</td><td>{}</td><td>{}</td></tr>'.format(
+            html.escape(str(item.get('date', ''))), html.escape(str(item.get('venue', ''))),
+            html.escape(str(item.get('race_no', ''))), html.escape(str(item.get('status', ''))),
+            html.escape(str(item.get('reason', '')))))
+    if not coverage.get('races'):
+        body.append('<tr><td colspan="4">当日の開催情報がまだありません。</td></tr>')
     body.extend(['</tbody></table></div>', '<h2>この集計の対象</h2><p>同じレースで候補を後から作り直しません。締切後に初めて登場したレースは追加しません。結果確定後に実際の三連単と公式払戻を照合します。同着など順序が一意でないレースは的中率から除外します。</p>',
         '<p>学習・候補生成・公式結果の照合は本番リスク部と分離しています。候補は購入を指示するものではありません。学習日は結果レポートに表示します。</p>',
         '<p><a href="fusion_shadow_live_report.json">集計JSON</a> ／ <a href="fusion_shadow_live_ledger.jsonl">締切前予想台帳</a></p></main></body></html>'])
     REPORT_HTML.write_text(''.join(body), encoding='utf-8')
     return summary
+
+
+def rank_race_candidates(race, bundle):
+    """Apply the frozen formula independently to this race and rank exact tickets."""
+    packet = experts.make_packet(race, bundle['profiles'])
+    available = experts.components(bundle['equations'], packet)
+    distribution = fusion.temperature(
+        fusion.mix(bundle['equations']['pool'], available), bundle['equations']['temperature'])
+    base = available['original:model_positions']
+    anchored = repair.anchor_first(distribution, base)
+    keys = fusion.keys(packet)
+    return sorted(keys, key=lambda key: (-anchored[key], tuple(map(int, key.split('-'))))), anchored
 
 
 def forecast(entries_path, results_path, asof=None):
@@ -279,12 +344,39 @@ def forecast(entries_path, results_path, asof=None):
         raise ValueError('entry feed is missing race identity or closing time')
     entries['date'] = pd.to_datetime(entries.date, errors='coerce').dt.strftime('%Y-%m-%d')
     close = pd.to_numeric(entries.close_at, errors='coerce')
+    today_entries = entries[entries.date.eq(now.strftime('%Y-%m-%d'))].copy()
+    if today_entries.empty:
+        raise ValueError('today race snapshot has no racecards; refusing to publish empty all-race coverage')
     entries = entries[close.gt(now.timestamp())].copy()
     results = json.loads(Path(results_path).read_text(encoding='utf-8')) if Path(results_path).exists() else []
     decided_ids = {str(item.get('race_id')) for item in results
                    if item.get('official_result_available') and item.get('actual_trifecta')}
     entries = entries[~entries.race_id.astype(str).isin(decided_ids)].copy()
-    eligible, _ = old.eligible(features.mask_outcomes(entries))
+    valid_rows = []
+    eligible_ids = set()
+    skipped = []
+    frozen_ids = {str(row['race_id']) for row in read_ledger()}
+    entry_ids = set(today_entries.race_id.dropna().astype(str))
+    for rid, race in today_entries.groupby('race_id', sort=False):
+        rid = str(rid)
+        if rid in frozen_ids:
+            valid_rows.append((rid, race, '買い目固定済み', ''))
+            continue
+        if rid in decided_ids:
+            valid_rows.append((rid, race, '予想なし', '予想保存前に公式結果が確定'))
+            continue
+        close_at = pd.to_numeric(race.close_at, errors='coerce').dropna()
+        if close_at.empty or float(close_at.iloc[0]) <= now.timestamp():
+            valid_rows.append((rid, race, '予想なし', '初回確認時点ですでに締切後'))
+            continue
+        eligible_ids.add(rid)
+    eligible_input = entries[entries.race_id.astype(str).isin(eligible_ids)].copy()
+    eligible, _ = old.eligible(features.mask_outcomes(eligible_input))
+    accepted_ids = set(eligible.race_id.astype(str))
+    for rid in eligible_ids - accepted_ids:
+        race = today_entries[today_entries.race_id.astype(str).eq(rid)]
+        reason = old.input_reason(race) or '候補生成対象外'
+        valid_rows.append((rid, race, '予想なし', reason))
     if not eligible.empty and not pd.to_datetime(eligible.date).ge(pd.Timestamp(manifest['training_cutoff_exclusive'])).all():
         raise ValueError('a forecast date is not after the model training window')
     predicted = old.base_predict(eligible, bundle) if len(eligible) else eligible
@@ -296,31 +388,47 @@ def forecast(entries_path, results_path, asof=None):
         close_at = float(pd.to_numeric(race.close_at, errors='coerce').iloc[0])
         if rid in known or not math.isfinite(close_at) or now.timestamp() >= close_at:
             continue
-        packet = experts.make_packet(race, bundle['profiles'])
-        available = experts.components(bundle['equations'], packet)
-        distribution = fusion.temperature(
-            fusion.mix(bundle['equations']['pool'], available), bundle['equations']['temperature'])
-        base = available['original:model_positions']
-        anchored = repair.anchor_first(distribution, base)
-        keys = fusion.keys(packet)
-        ranked = sorted(keys, key=lambda key: (-anchored[key], tuple(map(int, key.split('-')))))
+        try:
+            ranked, anchored = rank_race_candidates(race, bundle)
+        except Exception as error:
+            valid_rows.append((rid, race, '予想なし', f'候補計算エラー: {type(error).__name__}'))
+            continue
+        if not ranked:
+            valid_rows.append((rid, race, '予想なし', '有効な三連単候補なし'))
+            continue
         item = race.iloc[0]
+        race_no = pd.to_numeric(item.get('race_no'), errors='coerce')
         new.append({
             'race_id': rid, 'date': str(item.date), 'venue': str(item.get('venue') or ''),
-            'race_no': int(item.get('race_no') or 0), 'close_at': close_at,
+            'race_no': int(race_no) if pd.notna(race_no) else 0, 'close_at': close_at,
             'snapshot_at_jst': now.isoformat(timespec='seconds'), 'top12': ranked[:12],
             'probabilities': [float(anchored[key]) for key in ranked[:12]],
             'training_cutoff_exclusive': manifest['training_cutoff_exclusive'],
             'model_sha256': manifest['model_sha256'], 'actual': None,
             'top12_hit': None, 'actual_odds': None, 'purchase_authorized': False,
         })
+        valid_rows.append((rid, race, '買い目固定済み', ''))
     rows.extend(new)
     rows = apply_results(rows, results)
     write_ledger(rows)
     active = [r for r in rows if r['race_id'] in {x['race_id'] for x in new}]
+    coverage_races = []
+    status_by_id = {rid: (status, reason) for rid, _, status, reason in valid_rows}
+    for rid, race in today_entries.groupby('race_id', sort=False):
+        status, reason = status_by_id.get(str(rid), ('予想なし', '候補を固定できなかった'))
+        item = race.iloc[0]
+        race_no = pd.to_numeric(item.get('race_no'), errors='coerce')
+        coverage_races.append({'race_id': str(rid), 'date': str(item.get('date', '')),
+            'venue': str(item.get('venue') or ''), 'race_no': int(race_no) if pd.notna(race_no) else 0,
+            'status': status, 'reason': reason})
+    coverage = {'date': now.strftime('%Y-%m-%d'), 'input_races': int(len(entry_ids)),
+        'forecasted_races': sum(x['status'] == '買い目固定済み' for x in coverage_races),
+        'skipped_races': sum(x['status'] == '予想なし' for x in coverage_races),
+        'races': coverage_races}
     LATEST.write_text(json.dumps({'updated_at_jst': now.isoformat(timespec='seconds'),
+        'model_training_first': manifest['training_first'],
         'model_training_cutoff_exclusive': manifest['training_cutoff_exclusive'],
-        'new_forecasts': active}, ensure_ascii=False, indent=2), encoding='utf-8')
+        'new_forecasts': active, 'coverage': coverage}, ensure_ascii=False, indent=2), encoding='utf-8')
     return build_report(rows, now)
 
 
