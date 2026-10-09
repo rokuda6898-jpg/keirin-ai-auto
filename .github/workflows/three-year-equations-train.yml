@@ -1,0 +1,68 @@
+name: three-year-equations-train
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/equations-three-year]
+    paths: ["src/individual_three_year.py", ".github/workflows/three-year-equations-train.yml"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: three-year-equations-train
+  cancel-in-progress: false
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      PYTHONPATH: src
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '2'
+      MKL_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python -m unittest discover -s tests -p test_individual_three_year.py
+      - name: Restore real central race archive
+        uses: actions/cache/restore@v4
+        with:
+          path: data/raw/history.csv
+          key: keirin-central-history-v1-${{ github.run_id }}
+          restore-keys: |
+            keirin-central-history-v1-
+      - name: Train all available historical equations on three calendar years
+        run: |
+          ASOF=$(TZ=Asia/Tokyo date +%F)
+          python src/individual_three_year.py --asof "$ASOF"
+      - name: Preserve trained evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: three-year-equations-${{ github.run_id }}
+          path: |
+            models/individual_three_year/model.joblib
+            models/individual_three_year/manifest.json
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Commit only trained independent model evidence
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add models/individual_three_year/model.joblib models/individual_three_year/manifest.json
+          git diff --cached --quiet && exit 0
+          git commit -m 'Freeze three-year recency-weighted independent equation models'
+          for attempt in 1 2 3 4; do
+            git fetch origin "$GITHUB_REF_NAME"
+            git merge --no-edit "origin/$GITHUB_REF_NAME"
+            if git push origin "HEAD:$GITHUB_REF_NAME"; then exit 0; fi
+          done
+          exit 1
