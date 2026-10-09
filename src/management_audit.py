@@ -25,13 +25,14 @@ def workflow_findings(workflow, runs, now_s):
     """An old failure remains open until a later successful completed run."""
     meaningful = [r for r in runs if r.get('conclusion') != 'skipped']
     completed = next((r for r in meaningful if r['status'] == 'completed'), None)
+    limit = 190 if workflow in ('daily.yml','settle.yml','fusion-shadow-live.yml') else 40
     stalled = next((r for r in meaningful if r['status'] != 'completed'
-                    and now_s-(timestamp(r.get('created_at')) or now_s)>40*60), None)
+                    and now_s-(timestamp(r.get('created_at')) or now_s)>limit*60), None)
     run = stalled or (completed if completed and completed.get('conclusion') != 'success' else None)
     if not run:
         return []
     return [{'owner':'operations','code':'workflow_'+workflow,'level':'error',
-             'message':workflow+(' が40分以上待機・実行中です。' if stalled else ' の直近完了処理が失敗しています。'),
+             'message':workflow+(f' が{limit}分以上待機・実行中です。' if stalled else ' の直近完了処理が失敗しています。'),
              'race_ids':[], 'run_url':run.get('html_url','')}]
 
 

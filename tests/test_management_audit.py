@@ -59,3 +59,8 @@ class ManagementTests(unittest.TestCase):
         active={'status':'in_progress','conclusion':None,'created_at':self.now.isoformat()}
         self.assertTrue(workflow_findings('daily.yml',[active,failed],self.now.timestamp()))
         self.assertFalse(workflow_findings('daily.yml',[{'status':'completed','conclusion':'success'},failed],self.now.timestamp()))
+
+    def test_training_and_settlement_use_their_longer_time_budget(self):
+        run={'status':'in_progress','created_at':'2026-10-09T11:00:00+09:00'}
+        self.assertFalse(workflow_findings('fusion-shadow-live.yml',[run],self.now.timestamp()))
+        self.assertTrue(workflow_findings('site-manager.yml',[run],self.now.timestamp()))
