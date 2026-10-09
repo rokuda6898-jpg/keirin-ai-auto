@@ -358,7 +358,7 @@ def render(folder, records, outcomes, value):
     (folder / 'index.html').write_text(''.join(page), encoding='utf-8')
 
 
-def merge(remote, folder=FOLDER):
+def merge(remote, folder=FOLDER, render_report=True):
     """Remote publication wins for an already committed race; never rewrite picks."""
     remote_rows = ledger(remote)
     remote_keys = {(r['family'], r['race_id']) for r in remote_rows}
@@ -381,7 +381,7 @@ def merge(remote, folder=FOLDER):
                 left['payout_complete'] = set(left['payouts']) == set(left['winning_buys'])
                 left['conflict'] = left.get('conflict', False) or outcome.get('conflict', False)
     save(folder / 'results.json', existing)
-    return report(folder)
+    return report(folder) if render_report else {}
 
 
 if __name__ == '__main__':
