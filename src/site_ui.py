@@ -163,7 +163,7 @@ def add_equation_entry(document):
     hero=soup.main.select_one('.hero')
     if hero:hero.insert_after(entry)
     else:soup.main.insert(0,entry)
-    return str(soup)
+    return add_shadow_home(str(soup))
 
 
 def enhance_today(document):
