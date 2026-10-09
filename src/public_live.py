@@ -1,0 +1,147 @@
+"""Small public data feed. Refresh data without redeploying the website."""
+import csv
+import json
+import math
+from collections import defaultdict
+from datetime import datetime
+from pathlib import Path
+from zoneinfo import ZoneInfo
+
+ROOT = Path(__file__).resolve().parents[1]
+LABELS = {'data_department':'データ部','pace_department':'展開部','line_department':'ライン部',
+          'risk_department':'リスク部','prediction_department':'予想部',
+          'strategist_department':'軍師','high_payout_department':'高配当戦略部'}
+
+
+def read_json(path, default):
+    return json.loads(path.read_text(encoding='utf-8')) if path.exists() else default
+
+
+def read_csv(path):
+    if not path.exists():
+        return []
+    with path.open(encoding='utf-8-sig', newline='') as stream:
+        return list(csv.DictReader(stream))
+
+
+def finite(value):
+    try:
+        number = float(value)
+        return number if math.isfinite(number) else None
+    except (TypeError, ValueError):
+        return None
+
+
+def frozen(path):
+    rows = {}
+    if not path.exists():
+        return rows
+    with path.open(encoding='utf-8') as stream:
+        for line in stream:
+            if not line.strip():
+                continue
+            row = json.loads(line)
+            stamp = row.get('snapshot_at_jst', '')
+            close = finite(row.get('close_at'))
+            when = datetime.fromisoformat(stamp)
+            if close is None or when.tzinfo is None or when.timestamp() >= close:
+                raise ValueError('Invalid pre-close forecast: '+str(row.get('race_id')))
+            rid = str(row['race_id'])
+            if rid not in rows or stamp < rows[rid]['snapshot_at_jst']:
+                rows[rid] = row
+    return rows
+
+
+def marks(row):
+    scores = defaultdict(lambda: [0., 0., 0.])
+    probs = row.get('probabilities', [])
+    for rank, buy in enumerate(row.get('top12', [])):
+        weight = finite(probs[rank]) if rank < len(probs) else None
+        weight = weight if weight is not None and weight > 0 else 1/(rank+1)
+        for position, car in enumerate(buy.split('-')):
+            scores[car][position] += weight
+    order = sorted(scores, key=lambda car: (*(-n for n in scores[car]), int(car)))
+    return [{'mark': mark, 'car': car} for mark, car in zip('◎○▲△☆', order)]
+
+
+def forecast_view(row):
+    if not row:
+        return None
+    tickets = row.get('top12', [])
+    if len(tickets) > 12 or len(set(tickets)) != len(tickets):
+        raise ValueError('Invalid ticket count')
+    for buy in tickets:
+        parts = buy.split('-')
+        if len(parts) != 3 or len(set(parts)) != 3 or any(p not in '123456789' or len(p) != 1 for p in parts):
+            raise ValueError('Invalid trifecta')
+    return {'tickets': tickets, 'marks': marks(row), 'snapshot_at': row['snapshot_at_jst'],
+            'opinions': [{'department': LABELS.get(name,name), 'tickets': buys}
+                         for name, buys in row.get('department_submissions', {}).items()],
+            'rule': row.get('strategist', {}).get('rule', '')}
+
+
+def build(root=ROOT, now=None):
+    now = now or datetime.now(ZoneInfo('Asia/Tokyo'))
+    out = root/'outputs'
+    company = frozen(out/'company/company_decision_ledger.jsonl')
+    shadow = frozen(out/'company/fusion_shadow_live_ledger.jsonl')
+    schedule = read_csv(out/'latest_race_schedule.csv')
+    if not schedule:
+        raise ValueError('Schedule is required; refusing an empty feed')
+    race_map = {str(row['race_id']): dict(row) for row in schedule}
+    for saved in (company, shadow):
+        for rid, row in saved.items():
+            race_map.setdefault(rid, {key: row.get(key) for key in
+                ('race_id','date','venue','race_no','close_at','start_at')})
+    results = {str(r['race_id']): r for r in read_json(out/'latest_results.json', [])}
+    riders = defaultdict(list)
+    for row in read_csv(out/'latest_predictions.csv'):
+        riders[str(row['race_id'])].append({'car':str(row['car_no']), 'name':row.get('player_name','')})
+    races = []
+    for rid, row in race_map.items():
+        result = results.get(rid, {})
+        actual = result.get('actual_trifecta_buys') or ([result['actual_trifecta']] if result.get('actual_trifecta') else [])
+        if not result.get('official_result_available'):
+            actual = []
+        payouts = result.get('payouts_trifecta_json') or '{}'
+        payouts = json.loads(payouts) if isinstance(payouts, str) else payouts
+        if not actual and shadow.get(rid, {}).get('actual'):
+            old = shadow[rid]
+            actual = [old['actual']]
+            price = finite(old.get('actual_odds'))
+            if price is not None:
+                payouts = {old['actual']: price*100}
+        for buy in actual:
+            if buy not in payouts and len(actual) == 1:
+                price = finite(result.get('actual_trifecta_odds'))
+                if price is not None:
+                    payouts[buy] = price*100
+        races.append({'id':rid, 'date':row['date'], 'venue':row['venue'],
+                      'number':int(float(row['race_no'])), 'start_at':finite(row.get('start_at')),
+                      'close_at':finite(row.get('close_at')), 'riders':riders.get(rid, []),
+                      'company':forecast_view(company.get(rid)), 'shadow':forecast_view(shadow.get(rid)),
+                      'actual':actual, 'payouts':{k:finite(v) for k,v in payouts.items()}})
+    races.sort(key=lambda r:(r['date'], r['start_at'] or r['close_at'] or 1e12, r['venue'], r['number']))
+    source_stamps = [r.get('result_observed_at_jst') for r in results.values()]
+    source_stamps += [r.get('schedule_fetched_at_jst') for r in schedule]
+    for name in ('company_decision_predictions.json','fusion_shadow_live_predictions.json'):
+        source_stamps.append(read_json(out/'company'/name,{}).get('updated_at_jst'))
+    source_times = []
+    for stamp in source_stamps:
+        if stamp:
+            value = datetime.fromisoformat(stamp)
+            if value.tzinfo is not None and value <= now:
+                source_times.append(value)
+    # Republishing an old snapshot must not falsely make its data look fresh.
+    updated = max(source_times).isoformat(timespec='seconds') if source_times else None
+    payload = {'schema':1,'updated_at':updated,'generated_at':now.isoformat(timespec='seconds'),
+               'schedule_date':max(r['date'] for r in schedule), 'races':races,
+               'historical_reference':{'shadow_top12_rate':.3877,'scope':'過去一年の検証値。今後の的中率ではありません。'}}
+    target = out/'public_live.json'
+    target.write_text(json.dumps(payload, ensure_ascii=False, separators=(',',':'), allow_nan=False), encoding='utf-8')
+    print(f'Public feed: {len(races)} races; {target.stat().st_size} bytes')
+    return payload
+
+
+if __name__ == '__main__':
+    build()

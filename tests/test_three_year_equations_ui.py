@@ -44,7 +44,7 @@ class EquationNavigationTests(unittest.TestCase):
         source='<html><body><main><div class="hero">紹介</div><article id="race-1">既存の買い目 1-2-3</article></main></body></html>'
         once=add_equation_entry(source);twice=add_equation_entry(once)
         soup=BeautifulSoup(twice,'html.parser')
-        self.assertEqual(len(soup.select('#individual-equation-entry')),1)
-        self.assertEqual(soup.select_one('#individual-equation-entry')['href'],'company/three_year_equations/index.html')
+        self.assertEqual(len(soup.select('#individual-equation-entry')),0)
+        self.assertEqual(len(soup.select('#shadow-original-picks')),1)
         self.assertEqual(soup.select_one('#race-1').get_text(),'既存の買い目 1-2-3')
         self.assertEqual(once,twice)

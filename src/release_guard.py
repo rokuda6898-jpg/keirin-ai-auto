@@ -21,6 +21,9 @@ SOURCES = (
     "src/market_axis_shadow.py",
     "src/mark_performance.py",
     "src/site_ui.py",
+    "src/company_decision.py",
+    "src/forecast_coverage.py",
+    "src/shadow_home.py",
     "src/betting_logic.py",
     "src/high_payout_strategy.py",
     "src/position_market.py",
@@ -149,6 +152,17 @@ def validate_release(root=ROOT, now=None):
     for name in ("all_department_predictions.html", "all_department_results.html"):
         if not (out / "company" / name).is_file():
             errors.append(f"department UI page missing: {name}")
+    company_path = out / 'company/company_decision_predictions.json'
+    if company_path.exists():
+        try:
+            decisions = json.loads(company_path.read_text(encoding='utf-8'))
+            stored = {str(row['race_id']) for row in decisions['predictions']}
+            for row in decisions['coverage']['races']:
+                close = row.get('close_at')
+                if close is not None and float(close) > now.timestamp() and str(row['race_id']) not in stored:
+                    errors.append('company meeting forecast missing: ' + str(row['race_id']))
+        except (KeyError, ValueError, TypeError) as exc:
+            errors.append('company meeting coverage invalid: ' + str(exc))
     return errors
 
 
