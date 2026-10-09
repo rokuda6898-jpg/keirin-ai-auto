@@ -337,6 +337,8 @@ def forecast(entries_path, results_path, asof=None):
     entries['date'] = pd.to_datetime(entries.date, errors='coerce').dt.strftime('%Y-%m-%d')
     close = pd.to_numeric(entries.close_at, errors='coerce')
     today_entries = entries[entries.date.eq(now.strftime('%Y-%m-%d'))].copy()
+    if today_entries.empty:
+        raise ValueError('today race snapshot has no racecards; refusing to publish empty all-race coverage')
     entries = entries[close.gt(now.timestamp())].copy()
     results = json.loads(Path(results_path).read_text(encoding='utf-8')) if Path(results_path).exists() else []
     decided_ids = {str(item.get('race_id')) for item in results
