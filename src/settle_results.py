@@ -893,7 +893,9 @@ def run_settlement(args):
                 results[column] = default
         public_columns = [
             "race_id", "actual_trifecta", "actual_trifecta_odds",
+            "actual_trifecta_buys", "payouts_trifecta_json",
             "official_result_available", "result_source", "secondary_result_url",
+            "result_observed_at_jst",
         ]
         for column in public_columns:
             if column not in results.columns:
@@ -972,6 +974,28 @@ def run_settlement(args):
         print(f"Prediction-mark result audit update failed: {exc}", flush=True)
     history = update_prediction_history(settled)
     HISTORY_HTML.write_text(build_history_html(history), encoding="utf-8")
+    try:
+        from fusion_shadow_live import settle as settle_fusion_shadow
+        shadow_report = settle_fusion_shadow(LATEST_RESULTS_JSON)
+        from fusion_shadow_live import has_overdue_unsettled
+        if has_overdue_unsettled():
+            # The ordinary result job may skip fetching when the production
+            # ticket ledger is empty. Still settle separately frozen forecasts.
+            shadow_results = fetch_results()
+            public = ["race_id", "actual_trifecta", "actual_trifecta_odds",
+                      "actual_trifecta_buys", "payouts_trifecta_json",
+                      "official_result_available", "result_source", "secondary_result_url",
+                      "result_observed_at_jst"]
+            for column in public:
+                if column not in shadow_results:
+                    shadow_results[column] = ""
+            shadow_results[public].to_json(LATEST_RESULTS_JSON, orient="records", force_ascii=False)
+            shadow_report = settle_fusion_shadow(LATEST_RESULTS_JSON)
+        print(f"fusion shadow settled: {shadow_report['hit_races']}/{shadow_report['settled_races']} "
+              f"top-12 hits; over 50x={shadow_report['hit_payout_over_50x']}, "
+              f"over 100x={shadow_report['hit_payout_over_100x']}", flush=True)
+    except Exception as exc:
+        print(f"fusion shadow settlement skipped: {type(exc).__name__}: {exc}", flush=True)
     print(f"history rows: {len(history)}")
     print(summary.to_string(index=False))
     print(f"saved: {PURCHASE_PLAN_CSV}")
@@ -991,3 +1015,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
