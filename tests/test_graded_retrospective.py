@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from graded_retrospective import features, distribution
+from graded_retrospective import features, distribution, ArchiveEstimator
 
 
 class ConstantModel:
@@ -37,6 +37,14 @@ class GradedRetrospectiveTests(unittest.TestCase):
         self.assertTrue(np.isnan(x[-1]))
         for r in self.rows:r['line_verification_status']='verified'
         self.assertEqual(features(self.rows,2,(1,),[],True)[-1],1.)
+
+    def test_all_missing_training_column_is_safe_and_remains_flagged(self):
+        model=ArchiveEstimator()
+        model.fit(np.array([[i,np.nan] for i in range(50)],dtype=float),[i%2 for i in range(50)],np.ones(50))
+        transformed=model.transform(np.array([[999.,np.nan]]))
+        self.assertEqual(transformed[0,-1],1.)
+        self.assertEqual(transformed[0,1],0.)
+        self.assertTrue(np.isfinite(model.predict_proba(np.array([[999.,np.nan]]))).all())
 
 
 if __name__=='__main__':unittest.main()

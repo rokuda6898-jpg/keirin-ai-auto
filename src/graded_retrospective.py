@@ -23,6 +23,23 @@ FIELDS = ('score','win_rate','place2_rate','place3_rate','back_count','front_run
           'track_place3_rate','track_races')
 
 
+class ArchiveEstimator:
+    """Train-only imputation plus explicit missing flags, including empty columns."""
+    def fit(self, x, y, sample_weight):
+        self.fills=np.array([np.median(c[np.isfinite(c)]) if np.isfinite(c).any() else 0. for c in x.T])
+        self.model=HistGradientBoostingClassifier(max_iter=100,max_leaf_nodes=15,
+            l2_regularization=2.,learning_rate=.05,early_stopping=False,random_state=20261010)
+        self.model.fit(self.transform(x),y,sample_weight=sample_weight)
+        return self
+
+    def transform(self,x):
+        missing=~np.isfinite(x)
+        return np.column_stack([np.where(missing,self.fills,x),missing.astype(float)])
+
+    def predict_proba(self,x):
+        return self.model.predict_proba(self.transform(x))
+
+
 def write(path, obj):
     path.write_text(json.dumps(obj, ensure_ascii=False, indent=2, allow_nan=False), encoding='utf-8')
 
@@ -114,8 +131,7 @@ def fit(groups, method, stages):
                 yy.append(int(c==actual[position-1]))
                 ww.append((2. if str(race.iloc[0].date)>='2024-10-10' else 1.)/len(candidates))
         if not xx or len(set(yy))<2:raise ValueError('Insufficient labels')
-        model=HistGradientBoostingClassifier(max_iter=100,max_leaf_nodes=15,
-            l2_regularization=2.,learning_rate=.05,early_stopping=False,random_state=20261010)
+        model=ArchiveEstimator()
         model.fit(np.asarray(xx,dtype=float),yy,sample_weight=ww)
         models.append(model)
         print(f'FIT {method} position={position} rows={len(xx)}',flush=True)
@@ -156,9 +172,10 @@ def assess(predictions, target, folder):
                 z=sub.setdefault(bucket,{}).setdefault(m,{'races':0,'hits':0})
                 z['races']+=1;z['hits']+=hit
         paired.append({'date':row['date'],**hits})
-    for t in totals.values():
+    for m,t in totals.items():
         t['hit_rate']=t['hits']/t['races'] if t['races'] else None
         t['roi']=None
+        if m=='current_v1':t['log_loss_sum']=None
     # Day-block bootstrap avoids treating same-day races as independent.
     paired=pd.DataFrame(paired); differences={}
     rng=np.random.default_rng(20261010)
