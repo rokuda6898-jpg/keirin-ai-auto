@@ -57,6 +57,7 @@ def eligible_races(frame, asof):
         good.loc[good.index.isin(bad_ids)] = False
     valid = summary.loc[good,['day']].copy()
     valid['race_id'] = valid.index.astype(str)
+    valid = valid.reset_index(drop=True)
     valid.sort_values(['day','race_id'],inplace=True)
     valid_ids = set(valid['race_id'])
     return frame[frame.race_id.isin(valid_ids)].copy(),valid
@@ -83,7 +84,7 @@ def design(frame, train_ids):
         records = race.to_dict('records')
         fs = rider_vectors(records)
         ranks = {int(row['car_no']):int(row['_p']) for row in records
-                 if int(row['_p']) in (1,2,3)}
+                 if row['_p'] in (1,2,3)}
         if len(ranks) != 3:
             raise ValueError('incomplete podium after validation')
         for row in records:
@@ -128,7 +129,7 @@ def evaluate(frame, holdout_ids, model, limit=3000):
                  for m in NAMES}
     for rid,race in frame[frame.race_id.isin(set(chosen))].groupby('race_id',sort=False):
         actual=sorted(((int(row['car_no']),int(row['_p'])) for row in race.to_dict('records')
-                       if int(row['_p']) in (1,2,3)),key=lambda x:x[1])
+                       if row['_p'] in (1,2,3)),key=lambda x:x[1])
         if len(actual)!=3:continue
         answer='-'.join(str(c) for c,_ in actual)
         records=race.to_dict('records')
@@ -153,6 +154,7 @@ def run(history_path, output_model, output_report, asof='2026-10-09'):
     if not history_path.is_file():
         raise FileNotFoundError('central REAL historical race archive is required; no synthetic fallback')
     frame=pd.read_csv(history_path,dtype={'race_id':str,'player_id':str},low_memory=False)
+    raw_race_count=frame.race_id.nunique()
     frame,valid=eligible_races(frame,asof)
     train_ids,holdout_ids,end_day,start_holdout=chronological_split(valid)
     prior=frame[frame.race_id.isin(set(train_ids))]
@@ -172,7 +174,7 @@ def run(history_path, output_model, output_report, asof='2026-10-09'):
     report={'version':VERSION,'trained_races':len(train_ids),'heldout_available_races':len(holdout_ids),
             'heldout_evaluated_races':next(iter(holdout.values()))['races'],
             'train_end':end_day,'holdout_start':start_holdout,
-            'historical_valid_races':len(valid),'excluded_races':int(frame.race_id.nunique()-len(valid)),
+            'historical_valid_races':len(valid),'excluded_races':int(raw_race_count-len(valid)),
             'metrics':holdout,'model_sha256':frozen['model_sha256'],
             'archive_sha256':checksum,'evaluation':'chronological_retrospective_holdout',
             'historical_3way_odds_available':False,'observed_start_bell_back_paths_available':False,
