@@ -219,13 +219,19 @@ def build_report(rows, now):
         'updated_at_jst': now.isoformat(timespec='seconds'),
         'status': 'ready' if rows else 'waiting_for_first_frozen_forecast',
         'forecast_races': len(rows), 'settled_races': len(decided), 'hit_races': len(hits),
+        'hit_races_top1': sum(bool(set(r.get('hit_tickets', [])) & set(r['top12'][:1])) for r in decided),
+        'hit_races_top6': sum(bool(set(r.get('hit_tickets', [])) & set(r['top12'][:6])) for r in decided),
+        'hit_races_top12': len(hits),
+        'hit_rate_top1': sum(bool(set(r.get('hit_tickets', [])) & set(r['top12'][:1])) for r in decided)/len(decided) if decided else None,
+        'hit_rate_top6': sum(bool(set(r.get('hit_tickets', [])) & set(r['top12'][:6])) for r in decided)/len(decided) if decided else None,
+        'hit_rate_top12': len(hits)/len(decided) if decided else None,
         'hit_rate': len(hits)/len(decided) if decided else None,
         'official_payout_known_hits': len(known),
         'hit_payout_over_50x': sum(any(odds > 50 for odds in r['hit_odds']) for r in known),
         'hit_payout_over_100x': sum(any(odds > 100 for odds in r['hit_odds']) for r in known),
         'payout_unknown_hits': len(hits)-len(known),
         'open_races': len(active), 'purchase_authorized': False,
-        'metrics_scope': 'top 12 exact-order trifecta candidates per race; not main/hole tickets or ROI',
+        'metrics_scope': 'ranked exact-order trifecta candidates per race: top1, top6 and top12; not main/hole tickets or ROI',
         'forecast_ledger_sha256': digest(LEDGER) if LEDGER.exists() else None,
     }
     REPORT_JSON.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding='utf-8')
@@ -237,17 +243,19 @@ def build_report(rows, now):
         '<p><a href="../index.html">今日の予想へ戻る</a> ／ <a href="fusion_input_repair_report.html">過去一年の方程式検証</a></p>',
         '<h1>統合式の別予想・今後の成績</h1>',
         '<p class="notice">過去検証の38.77%案を、別の影予想として毎日保存します。モデルは直近までの確定履歴だけで学習し、レースごとに締切前の最大12候補を一度だけ固定します。的中判定は公式結果を取得してから更新します。</p>',
-        '<p>三連単の候補集合の的中率です。現行の本線・穴の選別、購入点数・投資額、実購入成績、回収率とは別集計です。高配当回数は、候補が的中したレースの公式払戻倍率で数えます。</p>',
+        '<p>三連単の順位上位1点・6点・12点それぞれの的中率を表示します。過去検証の38.77%は12点時の値なので、将来の12点欄と比較してください。現行の本線・穴の選別、購入点数・投資額、実購入成績、回収率とは別集計です。高配当回数は、保存候補が的中したレースの公式払戻倍率で数えます。</p>',
         '<section class="stats">',
         f'<div>締切前に固定<b>{summary["forecast_races"]:,}</b>レース</div><div>結果確定<b>{summary["settled_races"]:,}</b>レース</div>',
-        f'<div>12候補で的中<b>{summary["hit_races"]:,}</b>レース</div><div>的中率<b>{pct(summary["hit_rate"])}</b></div>',
+        f'<div>1点的中率<b>{pct(summary["hit_rate_top1"])}</b>（{summary["hit_races_top1"]:,}）</div>',
+        f'<div>6点的中率<b>{pct(summary["hit_rate_top6"])}</b>（{summary["hit_races_top6"]:,}）</div>',
+        f'<div>12点的中率<b>{pct(summary["hit_rate_top12"])}</b>（{summary["hit_races_top12"]:,}）</div>',
         f'<div>的中かつ50倍超<b>{summary["hit_payout_over_50x"]:,}</b>レース</div><div>的中かつ100倍超<b>{summary["hit_payout_over_100x"]:,}</b>レース</div></section>',
         f'<p>的中のうち公式倍率未取得：{summary["payout_unknown_hits"]}レース。買い目候補は各レースの確率上位12通りです。</p>',
-        '<h2>最近の確定結果と、締切前に保存した候補</h2><div class="scroll"><table><thead><tr><th>日付</th><th>場・R</th><th>締切前候補（上位12）</th><th>実際の3連単</th><th>結果</th><th>公式払戻倍率</th><th>予想時刻</th></tr></thead><tbody>']
+        '<h2>最近の確定結果と、締切前に保存した候補</h2><div class="scroll"><table><thead><tr><th>日付</th><th>場・R</th><th>締切前候補（上位12）</th><th>実際の3連単</th><th>結果（1点・6点・12点）</th><th>公式払戻倍率</th><th>予想時刻</th></tr></thead><tbody>']
     for row in sorted(rows, key=lambda r: (r.get('date',''), r.get('race_id','')), reverse=True)[:250]:
         venue = html.escape(str(row.get('venue') or ''))
         actual = html.escape(str(row.get('actual') or '未確定'))
-        status = ('的中' if row.get('top12_hit') else '不的中') if row.get('actual') else '結果待ち'
+        status = ('／'.join('的中' if set(row.get('hit_tickets', [])) & set(row['top12'][:n]) else '不的中' for n in (1,6,12))) if row.get('actual') else '結果待ち'
         odds = f'{row["actual_odds"]:.1f}倍（候補的中）' if row.get('actual_odds') is not None else ('未取得' if row.get('actual') else '—')
         picks = html.escape(' ／ '.join(row['top12']))
         created = html.escape(str(row.get('snapshot_at_jst') or ''))
