@@ -23,6 +23,7 @@ def build(root=ROOT, destination=None):
         nav = ('<div class="nexus-site-header">'
                f'<a href="{home}index.html">NEXUS トップ</a><nav aria-label="サイト案内">'
                f'<a href="{home}original/index.html">本線・穴</a>'
+               f'<a href="{home}independent.html">独立予想の買い目</a>'
                f'<a href="{home}company.html">会社・全部署</a>'
                f'<a href="{home}archive.html">過去レース保管庫</a></nav></div>'
                f'<small class="nexus-published">画面保存 {stamp} ／ 各予想の保存時刻は本文に表示</small>')
