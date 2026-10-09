@@ -101,6 +101,7 @@ def forecast(folder=FOLDER):
             item = race.iloc[0]
             meta = {'race_id':str(rid), 'date':day, 'venue':str(item.get('venue','')),
                 'race_no':int(item.race_no), 'close_at':float(item.close_at),
+                'producer_sha256':hashlib.sha256(Path(__file__).read_bytes().replace(b'\r\n',b'\n')).hexdigest(),
                 'input_sha256':hashlib.sha256(clean[clean.race_id.eq(rid)].to_json(orient='records').encode()).hexdigest()}
             frozen = common.freeze(records, 'three_year_421', meta, methods,
                 {'three_year':{'training_cutoff_exclusive':manifest['training_cutoff_exclusive'],
@@ -154,7 +155,7 @@ def render(folder,records,saved,outcomes,value):
     page.extend(f'<option value="{esc(n)}"'+(' selected' if n=='first_anchor' else '')+f'>{esc(label)}</option>' for n,label in NAMES.items())
     page.append('</select><div id="commands">')
     page.extend(f'<button type="button" data-choice="{n}" aria-pressed="'+('true' if n==3 else 'false')+f'" onclick="points={n};choose()">{n}点方程式予想・6,000円</button>' for n in budget.POINTS)
-    page.append('</div><p>3点・6点・12点は切替用です。合計18,000円の購入を意味しません。各プランは締切前に固定し、後から当たったプランへ変更しません。</p>')
+    page.append('</div><p>3点・6点・12点は切替用です。合計18,000円の購入を意味しません。各プランは締切前に固定し、後から当たったプランへ変更しません。金額未配分のレースは6,000円プランの成績集計に含めません。</p>')
     for name,label in NAMES.items():
         page.append(f'<section data-equation="{esc(name)}"'+(' hidden' if name!='first_anchor' else '')+f'><h2>{esc(label)}</h2>')
         for points in budget.POINTS:
