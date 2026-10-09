@@ -1,0 +1,116 @@
+name: fusion-input-repair
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/fusion-input-repair]
+    paths:
+      - src/fusion_input_repair*.py
+      - tests/test_fusion_input_repair.py
+      - .github/workflows/fusion-input-repair.yml
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: fusion-input-repair
+  cancel-in-progress: false
+
+env:
+  PYTHONPATH: src
+  OMP_NUM_THREADS: '2'
+  OPENBLAS_NUM_THREADS: '2'
+  MKL_NUM_THREADS: '2'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt numpy==2.5.3 pandas==3.0.6 scikit-learn==1.9.1 joblib==1.6.0 scipy==1.18.1
+      - run: python -m unittest discover -s tests -p test_fusion_input_repair.py
+  forecasts:
+    needs: verify
+    strategy:
+      fail-fast: false
+      matrix:
+        arm: [gap, identity, both, refit]
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt numpy==2.5.3 pandas==3.0.6 scikit-learn==1.9.1 joblib==1.6.0 scipy==1.18.1
+      - uses: actions/cache/restore@v4
+        with:
+          path: data/raw/history.csv
+          key: keirin-central-history-v1-37796966787
+          fail-on-cache-miss: true
+      - uses: actions/download-artifact@v4
+        with:
+          name: fixed-year-research-37857407998
+          run-id: 37857407998
+          github-token: ${{ github.token }}
+          path: research/frozen_original
+      - name: Fit only older races
+        run: python src/fusion_input_repair.py --stage train --arm ${{ matrix.arm }}
+      - name: Save outcome-free target forecasts
+        run: python src/fusion_input_repair.py --stage predict --arm ${{ matrix.arm }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: repair-${{ matrix.arm }}-${{ github.run_id }}
+          path: |
+            research/fusion_input_repair/${{ matrix.arm }}/
+            !research/fusion_input_repair/${{ matrix.arm }}/joint_design.f32
+          if-no-files-found: warn
+          retention-days: 30
+  assess:
+    needs: forecasts
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt numpy==2.5.3 pandas==3.0.6 scikit-learn==1.9.1 joblib==1.6.0 scipy==1.18.1
+      - uses: actions/cache/restore@v4
+        with:
+          path: data/raw/history.csv
+          key: keirin-central-history-v1-37796966787
+          fail-on-cache-miss: true
+      - uses: actions/download-artifact@v4
+        with:
+          name: fixed-year-research-37857407998
+          run-id: 37857407998
+          github-token: ${{ github.token }}
+          path: research/frozen_original
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: repair-*-${{ github.run_id }}
+          path: research/arms
+      - name: Collect four independent frozen forecasts
+        run: |
+          mkdir -p research/fusion_input_repair
+          for arm in gap identity both refit; do
+            mv "research/arms/repair-${arm}-${{ github.run_id }}" "research/fusion_input_repair/${arm}"
+          done
+      - name: Score only after all forecasts exist
+        run: python src/fusion_input_repair.py --stage assess
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fusion-input-repair-${{ github.run_id }}
+          path: research/fusion_input_repair/
+          if-no-files-found: warn
+          retention-days: 30
