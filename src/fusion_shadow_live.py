@@ -287,11 +287,11 @@ def build_report(rows, now):
         '<section class="stats">',
         f'<div>締切前に固定<b>{summary["forecast_races"]:,}</b>レース</div><div>結果確定<b>{summary["settled_races"]:,}</b>レース</div>',
         f'<div>直近対象日に確認<b>{summary["latest_input_races"]:,}</b>レース</div><div>直近対象日の予想<b>{summary["latest_forecasted_races"]:,}</b>レース</div><div>予想なし・理由表示<b>{summary["latest_skipped_races"]:,}</b>レース</div>',
-        f'<p>モデルの学習期間：{html.escape(str(summary["model_training_first"] or "未取得"))}〜{html.escape(str(summary["model_training_cutoff_exclusive"] or "未取得"))}の前日まで</p>',
         f'<div>1点的中率<b>{pct(summary["hit_rate_top1"])}</b>（{summary["hit_races_top1"]:,}）</div>',
         f'<div>6点的中率<b>{pct(summary["hit_rate_top6"])}</b>（{summary["hit_races_top6"]:,}）</div>',
         f'<div>12点的中率<b>{pct(summary["hit_rate_top12"])}</b>（{summary["hit_races_top12"]:,}）</div>',
         f'<div>的中かつ50倍超<b>{summary["hit_payout_over_50x"]:,}</b>レース</div><div>的中かつ100倍超<b>{summary["hit_payout_over_100x"]:,}</b>レース</div></section>',
+        f'<p>モデルの学習期間：{html.escape(str(summary["model_training_first"] or "未取得"))}〜{html.escape(str(summary["model_training_cutoff_exclusive"] or "未取得"))}の前日まで。</p>',
         f'<p>的中のうち公式倍率未取得：{summary["payout_unknown_hits"]}レース。買い目候補は各レースの確率上位12通りです。</p>',
         '<h2>最近の確定結果と、締切前に保存した候補</h2><div class="scroll"><table><thead><tr><th>日付</th><th>場・R</th><th>締切前候補（上位12）</th><th>実際の3連単</th><th>結果（1点・6点・12点）</th><th>公式払戻倍率</th><th>予想時刻</th></tr></thead><tbody>']
     for row in sorted(rows, key=lambda r: (r.get('date',''), r.get('race_id','')), reverse=True)[:250]:
