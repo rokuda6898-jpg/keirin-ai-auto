@@ -71,6 +71,41 @@ class ThreeYearLiveTests(unittest.TestCase):
             self.assertEqual(live.freeze_allocations(saved,self.forecast,pd.DataFrame(),pd.DataFrame(),self.now),57)
         self.assertTrue(all(r['equation']!='first_anchor' for r in saved))
 
+    def test_common_comparison_excludes_unmatched_equation_cohort(self):
+        saved=[]
+        with patch.object(live,'quote_view',return_value=(self.prices,self.stamps,{},[])), patch.object(live.common,'clock',return_value=self.now):
+            live.freeze_allocations(saved,self.forecast,pd.DataFrame(),pd.DataFrame(),self.now)
+        saved=[r for r in saved if not (r['equation']=='first_anchor' and r['points']==3)]
+        with tempfile.TemporaryDirectory() as temp:
+            folder=Path(temp)
+            live.common.save(folder/'forecasts.json',[self.forecast])
+            live.common.save(folder/'allocations.json',saved)
+            with patch.object(live.common,'update_results',return_value={}):
+                value=live.report(folder)
+            self.assertEqual(value['statistics']['original']['3']['forecast_races'],1)
+            self.assertEqual(value['common_comparison_statistics']['original']['3']['forecast_races'],0)
+            self.assertEqual(value['common_comparison_statistics']['original']['6']['forecast_races'],1)
+
+    @unittest.skipUnless((live.training.FOLDER/'model.joblib').exists(), 'real model training still pending')
+    def test_real_trained_bundle_scores_actual_card_without_saving_forecasts(self):
+        entries=pd.read_csv(live.ROOT/'data/raw/today_entries.csv',dtype={'race_id':str,'player_id':str})
+        manifest,bundle=live.training.load(str(max(entries.date)))
+        self.assertEqual(manifest['year_weights_recent_to_old'],[4,2,1])
+        self.assertGreater(manifest['training_races'],10000)
+        covered=set()
+        for _,race in entries.groupby('race_id',sort=False):
+            if len(race) in covered:
+                continue
+            covered.add(len(race))
+            clean=live.features.mask_outcomes(race)
+            predicted=live.study.base_predict(clean,bundle)
+            methods=live.common.race_distributions(predicted,bundle,predicted,bundle,bundle['stage'])
+            for name in live.archive.NAMES:
+                methods[name]={'tickets':live.common.ranked(live.archive.probabilities(name,bundle['archive'],clean.to_dict('records')))}
+            self.assertEqual(set(methods),set(live.NAMES))
+            for method in methods.values():
+                self.assertEqual(len(method['tickets']),min(12,len(race)*(len(race)-1)*(len(race)-2)))
+
 
 if __name__=='__main__':
     unittest.main()

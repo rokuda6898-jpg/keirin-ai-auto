@@ -151,6 +151,8 @@ def render(folder,records,saved,outcomes,value):
     esc=lambda x:html.escape(str(x))
     pct=lambda p:'未集計' if p is None else f'{p:.1%}'
     lookup={(r['race_id'],r['points'],r['equation']):r for r in saved}
+    visible_dates=set(sorted({r['date'] for r in records})[-2:])
+    visible_records=[r for r in records if r['date'] in visible_dates]
     m=value['training']
     page=['<!doctype html><html lang="ja"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">',
         '<title>3年学習・個別方程式予想｜KEIRIN NEXUS</title><style>body{margin:0;background:#0b1322;color:#e8edf7;font:16px/1.7 system-ui}main{max-width:1150px;margin:auto;padding:24px 16px}a{color:#9bd8ff}section{background:#15243a;border-radius:12px;padding:18px;margin:20px 0}button,select{font:inherit;padding:12px;border-radius:8px;border:1px solid #7197bb;background:#213653;color:white;margin:5px 5px 5px 0}button[aria-pressed=true]{background:#235e67;border-color:#8be4d0}select{max-width:100%;width:640px}.scroll{overflow:auto}table{border-collapse:collapse;width:100%}th,td{text-align:left;padding:10px;border-bottom:1px solid #405068;vertical-align:top}td{min-width:85px}.picks{min-width:300px}.muted{color:#bbcadc}.warn{color:#f8d998}</style><main>',
@@ -162,13 +164,13 @@ def render(folder,records,saved,outcomes,value):
     page.extend(f'<option value="{esc(n)}"'+(' selected' if n=='first_anchor' else '')+f'>{esc(label)}</option>' for n,label in NAMES.items())
     page.append('</select><div id="commands">')
     page.extend(f'<button type="button" data-choice="{n}" aria-pressed="'+('true' if n==3 else 'false')+f'" onclick="points={n};choose()">{n}点方程式予想・6,000円</button>' for n in budget.POINTS)
-    page.append('</div><p>3点・6点・12点は切替用です。合計18,000円の購入を意味しません。各プランは締切前に固定し、後から当たったプランへ変更しません。金額未配分のレースは6,000円プランの成績集計に含めません。</p>')
+    page.append('</div><p>3点・6点・12点は切替用です。合計18,000円の購入を意味しません。各プランは締切前に固定し、後から当たったプランへ変更しません。金額未配分のレースは6,000円プランの成績集計に含めません。</p><p>買い目一覧は直近2開催日の全レース、成績は保存開始からの累計です。過去の固定記録はページ末尾から確認できます。</p>')
     for name,label in NAMES.items():
         page.append(f'<section data-equation="{esc(name)}"'+(' hidden' if name!='first_anchor' else '')+f'><h2>{esc(label)}</h2>')
         for points in budget.POINTS:
             s=value['statistics'][name][str(points)]
             page.append(f'<div data-points="{points}"'+(' hidden' if points!=3 else '')+f'><h3>{points}点・6,000円プラン</h3><p>配分保存 {s["forecast_races"]}R ／ 的中 {s["hits"]} / 確定 {s["settled_races"]}R ／ 的中率 <b>{pct(s["hit_rate"])}</b> ／ 実績回収率 <b>{pct(s["roi"])}</b><br>仮想投資 {s["stake_yen"]:,}円 ／ 払戻し {s["return_yen"]:,.0f}円 ／ 払戻し未取得 {s["payout_pending_races"]}R<br>50倍超 {s["hits_over_50x"]}R ／ 100倍以上 {s["hits_at_least_100x"]}R</p><div class="scroll"><table><tr><th>開催・R</th><th>買い目・金額</th><th>回収見込み</th><th>公式結果</th><th>記録時刻</th></tr>')
-            for row in sorted(records,key=lambda r:(r['date'],r['close_at']),reverse=True):
+            for row in sorted(visible_records,key=lambda r:(r['date'],r['close_at']),reverse=True):
                 frozen=lookup.get((row['race_id'],points,name))
                 plan=frozen['methods'][name] if frozen else None
                 picks=plan['tickets'] if plan else row['methods'][name]['tickets'][:points]
