@@ -22,7 +22,9 @@ def build(root=ROOT):
     for row in read_json(out / 'company/ticket_return_settled.json', []):
         rid = row['race_id']
         race = races.setdefault(rid, dict(id=rid,date=row.get('date',''),venue=row.get('venue',''),number=row.get('race_no',''),actual='',forecasts=[]))
-        race['forecasts'].append({key:row.get(key) for key in ('snapshot_at','strategy_version','tickets','actual_trifecta','actual_trifecta_odds','is_hit')})
+        if row.get('actual_trifecta'):
+            race['actual'] = row['actual_trifecta']
+        race['forecasts'].append({key:row.get(key) for key in ('snapshot_at','strategy_version','tickets','actual_trifecta','payout_per_100yen')})
     knowledge = read_json(out / 'company/annual_rider_knowledge.json', {})
     manifest = read_json(out / 'company/central_history_manifest.json', {})
     learning = {key:knowledge.get(key) for key in ('updated_at_jst','as_of','status','total_archive_races','annual_races','policy')}
