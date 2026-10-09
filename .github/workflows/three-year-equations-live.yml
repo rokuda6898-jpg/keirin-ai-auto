@@ -2,14 +2,6 @@ name: three-year-equations-live
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '7,22,37,52 0-14 * * *'
-  push:
-    branches: [main]
-    paths: ["src/three_year_equations_live.py", "src/three_year_equations_ui.py", "src/site_ui.py", "models/individual_three_year/**", ".github/workflows/three-year-equations-live.yml"]
-  workflow_run:
-    workflows: ["daily-keirin-predict", "intraday-keirin-odds", "quick-keirin-results", "settle-keirin-results", "fusion-shadow-live"]
-    types: [completed]
 
 permissions:
   contents: write

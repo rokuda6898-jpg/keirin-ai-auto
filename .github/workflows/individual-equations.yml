@@ -2,12 +2,6 @@ name: individual-equations
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths: ["src/individual_equations_live.py", "models/individual_stage/**", ".github/workflows/individual-equations.yml"]
-  workflow_run:
-    workflows: ["daily-keirin-predict", "intraday-keirin-odds", "quick-keirin-results", "settle-keirin-results", "fusion-shadow-live"]
-    types: [completed]
 
 permissions:
   contents: write
