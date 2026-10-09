@@ -1,5 +1,5 @@
 {
-  "checked_at_jst": "2026-10-09T15:58:47+09:00",
+  "checked_at_jst": "2026-10-09T16:17:58+09:00",
   "status": "repaired",
   "repaired": true,
   "attempts": [
@@ -8,16 +8,23 @@
       "problems": [
         {
           "type": "site_release_stale",
-          "count": 2,
+          "count": 1,
           "details": [
-            "code changed since generation: src/predict.py",
-            "code changed since generation: src/equation_lab.py"
+            "code changed since generation: src/fusion_shadow_live.py"
+          ]
+        },
+        {
+          "type": "results_waiting",
+          "race_ids": [
+            "013520261009",
+            "112120261009"
           ]
         }
       ],
       "health": {
         "severity": "warning",
         "problem_types": [
+          "results_waiting",
           "site_release_stale"
         ],
         "race_count": 79,
@@ -29,6 +36,35 @@
     },
     {
       "attempt": 1,
+      "problems": [
+        {
+          "type": "results_waiting",
+          "race_ids": [
+            "013520261009"
+          ]
+        },
+        {
+          "type": "results_overdue",
+          "race_ids": [
+            "112120261009"
+          ]
+        }
+      ],
+      "health": {
+        "severity": "warning",
+        "problem_types": [
+          "results_overdue",
+          "results_waiting"
+        ],
+        "race_count": 79,
+        "expected_riders": 575,
+        "actual_riders": 575,
+        "rider_integrity_ok": true
+      },
+      "repair_action": "settlement_refresh"
+    },
+    {
+      "attempt": 2,
       "problems": [],
       "health": {
         "severity": "ok",
