@@ -34,6 +34,7 @@ SOURCES = (
     "src/fusion_lab.py",
     "src/official_outcomes.py",
     "src/settle_results.py",
+    "src/fusion_shadow_live.py",
     "src/release_guard.py",
 )
 DEPARTMENTS = {
@@ -158,3 +159,4 @@ if __name__ == "__main__":
         print("PUBLICATION BLOCKED:\n" + "\n".join("- " + reason for reason in failures))
         sys.exit(2)
     print("PUBLICATION VALIDATED: code fingerprint, race coverage, and all seven departments")
+
