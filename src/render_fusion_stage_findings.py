@@ -44,6 +44,8 @@ def render(source, destination):
     diff = result['comparisons_to_original_fusion'][best]['top12']
     if diff['extra_hits'] > 0:
         headline = f'{NAMES[best]}が12候補で最多。従来の統合式より{diff["extra_hits"]:,}レース多く的中。'
+        if diff['day_bootstrap_95_percent_interval'][0] <= 0:
+            headline += ' 差は小さく、明確な改善は確認できていません。'
     else:
         headline = '今回の３案では、12候補の的中数で従来の統合式を上回る案はありませんでした。'
     rows = ''
@@ -77,6 +79,7 @@ def render(source, destination):
 <p>予想対象：2025-10-09〜2026-10-08。予想 {result['predicted_races']:,} レース、同じ {n:,} レースで比較。判定できない着順 {sum(result['outcome_exclusions'].values()):,} レースは全方式共通で集計から除外。</p>
 <h2>同じ候補数で比べた的中率</h2><div class="scroll"><table><tr><th>方式</th><th>１候補</th><th>６候補</th><th>12候補</th><th>12候補の的中数</th><th>従来統合式との差</th><th>確率の損失↓</th></tr>{rows}</table></div>
 <p>無価格の３連単候補の比較です。本線・100倍以上の穴・同金額の買い目比較、回収率は未検証です。候補数は追加していません。</p>
+<p><b>今回の判断：社長・本番への追加採用は見送り。</b>着順だけを分ける案は古い選択期間で配合０％となり、従来の統合式と同じ予想です。条件と着順を組み合わせた案は確率の損失を減らしましたが、12候補の的中率は低下しました。確率全体の改善と、限られた候補数での的中率改善は分けて評価します。</p>
 <h2>何を追加したか</h2><ol><li>出走人数×クラスで、各式の配分を変更。</li><li>１着、２着｜１着、３着｜１・２着の３段階で、別々の配分を学習。</li><li>①と②を組み合わせる。</li></ol>
 <p><b>P(a,b,c) = Σw₁p(a) × Σw₂p(b｜a) × Σw₃p(c｜a,b)</b></p><p>予想時にはすべての１・２着候補を評価します。正解の１・２着は渡しません。少数条件は全体の配分へ戻し、同一予想の複製は１枠にまとめます。</p>
 <h2>増えた的中と失った的中（12候補）</h2><div class="scroll"><table><tr><th>追加案</th><th>旧式の外れを救済</th><th>旧式の的中を失う</th><th>差し引き</th><th>差の参考95％区間</th></tr>{changes}</table></div><p>区間は日単位の再抽出。探索後の採用合格判定には使いません。</p>
