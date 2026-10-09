@@ -3,10 +3,20 @@ import unittest
 from datetime import datetime
 from unittest.mock import patch
 from management_audit import audit, workflow_findings
-from management_notify import deliver
+from management_notify import deliver, native_notice
 
 
 class ManagementTests(unittest.TestCase):
+    def test_native_alert_needs_no_smtp_and_recovers_without_fake_failure(self):
+        report={'findings':[{'code':'missing_shadow','message':'missing'}]}
+        state,status,alert=native_notice(report,{},100)
+        self.assertTrue(alert)
+        self.assertFalse(native_notice(report,state,101)[2])
+        self.assertTrue(native_notice(report,state,86501)[2])
+        recovered,status,alert=native_notice({'findings':[]},state,102)
+        self.assertFalse(alert)
+        self.assertFalse(recovered['active'])
+        self.assertTrue(native_notice(report,recovered,103)[2])
     def setUp(self):
         self.now = datetime.fromisoformat('2026-10-09T12:00:00+09:00')
         self.feed = {'schema':1,'schedule_date':'2026-10-09','updated_at':self.now.isoformat(),'races':[]}
