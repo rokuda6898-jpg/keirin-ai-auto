@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-10-09T22:52:17+09:00",
+  "checked_at": "2026-10-09T23:02:10+09:00",
   "owners": {
     "data": "データ品質責任者",
     "coverage": "全レース予想責任者",
@@ -105,12 +105,21 @@
       ]
     },
     {
-      "owner": "operations",
-      "code": "workflow_daily.yml",
+      "owner": "coverage",
+      "code": "invalid_tickets",
       "level": "error",
-      "message": "daily.yml の直近完了処理が失敗しています。",
+      "message": "車番・重複・点数・締切時刻に不正があります。",
+      "race_ids": [
+        "095320261009"
+      ]
+    },
+    {
+      "owner": "operations",
+      "code": "workflow_fusion-shadow-live.yml",
+      "level": "error",
+      "message": "fusion-shadow-live.yml の直近完了処理が失敗しています。",
       "race_ids": [],
-      "run_url": "https://github.com/rokuda6898-jpg/keirin-ai-auto/actions/runs/37849919016"
+      "run_url": "https://github.com/rokuda6898-jpg/keirin-ai-auto/actions/runs/37941028631"
     }
   ],
   "coverage": {
@@ -127,18 +136,18 @@
   },
   "matched_comparison": {
     "company": {
-      "races": 23,
+      "races": 24,
       "hits": 4,
-      "stake_yen": 4600,
+      "stake_yen": 4800,
       "return_yen": 1360.0,
       "largest_hit_return_share": 0.33088235294117646
     },
     "shadow": {
-      "races": 23,
-      "hits": 7,
-      "stake_yen": 27600,
-      "return_yen": 9270.0,
-      "largest_hit_return_share": 0.7259978425026968
+      "races": 24,
+      "hits": 8,
+      "stake_yen": 28800,
+      "return_yen": 10860.0,
+      "largest_hit_return_share": 0.6197053406998159
     }
   },
   "comparison_scope": "同じレース・初回締切前予想・各点100円。点数差は投資額に反映。因果的な優劣判定ではありません。",
