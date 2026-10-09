@@ -27,12 +27,12 @@ class ThreeYearLiveTests(unittest.TestCase):
     def test_allocations_are_common_budget_immutable_and_preclose(self):
         saved=[]
         with patch.object(live,'quote_view',return_value=(self.prices,self.stamps,{},[])), patch.object(live.common,'clock',return_value=self.now):
-            self.assertEqual(live.freeze_allocations(saved,self.forecast,pd.DataFrame(),pd.DataFrame(),self.now),3)
+            self.assertEqual(live.freeze_allocations(saved,self.forecast,pd.DataFrame(),pd.DataFrame(),self.now),60)
             original=copy.deepcopy(saved)
             self.assertEqual(live.freeze_allocations(saved,self.forecast,pd.DataFrame(),pd.DataFrame(),self.now),0)
             self.assertEqual(saved,original)
             for row in saved:
-                self.assertEqual(set(row['methods']),set(live.NAMES))
+                self.assertEqual(set(row['methods']),{row['equation']})
                 self.assertTrue(all(m['spent_yen']==6000 for m in row['methods'].values()))
             later=self.now+timedelta(hours=1)
             self.assertEqual(live.freeze_allocations([],self.forecast,pd.DataFrame(),pd.DataFrame(),later),0)
@@ -54,14 +54,22 @@ class ThreeYearLiveTests(unittest.TestCase):
             plan=live.command('first_anchor',3,'r1',folder)
             self.assertEqual(plan['spent_yen'],6000)
             outcomes={'r1':{'winning_buys':[self.picks[0]['buy']], 'payouts':{self.picks[0]['buy']:10000}, 'payout_complete':True}}
-            metrics=live.common.metrics([saved[0]],outcomes,'first_anchor',3)
+            selected=next(r for r in saved if r['equation']=='first_anchor' and r['points']==3)
+            metrics=live.common.metrics([selected],outcomes,'first_anchor',3)
             self.assertEqual(metrics['stake_yen'],6000)
             self.assertEqual(metrics['return_yen'],plan['tickets'][0]['stake_yen']*100)
             self.assertEqual(live.command('first_anchor',3,'missing',folder)['status'],'no_frozen_preclose_allocation')
-            saved[0]['methods']['first_anchor']['tickets'][0]['stake_yen']=6000
+            selected['methods']['first_anchor']['tickets'][0]['stake_yen']=6000
             live.common.save(folder/'allocations.json',saved)
             with self.assertRaises(ValueError):
                 live.allocations(folder)
+
+    def test_one_equation_missing_prices_does_not_block_others(self):
+        self.forecast['methods']['first_anchor']['tickets'][0]['buy']='4-3-2'
+        saved=[]
+        with patch.object(live,'quote_view',return_value=(self.prices,self.stamps,{},[])), patch.object(live.common,'clock',return_value=self.now):
+            self.assertEqual(live.freeze_allocations(saved,self.forecast,pd.DataFrame(),pd.DataFrame(),self.now),57)
+        self.assertTrue(all(r['equation']!='first_anchor' for r in saved))
 
 
 if __name__=='__main__':
