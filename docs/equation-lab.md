@@ -74,6 +74,27 @@ Conflicting annotations are excluded. Each field-size bucket independently needs
 50 verified paths over 7 days. There is no automatic video annotation pipeline in
 this change. Until observations exist, the path equation is explicitly untrained.
 
+## Separate ticket display
+
+The company page and daily-site link expose one **standalone** list of trifecta
+tickets for each of the three equations, separately for regular odds and
+longshots (100x or more). Each method ranks all its own tickets without input
+from the other formulas or the risk-department portfolio; each group has up to
+12 tickets with a reference stake of 100 yen. These standalone ranked lists
+are **not** merged into CEO, risk, or live purchasing.
+
+Until a trained model exists, the display is explicitly marked
+`untrained_preclose_proxy`. Such lists are fixed, non-calibrated baseline
+heuristics run only on recorded canonical pre-close inputs. In particular,
+the state-path proxy does **not** claim to have observed real intermediate
+stages. These provisional lists are excluded from official matched-method
+hit-rate and ROI comparisons. The validated trained-model predictions remain
+unchanged, including the 50-race / seven-day threshold and the requirement
+for verified intermediate order observations.
+
+Old races are never backfilled from results. The standalone page lists
+immutable pre-close records created after this feature was installed.
+
 ## Selection and comparison
 
 All three candidates evaluate every ordered triple. Selection is by probability,
