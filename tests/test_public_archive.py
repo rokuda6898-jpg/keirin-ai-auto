@@ -41,3 +41,6 @@ class PublicArchiveTests(unittest.TestCase):
                 for rid,positions in [('ok',[1,2,3]),('missing',[1,2]),('tie',[1,1,2,3])]:
                     for car,pos in enumerate(positions,1):writer.writerow([rid,'2020-01-01','track',1,pos,car])
             self.assertEqual(export(root),1)
+            # A later partial source must never erase the stored race.
+            (root/'data/raw/history.csv').write_text('race_id,date,venue,race_no,finish_pos,car_no\n')
+            self.assertEqual(export(root),1)
