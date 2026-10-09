@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-10-10T07:03:49+09:00",
+  "checked_at": "2026-10-10T07:31:07+09:00",
   "owners": {
     "data": "データ品質責任者",
     "coverage": "全レース予想責任者",
@@ -7,21 +7,16 @@
     "settlement": "成績・払戻責任者",
     "operations": "稼働・通知責任者"
   },
-  "status": "error",
+  "status": "warning",
   "findings": [
-    {
-      "owner": "data",
-      "code": "feed_stale",
-      "level": "error",
-      "message": "締切前レースがありますが公開データが45分以上古い、または時刻が不正です。",
-      "race_ids": []
-    },
     {
       "owner": "settlement",
       "code": "withdrawn_tickets",
       "level": "warning",
       "message": "公式データの欠車が保存済み買い目に含まれます。元の予想を保持し、返還を含む精算確認まで比較集計から除外します。",
       "race_ids": [
+        "044620261010",
+        "053520261010",
         "095320261009"
       ]
     }
@@ -58,5 +53,5 @@
   "department_mean_ticket_overlap": 0.23316432245003674,
   "email_configured": false,
   "notification_channel": "github_actions",
-  "email_status": "github_actions_duplicate"
+  "email_status": "github_actions_alert"
 }
