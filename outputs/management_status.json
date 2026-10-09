@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-10-09T23:09:40+09:00",
+  "checked_at": "2026-10-09T23:13:21+09:00",
   "owners": {
     "data": "データ品質責任者",
     "coverage": "全レース予想責任者",
@@ -105,21 +105,13 @@
       ]
     },
     {
-      "owner": "coverage",
-      "code": "invalid_tickets",
-      "level": "error",
-      "message": "車番・重複・点数・締切時刻に不正があります。",
+      "owner": "settlement",
+      "code": "withdrawn_tickets",
+      "level": "warning",
+      "message": "公式データの欠車が保存済み買い目に含まれます。元の予想を保持し、返還を含む精算確認まで比較集計から除外します。",
       "race_ids": [
         "095320261009"
       ]
-    },
-    {
-      "owner": "operations",
-      "code": "workflow_fusion-shadow-live.yml",
-      "level": "error",
-      "message": "fusion-shadow-live.yml の直近完了処理が失敗しています。",
-      "race_ids": [],
-      "run_url": "https://github.com/rokuda6898-jpg/keirin-ai-auto/actions/runs/37941028631"
     }
   ],
   "coverage": {
@@ -154,5 +146,5 @@
   "department_mean_ticket_overlap": 0.7142857142857143,
   "email_configured": false,
   "notification_channel": "github_actions",
-  "email_status": "github_actions_duplicate"
+  "email_status": "github_actions_alert"
 }
