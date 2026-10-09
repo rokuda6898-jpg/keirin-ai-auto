@@ -26,6 +26,20 @@ NAMES.update(archive_positions='順位別ロジット式（3年学習）',
 VERSION = 'three_year_equations_6000_v1'
 
 
+def prediction_marks(method):
+    """Display-only ranking from the immutable equation's saved top-12 picks.
+
+    Compare summed first-place support, then second/third support for ties.
+    These truncated sums are not full-field winning probabilities.
+    """
+    support = {}
+    for pick in method['tickets']:
+        for place, car in enumerate(map(int, pick['buy'].split('-'))):
+            support.setdefault(car, [0., 0., 0.])[place] += float(pick['probability'])
+    cars = sorted(support, key=lambda car: (*(-p for p in support[car]), car))
+    return [{'mark':mark, 'car_no':car} for mark,car in zip(('◎','○','▲','△','☆'),cars)]
+
+
 def allocations(folder):
     rows = common.read_json(folder/'allocations.json', [])
     seen = set()
@@ -203,7 +217,7 @@ def render(folder,records,saved,outcomes,value):
     page=['<!doctype html><html lang="ja"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">',
         '<title>3年学習・個別方程式予想｜KEIRIN NEXUS</title><style>body{margin:0;background:#0b1322;color:#e8edf7;font:16px/1.7 system-ui}main{max-width:1150px;margin:auto;padding:24px 16px}a{color:#9bd8ff}section{background:#15243a;border-radius:12px;padding:18px;margin:20px 0}button,select{font:inherit;padding:12px;border-radius:8px;border:1px solid #7197bb;background:#213653;color:white;margin:5px 5px 5px 0}button[aria-pressed=true]{background:#235e67;border-color:#8be4d0}select{max-width:100%;width:640px}.scroll{overflow:auto}table{border-collapse:collapse;width:100%}th,td{text-align:left;padding:10px;border-bottom:1px solid #405068;vertical-align:top}td{min-width:85px}.picks{min-width:300px}.muted{color:#bbcadc}.warn{color:#f8d998}</style><main>',
         '<p><a href="../../index.html">今日の予想</a> ／ <a href="../individual_equations/index.html">導入前の独立式</a> ／ <a href="../fusion_shadow_live_report.html">既存統合式</a></p><h1>3年学習・個別方程式予想</h1>',
-        '<p>各式が単独で三連単を選び、選択した1プランに6,000円を配分します。本線・穴とは別の仮想購入です。</p>',
+        '<p>各式が単独で三連単を選び、選択した1プランに6,000円を配分します。本線・穴とは別の仮想購入です。</p><p>予想印：◎本命・○対抗・▲単穴・△連下・☆注目。各式の保存済み上位12買い目から1着支持を合算した順です。同点は2着、3着の支持順。印は3点・6点・12点で共通です。</p>',
         f'<p>学習：{esc(m.get("training_first","確認中"))}〜{esc(m.get("training_last","確認中"))} ／ {esc(m.get("training_races","—"))}レース。重みは直近1年：その前1年：さらに前1年＝<b>4：2：1</b>。</p>',
         '<p class="muted">買い目は各式の確率順位。金額は当たる確率と締切前オッズを使って100円単位で配分します。表示する回収見込みは予測値で、実際の回収率と区別しています。過去3年の締切前三連単オッズ・途中隊列が不足するため、市場残差式・市場条件付き先着式・途中隊列式は3年学習済みとは表示しません。</p>',
         '<label for="equation">個別の方程式</label><br><select id="equation" onchange="choose()">']
@@ -233,7 +247,8 @@ def render(folder,records,saved,outcomes,value):
                             status+=f' ／ {cash:,.0f}円'
                 expected=f'{plan["estimated_return_yen"]:,.0f}円（{plan["estimated_roi"]:.1%}）' if plan else 'オッズ未確定'
                 stamp=frozen['allocated_at_jst'] if frozen else row['snapshot_at_jst']
-                page.append(f'<tr><td>{esc(row["date"])}<br>{esc(row["venue"])} {row["race_no"]}R</td><td class="picks">'+ '<br>'.join(esc(t) for t in descriptions)+f'</td><td>{esc(expected)}</td><td>{esc(status)}</td><td>{esc(stamp)}</td></tr>')
+                marks='　'.join(f'{m["mark"]}{m["car_no"]}番' for m in prediction_marks(row['methods'][name]))
+                page.append(f'<tr><td>{esc(row["date"])}<br>{esc(row["venue"])} {row["race_no"]}R</td><td class="picks"><b aria-label="予想印">{esc(marks)}</b><br>'+ '<br>'.join(esc(t) for t in descriptions)+f'</td><td>{esc(expected)}</td><td>{esc(status)}</td><td>{esc(stamp)}</td></tr>')
             shared=value['common_comparison_statistics'][name][str(points)]
             page.append(f'</table></div><p>20式の共通条件だけで比較：的中 {shared["hits"]} / 確定 {shared["settled_races"]}R ／ 的中率 {pct(shared["hit_rate"])} ／ 回収率 {pct(shared["roi"])}。この式の最大払戻への依存：{pct(s["largest_return_share"])}。</p></div>')
         page.append('</section>')

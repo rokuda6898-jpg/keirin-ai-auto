@@ -71,6 +71,16 @@ class ThreeYearLiveTests(unittest.TestCase):
             self.assertEqual(live.freeze_allocations(saved,self.forecast,pd.DataFrame(),pd.DataFrame(),self.now),57)
         self.assertTrue(all(r['equation']!='first_anchor' for r in saved))
 
+    def test_marks_use_each_frozen_equations_place_support_without_mutating_picks(self):
+        method={'tickets':[{'buy':'1-2-3','probability':.3},
+                           {'buy':'2-3-1','probability':.2},
+                           {'buy':'2-1-3','probability':.2}]}
+        original=copy.deepcopy(method)
+        self.assertEqual(live.prediction_marks(method),[{'mark':'◎','car_no':2},{'mark':'○','car_no':1},{'mark':'▲','car_no':3}])
+        self.assertEqual(method,original)
+        other={'tickets':[{'buy':'3-1-2','probability':.3}]}
+        self.assertEqual(live.prediction_marks(other),[{'mark':'◎','car_no':3},{'mark':'○','car_no':1},{'mark':'▲','car_no':2}])
+
     def test_fresh_market_rejects_changed_field_or_close(self):
         race=pd.DataFrame([{'race_id':'r1','car_no':n,'player_id':str(n),'close_at':self.forecast['close_at'],'source_url':'https://example.test/race'} for n in (1,2,3,4)])
         fresh=race.to_dict('records')
