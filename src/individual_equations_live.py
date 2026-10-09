@@ -8,7 +8,7 @@ import hashlib
 import html
 import json
 import math
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -31,6 +31,8 @@ JST = ZoneInfo('Asia/Tokyo')
 FOLDER = ROOT / 'outputs/company/individual_equations'
 STAGE_FOLDER = ROOT / 'models/individual_stage'
 LABELS = {**study.NAMES, 'first_anchor': '1着補正付き統合式（38.77%案）',
+          'archive_positions': '過去5万レース・順位別式',
+          'archive_pairwise': '過去5万レース・先着関係式',
           'context_joint': '出走人数・クラス別統合式',
           'stage_global': '着順別統合式', 'stage_context': '条件・着順別統合式',
           **{'market_' + k: v for k, v in MARKET_LABELS.items()}}
@@ -150,6 +152,8 @@ def capture_market(records, folder, decided):
             continue
         methods = {}
         for name, item in row['standalone'].items():
+            if name not in MARKET_LABELS:
+                continue
             # Each odds band already preserves its own top 12, so its union
             # contains every possible member of the overall top 12.
             pool = [t for group in item['picks'].values() for t in group]
@@ -200,12 +204,20 @@ def forecast(folder=FOLDER):
         clean, _ = study.eligible(features.mask_outcomes(pd.concat(accepted)))
         manifest, bundle = shadow.load_model(now.date())
         stage_model, stage_manifest, stage_bundle = load_stage(day)
+        import archive_50000 as archive
+        archive_model = archive.load_model(ROOT / 'models/archive_50000.json', day)
+        if archive_model is None:
+            raise ValueError('validated 50000-race model required')
         predicted = shadow.restore_race_metadata(study.base_predict(clean, bundle), clean)
         old_predicted = study.base_predict(clean, stage_bundle)
         old_by_id = {str(rid): r for rid, r in old_predicted.groupby('race_id', sort=False)}
         for rid, race in predicted.groupby('race_id', sort=False):
             item = race.iloc[0]
             methods = race_distributions(race, bundle, old_by_id[str(rid)], stage_bundle, stage_model)
+            riders = clean[clean.race_id.astype(str).eq(str(rid))].to_dict('records')
+            for name in archive.NAMES:
+                methods[name] = {'basis': 'trained',
+                    'tickets': ranked(archive.probabilities(name, archive_model, riders))}
             meta = {'race_id': str(rid), 'date': str(item.date), 'venue': str(item.get('venue', '')),
                     'race_no': int(item.race_no), 'close_at': float(item.close_at),
                     'input_sha256': hashlib.sha256(clean[clean.race_id.astype(str).eq(str(rid))].to_json(orient='records').encode()).hexdigest()}
@@ -213,7 +225,9 @@ def forecast(folder=FOLDER):
                 {'refit': {'training_cutoff_exclusive': manifest['training_cutoff_exclusive'],
                            'model_sha256': manifest['model_sha256']},
                  'stage': {'training_cutoff_exclusive': stage_manifest['training_cutoff_exclusive'],
-                           'model_sha256': stage_manifest['stage_model_sha256']}}, clock())
+                           'model_sha256': stage_manifest['stage_model_sha256']},
+                 'archive50000': {'training_cutoff_exclusive': (datetime.fromisoformat(archive_model['training_end']) + timedelta(days=1)).date().isoformat(),
+                                  'model_sha256': archive_model['model_sha256']}}, clock())
             for row in coverage:
                 if row['race_id'] == str(rid):
                     row['reason'] = '保存済み' if frozen else '計算完了時点で締切後'
@@ -302,7 +316,7 @@ def render(folder, records, outcomes, value):
         '<p><a href="../../index.html">今日の予想</a> ／ <a href="../fusion_shadow_live_report.html">38.77%案の既存成績</a> ／ <a href="../annual_equation_report.html">市場・隊列式の学習状況</a></p>',
         '<h1>方程式ごとの独立予想</h1><p>各式が自分の計算で選んだ三連単を、最大12点ずつ表示します。各100円の仮想購入です。本線・穴の購入枠や社長の選別とは別に保存しています。</p>',
         '<p>1点・6点・12点で的中率と回収率を分けて集計。回収率は公式払戻しが揃ったレースだけを対象とし、未取得件数も表示します。同着は該当する買い目すべての払戻しを合算します。</p>',
-        '<p>学習済み18式は同じ入力・時刻・点数で比較します。市場を使う3式は別の共通入力群です。未学習の暫定式の成績は学習済みと混ぜません。集計対象レースが違う群同士の順位付けはできません。</p>',
+        '<p>学習済み20式は同じ入力・時刻・点数で比較します。市場を使う3式は別の共通入力群です。未学習の暫定式の成績は学習済みと混ぜません。集計対象レースが違う群同士の順位付けはできません。</p>',
         '<label for="equation">表示する方程式</label><br><select id="equation" onchange="document.querySelectorAll(\'[data-equation]\').forEach(e=>e.hidden=this.value!==\'all\'&amp;&amp;e.dataset.equation!==this.value)"><option value="all">すべての方程式</option>']
     page.extend(f'<option value="{esc(n)}"' + (' selected' if n == 'first_anchor' else '') + f'>{esc(label)}</option>' for n, label in LABELS.items())
     page.append('</select>')
@@ -332,7 +346,8 @@ def render(folder, records, outcomes, value):
             if out:
                 status = '公式結果の不一致・集計除外' if out.get('conflict') else ('的中' if set(picks) & set(out['winning_buys']) else '不的中')
             basis = '暫定参考' if method['basis'] == 'provisional' else '学習済み'
-            model_key = 'market' if name.startswith('market_') else ('stage' if name in stage.VARIANTS else 'refit')
+            model_key = ('market' if name.startswith('market_') else 'archive50000' if name.startswith('archive_')
+                         else 'stage' if name in stage.VARIANTS else 'refit')
             cutoff = row['models'][model_key]['training_cutoff_exclusive']
             page.append(f'<tr><td>{esc(row["date"])}<br>{esc(row["venue"])} {esc(row["race_no"])}R<br><small>{basis}</small></td><td class="picks">{esc(" ／ ".join(picks))}</td><td>{esc(" ／ ".join(out["winning_buys"]) if out else "未確定")}</td><td>{status}</td><td>{esc(row["snapshot_at_jst"])}</td><td>{esc(cutoff)}より前</td></tr>')
         page.append('</table></div></section>')
