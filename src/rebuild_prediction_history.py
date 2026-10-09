@@ -5,7 +5,11 @@ from pathlib import Path
 import pandas as pd
 
 from fetch_today_entries import fetch_today_entries
-from predict import allocate_daily_budget
+try:
+    from predict import allocate_daily_budget
+except ImportError:
+    # This legacy backfill is optional; never invent historical stake amounts.
+    allocate_daily_budget = None
 from settle_results import (
     PREDICTION_HISTORY_CSV,
     build_history_html,
@@ -73,6 +77,13 @@ def load_final_snapshots(start="20260919", end="20260925"):
 
 
 def main():
+    if allocate_daily_budget is None:
+        print(
+            "historical prediction history rebuild skipped: daily budget allocator unavailable; "
+            "historical stakes were left untouched",
+            flush=True,
+        )
+        return 0
     bets = load_final_snapshots()
     if bets.empty:
         raise SystemExit("no recoverable prediction snapshots found")
