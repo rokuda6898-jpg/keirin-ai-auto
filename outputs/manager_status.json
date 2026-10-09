@@ -1,43 +1,19 @@
 {
-  "checked_at_jst": "2026-10-09T17:30:16+09:00",
-  "status": "waiting_results",
+  "checked_at_jst": "2026-10-09T17:44:28+09:00",
+  "status": "repaired",
   "repaired": true,
   "attempts": [
     {
       "attempt": 0,
       "problems": [
         {
-          "type": "site_release_stale",
-          "count": 1,
-          "details": [
-            "code changed since generation: src/site_ui.py"
+          "type": "results_waiting",
+          "race_ids": [
+            "044820261009"
           ]
         },
         {
           "type": "results_overdue",
-          "race_ids": [
-            "034820261009"
-          ]
-        }
-      ],
-      "health": {
-        "severity": "warning",
-        "problem_types": [
-          "results_overdue",
-          "site_release_stale"
-        ],
-        "race_count": 79,
-        "expected_riders": 575,
-        "actual_riders": 575,
-        "rider_integrity_ok": true
-      },
-      "repair_action": "prediction_regeneration+settlement_refresh"
-    },
-    {
-      "attempt": 1,
-      "problems": [
-        {
-          "type": "results_waiting",
           "race_ids": [
             "043520261009"
           ]
@@ -46,8 +22,22 @@
       "health": {
         "severity": "warning",
         "problem_types": [
+          "results_overdue",
           "results_waiting"
         ],
+        "race_count": 79,
+        "expected_riders": 575,
+        "actual_riders": 575,
+        "rider_integrity_ok": true
+      },
+      "repair_action": "settlement_refresh"
+    },
+    {
+      "attempt": 1,
+      "problems": [],
+      "health": {
+        "severity": "ok",
+        "problem_types": [],
         "race_count": 79,
         "expected_riders": 575,
         "actual_riders": 575,
@@ -1265,10 +1255,8 @@
     }
   },
   "health": {
-    "severity": "warning",
-    "problem_types": [
-      "results_waiting"
-    ],
+    "severity": "ok",
+    "problem_types": [],
     "race_count": 79,
     "expected_riders": 575,
     "actual_riders": 575,
@@ -1276,8 +1264,6 @@
   },
   "recurrence": {
     "level": 0,
-    "counts": {
-      "results_waiting:043520261009": 0
-    }
+    "counts": {}
   }
 }
