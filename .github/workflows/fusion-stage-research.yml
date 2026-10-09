@@ -1,0 +1,65 @@
+name: fusion-stage-research
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/fusion-stage-context]
+    paths:
+      - src/fusion_stage_*.py
+      - tests/test_fusion_stage_context.py
+      - .github/workflows/fusion-stage-research.yml
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: fusion-stage-research
+  cancel-in-progress: false
+
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      PYTHONPATH: src
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '2'
+      MKL_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Match the original frozen estimator runtime
+        run: pip install -r requirements.txt numpy==2.5.3 pandas==3.0.6 scikit-learn==1.9.1 joblib==1.6.0 scipy==1.18.1
+      - name: Verify stage probabilities, baselines, and time separation
+        run: python -m unittest discover -s tests -p test_fusion_stage_context.py
+      - name: Restore the exact original archive
+        uses: actions/cache/restore@v4
+        with:
+          path: data/raw/history.csv
+          key: keirin-central-history-v1-37796966787
+          fail-on-cache-miss: true
+      - name: Reuse the frozen original study
+        uses: actions/download-artifact@v4
+        with:
+          name: fixed-year-research-37857407998
+          run-id: 37857407998
+          github-token: ${{ github.token }}
+          path: research/frozen_original
+      - name: Fit and select additions exclusively before the target year
+        run: python src/fusion_stage_study.py --stage train
+      - name: Save target predictions and reproduce both original baselines
+        run: python src/fusion_stage_study.py --stage predict
+      - name: Assess all three predefined additions after saving predictions
+        run: python src/fusion_stage_study.py --stage assess
+      - name: Retain independent research evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fusion-stage-research-${{ github.run_id }}
+          path: research/fusion_stage_context/
+          if-no-files-found: warn
+          retention-days: 30
