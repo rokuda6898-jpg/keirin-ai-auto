@@ -107,12 +107,40 @@ jobs:
         env:
           PYTHONPATH: src
         run: python src/fusion_shadow_live.py --stage forecast
+      - name: Refresh site link and release fingerprints without regenerating production picks
+        env:
+          PYTHONPATH: src
+        run: |
+          # The close-window fetch is only an input to the shadow model. Keep
+          # the public forecast cohort tied to the already-published daily run.
+          git restore --worktree data/raw/today_entries.csv
+          python - <<'PY'
+          from pathlib import Path
+          from release_guard import validate_release, write_release_manifest
+          page = Path('outputs/index.html')
+          text = page.read_text(encoding='utf-8')
+          href = 'company/fusion_shadow_live_report.html'
+          if href not in text:
+              anchor = 'href="company/annual_department_report.html"'
+              start = text.find(anchor)
+              end = text.find('</p>', start)
+              if start < 0 or end < 0:
+                  raise SystemExit('could not locate the existing homepage report links')
+              link = ' ／ <a style="color:#b9ddff" href="company/fusion_shadow_live_report.html">統合式の別予想・今後の成績</a>'
+              text = text[:end] + link + text[end:]
+              page.write_text(text, encoding='utf-8')
+          write_release_manifest()
+          errors = validate_release()
+          if errors:
+              raise SystemExit('site release guard failed: ' + '; '.join(errors))
+          print('site link, source fingerprints, and existing production forecast cohort verified')
+          PY
       - name: Publish only the shadow model and its report
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -f models/fusion_shadow_refit_first_anchor.joblib
-          git add models/fusion_shadow_refit_first_anchor.json outputs/company/fusion_shadow_live_ledger.jsonl outputs/company/fusion_shadow_live_predictions.json outputs/company/fusion_shadow_live_report.json outputs/company/fusion_shadow_live_report.html
+          git add models/fusion_shadow_refit_first_anchor.json outputs/index.html outputs/release_manifest.json outputs/company/fusion_shadow_live_ledger.jsonl outputs/company/fusion_shadow_live_predictions.json outputs/company/fusion_shadow_live_report.json outputs/company/fusion_shadow_live_report.html
           git diff --cached --quiet && exit 0
           git commit -m 'Update isolated fusion shadow forecasts and results'
           for attempt in 1 2 3 4 5 6 7 8; do
@@ -128,7 +156,7 @@ jobs:
             git merge --no-edit -X ours origin/main
             PYTHONPATH=src python src/fusion_shadow_live.py --stage merge --remote-ledger "$remote_ledger"
             git add -f models/fusion_shadow_refit_first_anchor.joblib
-            git add models/fusion_shadow_refit_first_anchor.json outputs/company/fusion_shadow_live_ledger.jsonl outputs/company/fusion_shadow_live_predictions.json outputs/company/fusion_shadow_live_report.json outputs/company/fusion_shadow_live_report.html
+            git add models/fusion_shadow_refit_first_anchor.json outputs/index.html outputs/release_manifest.json outputs/company/fusion_shadow_live_ledger.jsonl outputs/company/fusion_shadow_live_predictions.json outputs/company/fusion_shadow_live_report.json outputs/company/fusion_shadow_live_report.html
             if ! git diff --cached --quiet; then
               git commit -m 'Reconcile isolated fusion shadow ledger'
             fi
