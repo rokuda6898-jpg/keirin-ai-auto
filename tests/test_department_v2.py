@@ -87,6 +87,12 @@ class DepartmentV2Tests(unittest.TestCase):
         tickets = public_preserved(preserved, self.market, frame, policy)
         for group in ('本線', '穴'):
             self.assertLessEqual(sum(t['group']==group for t in tickets), int((frame.is_selected & frame.ticket_group.eq(group)).sum()))
+        profiles = {str(c): {'line_positions':{str(int(self.race.iloc[c-1].line_position)):{'races':40}}} for c in range(1,8)}
+        context,_=context_for('line_department',self.race,profiles)
+        contextual=public_preserved(preserved,self.market,frame,policy,context=context)
+        for group in ('本線','穴'):
+            self.assertLessEqual(sum(t['group']==group for t in contextual),int((frame.is_selected & frame.ticket_group.eq(group)).sum()))
+        self.assertTrue(all(t['odds']>=100 for t in contextual if t['group']=='穴'))
 
     def test_capture_keeps_exact_legacy_risk_and_equal_budget_views(self):
         row = self.record()

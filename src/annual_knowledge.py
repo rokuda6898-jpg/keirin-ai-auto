@@ -356,7 +356,7 @@ def forecast_departments(pred, odds, report, now, output_dir=OUTPUT_DIR):
                 context = None
                 if department == "pace_department":
                     context = profile.get("recent90")
-                if department == "line_department":
+                if department == "line_department" and rider.get('line_verification_status') == 'verified':
                     position = pd.to_numeric(rider.get("line_position"), errors="coerce")
                     context = profile.get("line_positions", {}).get(str(int(position))) if pd.notna(position) else None
                 if context and context.get("races", 0):
@@ -407,6 +407,18 @@ def forecast_departments(pred, odds, report, now, output_dir=OUTPUT_DIR):
                 ),
             )
             top3 = [int(race.iloc[index]["car_no"]) for index in best]
+            specialist_context = None
+            specialist_evidence = {'status': 'risk_legacy_unchanged'}
+            if department != 'risk_department':
+                from department_context import context_for
+                specialist_context, specialist_evidence = context_for(department, temp, report.get('profiles', {}))
+                if specialist_context is not None:
+                    from department_ticket_v2 import distributions
+                    positional = [{'car_no': int(r.car_no), 'first': float(r.score_first),
+                                   'second': float(r.score_second), 'third': float(r.score_third)}
+                                  for r in temp.itertuples()]
+                    joint = distributions(positional, context=specialist_context)[3]
+                    top3 = list(min(joint, key=lambda pick: (-joint[pick], pick)))
             try:
                 riders = score_riders(temp, market, preserve_position_scores=department != "risk_department")
                 candidates, plan = select_race(riders, market)
@@ -418,7 +430,7 @@ def forecast_departments(pred, odds, report, now, output_dir=OUTPUT_DIR):
                 ]
                 if department != 'risk_department':
                     from department_ticket_v2 import public_preserved
-                    tickets = public_preserved(riders, market, candidates, plan)
+                    tickets = public_preserved(riders, market, candidates, plan, context=specialist_context)
                 main_count, hole_count = int(plan["main_count"]), int(plan["hole_count"])
                 if department != 'risk_department':
                     main_count = sum(t['group'] == '本線' for t in tickets)
@@ -446,7 +458,10 @@ def forecast_departments(pred, odds, report, now, output_dir=OUTPUT_DIR):
                 "tickets": tickets, "main_count": main_count, "hole_count": hole_count,
                 "ticket_decision": ticket_decision,
                 "probability_status": "provisional_annual_shadow",
-                "ticket_strategy": "risk_legacy_unchanged" if department == "risk_department" else "preserve_scale_v2",
+                "ticket_strategy": "risk_legacy_unchanged" if department == "risk_department" else "specialist_context_v3",
+                "specialist_evidence": specialist_evidence,
+                "opinion_origin": ('shared_model_fallback' if missing_reference == len(race)
+                                   else department),
                 "producer": pred.attrs.get('department_provenance', {}).get('producer', 'legacy_unidentified'),
                 "reference_cutoff_exclusive": report["window_end_exclusive"],
                 "features_used": feature_map[department],
