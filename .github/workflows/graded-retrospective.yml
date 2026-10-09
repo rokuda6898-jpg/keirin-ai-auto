@@ -1,0 +1,41 @@
+name: graded-retrospective
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/graded-retrospective]
+    paths: ['src/graded_retrospective.py', 'tests/test_graded_retrospective.py', '.github/workflows/graded-retrospective.yml']
+permissions:
+  contents: read
+concurrency:
+  group: graded-retrospective
+  cancel-in-progress: false
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      PYTHONPATH: src
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python -m unittest discover -s tests -p test_graded_retrospective.py
+      - uses: actions/cache/restore@v4
+        with:
+          path: data/raw/history.csv
+          key: keirin-central-history-v1-${{ github.run_id }}
+          restore-keys: |
+            keirin-central-history-v1-
+          fail-on-cache-miss: true
+      - run: python src/graded_retrospective.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: graded-retrospective-${{ github.run_id }}
+          path: research/graded_retrospective/
+          retention-days: 30
