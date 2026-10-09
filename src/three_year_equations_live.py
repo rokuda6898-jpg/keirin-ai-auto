@@ -70,9 +70,10 @@ def field_signature(race):
     return common.digest(sorted((int(r.car_no),str(r.player_id).lstrip('0') or '0') for r in race.itertuples()))
 
 
-def fresh_market(race):
+def fresh_market(race, report_dir=None):
     from fetch_today_entries import parse_race_page
-    entries, odds = parse_race_page(str(race.iloc[0].source_url), completeness_attempts=1)
+    entries, odds = parse_race_page(str(race.iloc[0].source_url), completeness_attempts=1,
+        market_report_dir=report_dir if report_dir is not None else FOLDER/'market_evidence')
     fresh = pd.DataFrame(entries)
     if (fresh.empty or set(fresh.race_id.astype(str)) != {str(race.iloc[0].race_id)}
             or field_signature(fresh) != field_signature(race)
@@ -103,7 +104,7 @@ def allocate_pending(folder=FOLDER, refresh_odds=False):
         quote=quotes.get(rid,pd.DataFrame())
         if refresh_odds and row['close_at']-now.timestamp()<=3600:
             try:
-                quote=fresh_market(race)
+                quote=fresh_market(race,folder/'market_evidence')
             except Exception as exc:
                 diagnostics.append({'race_id':rid,'reason':str(exc)})
                 continue

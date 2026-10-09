@@ -266,7 +266,7 @@ def _entry_rows_complete(rows):
     return complete, cars, expected
 
 
-def parse_race_page(url, completeness_attempts=5, completeness_retry_sec=5.0):
+def parse_race_page(url, completeness_attempts=5, completeness_retry_sec=5.0, market_report_dir=None):
     last_incomplete = None
     for completeness_attempt in range(max(int(completeness_attempts), 1)):
         html = http_get(url)
@@ -312,7 +312,7 @@ def parse_race_page(url, completeness_attempts=5, completeness_retry_sec=5.0):
             odds_data = find_query_data(state, "FETCH_KEIRIN_RACE_ODDS")
             odds_rows = build_odds_rows(odds_data, race_date, venue, race_no, race_id, url)
             from market_odds_sources import verify_market
-            odds_rows = verify_market(entry_rows, odds_rows)
+            odds_rows = verify_market(entry_rows, odds_rows, **({'report_dir':market_report_dir} if market_report_dir is not None else {}))
             return entry_rows, odds_rows
 
         last_incomplete = (
