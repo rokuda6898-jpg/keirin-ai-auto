@@ -24,6 +24,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -260,6 +262,7 @@ jobs:
           }
 
           regenerate_daily_on_latest_main() {
+            python src/preserve_validation.py save /tmp/daily_validation
             git fetch origin main
             git reset --hard origin/main
             git clean -fd
@@ -288,23 +291,26 @@ jobs:
 
             python src/predict.py
             stage_daily_state
+            git restore --worktree -- .
           }
 
           stage_daily_state
+          git restore --worktree -- .
 
-          # Never rebase a generated prediction snapshot over newer main.
-          # If manager/results advanced main after checkout, rebuild the
-          # prediction from that newest state before publishing.
+          # Merge concurrent evidence with release checks; changed code or an
+          # incompatible cohort still requires regeneration.
           git fetch origin main
           if [ "$(git rev-parse origin/main)" != "$GITHUB_SHA" ]; then
-            echo "main advanced since daily checkout; regenerating on latest main"
-            regenerate_daily_on_latest_main
+            echo "main advanced since daily checkout; reconciling frozen evidence on latest main"
+            python src/publication_merge.py || regenerate_daily_on_latest_main
           fi
 
           for attempt in 1 2 3 4; do
             git push origin HEAD:main && exit 0
             echo "daily push race: regenerate from latest main retry $attempt/4"
-            regenerate_daily_on_latest_main
+            git fetch origin main
+            python src/publication_merge.py || regenerate_daily_on_latest_main
             sleep $((attempt * 2))
           done
-          exit 1
+          # The final retry generated a new commit: actually publish it.
+          git push origin HEAD:main

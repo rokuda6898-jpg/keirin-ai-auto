@@ -163,7 +163,7 @@ jobs:
       - name: Fetch races near close
         id: upcoming
         run: |
-          python src/fetch_upcoming_entries.py --min-minutes 5 --max-minutes 40
+          python src/coverage_refresh.py
           echo "count=$(cat data/raw/upcoming_races_count.txt)" >> "$GITHUB_OUTPUT"
 
       - name: Predict with near-close odds
@@ -220,6 +220,7 @@ jobs:
           }
 
           regenerate_intraday_on_latest_main() {
+            python src/preserve_validation.py save /tmp/intraday_validation
             git fetch origin main
             git reset --hard origin/main
             git clean -fd
@@ -229,7 +230,7 @@ jobs:
               mkdir -p data/raw
               cp /tmp/intraday_history.csv data/raw/history.csv
             fi
-            python src/fetch_upcoming_entries.py --min-minutes 5 --max-minutes 40
+            python src/coverage_refresh.py
             if [ "$(cat data/raw/upcoming_races_count.txt)" = "0" ]; then
               echo "No near-close races remain; preserving already frozen validation evidence."
               python src/company_knowledge.py --mode settle
@@ -240,18 +241,19 @@ jobs:
 
             python src/predict.py
             stage_intraday_state
+            git restore --worktree -- .
             return 0
           }
 
           stage_intraday_state
+          git restore --worktree -- .
 
-          # Generated near-close predictions are time-sensitive. Never rebase an
-          # older snapshot over a newer main; regenerate from the latest source
-          # state instead.
+          # Preserve frozen evidence and newer results when only generated
+          # data changed. Changed code still requires regeneration.
           git fetch origin main
           if [ "$(git rev-parse origin/main)" != "$GITHUB_SHA" ]; then
-            echo "main advanced since intraday checkout; regenerating on latest main"
-            if regenerate_intraday_on_latest_main; then
+            echo "main advanced since intraday checkout; reconciling frozen evidence on latest main"
+            if python src/publication_merge.py || regenerate_intraday_on_latest_main; then
               :
             else
               rc=$?
@@ -262,8 +264,9 @@ jobs:
 
           for attempt in 1 2 3 4; do
             git push origin HEAD:main && exit 0
+            git fetch origin main
             echo "intraday push race: regenerate from latest main retry $attempt/4"
-            if regenerate_intraday_on_latest_main; then
+            if python src/publication_merge.py || regenerate_intraday_on_latest_main; then
               :
             else
               rc=$?
@@ -273,5 +276,6 @@ jobs:
             sleep $((attempt * 2))
           done
 
+          git push origin HEAD:main && exit 0
           echo "Failed to publish fresh prediction after 4 push retries" >&2
           exit 1
