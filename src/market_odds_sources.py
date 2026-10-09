@@ -2,6 +2,7 @@
 import json
 import math
 import re
+from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -80,7 +81,7 @@ def reconcile(sources):
             evidence[ticket] = [name for name,_ in rows]
     return chosen, conflicts, evidence
 
-def verify_market(entry_rows, odds_rows, fetch_html=None):
+def verify_market(entry_rows, odds_rows, fetch_html=None, report_dir=None):
     """Capture only pre-close data; historical/backtest requests stay offline."""
     base = entry_rows[0]
     now = datetime.now(ZoneInfo("Asia/Tokyo"))
@@ -140,8 +141,9 @@ def verify_market(entry_rows, odds_rows, fetch_html=None):
     if datetime.now(ZoneInfo("Asia/Tokyo")).timestamp() >= float(base["close_at"]):
         verified={};conflicts["capture"]={"reason":"closed_during_fetch"}
     report={"race_id":rid,"captured_at_jst":now.isoformat(timespec="seconds"),"parser_version":VERSION,"sources":sources,"conflicts":conflicts,"ticket_sources":evidence,"usable_count":len(verified)}
-    OUTPUT_DIR.mkdir(parents=True,exist_ok=True)
-    (OUTPUT_DIR/f"market_odds_{rid}.json").write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
+    destination = OUTPUT_DIR if report_dir is None else Path(report_dir)
+    destination.mkdir(parents=True,exist_ok=True)
+    (destination/f"market_odds_{rid}.json").write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
     # Keep non-trifecta pools unchanged. Invalid/conflicting trifecta prices are
     # represented explicitly by NaN, so cached prices cannot resurrect them.
     result=[r for r in odds_rows if r["bet_type"] != "trifecta"]
