@@ -7,6 +7,7 @@ import os
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
+from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
 OWNERS = {
@@ -16,6 +17,22 @@ OWNERS = {
     'settlement': '成績・払戻責任者',
     'operations': '稼働・通知責任者',
 }
+WORKFLOWS = ('site-manager.yml','manager-watchdog.yml','daily.yml','intraday.yml',
+             'fusion-shadow-live.yml','quick-results.yml','settle.yml','public-live-data.yml','pages.yml')
+
+
+def workflow_findings(workflow, runs, now_s):
+    """An old failure remains open until a later successful completed run."""
+    meaningful = [r for r in runs if r.get('conclusion') != 'skipped']
+    completed = next((r for r in meaningful if r['status'] == 'completed'), None)
+    stalled = next((r for r in meaningful if r['status'] != 'completed'
+                    and now_s-(timestamp(r.get('created_at')) or now_s)>40*60), None)
+    run = stalled or (completed if completed and completed.get('conclusion') != 'success' else None)
+    if not run:
+        return []
+    return [{'owner':'operations','code':'workflow_'+workflow,'level':'error',
+             'message':workflow+(' が40分以上待機・実行中です。' if stalled else ' の直近完了処理が失敗しています。'),
+             'race_ids':[], 'run_url':run.get('html_url','')}]
 
 
 def timestamp(value):
@@ -158,12 +175,20 @@ def main():
     except (OSError, ValueError, TypeError, KeyError) as error:
         report = {'checked_at':now.isoformat(), 'owners':OWNERS, 'status':'error', 'findings':[
             {'owner':'data','code':'audit_input_error','level':'error','message':'監査入力の読込・検査に失敗: '+type(error).__name__,'race_ids':[]}]}
-    conclusion = os.environ.get('UPSTREAM_CONCLUSION', '')
-    if conclusion and conclusion not in ('success','skipped'):
-        report['status'] = 'error'
-        report['findings'].append({'owner':'operations','code':'workflow_failure', 'level':'error',
-            'message':os.environ.get('UPSTREAM_NAME','処理')+' が '+conclusion+' で終了しました。',
-            'race_ids':[], 'run_url':os.environ.get('UPSTREAM_URL','')})
+    if os.environ.get('GITHUB_ACTIONS') == 'true':
+        for workflow in WORKFLOWS:
+            try:
+                url = 'https://api.github.com/repos/'+os.environ['GITHUB_REPOSITORY']+'/actions/workflows/'+workflow+'/runs?branch=main&per_page=15'
+                request = Request(url, headers={'Authorization':'Bearer '+os.environ['GITHUB_TOKEN'], 'Accept':'application/vnd.github+json'})
+                with urlopen(request, timeout=20) as response:
+                    runs = json.load(response)['workflow_runs']
+                report['findings'].extend(workflow_findings(workflow,runs,now.timestamp()))
+            except Exception:
+                report['findings'].append({'owner':'operations','code':'workflow_check_unavailable', 'level':'error',
+                    'message':'更新処理の稼働確認に失敗しました。正常とは判断できません。','race_ids':[]})
+                break
+        if any(f['level']=='error' for f in report['findings']):
+            report['status'] = 'error'
     report['email_configured'] = all(os.environ.get(k) for k in ('SMTP_HOST','SMTP_USER','SMTP_PASSWORD','ALERT_FROM','ALERT_TO'))
     target = args.root/'outputs/management_status.json'
     target.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')

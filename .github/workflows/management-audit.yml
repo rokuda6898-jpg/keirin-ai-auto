@@ -11,6 +11,7 @@ on:
     types: [completed]
 permissions:
   contents: write
+  actions: read
 concurrency:
   group: nexus-management-audit
   cancel-in-progress: false
@@ -40,9 +41,7 @@ jobs:
           restore-keys: management-alert-state-
       - name: Independent management checks
         env:
-          UPSTREAM_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
-          UPSTREAM_NAME: ${{ github.event.workflow_run.name }}
-          UPSTREAM_URL: ${{ github.event.workflow_run.html_url }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: python src/management_audit.py
       - name: Email new incident or recovery
         run: python src/management_notify.py

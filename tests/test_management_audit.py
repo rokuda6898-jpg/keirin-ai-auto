@@ -2,7 +2,7 @@ import os
 import unittest
 from datetime import datetime
 from unittest.mock import patch
-from management_audit import audit
+from management_audit import audit, workflow_findings
 from management_notify import deliver
 
 
@@ -53,3 +53,9 @@ class ManagementTests(unittest.TestCase):
         with patch.dict(os.environ,{},clear=True):
             report=audit({**self.feed,'races':[self.race()]},self.now)
             self.assertEqual(deliver(report,{},100)[1],'not_configured')
+
+    def test_failure_does_not_recover_just_because_retry_started(self):
+        failed={'status':'completed','conclusion':'failure'}
+        active={'status':'in_progress','conclusion':None,'created_at':self.now.isoformat()}
+        self.assertTrue(workflow_findings('daily.yml',[active,failed],self.now.timestamp()))
+        self.assertFalse(workflow_findings('daily.yml',[{'status':'completed','conclusion':'success'},failed],self.now.timestamp()))
