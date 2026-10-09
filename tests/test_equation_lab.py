@@ -43,6 +43,24 @@ class EquationModelTests(unittest.TestCase):
         fitted=models.fit([small_sample()])
         self.assertTrue(all(v is None for v in fitted['models'].values()))
 
+    def test_independent_provisional_picks_are_separate_and_labelled(self):
+        from equation_preview import provisional_distribution, standalone_tickets
+        sample = small_sample()
+        keys = list(sample['quotes'])
+        quotes = {k: (150.0 if i % 2 else 24.0) for i, k in enumerate(keys)}
+        distributions = {m: provisional_distribution(m, sample['riders'], quotes)
+                         for m in models.METHODS}
+        for name, distribution in distributions.items():
+            self.assertEqual(set(distribution), set(quotes))
+            self.assertAlmostEqual(sum(distribution.values()), 1.0)
+            picks = standalone_tickets(distribution, quotes)
+            self.assertEqual(len(picks['本線']), 12)
+            self.assertEqual(len(picks['穴']), 12)
+            self.assertTrue(all(t['odds'] >= 100 for t in picks['穴']))
+            self.assertTrue(all(t['odds'] < 100 for t in picks['本線']))
+        self.assertNotEqual(distributions['market_residual'], distributions['pairwise_order'])
+        self.assertNotEqual(distributions['state_paths'], distributions['pairwise_order'])
+
     def test_pairwise_equation_is_invariant_to_car_renaming(self):
         s=small_sample(); beta={'beta':[.3,-.2,.1,.4,.2,-.5,0,0]}
         p=models.predict('pairwise_order',beta,s['riders'],s['quotes'])
@@ -102,6 +120,15 @@ class EquationLedgerTests(unittest.TestCase):
         self.assertEqual(len(rows),1)
         self.assertFalse(rows[0]['ceo_integration'])
         self.assertFalse(rows[0]['purchase_authorized'])
+        self.assertEqual(set(rows[0]['standalone']), set(models.METHODS))
+        for method in models.METHODS:
+            independent = rows[0]['standalone'][method]
+            self.assertEqual(independent['basis'], 'untrained_preclose_proxy')
+            self.assertTrue(independent['picks']['本線'] or independent['picks']['穴'])
+        report = lab.build_report(self.out, self.now)
+        self.assertEqual(len(report['standalone_by_race']), 1)
+        page = (self.folder / 'annual_equation_report.html').read_text()
+        self.assertIn('方程式ごとの単独買い目', page)
         for g in lab.GROUPS:
             expected=[t for t in self.row['risk_tickets'] if t['group']==g]
             self.assertEqual(rows[0]['views'][g]['risk'],expected or None)
