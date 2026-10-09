@@ -21,12 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     env:
-      SMTP_HOST: ${{ secrets.SMTP_HOST }}
-      SMTP_PORT: ${{ secrets.SMTP_PORT }}
-      SMTP_USER: ${{ secrets.SMTP_USER }}
-      SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
-      ALERT_FROM: ${{ secrets.ALERT_FROM }}
-      ALERT_TO: ${{ secrets.ALERT_TO }}
+      NOTIFICATION_CHANNEL: github_actions
     steps:
       - uses: actions/checkout@v4
         with:
@@ -43,7 +38,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: python src/management_audit.py
-      - name: Email new incident or recovery
+      - name: Prepare existing GitHub failure notification
+        id: notification
         run: python src/management_notify.py
       - uses: actions/cache/save@v4
         if: always()
@@ -66,4 +62,9 @@ jobs:
             git commit -m 'Record independent management audit'
             git push origin HEAD:main && exit 0
           done
+          exit 1
+      - name: Report detected incident to GitHub notifications
+        if: steps.notification.outputs.alert == 'true'
+        run: |
+          echo '::error::NEXUS management detected an incident. See the job summary and management.html.'
           exit 1

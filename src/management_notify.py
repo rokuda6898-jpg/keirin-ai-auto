@@ -15,6 +15,17 @@ def fingerprint(report):
     return hashlib.sha256(json.dumps(keys, ensure_ascii=False).encode()).hexdigest()
 
 
+def native_notice(report, state, now=None):
+    """Signal real audit incidents through the user's existing Actions emails."""
+    now = time.time() if now is None else now
+    if not report.get('findings'):
+        return {'active':False}, 'github_actions_healthy', False
+    key = fingerprint(report)
+    if state.get('native_fingerprint') == key and now-state.get('signaled_at',0) < 86400:
+        return state, 'github_actions_duplicate', False
+    return {'active':True,'native_fingerprint':key,'signaled_at':now}, 'github_actions_alert', True
+
+
 def deliver(report, state, now=None, sender=None):
     now = time.time() if now is None else now
     issues = report.get('findings', [])
@@ -63,7 +74,17 @@ if __name__ == '__main__':
     path = Path('.alert-state/state.json')
     state = json.loads(path.read_text()) if path.exists() else {}
     try:
-        state, status = deliver(report, state)
+        if os.environ.get('NOTIFICATION_CHANNEL') == 'github_actions':
+            state, status, alert = native_notice(report,state)
+            report['notification_channel'] = 'github_actions'
+            with open(os.environ['GITHUB_OUTPUT'],'a',encoding='utf-8') as stream:
+                stream.write('alert='+str(alert).lower()+'\n')
+            summary = ['## NEXUS management audit', 'Status: '+report['status']]
+            summary += [f"- {report['owners'].get(f['owner'],f['owner'])}: {f['message']} ({len(f.get('race_ids',[]))} races)" for f in report['findings']]
+            with open(os.environ['GITHUB_STEP_SUMMARY'],'a',encoding='utf-8') as stream:
+                stream.write('\n'.join(summary)+'\n')
+        else:
+            state, status = deliver(report, state)
     except Exception as error:
         # Do not log SMTP server text, which can include addresses or credentials.
         report['email_status'] = 'delivery_failed'
