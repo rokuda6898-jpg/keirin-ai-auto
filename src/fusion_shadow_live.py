@@ -282,6 +282,7 @@ def build_report(rows, now):
         '<style>body{margin:0;background:#0b1322;color:#e8edf7;font:16px/1.8 system-ui}main{max-width:1100px;margin:auto;padding:28px 18px}a{color:#8dc8ff}.notice{background:#182d43;padding:16px;border-left:4px solid #70c8bc}.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}.stats div{background:#14253a;padding:14px;border-radius:12px}.stats b{font-size:24px;display:block}.scroll{overflow:auto}table{border-collapse:collapse;width:100%;white-space:nowrap}td,th{text-align:left;padding:9px;border-bottom:1px solid #324157}small{color:#bac8d9}</style></head><body><main>',
         '<p><a href="../index.html">今日の予想へ戻る</a> ／ <a href="fusion_input_repair_report.html">過去一年の方程式検証</a></p>',
         '<p><a href="individual_equations/index.html">各方程式の独立買い目・的中率・回収率</a></p>',
+        '<p><a href="three_year_equations/index.html">3年学習・個別方程式予想（3点／6点／12点・各6,000円）</a></p>',
         '<h1>統合式の別予想・今後の成績</h1>',
         '<p class="notice">過去検証の38.77%案を、別の影予想として毎日保存します。モデルは直近までの確定履歴だけで学習し、レースごとに締切前の最大12候補を一度だけ固定します。的中判定は公式結果を取得してから更新します。</p>',
         '<p>三連単の順位上位1点・6点・12点それぞれの的中率を表示します。過去検証の38.77%は12点時の値なので、将来の12点欄と比較してください。現行の本線・穴の選別、購入点数・投資額、実購入成績、回収率とは別集計です。高配当回数は、保存候補が的中したレースの公式払戻倍率で数えます。</p>',
