@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['src/public_live.py', '.github/workflows/public-live-data.yml']
+    paths: ['src/public_live.py', 'src/public_archive.py', '.github/workflows/public-live-data.yml']
   workflow_run:
     workflows: ['daily-keirin-predict', 'intraday-keirin-odds', 'fusion-shadow-live', 'quick-keirin-results', 'settle-keirin-results']
     types: [completed]
@@ -28,7 +28,8 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
             python src/public_live.py
-            git add outputs/public_live.json
+            python src/public_archive.py
+            git add outputs/public_live.json outputs/public_archive.json
             git diff --cached --quiet && exit 0
             git commit -m 'Refresh public prediction data without rebuilding site'
             git push origin HEAD:main && exit 0

@@ -1,0 +1,75 @@
+name: archive-learning
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['src/archive_history.py', '.github/workflows/archive-learning.yml']
+  schedule:
+    - cron: '10 15 * * *'
+permissions:
+  contents: write
+concurrency:
+  group: archive-learning
+  cancel-in-progress: false
+jobs:
+  learn:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      PYTHONPATH: src
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - uses: actions/cache/restore@v4
+        with:
+          path: data/raw/history.csv
+          key: keirin-central-history-v1-${{ github.run_id }}
+          restore-keys: keirin-central-history-v1-
+      - name: Check and preserve historical results
+        run: |
+          python -c "import pandas as pd; d=pd.read_csv('data/raw/history.csv',usecols=['race_id']); n=d.race_id.nunique(); print(n); assert n>=30000, 'History cache incomplete'"
+          python src/archive_history.py
+      - name: Learn a candidate using the existing chronological training logic
+        run: |
+          python src/train_top1_candidate.py
+          cp models/candidate_win_model.joblib models/archive_candidate_win_model.joblib
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('models/candidate_fast_metrics.json').read_text())
+          p={'completed_at':d['trained_at_jst'],'training_races':d['n_races'],'fit_races':d['fit_races'],'calibration_races':d['calibration_races'],'production_replaced':False,'method':d['training_scope']}
+          Path('outputs/company/archive_learning_run.json').write_text(json.dumps(p,ensure_ascii=False,indent=2))
+          PY
+          python src/public_archive.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: archive-trained-candidate
+          path: |
+            models/archive_candidate_win_model.joblib
+            models/candidate_fast_metrics.json
+            outputs/company/archive_learning_run.json
+          retention-days: 30
+      - name: Preserve archive and learning record without replacing production logic
+        run: |
+          mkdir -p /tmp/archive-publication
+          cp outputs/company/historical_race_archive.csv outputs/company/archive_learning_run.json models/archive_candidate_win_model.joblib /tmp/archive-publication/
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for attempt in 1 2 3 4; do
+            git fetch origin main
+            git reset --hard origin/main
+            cp /tmp/archive-publication/historical_race_archive.csv /tmp/archive-publication/archive_learning_run.json outputs/company/
+            cp /tmp/archive-publication/archive_candidate_win_model.joblib models/
+            python src/public_archive.py
+            git add outputs/company/historical_race_archive.csv outputs/company/archive_learning_run.json outputs/public_archive.json models/archive_candidate_win_model.joblib
+            git diff --cached --quiet && exit 0
+            git commit -m 'Preserve past race archive and trained candidate with provenance'
+            git push origin HEAD:main && exit 0
+          done
+          exit 1
