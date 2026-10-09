@@ -334,6 +334,16 @@ def rank_race_candidates(race, bundle):
     return sorted(keys, key=lambda key: (-anchored[key], tuple(map(int, key.split('-'))))), anchored
 
 
+def restore_race_metadata(predicted, entries):
+    """Restore close/race identifiers dropped by the model's rider projection."""
+    consistency = entries.groupby('race_id')[['close_at', 'race_no']].nunique(dropna=False)
+    if consistency.gt(1).any().any():
+        raise ValueError('race-level close time or race number is inconsistent within a field')
+    race_metadata = entries[['race_id', 'close_at', 'race_no']].drop_duplicates('race_id')
+    return predicted.drop(columns=['close_at', 'race_no'], errors='ignore').merge(
+        race_metadata, on='race_id', how='left', validate='many_to_one')
+
+
 def forecast(entries_path, results_path, asof=None):
     now = datetime.now(ZoneInfo('Asia/Tokyo'))
     if asof:
@@ -380,6 +390,9 @@ def forecast(entries_path, results_path, asof=None):
     if not eligible.empty and not pd.to_datetime(eligible.date).ge(pd.Timestamp(manifest['training_cutoff_exclusive'])).all():
         raise ValueError('a forecast date is not after the model training window')
     predicted = old.base_predict(eligible, bundle) if len(eligible) else eligible
+    # base_predict intentionally narrows the rider feature frame. Reattach
+    # race-level fields needed by the pre-close ledger after that projection.
+    predicted = restore_race_metadata(predicted, entries)
     rows = read_ledger()
     known = {str(r['race_id']) for r in rows}
     new = []
