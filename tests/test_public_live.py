@@ -34,3 +34,18 @@ class PublicLiveTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             with self.assertRaises(ValueError):
                 build(Path(temp))
+
+    def test_tied_ledger_fallback_keeps_each_payout_and_does_not_reuse_max(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp);out=root/'outputs';(out/'company').mkdir(parents=True)
+            (out/'latest_race_schedule.csv').write_text('race_id,date,venue,race_no,start_at,close_at\na,2026-10-09,場,1,1791530000,1791529700\n',encoding='utf-8')
+            row=dict(race_id='a',date='2026-10-09',venue='場',race_no=1,close_at=1791529700,
+                     snapshot_at_jst='2026-10-09T08:00:00+09:00',top12=['1-2-3'],
+                     actual='1-2-3|2-1-3',result_source='official',hit_tickets=['1-2-3'],hit_odds=[25],actual_odds=25)
+            (out/'company/fusion_shadow_live_ledger.jsonl').write_text(json.dumps(row)+'\n',encoding='utf-8')
+            r=build(root)['races'][0]
+            self.assertEqual(r['actual'],['1-2-3','2-1-3'])
+            self.assertEqual(r['payouts'],{'1-2-3':2500})
+            # Explicitly unconfirmed current result must not be overridden by old ledger.
+            (out/'latest_results.json').write_text(json.dumps([{'race_id':'a','official_result_available':'false','actual_trifecta':'1-2-3'}]),encoding='utf-8')
+            self.assertEqual(build(root)['races'][0]['actual'],[])
