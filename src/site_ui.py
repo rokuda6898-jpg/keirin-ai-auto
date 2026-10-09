@@ -154,6 +154,8 @@ document.querySelectorAll('.continuous-results').forEach(async box=>{try{const r
 
 def add_equation_entry(document):
     """Add a stable top-page entry without recomputing any race predictions."""
+    from shadow_home import add_shadow_home
+    document = add_shadow_home(document)
     soup=BeautifulSoup(document,'html.parser')
     if soup.select_one('#individual-equation-entry') or soup.main is None:
         return document
@@ -161,7 +163,7 @@ def add_equation_entry(document):
     hero=soup.main.select_one('.hero')
     if hero:hero.insert_after(entry)
     else:soup.main.insert(0,entry)
-    return str(soup)
+    return add_shadow_home(str(soup))
 
 
 def enhance_today(document):
