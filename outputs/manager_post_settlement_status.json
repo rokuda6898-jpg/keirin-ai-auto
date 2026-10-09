@@ -1,6 +1,6 @@
 {
-  "checked_at_jst": "2026-10-09T12:43:42+09:00",
-  "status": "waiting_results",
+  "checked_at_jst": "2026-10-09T12:47:20+09:00",
+  "status": "unhealthy",
   "repaired": false,
   "check_source": "post_settlement_read_only_audit",
   "attempts": [
@@ -8,16 +8,20 @@
       "attempt": 0,
       "problems": [
         {
-          "type": "results_overdue",
-          "race_ids": [
-            "052120261009"
+          "type": "site_release_stale",
+          "count": 4,
+          "details": [
+            "code changed since generation: src/predict.py",
+            "code changed since generation: src/settle_results.py",
+            "code changed since generation: src/fusion_shadow_live.py",
+            "code changed since generation: src/release_guard.py"
           ]
         }
       ],
       "health": {
         "severity": "warning",
         "problem_types": [
-          "results_overdue"
+          "site_release_stale"
         ],
         "race_count": 79,
         "expected_riders": 575,
@@ -1238,7 +1242,7 @@
   "health": {
     "severity": "warning",
     "problem_types": [
-      "results_overdue"
+      "site_release_stale"
     ],
     "race_count": 79,
     "expected_riders": 575,
