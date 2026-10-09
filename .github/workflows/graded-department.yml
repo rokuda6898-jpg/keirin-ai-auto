@@ -1,0 +1,54 @@
+name: graded-department
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['src/graded_department.py', '.github/workflows/graded-department.yml']
+  schedule:
+    - cron: '8,23,38,53 0-14,22-23 * * *'
+  workflow_run:
+    workflows: ['daily-keirin-predict', 'quick-keirin-results', 'settle-keirin-results']
+    types: [completed]
+permissions:
+  contents: write
+concurrency:
+  group: graded-department
+  cancel-in-progress: false
+jobs:
+  forecast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Freeze graded forecasts and refresh individual results
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          carry="$RUNNER_TEMP/graded-carry.jsonl"
+          touch "$carry"
+          for attempt in 1 2 3 4; do
+            git fetch origin main
+            git reset --hard origin/main
+            python src/graded_department.py --carry "$carry"
+            cp outputs/company/graded_department_ledger.jsonl "$carry"
+            git add outputs/company/graded_department_ledger.jsonl outputs/company/graded_department_status.json outputs/graded_live.json
+            git diff --cached --quiet && exit 0
+            git commit -m 'Update independent G1 G2 G3 department forecasts and results'
+            git push origin HEAD:main && exit 0
+          done
+          exit 1
+      - name: Surface acquisition errors after publishing diagnostics
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report=json.loads(Path('outputs/company/graded_department_status.json').read_text())
+          errors=[r for r in report['decisions'] if r['status']=='data_error']
+          if errors:
+              raise SystemExit(f'Graded department data acquisition errors: {len(errors)}')
+          PY
