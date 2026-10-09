@@ -2,8 +2,11 @@ name: deploy-pages
 on:
   push:
     branches: [main]
-    paths: ['site/**', '.github/workflows/pages.yml']
+    paths: ['site/**', 'src/build_public_site.py', '.github/workflows/pages.yml']
   workflow_dispatch:
+  schedule:
+    # Full original reports refresh hourly; live cards still fetch data directly.
+    - cron: '7 * * * *'
 permissions:
   contents: read
   pages: write
@@ -22,11 +25,14 @@ jobs:
       - name: Check public app
         run: |
           node --check site/app.js
+          node --check site/archive.js
           test -s site/index.html
           test -s site/style.css
+      - name: Include the complete original company and history pages
+        run: python src/build_public_site.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: site
+          path: public-build
       - uses: actions/deploy-pages@v4
         id: deployment
