@@ -1,0 +1,1396 @@
+{
+  "version": "individual_equations_v1",
+  "updated_at_jst": "2026-10-09T16:07:15.580655+09:00",
+  "equations": {
+    "original": "順位別モデル",
+    "risk": "リスク評価式（再学習入力の参考予想）",
+    "data": "データ部・順位保持",
+    "pace": "展開部・順位保持",
+    "line": "ライン部・順位保持",
+    "pairwise": "先着関係式",
+    "data_legacy": "データ部・２／３着を従来式で上書き",
+    "pace_legacy": "展開部・２／３着を従来式で上書き",
+    "line_legacy": "ライン部・２／３着を従来式で上書き",
+    "joint": "１・２着に応じた組み合わせ式",
+    "fusion": "統合式",
+    "without_departments": "統合式から部署の分布を除外",
+    "without_pairwise": "統合式から先着関係式を除外",
+    "without_joint": "統合式から組み合わせ式を除外",
+    "first_anchor": "1着補正付き統合式（38.77%案）",
+    "archive_positions": "過去5万レース・順位別式",
+    "archive_pairwise": "過去5万レース・先着関係式",
+    "context_joint": "出走人数・クラス別統合式",
+    "stage_global": "着順別統合式",
+    "stage_context": "条件・着順別統合式",
+    "market_market_residual": "市場の見落としを学ぶ式",
+    "market_pairwise_order": "先着関係から組む式",
+    "market_state_paths": "途中隊列の遷移式"
+  },
+  "statistics": {
+    "original:trained": {
+      "1": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "6": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "12": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      }
+    },
+    "risk:trained": {
+      "1": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "6": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "12": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      }
+    },
+    "data:trained": {
+      "1": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "6": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "12": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      }
+    },
+    "pace:trained": {
+      "1": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "6": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "12": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      }
+    },
+    "line:trained": {
+      "1": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "6": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "12": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      }
+    },
+    "pairwise:trained": {
+      "1": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "6": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "12": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      }
+    },
+    "data_legacy:trained": {
+      "1": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "6": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "12": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      }
+    },
+    "pace_legacy:trained": {
+      "1": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "6": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "12": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      }
+    },
+    "line_legacy:trained": {
+      "1": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "6": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "12": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      }
+    },
+    "joint:trained": {
+      "1": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "6": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "12": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      }
+    },
+    "fusion:trained": {
+      "1": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "6": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "12": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      }
+    },
+    "without_departments:trained": {
+      "1": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "6": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "12": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      }
+    },
+    "without_pairwise:trained": {
+      "1": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "6": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "12": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      }
+    },
+    "without_joint:trained": {
+      "1": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "6": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "12": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      }
+    },
+    "first_anchor:trained": {
+      "1": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "6": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "12": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      }
+    },
+    "archive_positions:trained": {
+      "1": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "6": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "12": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      }
+    },
+    "archive_pairwise:trained": {
+      "1": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "6": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "12": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      }
+    },
+    "context_joint:trained": {
+      "1": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "6": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "12": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      }
+    },
+    "stage_global:trained": {
+      "1": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "6": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "12": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      }
+    },
+    "stage_context:trained": {
+      "1": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "6": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      },
+      "12": {
+        "forecast_races": 42,
+        "settled_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "roi_races": 0,
+        "payout_pending_races": 0,
+        "stake_yen": 0,
+        "return_yen": 0.0,
+        "roi": null,
+        "hits_over_50x": 0,
+        "hits_at_least_100x": 0,
+        "largest_return_share": null
+      }
+    }
+  },
+  "coverage": {
+    "date": "2026-10-09",
+    "races": [
+      {
+        "race_id": "014820261009",
+        "venue": "四日市",
+        "race_no": 1,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "024820261009",
+        "venue": "四日市",
+        "race_no": 2,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "034820261009",
+        "venue": "四日市",
+        "race_no": 3,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "044820261009",
+        "venue": "四日市",
+        "race_no": 4,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "054820261009",
+        "venue": "四日市",
+        "race_no": 5,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "064820261009",
+        "venue": "四日市",
+        "race_no": 6,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "074820261009",
+        "venue": "四日市",
+        "race_no": 7,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "084820261009",
+        "venue": "四日市",
+        "race_no": 8,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "094820261009",
+        "venue": "四日市",
+        "race_no": 9,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "104820261009",
+        "venue": "四日市",
+        "race_no": 10,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "114820261009",
+        "venue": "四日市",
+        "race_no": 11,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "124820261009",
+        "venue": "四日市",
+        "race_no": 12,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "015320261009",
+        "venue": "奈良",
+        "race_no": 1,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "025320261009",
+        "venue": "奈良",
+        "race_no": 2,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "035320261009",
+        "venue": "奈良",
+        "race_no": 3,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "045320261009",
+        "venue": "奈良",
+        "race_no": 4,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "055320261009",
+        "venue": "奈良",
+        "race_no": 5,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "065320261009",
+        "venue": "奈良",
+        "race_no": 6,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "075320261009",
+        "venue": "奈良",
+        "race_no": 7,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "085320261009",
+        "venue": "奈良",
+        "race_no": 8,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "095320261009",
+        "venue": "奈良",
+        "race_no": 9,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "013420261009",
+        "venue": "川崎",
+        "race_no": 1,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "023420261009",
+        "venue": "川崎",
+        "race_no": 2,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "033420261009",
+        "venue": "川崎",
+        "race_no": 3,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "043420261009",
+        "venue": "川崎",
+        "race_no": 4,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "053420261009",
+        "venue": "川崎",
+        "race_no": 5,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "063420261009",
+        "venue": "川崎",
+        "race_no": 6,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "073420261009",
+        "venue": "川崎",
+        "race_no": 7,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "083420261009",
+        "venue": "川崎",
+        "race_no": 8,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "093420261009",
+        "venue": "川崎",
+        "race_no": 9,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "013520261009",
+        "venue": "平塚",
+        "race_no": 1,
+        "reason": "初回確認時点で締切後"
+      },
+      {
+        "race_id": "023520261009",
+        "venue": "平塚",
+        "race_no": 2,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "033520261009",
+        "venue": "平塚",
+        "race_no": 3,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "043520261009",
+        "venue": "平塚",
+        "race_no": 4,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "053520261009",
+        "venue": "平塚",
+        "race_no": 5,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "063520261009",
+        "venue": "平塚",
+        "race_no": 6,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "073520261009",
+        "venue": "平塚",
+        "race_no": 7,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "083520261009",
+        "venue": "平塚",
+        "race_no": 8,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "093520261009",
+        "venue": "平塚",
+        "race_no": 9,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "103520261009",
+        "venue": "平塚",
+        "race_no": 10,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "113520261009",
+        "venue": "平塚",
+        "race_no": 11,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "123520261009",
+        "venue": "平塚",
+        "race_no": 12,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "012120261009",
+        "venue": "弥彦",
+        "race_no": 1,
+        "reason": "開始前に結果確定"
+      },
+      {
+        "race_id": "022120261009",
+        "venue": "弥彦",
+        "race_no": 2,
+        "reason": "開始前に結果確定"
+      },
+      {
+        "race_id": "032120261009",
+        "venue": "弥彦",
+        "race_no": 3,
+        "reason": "開始前に結果確定"
+      },
+      {
+        "race_id": "042120261009",
+        "venue": "弥彦",
+        "race_no": 4,
+        "reason": "開始前に結果確定"
+      },
+      {
+        "race_id": "052120261009",
+        "venue": "弥彦",
+        "race_no": 5,
+        "reason": "開始前に結果確定"
+      },
+      {
+        "race_id": "062120261009",
+        "venue": "弥彦",
+        "race_no": 6,
+        "reason": "開始前に結果確定"
+      },
+      {
+        "race_id": "072120261009",
+        "venue": "弥彦",
+        "race_no": 7,
+        "reason": "開始前に結果確定"
+      },
+      {
+        "race_id": "082120261009",
+        "venue": "弥彦",
+        "race_no": 8,
+        "reason": "開始前に結果確定"
+      },
+      {
+        "race_id": "092120261009",
+        "venue": "弥彦",
+        "race_no": 9,
+        "reason": "開始前に結果確定"
+      },
+      {
+        "race_id": "102120261009",
+        "venue": "弥彦",
+        "race_no": 10,
+        "reason": "開始前に結果確定"
+      },
+      {
+        "race_id": "112120261009",
+        "venue": "弥彦",
+        "race_no": 11,
+        "reason": "初回確認時点で締切後"
+      },
+      {
+        "race_id": "122120261009",
+        "venue": "弥彦",
+        "race_no": 12,
+        "reason": "保存済み"
+      },
+      {
+        "race_id": "018420261009",
+        "venue": "武雄",
+        "race_no": 1,
+        "reason": "開始前に結果確定"
+      },
+      {
+        "race_id": "028420261009",
+        "venue": "武雄",
+        "race_no": 2,
+        "reason": "開始前に結果確定"
+      },
+      {
+        "race_id": "038420261009",
+        "venue": "武雄",
+        "race_no": 3,
+        "reason": "開始前に結果確定"
+      },
+      {
+        "race_id": "048420261009",
+        "venue": "武雄",
+        "race_no": 4,
+        "reason": "開始前に結果確定"
+      },
+      {
+        "race_id": "058420261009",
+        "venue": "武雄",
+        "race_no": 5,
+        "reason": "開始前に結果確定"
+      },
+      {
+        "race_id": "068420261009",
+        "venue": "武雄",
+        "race_no": 6,
+        "reason": "開始前に結果確定"
+      },
+      {
+        "race_id": "078420261009",
+        "venue": "武雄",
+        "race_no": 7,
+        "reason": "開始前に結果確定"
+      },
+      {
+        "race_id": "013820261009",
+        "venue": "静岡",
+        "race_no": 1,
+        "reason": "開始前に結果確定"
+      },
+      {
+        "race_id": "023820261009",
+        "venue": "静岡",
+        "race_no": 2,
+        "reason": "開始前に結果確定"
+      },
+      {
+        "race_id": "033820261009",
+        "venue": "静岡",
+        "race_no": 3,
+        "reason": "開始前に結果確定"
+      },
+      {
+        "race_id": "043820261009",
+        "venue": "静岡",
+        "race_no": 4,
+        "reason": "開始前に結果確定"
+      },
+      {
+        "race_id": "053820261009",
+        "venue": "静岡",
+        "race_no": 5,
+        "reason": "開始前に結果確定"
+      },
+      {
+        "race_id": "063820261009",
+        "venue": "静岡",
+        "race_no": 6,
+        "reason": "開始前に結果確定"
+      },
+      {
+        "race_id": "073820261009",
+        "venue": "静岡",
+        "race_no": 7,
+        "reason": "開始前に結果確定"
+      },
+      {
+        "race_id": "083820261009",
+        "venue": "静岡",
+        "race_no": 8,
+        "reason": "開始前に結果確定"
+      },
+      {
+        "race_id": "093820261009",
+        "venue": "静岡",
+        "race_no": 9,
+        "reason": "開始前に結果確定"
+      },
+      {
+        "race_id": "103820261009",
+        "venue": "静岡",
+        "race_no": 10,
+        "reason": "開始前に結果確定"
+      },
+      {
+        "race_id": "113820261009",
+        "venue": "静岡",
+        "race_no": 11,
+        "reason": "初回確認時点で締切後"
+      },
+      {
+        "race_id": "017420261009",
+        "venue": "高知",
+        "race_no": 1,
+        "reason": "開始前に結果確定"
+      },
+      {
+        "race_id": "027420261009",
+        "venue": "高知",
+        "race_no": 2,
+        "reason": "開始前に結果確定"
+      },
+      {
+        "race_id": "037420261009",
+        "venue": "高知",
+        "race_no": 3,
+        "reason": "開始前に結果確定"
+      },
+      {
+        "race_id": "047420261009",
+        "venue": "高知",
+        "race_no": 4,
+        "reason": "開始前に結果確定"
+      },
+      {
+        "race_id": "057420261009",
+        "venue": "高知",
+        "race_no": 5,
+        "reason": "開始前に結果確定"
+      },
+      {
+        "race_id": "067420261009",
+        "venue": "高知",
+        "race_no": 6,
+        "reason": "開始前に結果確定"
+      },
+      {
+        "race_id": "077420261009",
+        "venue": "高知",
+        "race_no": 7,
+        "reason": "開始前に結果確定"
+      }
+    ],
+    "updated_at": "2026-10-09T16:07:12.209369+09:00"
+  },
+  "records": 42,
+  "forecast_policy": "first immutable pre-close top12 per family and race, 100 yen per ticket",
+  "comparison_policy": "same family, same basis, same race IDs, same timestamp, same ticket limit",
+  "purchase_authorized": false,
+  "result_conflicts": 0
+}

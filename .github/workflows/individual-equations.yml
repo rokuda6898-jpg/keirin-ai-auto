@@ -1,0 +1,75 @@
+name: individual-equations
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["src/individual_equations_live.py", "models/individual_stage/**", ".github/workflows/individual-equations.yml"]
+  workflow_run:
+    workflows: ["daily-keirin-predict", "intraday-keirin-odds", "quick-keirin-results", "settle-keirin-results", "fusion-shadow-live"]
+    types: [completed]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: individual-equations
+  cancel-in-progress: false
+
+jobs:
+  independent-forecasts:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Freeze independent pre-close portfolios
+        if: github.event_name != 'workflow_run' || (github.event.workflow_run.name != 'quick-keirin-results' && github.event.workflow_run.name != 'settle-keirin-results')
+        env:
+          PYTHONPATH: src
+        run: python src/individual_equations_live.py forecast
+      - name: Update per-equation outcomes and reports
+        env:
+          PYTHONPATH: src
+        run: python src/individual_equations_live.py report
+      - name: Publish independent reports without modifying production forecasts
+        env:
+          PYTHONPATH: src
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add outputs/company/individual_equations/
+          git diff --cached --quiet && exit 0
+          git commit -m 'Publish independent equation forecasts and performance'
+          for attempt in 1 2 3 4 5 6; do
+            git fetch origin main
+            mkdir -p "$RUNNER_TEMP/independent-remote"
+            for name in forecasts.json results.json; do
+              git show "origin/main:outputs/company/individual_equations/$name" > "$RUNNER_TEMP/independent-remote/$name" 2>/dev/null || rm -f "$RUNNER_TEMP/independent-remote/$name"
+            done
+            git merge --no-edit -X ours origin/main
+            python src/individual_equations_live.py merge --remote "$RUNNER_TEMP/independent-remote"
+            python - <<'PY'
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+          import fusion_shadow_live as shadow
+          from release_guard import validate_release, write_release_manifest
+          shadow.build_report(shadow.read_ledger(), datetime.now(ZoneInfo('Asia/Tokyo')))
+          write_release_manifest()
+          errors = validate_release()
+          if errors:
+              raise SystemExit('; '.join(errors))
+          PY
+            git add outputs/company/individual_equations/
+            git add outputs/company/fusion_shadow_live_report.html outputs/company/fusion_shadow_live_report.json outputs/release_manifest.json
+            git diff --cached --quiet || git commit -m 'Reconcile immutable independent equation evidence'
+            if git push origin HEAD:main; then exit 0; fi
+          done
+          exit 1
