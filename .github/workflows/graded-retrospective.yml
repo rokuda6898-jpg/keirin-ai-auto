@@ -28,9 +28,7 @@ jobs:
       - uses: actions/cache/restore@v4
         with:
           path: data/raw/history.csv
-          key: keirin-central-history-v1-${{ github.run_id }}
-          restore-keys: |
-            keirin-central-history-v1-
+          key: keirin-central-history-v1-37948350612
           fail-on-cache-miss: true
       - run: python src/graded_retrospective.py
       - uses: actions/upload-artifact@v4

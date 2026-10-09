@@ -78,6 +78,20 @@ def classify(frame, folder):
             if c.get('id'):mapping[str(c['id'])]=c.get('grade')
         except Exception as exc:failures.append({'venue':r.venue,'reason':str(exc)})
         write(cache,mapping)
+    # The venue's latest page does not necessarily list every historical cup.
+    # Resolve remaining meetings from their own page, once per cup, not per race.
+    missing=frame.loc[frame.cup_id.notna()&~frame.cup_id.isin(mapping)].drop_duplicates('cup_id')
+    print(f'RESOLVE_MISSING_CUPS {len(missing)}',flush=True)
+    for r in missing.itertuples():
+        try:
+            state=extract_preloaded_state(http_get(r.source_url,attempts=2))
+            c=find_query_data(state,'FETCH_KEIRIN_CUP_RACES').get('cup',{})
+            if str(c.get('id'))==r.cup_id:mapping[r.cup_id]=c.get('grade')
+            else:
+                for c in find_query_data(state,'FETCH_KEIRIN_RACE').get('cups',[]):
+                    if str(c.get('id'))==r.cup_id:mapping[r.cup_id]=c.get('grade')
+        except Exception as exc:failures.append({'cup_id':r.cup_id,'reason':str(exc)})
+        write(cache,mapping)
     frame['grade']=frame.cup_id.map(mapping).map(GRADES)
     write(folder/'grade_coverage.json',{'flagged_races':int(frame.race_id.nunique()),
           'exact_target_races':int(frame.loc[frame.grade.notna(),'race_id'].nunique()),
@@ -156,17 +170,26 @@ def distribution(records, models, method, stages):
 
 
 def assess(predictions, target, folder):
-    actuals={str(rid):podium(r) for rid,r in target.groupby('race_id',sort=False)}
+    from official_outcomes import winning_orders
+    def actual_orders(race):
+        rows=[]
+        for r in race.itertuples():
+            try:
+                pos=float(r.finish_pos)
+                if math.isfinite(pos) and pos.is_integer() and pos>0:rows.append((int(pos),int(r.car_no)))
+            except (TypeError,ValueError):pass
+        return winning_orders(rows)
+    actuals={str(rid):actual_orders(r) for rid,r in target.groupby('race_id',sort=False)}
     totals={m:{'races':0,'hits':0,'stake_yen':0,'log_loss_sum':0.} for m in METHODS}
     sub={}; paired=[]
     for row in predictions:
         actual=actuals[row['race_id']]
-        if actual is None:continue
-        key='-'.join(map(str,actual)); hits={}
+        if not actual:continue
+        hits={}
         for m in METHODS:
-            hit=int(key in row['tickets'][m]); hits[m]=hit
+            hit=int(bool(set(actual)&set(row['tickets'][m]))); hits[m]=hit
             t=totals[m];t['races']+=1;t['hits']+=hit;t['stake_yen']+=len(row['tickets'][m])*100
-            if m!='current_v1':t['log_loss_sum']-=math.log(max(row['probabilities'][m].get(key,0),1e-12))
+            if m!='current_v1':t['log_loss_sum']-=math.log(max(sum(row['probabilities'][m].get(key,0) for key in actual),1e-12))
             for dimension in ('grade','stage','field_size'):
                 bucket=f'{dimension}:{row[dimension]}'
                 z=sub.setdefault(bucket,{}).setdefault(m,{'races':0,'hits':0})
@@ -188,6 +211,8 @@ def assess(predictions, target, folder):
             'familywise_95_interval':[float(v) for v in np.quantile(boot,[.05/6,1-.05/6])],
             'unit':'fraction; multiply by 100 for percentage points'}
     report={'methods':totals,'subgroups':sub,'paired_differences':differences,
+            'predicted_races':len(predictions),'unscorable_races':sum(not x for x in actuals.values()),
+            'tied_podium_races':sum(len(x)>1 for x in actuals.values()),
             'roi_status':'not_computable_without_verified_payouts',
             'hole_status':'not_tested_without_preclose_odds',
             'scope':'retrospective_archive_features_not_proven_point_in_time; no_live_promotion'}
@@ -214,6 +239,8 @@ def main():
     stages=sorted(train.race_type.fillna('').astype(str).unique())
     manifest={'asof_exclusive':END,'training_from':TRAIN_START,'training_before':START,
         'training_races':len(groups),'test_races':int(target.race_id.nunique()),
+        'training_labeled_races':sum(podium(r) is not None for _,r in groups),
+        'training_ambiguous_podium_excluded':sum(podium(r) is None for _,r in groups),
         'actual_test_first':min(target.date),'actual_test_last':max(target.date),'archive_races_in_period':all_races,
         'archive_sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'exclusions':dict(exclusions),
         'methods':METHODS,'tickets':12,'stake_per_ticket':100,'preclose_odds_available':False,
