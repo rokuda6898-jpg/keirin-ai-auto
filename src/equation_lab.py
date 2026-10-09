@@ -19,6 +19,8 @@ from department_experiment_v2 import (LEDGER as INPUTS, OUTCOMES, append, digest
                                      read_lines, seal, valid_record, outcomes_for)
 from equation_models import METHODS, LABELS, CONFIG, fit, predict
 from equation_preview import provisional_distribution, standalone_tickets
+from archive_50000 import (NAMES as ARCHIVE_NAMES, load_model as load_archive_model,
+                           probabilities as archive_probabilities, validated_model as valid_archive_model)
 from official_outcomes import ticket_return
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -42,7 +44,7 @@ def clock():
 
 
 def code_id():
-    names = ('equation_lab.py', 'equation_models.py', 'equation_preview.py',
+    names = ('equation_lab.py', 'equation_models.py', 'equation_preview.py', 'archive_50000.py',
              'department_experiment_v2.py', 'official_outcomes.py')
     return digest({'rules': RULES, 'training': CONFIG, 'sources': {
         n: hashlib.sha256(Path(__file__).with_name(n).read_bytes().replace(b'\r\n', b'\n')).hexdigest()
@@ -187,7 +189,7 @@ def choose(distribution, prices, group, count):
     return tickets[:count] if len(tickets) >= count else None
 
 
-def independent_views(distributions, riders, prices):
+def independent_views(distributions, riders, prices, archive_model=None):
     """One independently ranked ticket list per equation, never pooled or voted."""
     results = {}
     for method in METHODS:
@@ -198,6 +200,11 @@ def independent_views(distributions, riders, prices):
             'basis': 'trained_shadow' if trained else 'untrained_preclose_proxy',
             'picks': standalone_tickets(probabilities, prices),
         }
+    if archive_model is not None:
+        for method in ARCHIVE_NAMES:
+            dist = archive_probabilities(method, archive_model, riders)
+            results[method] = {'basis':'archive_trained_50000_retro',
+                               'picks':standalone_tickets(dist,prices)}
     return results
 
 
@@ -222,7 +229,10 @@ def capture(input_hash, source_time, output_dir=ROOT / 'outputs', now=None):
         reasons[method] = models['training']['reasons'][method]
         if model and distributions[method] is None:
             reasons[method] = 'no_observed_paths_for_field_size'
-    standalone = independent_views(distributions, source['evidence']['inputs']['risk_department'], prices)
+    archive_model = load_archive_model(
+        ROOT / 'models' / 'archive_50000.json', now.astimezone(JST).date().isoformat())
+    standalone = independent_views(distributions, source['evidence']['inputs']['risk_department'],
+                                   prices, archive_model)
     for group in GROUPS:
         risk = [t for t in source['risk_tickets'] if t['group'] == group]
         valid_risk = (0 < len(risk) <= 12 and all(t['odds'] == prices.get(t['buy']) and t['stake_yen'] == 100 for t in risk))
@@ -242,7 +252,7 @@ def capture(input_hash, source_time, output_dir=ROOT / 'outputs', now=None):
         'code': models['code'], 'cohort': digest([models['code'], source['code']['sha256']]),
         'model_record': models['record_sha256'], 'rules': RULES,
         'distributions': distributions, 'views': views, 'reasons': reasons,
-        'standalone': standalone,
+        'standalone': standalone, 'archive_model': archive_model,
         'purchase_authorized': False, 'ceo_integration': False})
     # Keep waiting states as evidence of availability, never as zero-hit forecasts.
     append(folder / LEDGER, row)
@@ -288,8 +298,12 @@ def validated_rows(folder):
                 abs(actual[k]-p) > 1e-12 for k,p in expected_distribution.items()):
                 raise ValueError('distribution does not match frozen equation model')
         prices = source['evidence']['usable_quotes']
+        archive_model = row.get('archive_model')
+        if archive_model is not None and not valid_archive_model(archive_model, row['date']):
+            raise ValueError('unverified or future-trained archive model')
         if 'standalone' in row and row['standalone'] != independent_views(
-                row['distributions'], source['evidence']['inputs']['risk_department'], prices):
+                row['distributions'], source['evidence']['inputs']['risk_department'],
+                prices, archive_model):
             raise ValueError('independent equation picks disagree with frozen input')
         for group in GROUPS:
             risk = [t for t in source['risk_tickets'] if t['group'] == group]
@@ -444,10 +458,11 @@ def build_report(output_dir=ROOT / 'outputs', now=None):
     for race in standalone_by_race:
         header = f"{race['venue']} {race['race_no']}R｜保存 {race['snapshot_at'][11:16]}"
         page += '<details><summary>'+html.escape(header)+'</summary>'
-        for method in METHODS:
+        for method in (*METHODS, *[m for m in ARCHIVE_NAMES if m in race['methods']]):
             item = race['methods'][method]
-            basis = '学習済み・実験用' if item['basis'] == 'trained_shadow' else '未学習・暫定参考'
-            page += '<h3>'+html.escape(LABELS[method])+' ／ '+basis+'</h3>'
+            basis = ('過去5万レース学習・研究用' if item['basis'] == 'archive_trained_50000_retro'
+                     else '学習済み・実験用' if item['basis'] == 'trained_shadow' else '未学習・暫定参考')
+            page += '<h3>'+html.escape({**LABELS,**ARCHIVE_NAMES}[method])+' ／ '+basis+'</h3>'
             for group in GROUPS:
                 items = item['picks'][group]
                 page += '<p><b>'+group+' '+str(len(items))+'点</b>：'
