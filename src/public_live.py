@@ -97,6 +97,15 @@ def build(root=ROOT, now=None):
                 ('race_id','date','venue','race_no','close_at','start_at')})
     results = {str(r['race_id']): r for r in read_json(out/'latest_results.json', [])}
     riders = defaultdict(list)
+    previous = read_json(out/'public_live.json', {})
+    cancelled = defaultdict(set, {r['id']:set(r.get('cancelled_cars', []))
+                                 for r in previous.get('races', [])})
+    entry_rows = read_csv(root/'data/raw/today_entries.csv')
+    for rid in {str(e['race_id']) for e in entry_rows}:
+        cancelled[rid] = set()
+    for entry in entry_rows:
+        import re
+        cancelled[str(entry['race_id'])].update(re.findall(r'[1-9]', entry.get('cancelled_car_numbers', '')))
     for row in read_csv(out/'latest_predictions.csv'):
         riders[str(row['race_id'])].append({'car':str(row['car_no']), 'name':row.get('player_name','')})
     races = []
@@ -120,6 +129,7 @@ def build(root=ROOT, now=None):
         races.append({'id':rid, 'date':row['date'], 'venue':row['venue'],
                       'number':int(float(row['race_no'])), 'start_at':finite(row.get('start_at')),
                       'close_at':finite(row.get('close_at')), 'riders':riders.get(rid, []),
+                      'cancelled_cars':sorted(cancelled.get(rid, set())),
                       'company':forecast_view(company.get(rid)), 'shadow':forecast_view(shadow.get(rid)),
                       'actual':actual, 'payouts':{k:finite(v) for k,v in payouts.items()}})
     races.sort(key=lambda r:(r['date'], r['start_at'] or r['close_at'] or 1e12, r['venue'], r['number']))

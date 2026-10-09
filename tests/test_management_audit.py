@@ -39,6 +39,18 @@ class ManagementTests(unittest.TestCase):
         codes={x['code'] for x in audit(self.feed,self.now)['findings']}
         self.assertTrue({'late_snapshot','invalid_tickets'}<=codes)
 
+    def test_official_withdrawal_is_preserved_but_not_compared_as_loss(self):
+        r=self.race();r['riders']=[{'car':'1'},{'car':'3'}]
+        r['cancelled_cars']=['2'];r['shadow']=dict(r['company'])
+        r['actual']=['1-3-4'];self.feed['races']=[r]
+        result=audit(self.feed,self.now)
+        codes={f['code'] for f in result['findings']}
+        self.assertNotIn('invalid_tickets',codes)
+        self.assertIn('withdrawn_tickets',codes)
+        self.assertEqual(result['matched_comparison']['company']['races'],0)
+        r['cancelled_cars']=[]
+        self.assertIn('invalid_tickets',{f['code'] for f in audit(self.feed,self.now)['findings']})
+
     def test_unknown_payoff_does_not_become_zero_return(self):
         r=self.race();r['actual']=['1-2-3'];r['shadow']=dict(r['company']);self.feed['races']=[r]
         result=audit(self.feed,self.now)

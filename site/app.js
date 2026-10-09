@@ -9,22 +9,24 @@ const band=r=>{if(!r.start_at)return '時刻未確認';const hour=Number(time(r.
 const percent=value=>value===null?'—':(value*100).toFixed(1)+'%';
 function choices(select,items,value){select.replaceChildren(...items.map(([key,label])=>{const option=el('option',label);option.value=key;return option;}));if(items.some(([key])=>key===value))select.value=value;}
 function selected(){return state.data.races.filter(r=>r.date===$('#day').value&&(!$('#venue').value||r.venue===$('#venue').value)&&(!$('#band').value||band(r)===$('#band').value));}
+const withdrawn=r=>(r[state.mode]?.tickets||[]).some(b=>b.split('-').some(c=>(r.cancelled_cars||[]).includes(c)));
 function stats(races){
-const saved=races.filter(r=>r[state.mode]?.tickets.length),settled=saved.filter(r=>r.actual.length),hits=settled.filter(r=>r[state.mode].tickets.some(t=>r.actual.includes(t)));
+const saved=races.filter(r=>r[state.mode]?.tickets.length),settled=saved.filter(r=>r.actual.length&&!withdrawn(r)),hits=settled.filter(r=>r[state.mode].tickets.some(t=>r.actual.includes(t)));
 let paid=0,stake=0,known=true;
 for(const r of settled){stake+=r[state.mode].tickets.length*100;for(const buy of r[state.mode].tickets.filter(t=>r.actual.includes(t))){if(r.payouts[buy]===null||r.payouts[buy]===undefined)known=false;else paid+=r.payouts[buy];}}
 return {saved:saved.length,settled:settled.length,hits:hits.length,hitRate:settled.length?hits.length/settled.length:null,roi:stake&&known?paid/stake:null};
 }
-function showStats(races){const s=stats(races);$('#stats').replaceChildren();for(const [label,value,note] of [['対象レース',races.length,'R'],['予想済み / 未作成',s.saved+' / '+(races.length-s.saved),'R'],['的中率',percent(s.hitRate),s.hits+'/'+s.settled+'R'],['回収率',percent(s.roi),'各点100円']]){const box=el('div',undefined,'stat');box.append(el('span',label),el('strong',value),el('small',note));$('#stats').append(box);}$('#scope').textContent='選択中の開催日・レース場・時間帯の集計。的中率の分母は、締切前予想があり結果が確定した '+s.settled+' レース。';}
+function showStats(races){const s=stats(races);$('#stats').replaceChildren();for(const [label,value,note] of [['対象レース',races.length,'R'],['予想済み / 未作成',s.saved+' / '+(races.length-s.saved),'R'],['的中率',percent(s.hitRate),s.hits+'/'+s.settled+'R'],['回収率',percent(s.roi),'各点100円']]){const box=el('div',undefined,'stat');box.append(el('span',label),el('strong',value),el('small',note));$('#stats').append(box);}$('#scope').textContent='選択中の開催日・レース場・時間帯の集計。的中率の分母は、締切前予想があり結果が確定した '+s.settled+' レース。欠車の影響がある '+races.filter(withdrawn).length+' レースは返還を含む精算確認まで成績集計から除外（予想記録は保持）。';}
 function car(value){return el('span',value,'car c'+value);}
 function raceCard(r,opened){
 const prediction=r[state.mode],buys=prediction?.tickets||[],hit=buys.some(t=>r.actual.includes(t));
 const card=el('details',undefined,'race');card.dataset.raceId=r.id;card.open=opened;
 const summary=el('summary');summary.append(el('span',r.number+'R','race-number'));const times=el('span',time(r.start_at)+' 発走','race-time');times.append(el('small','締切 '+time(r.close_at)));summary.append(times);
-let status=!buys.length?'予想未作成':r.actual.length?(hit?'的中':'不的中'):r.close_at&&Date.now()<r.close_at*1000?'締切前':'結果待ち';summary.append(el('span',status,'badge '+(hit?'hit':!buys.length?'missing':'')));card.append(summary);
+let status=withdrawn(r)?'欠車あり・精算確認中':!buys.length?'予想未作成':r.actual.length?(hit?'的中':'不的中'):r.close_at&&Date.now()<r.close_at*1000?'締切前':'結果待ち';summary.append(el('span',status,'badge '+(hit?'hit':!buys.length?'missing':'')));card.append(summary);
 const body=el('div',undefined,'race-body');
 if(prediction&&buys.length){const marks=el('div',undefined,'marks');for(const item of prediction.marks){const mark=el('span',undefined,'mark');mark.append(el('strong',item.mark),car(item.car));const rider=r.riders.find(p=>String(p.car)===String(item.car));if(rider)mark.append(el('small',rider.name));marks.append(mark);}body.append(marks);
 const tickets=el('div',undefined,'tickets');buys.forEach((buy,i)=>{const ticket=el('div',undefined,'ticket '+(r.actual.includes(buy)?'hit':''));ticket.setAttribute('aria-label','買い目 '+buy);ticket.append(el('small',String(i+1)));buy.split('-').forEach((value,index)=>{if(index)ticket.append(el('span','-'));ticket.append(car(value));});tickets.append(ticket);});body.append(tickets);
+if(withdrawn(r))body.append(el('p','欠車：'+r.cancelled_cars.join('・')+'番。以下は保存時の予想です。欠車を含む買い目は利用しないでください。返還を含む精算確認まで成績集計から除外しています。','saved'));
 body.append(el('p','予想保存 '+prediction.snapshot_at.replace('T',' ').replace('+09:00','')+' ／ '+buys.length+'点','saved'));
 body.append(el('p','予想印は、この予想の買い目における1着支持を優先。同点時は2着・3着支持で決めています。','saved'));
 if(prediction.opinions?.length){const opinions=el('details',undefined,'opinion');opinions.append(el('summary','全部署の意見・軍師の集約'));prediction.opinions.forEach(p=>{const e=p.evidence||{};const note=e.vote_weight===0?'集約担当・票の再加算なし':e.origin==='shared_model_fallback'?'共通モデルの根拠':e.context_status==='available'?'専門評価を買い目へ反映':e.context_status==='risk_legacy_unchanged'?'現行リスク判断を維持':e.context_status?'専門条件はデータ不足・基本評価を使用':'';opinions.append(el('p',p.department+'：'+p.tickets.join(' ／ ')+(note?'（'+note+'）':'')));});opinions.append(el('p',prediction.rule+' 社長が有効な買い目を最大12点に確定。集約点は確率ではありません。'));body.append(opinions);}}
