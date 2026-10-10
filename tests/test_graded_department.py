@@ -84,7 +84,8 @@ class GradedDepartmentTests(unittest.TestCase):
                    'tickets':['1-2-3']},'best_equation_status':'saved','best_equation_error':None}
         with tempfile.TemporaryDirectory() as folder:
             p=Path(folder)/'ledger'
-            p.write_text('\n'.join(json.dumps(r) for r in [base,extension]),encoding='utf-8')
+            # Carry-file set sorting can put equal-snapshot records in either order.
+            p.write_text('\n'.join(json.dumps(r) for r in [extension,base]),encoding='utf-8')
             self.assertEqual(load_ledger(p)['r'],extension)
             late={**base,'best_equation':{'snapshot_at':datetime.fromtimestamp(base['close_at']+1,JST).isoformat(),
                   'tickets':['1-2-3']},'best_equation_status':'saved'}

@@ -147,6 +147,7 @@ def load_ledger(path):
             if rid in records and records[rid] != row:
                 old = records[rid]
                 best_extension = False
+                reverse_best_extension = False
                 if old.get('market_available') == row.get('market_available') and not old.get('best_equation') and row.get('best_equation'):
                     ignored = {'best_equation', 'best_equation_status', 'best_equation_error'}
                     previous = {k:v for k,v in old.items() if k not in ignored}
@@ -154,8 +155,17 @@ def load_ledger(path):
                     best_stamp = datetime.fromisoformat(row['best_equation'].get('snapshot_at', ''))
                     best_extension = (previous == current and best_stamp.tzinfo is not None
                                       and stamp.timestamp() < best_stamp.timestamp() < row['close_at'])
-                if not best_extension and (old.get('market_available') or not row.get('market_available') or stamp <= datetime.fromisoformat(old['snapshot_at_jst'])):
+                elif old.get('market_available') == row.get('market_available') and old.get('best_equation') and not row.get('best_equation'):
+                    ignored = {'best_equation', 'best_equation_status', 'best_equation_error'}
+                    previous = {k:v for k,v in old.items() if k not in ignored}
+                    current = {k:v for k,v in row.items() if k not in ignored}
+                    best_stamp = datetime.fromisoformat(old['best_equation'].get('snapshot_at', ''))
+                    reverse_best_extension = (previous == current and best_stamp.tzinfo is not None
+                                              and stamp.timestamp() < best_stamp.timestamp() < row['close_at'])
+                if not (best_extension or reverse_best_extension) and (old.get('market_available') or not row.get('market_available') or stamp <= datetime.fromisoformat(old['snapshot_at_jst'])):
                     raise ValueError('Conflicting immutable graded records')
+                if reverse_best_extension:
+                    continue
             records[rid] = row
     return records
 
