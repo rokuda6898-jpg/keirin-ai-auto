@@ -1,6 +1,6 @@
 {
   "version": "high_payout_v1",
-  "updated_at_jst": "2026-10-10T18:10:07+09:00",
+  "updated_at_jst": "2026-10-10T18:19:51+09:00",
   "total": {
     "target_races": 185,
     "predicted_races": 48,
@@ -4120,6 +4120,99 @@
       "recommended_count": 0,
       "patterns": [],
       "tickets": [],
+      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
+      "unknowns": [
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
+        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+      ],
+      "probability_method": "geometric_model_market_estimate_uncalibrated",
+      "minimum_probability": 0.001,
+      "minimum_ev": 1.25,
+      "automatic_purchase": false,
+      "analysts": [
+        {
+          "role": "高配当専用軍師",
+          "status": "検証中",
+          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
+        },
+        {
+          "role": "1着波乱担当",
+          "status": "検証中",
+          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
+        },
+        {
+          "role": "2着突っ込み担当",
+          "status": "検証中",
+          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
+        },
+        {
+          "role": "3着紛れ担当",
+          "status": "検証中",
+          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
+        },
+        {
+          "role": "ライン崩壊担当",
+          "status": "検証中",
+          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
+        },
+        {
+          "role": "細切れ戦担当",
+          "status": "検証中",
+          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
+        },
+        {
+          "role": "単騎担当",
+          "status": "検証中",
+          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
+        },
+        {
+          "role": "人気過剰担当",
+          "status": "検証中",
+          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
+        },
+        {
+          "role": "高配当期待値担当",
+          "status": "検証中",
+          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
+        },
+        {
+          "role": "データ確認担当",
+          "status": "検証中",
+          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
+        },
+        {
+          "role": "比較検証担当",
+          "status": "検証中",
+          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
+        }
+      ],
+      "comparison": {
+        "version": "third_focus_v1",
+        "automatic_promotion": false,
+        "variants": {
+          "current": [],
+          "third_focus": []
+        }
+      },
+      "risk_coordination": {
+        "chaos_index": 53.9,
+        "risk_level": "高",
+        "line_collapse_probability": null,
+        "scenario_probability": null,
+        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
+      },
+      "analysis_rating": "見送り"
+    },
+    {
+      "race_id": "074320261010",
+      "venue": "岐阜",
+      "race_no": 7,
+      "version": "high_payout_v1",
+      "rating": "見送り",
+      "expectation_score": 0,
+      "recommended_count": 0,
+      "patterns": [],
+      "tickets": [],
       "skip_reason": "このレースは穴予想見送り",
       "unknowns": [
         "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
@@ -4195,175 +4288,12 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 39.72,
-        "risk_level": "中",
-        "line_collapse_probability": null,
-        "scenario_probability": null,
-        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      }
-    },
-    {
-      "race_id": "074320261010",
-      "venue": "岐阜",
-      "race_no": 7,
-      "version": "high_payout_v1",
-      "rating": "C",
-      "expectation_score": 54,
-      "recommended_count": 3,
-      "patterns": [
-        "2着荒れ",
-        "3着荒れ"
-      ],
-      "tickets": [
-        {
-          "buy": "1-2-3",
-          "odds": 104.9,
-          "probability": 0.023801692283697457,
-          "ev": 2.4967975205598636,
-          "patterns": [
-            "3着荒れ"
-          ]
-        },
-        {
-          "buy": "1-5-4",
-          "odds": 213.0,
-          "probability": 0.008067786894754254,
-          "ev": 1.718438608582656,
-          "patterns": [
-            "2着荒れ"
-          ]
-        },
-        {
-          "buy": "1-5-6",
-          "odds": 234.3,
-          "probability": 0.0056345248427509525,
-          "ev": 1.3201691706565482,
-          "patterns": [
-            "2着荒れ"
-          ]
-        }
-      ],
-      "skip_reason": "",
-      "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。"
-      ],
-      "probability_method": "geometric_model_market_estimate_uncalibrated",
-      "minimum_probability": 0.001,
-      "minimum_ev": 1.25,
-      "automatic_purchase": false,
-      "analysts": [
-        {
-          "role": "高配当専用軍師",
-          "status": "検証中",
-          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
-        },
-        {
-          "role": "1着波乱担当",
-          "status": "検証中",
-          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
-        },
-        {
-          "role": "2着突っ込み担当",
-          "status": "検証中",
-          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
-        },
-        {
-          "role": "3着紛れ担当",
-          "status": "検証中",
-          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
-        },
-        {
-          "role": "ライン崩壊担当",
-          "status": "検証中",
-          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
-        },
-        {
-          "role": "細切れ戦担当",
-          "status": "検証中",
-          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
-        },
-        {
-          "role": "単騎担当",
-          "status": "検証中",
-          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
-        },
-        {
-          "role": "人気過剰担当",
-          "status": "検証中",
-          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
-        },
-        {
-          "role": "高配当期待値担当",
-          "status": "検証中",
-          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
-        },
-        {
-          "role": "データ確認担当",
-          "status": "検証中",
-          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
-        },
-        {
-          "role": "比較検証担当",
-          "status": "検証中",
-          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
-        }
-      ],
-      "comparison": {
-        "version": "third_focus_v1",
-        "automatic_promotion": false,
-        "variants": {
-          "current": [
-            {
-              "buy": "1-2-3",
-              "odds": 104.9,
-              "probability": 0.023801692283697457,
-              "ev": 2.4967975205598636
-            },
-            {
-              "buy": "1-5-4",
-              "odds": 213.0,
-              "probability": 0.008067786894754254,
-              "ev": 1.718438608582656
-            },
-            {
-              "buy": "1-5-6",
-              "odds": 234.3,
-              "probability": 0.0056345248427509525,
-              "ev": 1.3201691706565482
-            }
-          ],
-          "third_focus": [
-            {
-              "buy": "1-2-3",
-              "odds": 104.9,
-              "probability": 0.023801692283697457,
-              "ev": 2.4967975205598636
-            }
-          ]
-        },
-        "decision": "本番は現在方式。3着重点方式は同じ上限点数・同じ最低EVで成立確率順に比較。"
-      },
-      "risk_coordination": {
         "chaos_index": 38.28,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "specialist_analysis": {
-        "細切れ戦": {
-          "status": "分析可能",
-          "line_count": 3
-        },
-        "単騎": {
-          "status": "分析可能",
-          "cars": [
-            6
-          ]
-        }
-      },
-      "strong_ev_candidate_count": 2,
-      "twelve_point_min_ev": 1.5
+      }
     },
     {
       "race_id": "083520261010",
@@ -4372,7 +4302,7 @@
       "version": "high_payout_v1",
       "rating": "A",
       "expectation_score": 77,
-      "recommended_count": 7,
+      "recommended_count": 9,
       "patterns": [
         "1着荒れ",
         "2着荒れ",
@@ -4382,9 +4312,9 @@
       "tickets": [
         {
           "buy": "2-6-7",
-          "odds": 706.4,
-          "probability": 0.002642429644853693,
-          "ev": 1.8666123011246487,
+          "odds": 790.2,
+          "probability": 0.0024982900162763347,
+          "ev": 1.9741487708615597,
           "patterns": [
             "2着荒れ",
             "細切れ戦"
@@ -4392,9 +4322,9 @@
         },
         {
           "buy": "3-5-7",
-          "odds": 137.1,
-          "probability": 0.01335831407239371,
-          "ev": 1.8314248593251776,
+          "odds": 143.9,
+          "probability": 0.013038347969946082,
+          "ev": 1.8762182728752412,
           "patterns": [
             "3着荒れ",
             "細切れ戦"
@@ -4402,50 +4332,69 @@
         },
         {
           "buy": "3-2-7",
-          "odds": 150.4,
-          "probability": 0.011525812430774232,
-          "ev": 1.7334821895884445,
+          "odds": 158.6,
+          "probability": 0.011223452197077289,
+          "ev": 1.780039518456458,
           "patterns": [
             "3着荒れ",
             "細切れ戦"
           ]
         },
         {
-          "buy": "2-6-5",
-          "odds": 507.7,
-          "probability": 0.0031340705440620407,
-          "ev": 1.591167615220298,
-          "patterns": [
-            "2着荒れ",
-            "細切れ戦"
-          ]
-        },
-        {
           "buy": "4-6-7",
-          "odds": 1015.5,
-          "probability": 0.0014821617180832871,
-          "ev": 1.505135224713578,
+          "odds": 1086.5,
+          "probability": 0.001432858410839061,
+          "ev": 1.5568006633766398,
           "patterns": [
             "1着荒れ",
             "細切れ戦"
           ]
         },
         {
+          "buy": "2-6-5",
+          "odds": 467.3,
+          "probability": 0.0032666081834791592,
+          "ev": 1.5264860041398112,
+          "patterns": [
+            "2着荒れ",
+            "細切れ戦"
+          ]
+        },
+        {
+          "buy": "2-6-1",
+          "odds": 612.1,
+          "probability": 0.0023050918953443733,
+          "ev": 1.410946749140291,
+          "patterns": [
+            "2着荒れ",
+            "細切れ戦"
+          ]
+        },
+        {
           "buy": "3-6-7",
-          "odds": 105.8,
-          "probability": 0.012781587913071862,
-          "ev": 1.3522920012030029,
+          "odds": 106.2,
+          "probability": 0.012756982913114868,
+          "ev": 1.354791585372799,
           "patterns": [
             "2着荒れ"
           ]
         },
         {
-          "buy": "2-6-1",
-          "odds": 560.3,
-          "probability": 0.0024093868483744422,
-          "ev": 1.3499794511441998,
+          "buy": "4-7-6",
+          "odds": 1060.0,
+          "probability": 0.0012736167979277278,
+          "ev": 1.3500338058033914,
           "patterns": [
-            "2着荒れ",
+            "1着荒れ"
+          ]
+        },
+        {
+          "buy": "2-3-7",
+          "odds": 203.0,
+          "probability": 0.006273727686025204,
+          "ev": 1.2735667202631165,
+          "patterns": [
+            "3着荒れ",
             "細切れ戦"
           ]
         }
@@ -4522,59 +4471,77 @@
           "current": [
             {
               "buy": "2-6-7",
-              "odds": 706.4,
-              "probability": 0.002642429644853693,
-              "ev": 1.8666123011246487
+              "odds": 790.2,
+              "probability": 0.0024982900162763347,
+              "ev": 1.9741487708615597
             },
             {
               "buy": "3-5-7",
-              "odds": 137.1,
-              "probability": 0.01335831407239371,
-              "ev": 1.8314248593251776
+              "odds": 143.9,
+              "probability": 0.013038347969946082,
+              "ev": 1.8762182728752412
             },
             {
               "buy": "3-2-7",
-              "odds": 150.4,
-              "probability": 0.011525812430774232,
-              "ev": 1.7334821895884445
-            },
-            {
-              "buy": "2-6-5",
-              "odds": 507.7,
-              "probability": 0.0031340705440620407,
-              "ev": 1.591167615220298
+              "odds": 158.6,
+              "probability": 0.011223452197077289,
+              "ev": 1.780039518456458
             },
             {
               "buy": "4-6-7",
-              "odds": 1015.5,
-              "probability": 0.0014821617180832871,
-              "ev": 1.505135224713578
+              "odds": 1086.5,
+              "probability": 0.001432858410839061,
+              "ev": 1.5568006633766398
             },
             {
-              "buy": "3-6-7",
-              "odds": 105.8,
-              "probability": 0.012781587913071862,
-              "ev": 1.3522920012030029
+              "buy": "2-6-5",
+              "odds": 467.3,
+              "probability": 0.0032666081834791592,
+              "ev": 1.5264860041398112
             },
             {
               "buy": "2-6-1",
-              "odds": 560.3,
-              "probability": 0.0024093868483744422,
-              "ev": 1.3499794511441998
+              "odds": 612.1,
+              "probability": 0.0023050918953443733,
+              "ev": 1.410946749140291
+            },
+            {
+              "buy": "3-6-7",
+              "odds": 106.2,
+              "probability": 0.012756982913114868,
+              "ev": 1.354791585372799
+            },
+            {
+              "buy": "4-7-6",
+              "odds": 1060.0,
+              "probability": 0.0012736167979277278,
+              "ev": 1.3500338058033914
+            },
+            {
+              "buy": "2-3-7",
+              "odds": 203.0,
+              "probability": 0.006273727686025204,
+              "ev": 1.2735667202631165
             }
           ],
           "third_focus": [
             {
               "buy": "3-5-7",
-              "odds": 137.1,
-              "probability": 0.01335831407239371,
-              "ev": 1.8314248593251776
+              "odds": 143.9,
+              "probability": 0.013038347969946082,
+              "ev": 1.8762182728752412
             },
             {
               "buy": "3-2-7",
-              "odds": 150.4,
-              "probability": 0.011525812430774232,
-              "ev": 1.7334821895884445
+              "odds": 158.6,
+              "probability": 0.011223452197077289,
+              "ev": 1.780039518456458
+            },
+            {
+              "buy": "2-3-7",
+              "odds": 203.0,
+              "probability": 0.006273727686025204,
+              "ev": 1.2735667202631165
             }
           ]
         },
@@ -4607,15 +4574,72 @@
       "venue": "岐阜",
       "race_no": 8,
       "version": "high_payout_v1",
-      "rating": "見送り",
-      "expectation_score": 0,
-      "recommended_count": 0,
-      "patterns": [],
-      "tickets": [],
-      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
+      "rating": "B",
+      "expectation_score": 66,
+      "recommended_count": 6,
+      "patterns": [
+        "2着荒れ",
+        "3着荒れ"
+      ],
+      "tickets": [
+        {
+          "buy": "2-4-3",
+          "odds": 366.8,
+          "probability": 0.0053696343854464645,
+          "ev": 1.9695818925817632,
+          "patterns": [
+            "2着荒れ"
+          ]
+        },
+        {
+          "buy": "5-4-7",
+          "odds": 271.1,
+          "probability": 0.0061230152787285505,
+          "ev": 1.6599494420633103,
+          "patterns": [
+            "2着荒れ"
+          ]
+        },
+        {
+          "buy": "2-4-6",
+          "odds": 445.4,
+          "probability": 0.003719777462955249,
+          "ev": 1.6567888820002679,
+          "patterns": [
+            "2着荒れ"
+          ]
+        },
+        {
+          "buy": "1-5-7",
+          "odds": 254.5,
+          "probability": 0.00633035872113504,
+          "ev": 1.6110762945288677,
+          "patterns": [
+            "3着荒れ"
+          ]
+        },
+        {
+          "buy": "2-4-7",
+          "odds": 164.1,
+          "probability": 0.009463239749776819,
+          "ev": 1.552917642938376,
+          "patterns": [
+            "2着荒れ"
+          ]
+        },
+        {
+          "buy": "5-4-3",
+          "odds": 215.0,
+          "probability": 0.0058327870072922726,
+          "ev": 1.2540492065678386,
+          "patterns": [
+            "2着荒れ"
+          ]
+        }
+      ],
+      "skip_reason": "",
       "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。"
       ],
       "probability_method": "geometric_model_market_estimate_uncalibrated",
       "minimum_probability": 0.001,
@@ -4682,18 +4706,76 @@
         "version": "third_focus_v1",
         "automatic_promotion": false,
         "variants": {
-          "current": [],
-          "third_focus": []
-        }
+          "current": [
+            {
+              "buy": "2-4-3",
+              "odds": 366.8,
+              "probability": 0.0053696343854464645,
+              "ev": 1.9695818925817632
+            },
+            {
+              "buy": "5-4-7",
+              "odds": 271.1,
+              "probability": 0.0061230152787285505,
+              "ev": 1.6599494420633103
+            },
+            {
+              "buy": "2-4-6",
+              "odds": 445.4,
+              "probability": 0.003719777462955249,
+              "ev": 1.6567888820002679
+            },
+            {
+              "buy": "1-5-7",
+              "odds": 254.5,
+              "probability": 0.00633035872113504,
+              "ev": 1.6110762945288677
+            },
+            {
+              "buy": "2-4-7",
+              "odds": 164.1,
+              "probability": 0.009463239749776819,
+              "ev": 1.552917642938376
+            },
+            {
+              "buy": "5-4-3",
+              "odds": 215.0,
+              "probability": 0.0058327870072922726,
+              "ev": 1.2540492065678386
+            }
+          ],
+          "third_focus": [
+            {
+              "buy": "1-5-7",
+              "odds": 254.5,
+              "probability": 0.00633035872113504,
+              "ev": 1.6110762945288677
+            }
+          ]
+        },
+        "decision": "本番は現在方式。3着重点方式は同じ上限点数・同じ最低EVで成立確率順に比較。"
       },
       "risk_coordination": {
-        "chaos_index": 63.73,
+        "chaos_index": 51.98,
         "risk_level": "高",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
       },
-      "analysis_rating": "見送り"
+      "specialist_analysis": {
+        "細切れ戦": {
+          "status": "分析可能",
+          "line_count": 3
+        },
+        "単騎": {
+          "status": "分析可能",
+          "cars": [
+            6
+          ]
+        }
+      },
+      "strong_ev_candidate_count": 5,
+      "twelve_point_min_ev": 1.5
     },
     {
       "race_id": "093520261010",
