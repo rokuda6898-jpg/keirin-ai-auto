@@ -1,5 +1,5 @@
 {
-  "checked_at_jst": "2026-10-10T16:37:58+09:00",
+  "checked_at_jst": "2026-10-10T16:58:34+09:00",
   "version": "market_first_shadow_v1",
   "input_valid": true,
   "phase": "prediction",
@@ -10,8 +10,9 @@
   "already_saved_races": 21,
   "reason_counts": {
     "already_saved": 21,
-    "invalid_prices": 35,
-    "near_or_after_close": 16
+    "invalid_prices": 33,
+    "invalid_reference": 1,
+    "near_or_after_close": 17
   },
   "decisions": [
     {
@@ -164,9 +165,7 @@
     },
     {
       "race_id": "043520261010",
-      "reason": "invalid_prices",
-      "expected_quotes": 210,
-      "observed_quotes": 210
+      "reason": "near_or_after_close"
     },
     {
       "race_id": "044320261010",
@@ -176,9 +175,10 @@
     },
     {
       "race_id": "053520261010",
-      "reason": "invalid_prices",
+      "reason": "invalid_reference",
       "expected_quotes": 60,
-      "observed_quotes": 60
+      "observed_quotes": 60,
+      "oldest_quote_age_seconds": 159.0474889278412
     },
     {
       "race_id": "054320261010",
