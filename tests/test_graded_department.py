@@ -117,6 +117,33 @@ class GradedDepartmentTests(unittest.TestCase):
             path.write_text('\n'.join(json.dumps(row) for row in [original,additions[0]]),encoding='utf-8')
             self.assertEqual(load_ledger(path)['r'],additions[0])
 
+    def test_repeated_equation_extensions_keep_the_first_snapshot_in_any_order(self):
+        now=datetime(2026,10,10,12,tzinfo=JST)
+        base={'race_id':'r','grade':'G1','close_at':now.timestamp()+1800,
+              'snapshot_at_jst':now.isoformat(),'market_available':False,'main':[]}
+        first={**base,'best_equation':{'snapshot_at':(now+timedelta(seconds=30)).isoformat(),'tickets':['1-2-3']}}
+        later={**base,'best_equation':{'snapshot_at':(now+timedelta(seconds=60)).isoformat(),'tickets':['1-2-4']}}
+        with tempfile.TemporaryDirectory() as folder:
+            path=Path(folder)/'ledger'
+            for rows in ([later,base,first],[first,base,later]):
+                path.write_text('\n'.join(json.dumps(r) for r in rows),encoding='utf-8')
+                self.assertEqual(load_ledger(path)['r'],first)
+
+    def test_unpriced_equation_is_not_repredicted(self):
+        now=datetime(2026,10,10,12,tzinfo=JST)
+        row={'race_id':'r','date':'2026-10-10','venue':'test','race_no':1,
+             'close_at':now.timestamp()+900,'source_url':'https://example.test/r'}
+        data={'cups':[{'id':'cup','grade':5}],'schedule':{'cupId':'cup'},
+              'race':{'id':'r','isGradeRace':True,'closeAt':now.timestamp()+900}}
+        saved={'r':{'race_id':'r','market_available':False,
+                     'best_equation':{'tickets':['1-2-3'],'snapshot_at':(now-timedelta(seconds=30)).isoformat()},
+                     'close_at':now.timestamp()+900}}
+        def query(_state,key):return data if key=='FETCH_KEIRIN_RACE' else {}
+        with patch('fetch_today_entries.find_query_data',side_effect=query), patch('race_features.build_entry_rows',return_value=riders()), patch('fetch_today_entries._entry_rows_complete',return_value=(True,[],7)), patch('fetch_today_entries.build_odds_rows',return_value=[]), patch('graded_tactics_live.predict',side_effect=AssertionError('saved equation must not be rerun')):
+            additions,decisions=forecast([row],now,lambda _url:{},saved,clock=lambda:now)
+        self.assertEqual(additions,[])
+        self.assertEqual(decisions[0]['best_equation_status'],'saved')
+
     def test_capture_unpriced_then_only_one_valid_market_upgrade(self):
         now=datetime(2026,10,10,12,tzinfo=JST)
         schedule=[{'race_id':'r','date':'2026-10-10','venue':'test','race_no':1,'close_at':now.timestamp()+900,'source_url':'https://example.test/r'}]
