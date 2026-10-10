@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 import graded_retrospective as base
 from graded_tactics import tactical_inputs, conditional_tactical_features, tactical_interaction_features
+from race_choice_equation import fit_choice, distribution as choice_distribution
 from fetch_today_entries import http_get, extract_preloaded_state, find_query_data
 
 ORIGINAL=base.features
@@ -101,7 +102,11 @@ def main():
         base.features=enhanced_v2
         learned_v2=base.fit(groups,'stage_conditional',stages)
     finally:base.features=ORIGINAL
-    joblib.dump({'champion':baseline,'tactical':learned,'tactical_v2':learned_v2,'stages':stages},folder/'models.joblib')
+    # Fit three stage-wise race-choice equations. Each stage compares the
+    # remaining riders within a race, conditional on the observed podium prefix.
+    choice_models=[fit_choice(groups,enhanced_v2,prefix,stages) for prefix in (0,1,2)]
+    joblib.dump({'champion':baseline,'tactical':learned,'tactical_v2':learned_v2,
+                 'race_choice':choice_models,'stages':stages},folder/'models.joblib')
     predictions=[]
     for i,(rid,race) in enumerate(target.groupby('race_id',sort=False),1):
         records=race.drop(columns=['finish_pos','official_finish_pos','result_available'],errors='ignore').to_dict('records')
@@ -114,9 +119,10 @@ def main():
             base.features=enhanced_v2
             tactical_v2=base.distribution(records,learned_v2,'stage_conditional',stages)
         finally:base.features=ORIGINAL
+        race_choice=choice_distribution(records,choice_models,enhanced_v2,stages)
         row={'race_id':rid,'date':str(race.iloc[0].date),'grade':str(race.iloc[0].grade),'stage':str(race.iloc[0].race_type),'field_size':len(race),
              'tickets':{'current_v1':[r['buy'] for r in base.rank_tickets(records,{})['main']]},'probabilities':{},'line_status':TACTICS[rid]['line_status']}
-        for name,d in [('champion',dist),('tactical',tactical),('tactical_v2',tactical_v2)]:
+        for name,d in [('champion',dist),('tactical',tactical),('tactical_v2',tactical_v2),('race_choice',race_choice)]:
             assert abs(sum(d.values())-1)<1e-8
             row['tickets'][name]=['-'.join(map(str,k)) for k in sorted(d,key=lambda k:(-d[k],k))[:12]]
             row['probabilities'][name]={'-'.join(map(str,k)):v for k,v in d.items()}
@@ -124,14 +130,14 @@ def main():
         if i%100==0:print(f'TACTICAL_PREDICT {i}/{target.race_id.nunique()}',flush=True)
     with gzip.open(folder/'predictions.jsonl.gz','wt',encoding='utf-8') as f:
         for row in predictions:f.write(json.dumps(row,ensure_ascii=False)+'\n')
-    base.METHODS=('current_v1','champion','tactical','tactical_v2');base.assess(predictions,target,folder)
+    base.METHODS=('current_v1','champion','tactical','tactical_v2','race_choice');base.assess(predictions,target,folder)
     report=json.loads((folder/'results.json').read_text(encoding='utf-8'))
     report.pop('paired_differences',None)
     report['coverage']=coverage
     report['model_sha256']=model_hash
     report['sample_selection']='All 1315 eligible races; exploratory comparison after the target year had already been inspected'
     report['limitations']=['Historical provider formations retrieved now; original preclose capture unverified','Advancement text not encoded without verified historical availability','No learned action timing or response scenarios; conditional formation features only','Previously inspected test year; exploratory comparison','No ROI or 100x eligibility claims']
-    report['delta_vs_champion']={m:report['methods'][m]['hit_rate']-report['methods']['champion']['hit_rate'] for m in ('tactical','tactical_v2')}
+    report['delta_vs_tactical']={m:report['methods'][m]['hit_rate']-report['methods']['tactical']['hit_rate'] for m in ('tactical_v2','race_choice')}
     base.write(folder/'results.json',report)
     print('TACTICAL_RESULT '+json.dumps({k:v for k,v in report.items() if k!='subgroups'}),flush=True)
 
