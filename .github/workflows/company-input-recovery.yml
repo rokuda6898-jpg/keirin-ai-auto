@@ -1,0 +1,27 @@
+name: company-input-recovery
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - src/company_input_recovery.py
+      - src/coverage_refresh.py
+      - .github/workflows/company-input-recovery.yml
+permissions:
+  contents: read
+  actions: write
+concurrency:
+  group: company-input-recovery
+  cancel-in-progress: false
+jobs:
+  resume:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Resume canonical company and department generation
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh workflow run intraday.yml --repo "$GH_REPO" --ref main
+          echo 'The canonical intraday workflow was dispatched. Dispatch alone is not proof of recovered forecasts.'
