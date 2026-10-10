@@ -8,7 +8,7 @@ from management_notify import deliver, native_notice
 
 class ManagementTests(unittest.TestCase):
     def test_native_alert_needs_no_smtp_and_recovers_without_fake_failure(self):
-        report={'findings':[{'code':'missing_shadow','message':'missing'}]}
+        report={'findings':[{'owner':'coverage','code':'missing_shadow','level':'error','message':'missing'}]}
         state,status,alert=native_notice(report,{},100)
         self.assertTrue(alert)
         self.assertFalse(native_notice(report,state,101)[2])
@@ -16,7 +16,40 @@ class ManagementTests(unittest.TestCase):
         recovered,status,alert=native_notice({'findings':[]},state,102)
         self.assertFalse(alert)
         self.assertFalse(recovered['active'])
-        self.assertTrue(native_notice(report,recovered,103)[2])
+        # A brief healthy cycle cannot re-arm the same alert within 24 hours.
+        self.assertFalse(native_notice(report,recovered,103)[2])
+
+    def test_warning_only_does_not_make_actions_fail(self):
+        report={'findings':[{'owner':'settlement','code':'withdrawn_tickets',
+                            'level':'warning','message':'withdrawn'}]}
+        state,status,alert=native_notice(report,{},100)
+        self.assertFalse(alert)
+        self.assertEqual(status,'github_actions_warning_only')
+        self.assertFalse(state['active'])
+
+    def test_alternating_error_combinations_do_not_spam(self):
+        first={'owner':'coverage','code':'missing_shadow','level':'error','message':'missing'}
+        second={'owner':'timing','code':'late_snapshot','level':'error','message':'late'}
+        state,_,alert=native_notice({'findings':[first]}, {}, 100)
+        self.assertTrue(alert)
+        state,_,alert=native_notice({'findings':[first,second]}, state, 101)
+        self.assertTrue(alert)  # Only the new error class is due.
+        state,_,alert=native_notice({'findings':[first]}, state, 102)
+        self.assertFalse(alert)
+        state,_,alert=native_notice({'findings':[first,second]}, state, 103)
+        self.assertFalse(alert)
+        state,_,alert=native_notice({'findings':[first]}, state, 86501)
+        self.assertTrue(alert)
+
+    def test_legacy_alert_cache_does_not_repeat_on_upgrade(self):
+        from management_notify import fingerprint
+        report={'findings':[{'owner':'coverage','code':'missing_shadow',
+                             'level':'error','message':'missing'}]}
+        state={'native_fingerprint':fingerprint(report),'signaled_at':100,'active':True}
+        migrated,status,alert=native_notice(report,state,101)
+        self.assertFalse(alert)
+        self.assertEqual(status,'github_actions_duplicate')
+        self.assertIn('coverage:missing_shadow',migrated['native_alerts'])
     def setUp(self):
         self.now = datetime.fromisoformat('2026-10-09T12:00:00+09:00')
         self.feed = {'schema':1,'schedule_date':'2026-10-09','updated_at':self.now.isoformat(),'races':[]}

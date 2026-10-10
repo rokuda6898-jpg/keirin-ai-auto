@@ -16,14 +16,46 @@ def fingerprint(report):
 
 
 def native_notice(report, state, now=None):
-    """Signal real audit incidents through the user's existing Actions emails."""
+    """Use GitHub Actions failures only for new/recurring *errors*.
+
+    Warnings remain visible in the audit report without generating a failure
+    email. Track each error class independently: alternating combinations or
+    a brief healthy cycle must not bypass the 24-hour notification cooldown.
+    """
     now = time.time() if now is None else now
-    if not report.get('findings'):
-        return {'active':False}, 'github_actions_healthy', False
-    key = fingerprint(report)
-    if state.get('native_fingerprint') == key and now-state.get('signaled_at',0) < 86400:
+    state = dict(state or {})
+    findings = report.get('findings', [])
+    errors = sorted({
+        str(item.get('owner', 'unknown')) + ':' + str(item.get('code', 'unknown'))
+        for item in findings if item.get('level', 'error') == 'error'
+    })
+    last_alerted = dict(state.get('native_alerts') or {})
+
+    # Read an existing cache written by the previous digest-only notifier.
+    # Do not issue a fresh notice solely because this code was deployed.
+    if errors and state.get('native_fingerprint') == fingerprint(report):
+        previous = state.get('signaled_at', 0)
+        if isinstance(previous, (int, float)) and now - previous < 86400:
+            for key in errors:
+                last_alerted.setdefault(key, previous)
+
+    due = [
+        key for key in errors
+        if now - last_alerted.get(key, -float('inf')) >= 86400
+    ]
+    for key in due:
+        last_alerted[key] = now
+    state['native_alerts'] = last_alerted
+    state['active'] = bool(errors)
+
+    if due:
+        state['signaled_at'] = now
+        return state, 'github_actions_alert', True
+    if errors:
         return state, 'github_actions_duplicate', False
-    return {'active':True,'native_fingerprint':key,'signaled_at':now}, 'github_actions_alert', True
+    if findings:
+        return state, 'github_actions_warning_only', False
+    return state, 'github_actions_healthy', False
 
 
 def deliver(report, state, now=None, sender=None):
