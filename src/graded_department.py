@@ -148,6 +148,9 @@ def load_ledger(path):
                 old = records[rid]
                 best_extension = False
                 reverse_best_extension = False
+                repeated_best_extension = False
+                earlier_best_extension = False
+                later_best_extension = False
                 if old.get('market_available') == row.get('market_available') and not old.get('best_equation') and row.get('best_equation'):
                     ignored = {'best_equation', 'best_equation_status', 'best_equation_error'}
                     previous = {k:v for k,v in old.items() if k not in ignored}
@@ -162,9 +165,24 @@ def load_ledger(path):
                     best_stamp = datetime.fromisoformat(old['best_equation'].get('snapshot_at', ''))
                     reverse_best_extension = (previous == current and best_stamp.tzinfo is not None
                                               and stamp.timestamp() < best_stamp.timestamp() < row['close_at'])
-                if not (best_extension or reverse_best_extension) and (old.get('market_available') or not row.get('market_available') or stamp <= datetime.fromisoformat(old['snapshot_at_jst'])):
+                elif old.get('market_available') == row.get('market_available') and old.get('best_equation') and row.get('best_equation'):
+                    ignored = {'best_equation', 'best_equation_status', 'best_equation_error'}
+                    previous = {k:v for k,v in old.items() if k not in ignored}
+                    current = {k:v for k,v in row.items() if k not in ignored}
+                    old_best_stamp = datetime.fromisoformat(old['best_equation'].get('snapshot_at', ''))
+                    new_best_stamp = datetime.fromisoformat(row['best_equation'].get('snapshot_at', ''))
+                    valid_stamps = (old_best_stamp.tzinfo is not None and new_best_stamp.tzinfo is not None
+                                    and stamp.timestamp() < old_best_stamp.timestamp() < row['close_at']
+                                    and stamp.timestamp() < new_best_stamp.timestamp() < row['close_at'])
+                    repeated_best_extension = (previous == current and valid_stamps
+                                               and row['best_equation'] == old['best_equation'])
+                    earlier_best_extension = (previous == current and valid_stamps
+                                              and new_best_stamp < old_best_stamp)
+                    later_best_extension = (previous == current and valid_stamps
+                                            and new_best_stamp > old_best_stamp)
+                if not (best_extension or reverse_best_extension or repeated_best_extension or earlier_best_extension or later_best_extension) and (old.get('market_available') or not row.get('market_available') or stamp <= datetime.fromisoformat(old['snapshot_at_jst'])):
                     raise ValueError('Conflicting immutable graded records')
-                if reverse_best_extension:
+                if reverse_best_extension or later_best_extension or (repeated_best_extension and not earlier_best_extension):
                     continue
             records[rid] = row
     return records
@@ -183,6 +201,10 @@ def forecast(schedule, now, fetch_state, saved, clock=None):
         rid = str(row['race_id'])
         decision = {**row, 'race_id': rid, 'grade': saved.get(rid, {}).get('grade'), 'status': 'pending'}
         decisions.append(decision)
+        if rid in saved and saved[rid].get('best_equation') and saved[rid].get('market_available'):
+            decision['best_equation_status'] = 'saved'
+            decision['status'] = 'saved'
+            continue
         if rid in saved and saved[rid].get('market_available'):
             existing = saved[rid]
             if not existing.get('best_equation') and number(existing.get('close_at')) - now.timestamp() > 300:
@@ -243,14 +265,15 @@ def forecast(schedule, now, fetch_state, saved, clock=None):
             # Keep the 31.48% historical champion separate from the existing
             # graded forecast. It uses no current odds and shares the same
             # pre-close race snapshot.
-            best_equation = None
+            best_equation = saved.get(rid, {}).get('best_equation')
             best_equation_error = None
-            try:
-                from graded_tactics_live import predict
-                best_equation = predict(entries, data, grade)
-                best_equation['snapshot_at'] = captured.isoformat(timespec='seconds')
-            except Exception as exc:
-                best_equation_error = f'{type(exc).__name__}: {exc}'
+            if not best_equation:
+                try:
+                    from graded_tactics_live import predict
+                    best_equation = predict(entries, data, grade)
+                    best_equation['snapshot_at'] = captured.isoformat(timespec='seconds')
+                except Exception as exc:
+                    best_equation_error = f'{type(exc).__name__}: {exc}'
             odds_data = find_query_data(state, 'FETCH_KEIRIN_RACE_ODDS')
             if odds_data.get('oddsDelayed') or odds_data.get('finalOdds'):
                 raise ValueError('Delayed or final odds are not pre-race evidence')
@@ -272,7 +295,7 @@ def forecast(schedule, now, fetch_state, saved, clock=None):
             if not quote_ready:
                 quotes = {}
                 if rid in saved:
-                    if best_equation:
+                    if best_equation and not saved[rid].get('best_equation'):
                         # A complete market is optional for the independent
                         # equation. Preserve the frozen original snapshot and
                         # attach its own pre-close prediction separately.
@@ -281,9 +304,11 @@ def forecast(schedule, now, fetch_state, saved, clock=None):
                         additions.append(extension)
                         saved[rid] = extension
                         decision['best_equation_status'] = 'saved'
-                    else:
+                    elif not best_equation:
                         decision['best_equation_status'] = 'prediction_error'
                         decision['best_equation_error'] = best_equation_error
+                    else:
+                        decision['best_equation_status'] = 'saved'
                     decision['status'] = 'saved_waiting_odds'
                     continue
             ranked = rank_tickets(entries, quotes)
