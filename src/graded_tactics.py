@@ -41,3 +41,44 @@ def conditional_tactical_features(inputs,car,prefix=()):
             int(own['line_leader'] in prefix),
             sum(c in prefix for c in own['opposing_leaders']),
             sum(c not in prefix for c in own['ahead_in_line'])]
+
+
+def tactical_interaction_features(inputs,records,car,prefix=()):
+    """Add line support and rival-line pressure using forecast inputs only."""
+    if inputs.get('line_status')!='verified':return [math.nan]*10
+    rows={int(r['car_no']):r for r in records}
+    own=inputs['riders'][str(car)]
+    teammates=[c for c in rows if c!=car and inputs['riders'][str(c)]['line_id']==own['line_id']]
+    behind=[c for c in teammates if inputs['riders'][str(c)]['line_position']>own['line_position']]
+    rivals={}
+    for c,r in inputs['riders'].items():
+        if r['line_id']==own['line_id']:continue
+        rivals.setdefault(r['line_id'],[]).append(int(c))
+    def score(c):
+        try:
+            v=float(rows[c].get('score'))
+            return v if math.isfinite(v) else math.nan
+        except (TypeError,ValueError):return math.nan
+    def mean(values):
+        values=[v for v in values if math.isfinite(v)]
+        return sum(values)/len(values) if values else math.nan
+    support=[score(c) for c in behind]
+    own_lead=int(own['line_leader']); lead_score=score(own_lead)
+    rival_totals=[sum(v for v in (score(c) for c in group) if math.isfinite(v)) for group in rivals.values()]
+    rival_leaders=[int(group[0]) for group in rivals.values()]
+    rival_scores=[score(c) for c in rival_leaders]
+    try:own_attack=float(rows[own_lead].get('back_count'))
+    except (TypeError,ValueError):own_attack=math.nan
+    attacks=[]
+    for c in rival_leaders:
+        try:
+            v=float(rows[c].get('back_count'))
+            if math.isfinite(v):attacks.append(v)
+        except (TypeError,ValueError):pass
+    front_pressure=sum(v>=own_attack-1 for v in attacks) if math.isfinite(own_attack) else math.nan
+    return [len(behind),mean(support),max(support,default=math.nan),
+            lead_score-score(car) if math.isfinite(lead_score) and math.isfinite(score(car)) else math.nan,
+            max(rival_totals,default=math.nan),
+            max(rival_scores,default=math.nan)-lead_score if rival_scores and math.isfinite(lead_score) else math.nan,
+            len(rival_leaders),front_pressure,own_attack,
+            sum(inputs['riders'][str(c)]['line_id']==own['line_id'] for c in prefix)]

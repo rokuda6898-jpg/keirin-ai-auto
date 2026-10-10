@@ -1,6 +1,6 @@
 import copy
 import unittest
-from graded_tactics import tactical_inputs, conditional_tactical_features
+from graded_tactics import tactical_inputs, conditional_tactical_features, tactical_interaction_features
 
 
 class TacticsTests(unittest.TestCase):
@@ -30,6 +30,14 @@ class TacticsTests(unittest.TestCase):
         self.assertEqual(x['line_status'],'ambiguous')
         self.assertEqual(x['leader_matchups'],[])
         self.assertFalse(x['forecast_available'])
+
+    def test_interaction_features_capture_team_support_and_rival_pressure(self):
+        x=tactical_inputs(self.data)
+        rows=[{'car_no':i,'score':float(i*10),'back_count':i} for i in range(1,5)]
+        values=tactical_interaction_features(x,rows,2,(1,))
+        self.assertEqual(len(values),10)
+        self.assertEqual(values[0],0)
+        self.assertEqual(values[6],1)
 
 
 if __name__=='__main__':unittest.main()
