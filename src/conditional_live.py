@@ -19,6 +19,7 @@ import trifecta_chain_research as chain
 from fixed_year_study import input_reason
 from official_outcomes import normalize_outcome
 from public_live import finite, forecast_view, frozen, read_csv, read_json
+from conditional_input_refresh import valid_race
 
 ROOT = Path(__file__).resolve().parents[1]
 LEDGER = 'outputs/company/conditional_live_ledger.jsonl'
@@ -75,10 +76,23 @@ def run(root=ROOT, predict_new=True, clock=now_jst, model_loader=load_model, pre
         raise ValueError('duplicate scheduled race')
     rows = frozen(root/LEDGER)
     results = {str(r['race_id']): r for r in read_json(root/'outputs/latest_results.json', [])}
-    entries_path = root/'data/raw/today_entries.csv'
-    entries = pd.read_csv(entries_path, dtype={'race_id': str, 'player_id': str}, low_memory=False) if entries_path.exists() else pd.DataFrame()
-    fields = {str(rid): race for rid, race in entries.groupby('race_id', sort=False)} if not entries.empty else {}
     metadata = {str(s['race_id']): dict(s) for s in schedule}
+    fields = {}
+    # The isolated conditional fetch has precedence only for a complete,
+    # current-day race; keep other workflows' inputs untouched.
+    for path in (root/'data/raw/today_entries.csv',
+                 root/'data/raw/conditional_today_entries.csv'):
+        if not path.exists():
+            continue
+        entries = pd.read_csv(path, dtype={'race_id': str, 'player_id': str}, low_memory=False)
+        if entries.empty:
+            continue
+        for rid, race in entries.groupby('race_id', sort=False):
+            rid = str(rid)
+            item = metadata.get(rid)
+            if item and (path.name != 'conditional_today_entries.csv' or
+                         valid_race(race, rid, item['date'], item['close_at'])):
+                fields[rid] = race
     errors, candidates, closes = {}, [], {}
     for rid, item in metadata.items():
         if rid in rows or not predict_new:
