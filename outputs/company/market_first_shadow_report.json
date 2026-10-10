@@ -1,7 +1,7 @@
 {
   "capture_audits": {
     "ingestion": {
-      "checked_at_jst": "2026-10-10T16:33:00+09:00",
+      "checked_at_jst": "2026-10-10T17:12:03+09:00",
       "version": "market_first_shadow_v1",
       "input_valid": true,
       "phase": "ingestion",
@@ -9,11 +9,12 @@
       "considered_races": 72,
       "saved_this_run": 0,
       "eligible_this_run": 0,
-      "already_saved_races": 21,
+      "already_saved_races": 22,
       "reason_counts": {
-        "already_saved": 21,
-        "invalid_prices": 35,
-        "near_or_after_close": 16
+        "already_saved": 22,
+        "invalid_prices": 32,
+        "invalid_reference": 1,
+        "near_or_after_close": 17
       },
       "decisions": [
         {
@@ -246,21 +247,18 @@
         },
         {
           "race_id": "043520261010",
-          "reason": "invalid_prices",
-          "expected_quotes": 210,
-          "observed_quotes": 210
+          "reason": "near_or_after_close"
         },
         {
           "race_id": "053520261010",
-          "reason": "invalid_prices",
+          "reason": "invalid_reference",
           "expected_quotes": 60,
-          "observed_quotes": 60
+          "observed_quotes": 60,
+          "oldest_quote_age_seconds": 8.457473039627075
         },
         {
           "race_id": "063520261010",
-          "reason": "invalid_prices",
-          "expected_quotes": 210,
-          "observed_quotes": 210
+          "reason": "already_saved"
         },
         {
           "race_id": "073520261010",
@@ -381,7 +379,7 @@
       "purchase_authorized": false
     },
     "prediction": {
-      "checked_at_jst": "2026-10-10T16:37:58+09:00",
+      "checked_at_jst": "2026-10-10T17:14:22+09:00",
       "version": "market_first_shadow_v1",
       "input_valid": true,
       "phase": "prediction",
@@ -389,11 +387,12 @@
       "considered_races": 72,
       "saved_this_run": 0,
       "eligible_this_run": 0,
-      "already_saved_races": 21,
+      "already_saved_races": 22,
       "reason_counts": {
-        "already_saved": 21,
-        "invalid_prices": 35,
-        "near_or_after_close": 16
+        "already_saved": 22,
+        "invalid_prices": 31,
+        "invalid_reference": 1,
+        "near_or_after_close": 18
       },
       "decisions": [
         {
@@ -546,21 +545,18 @@
         },
         {
           "race_id": "043520261010",
-          "reason": "invalid_prices",
-          "expected_quotes": 210,
-          "observed_quotes": 210
+          "reason": "near_or_after_close"
         },
         {
           "race_id": "044320261010",
-          "reason": "invalid_prices",
-          "expected_quotes": 210,
-          "observed_quotes": 210
+          "reason": "near_or_after_close"
         },
         {
           "race_id": "053520261010",
-          "reason": "invalid_prices",
+          "reason": "invalid_reference",
           "expected_quotes": 60,
-          "observed_quotes": 60
+          "observed_quotes": 60,
+          "oldest_quote_age_seconds": 147.0379068851471
         },
         {
           "race_id": "054320261010",
@@ -570,9 +566,7 @@
         },
         {
           "race_id": "063520261010",
-          "reason": "invalid_prices",
-          "expected_quotes": 210,
-          "observed_quotes": 210
+          "reason": "already_saved"
         },
         {
           "race_id": "064320261010",
@@ -761,30 +755,30 @@
       "purchase_authorized": false
     }
   },
-  "updated_at_jst": "2026-10-10T16:48:13+09:00",
+  "updated_at_jst": "2026-10-10T17:15:02+09:00",
   "version": "market_first_shadow_v1",
-  "frozen_races": 75,
-  "settled_races": 73,
+  "frozen_races": 76,
+  "settled_races": 74,
   "variants": {
     "market_first": {
-      "paired_races": 73,
+      "paired_races": 74,
       "winner_hits": 35,
-      "hit_rate": 0.4794520547945205
+      "hit_rate": 0.47297297297297297
     },
     "current_hole": {
-      "paired_races": 73,
+      "paired_races": 74,
       "winner_hits": 20,
-      "hit_rate": 0.273972602739726
+      "hit_rate": 0.2702702702702703
     },
     "consensus": {
-      "paired_races": 73,
+      "paired_races": 74,
       "winner_hits": 36,
-      "hit_rate": 0.4931506849315068
+      "hit_rate": 0.4864864864864865
     }
   },
   "market_only": 27,
   "hole_only": 12,
-  "different_axes": 54,
+  "different_axes": 55,
   "review_ready": false,
   "automatic_promotion": false,
   "purchase_authorized": false,
