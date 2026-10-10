@@ -2,10 +2,13 @@ name: deploy-pages
 on:
   push:
     branches: [main]
-    paths: ['site/**', 'src/build_public_site.py', '.github/workflows/pages.yml']
+    paths: ['site/**', 'src/build_public_site.py', 'src/site_retirement.py', '.github/workflows/pages.yml']
   workflow_dispatch:
+  workflow_run:
+    workflows: ['daily-keirin-predict', 'intraday-keirin-odds']
+    types: [completed]
   schedule:
-    # Full original reports refresh hourly; live cards still fetch data directly.
+    # Retain a periodic refresh; successful canonical forecasts publish immediately.
     - cron: '7 * * * *'
 permissions:
   contents: read
@@ -16,12 +19,15 @@ concurrency:
   cancel-in-progress: false
 jobs:
   deploy:
+    if: github.event_name != 'workflow_run' || (github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.conclusion == 'success')
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
       - name: Check public app
         run: |
           node --check site/app.js
@@ -30,6 +36,38 @@ jobs:
           test -s site/style.css
       - name: Include the complete original company and history pages
         run: python src/build_public_site.py
+      - name: Verify retired navigation and published forecast snapshot
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path('public-build')
+          home = (root/'index.html').read_text(encoding='utf-8')
+          company = (root/'company.html').read_text(encoding='utf-8')
+          conditional = (root/'conditional.html').read_text(encoding='utf-8')
+          assert 'shadow-mode' not in home and 'independent.html' not in home
+          assert '独立予想' not in company
+          assert 'conditional.html' in home and '条件付き3連単' in conditional
+          assert 'url=conditional.html' in (root/'independent.html').read_text(encoding='utf-8')
+          for path in ('company/all_department_predictions.json', 'company/company_decision_predictions.json', 'conditional_live.json'):
+              assert (root/'original'/path).read_bytes() == (Path('outputs')/path).read_bytes(), path
+          departments = json.loads((root/'original/company/all_department_predictions.json').read_text(encoding='utf-8'))
+          decision = json.loads((root/'original/company/company_decision_predictions.json').read_text(encoding='utf-8'))
+          conditional_data = json.loads((root/'original/conditional_live.json').read_text(encoding='utf-8'))
+          # Report missing forecasts honestly; incomplete coverage is not a reason
+          # to keep serving an older, apparently healthy page.
+          print('PUBLISHED_FORECAST_SNAPSHOT '+json.dumps({
+              'legacy_independent_navigation': False,
+              'department_updated_at': departments.get('updated_at_jst'),
+              'department_responses': departments.get('responses'),
+              'department_expected': departments.get('expected_responses'),
+              'department_missing': departments.get('upcoming_missing_forecasts'),
+              'company_date': decision.get('coverage', {}).get('date'),
+              'company_forecasted': decision.get('coverage', {}).get('forecasted_races'),
+              'company_input_races': decision.get('coverage', {}).get('input_races'),
+              'conditional_coverage': conditional_data.get('coverage')
+          }, ensure_ascii=False))
+          PY
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
