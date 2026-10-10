@@ -48,9 +48,9 @@ def main():
     frame=base.classify(frame,folder)
     valid=[rid for rid,r in frame.groupby('race_id') if base.valid(r)]
     frame=frame[frame.race_id.isin(valid)]
-    # Rate-limited source: predeclare a chronological pilot, not a selected
-    # subset based on predictions or outcomes. Preserve every selected race.
-    test_ids=frame[frame.date.ge(base.START)].sort_values(['date','race_id']).drop_duplicates('race_id').head(100).race_id.tolist()
+    # Full-year extension with the exact frozen pilot model.
+    test_ids=frame[frame.date.ge(base.START)].sort_values(['date','race_id']).drop_duplicates('race_id').race_id.tolist()
+    assert len(test_ids)==1315, 'Full-year coverage changed'
     train_ids=[p.stem for p in sources.glob('*.json')]
     frame=frame[frame.date.lt(base.START)|frame.race_id.isin(test_ids)]
     races=frame[frame.race_id.isin(train_ids+test_ids)].drop_duplicates('race_id')
@@ -71,14 +71,13 @@ def main():
             status=TACTICS[rid]['line_status'];counts[status]=counts.get(status,0)+1
         coverage[name]={'races':len(ids),'lines':counts,'advancement_available':sum(bool(TACTICS[r].get('advancement_text')) for r in ids)}
     base.write(folder/'coverage.json',coverage);print('TACTICAL_COVERAGE '+json.dumps(coverage),flush=True)
-    groups=list(train.groupby('race_id',sort=False));stages=sorted(train.race_type.fillna('').astype(str).unique())
-    baseline=base.fit(groups,'stage_conditional',stages)
-    try:
-        base.features=enhanced
-        learned=base.fit(groups,'stage_conditional',stages)
-    finally:base.features=ORIGINAL
     import joblib
-    joblib.dump({'champion':baseline,'tactical':learned,'stages':stages},folder/'models.joblib')
+    model_path=seed/'models.joblib'
+    model_hash=hashlib.sha256(model_path.read_bytes()).hexdigest()
+    assert model_hash=='2d2fc06e43dc7ea54369dab71865fda36de1f93901686cb425b4b840df045657'
+    frozen=joblib.load(model_path)
+    baseline,learned,stages=frozen['champion'],frozen['tactical'],frozen['stages']
+    shutil.copy2(model_path,folder/'models.joblib')
     predictions=[]
     for i,(rid,race) in enumerate(target.groupby('race_id',sort=False),1):
         records=race.drop(columns=['finish_pos','official_finish_pos','result_available'],errors='ignore').to_dict('records')
@@ -101,7 +100,8 @@ def main():
     report=json.loads((folder/'results.json').read_text(encoding='utf-8'))
     report.pop('paired_differences',None)
     report['coverage']=coverage
-    report['sample_selection']='First 100 eligible test races ordered by date and race_id before examining outcomes; pilot only'
+    report['model_sha256']=model_hash
+    report['sample_selection']='All 1315 eligible races; frozen 100-race-pilot models, no refitting or tuning'
     report['limitations']=['Historical provider formations retrieved now; original preclose capture unverified','Advancement text not encoded without verified historical availability','No learned action timing or response scenarios; conditional formation features only','Previously inspected test year; exploratory comparison','No ROI or 100x eligibility claims']
     report['delta_vs_champion']=report['methods']['tactical']['hit_rate']-report['methods']['champion']['hit_rate']
     base.write(folder/'results.json',report)
