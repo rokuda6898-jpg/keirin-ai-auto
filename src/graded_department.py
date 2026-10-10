@@ -147,7 +147,7 @@ def load_ledger(path):
             if rid in records and records[rid] != row:
                 old = records[rid]
                 best_extension = False
-                if old.get('market_available') and row.get('market_available') and not old.get('best_equation') and row.get('best_equation'):
+                if old.get('market_available') == row.get('market_available') and not old.get('best_equation') and row.get('best_equation'):
                     ignored = {'best_equation', 'best_equation_status', 'best_equation_error'}
                     previous = {k:v for k,v in old.items() if k not in ignored}
                     current = {k:v for k,v in row.items() if k not in ignored}
@@ -262,6 +262,18 @@ def forecast(schedule, now, fetch_state, saved, clock=None):
             if not quote_ready:
                 quotes = {}
                 if rid in saved:
+                    if best_equation:
+                        # A complete market is optional for the independent
+                        # equation. Preserve the frozen original snapshot and
+                        # attach its own pre-close prediction separately.
+                        extension = dict(saved[rid], best_equation=best_equation,
+                                         best_equation_status='saved', best_equation_error=None)
+                        additions.append(extension)
+                        saved[rid] = extension
+                        decision['best_equation_status'] = 'saved'
+                    else:
+                        decision['best_equation_status'] = 'prediction_error'
+                        decision['best_equation_error'] = best_equation_error
                     decision['status'] = 'saved_waiting_odds'
                     continue
             ranked = rank_tickets(entries, quotes)

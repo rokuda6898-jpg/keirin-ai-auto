@@ -91,6 +91,31 @@ class GradedDepartmentTests(unittest.TestCase):
             p.write_text('\n'.join(json.dumps(r) for r in [base,late]),encoding='utf-8')
             with self.assertRaises(ValueError):load_ledger(p)
 
+    def test_best_equation_is_saved_for_unpriced_existing_race(self):
+        now=datetime(2026,10,10,12,tzinfo=JST)
+        schedule=[{'race_id':'r','date':'2026-10-10','venue':'test','race_no':1,
+                   'close_at':now.timestamp()+900,'source_url':'https://example.test/r'}]
+        data={'cups':[{'id':'cup','grade':5}],'schedule':{'cupId':'cup'},
+              'race':{'id':'r','isGradeRace':True,'closeAt':now.timestamp()+900}}
+        original={'race_id':'r','grade':'G1','close_at':now.timestamp()+900,
+                  'snapshot_at_jst':(now-timedelta(seconds=60)).isoformat(),
+                  'market_available':False,'main':['1-2-3'],'hole':[]}
+        best={'tickets':['1-2-3','2-1-3'],'probabilities':[.2,.1],
+              'snapshot_at':now.isoformat(timespec='seconds'),'model_version':'test'}
+        def query(_state,key):return data if key=='FETCH_KEIRIN_RACE' else {}
+        with patch('fetch_today_entries.find_query_data',side_effect=query), patch('race_features.build_entry_rows',return_value=riders()), patch('fetch_today_entries._entry_rows_complete',return_value=(True,[],7)), patch('fetch_today_entries.build_odds_rows',return_value=[]), patch('graded_tactics_live.predict',return_value=best):
+            additions,decisions=forecast(schedule,now,lambda _url:{},{'r':original},clock=lambda:now)
+        self.assertEqual(len(additions),1)
+        self.assertEqual(additions[0]['best_equation'],best)
+        self.assertFalse(additions[0]['market_available'])
+        self.assertEqual(additions[0]['snapshot_at_jst'],original['snapshot_at_jst'])
+        self.assertEqual(additions[0]['main'],original['main'])
+        self.assertEqual(decisions[0]['best_equation_status'],'saved')
+        with tempfile.TemporaryDirectory() as folder:
+            path=Path(folder)/'ledger'
+            path.write_text('\n'.join(json.dumps(row) for row in [original,additions[0]]),encoding='utf-8')
+            self.assertEqual(load_ledger(path)['r'],additions[0])
+
     def test_capture_unpriced_then_only_one_valid_market_upgrade(self):
         now=datetime(2026,10,10,12,tzinfo=JST)
         schedule=[{'race_id':'r','date':'2026-10-10','venue':'test','race_no':1,'close_at':now.timestamp()+900,'source_url':'https://example.test/r'}]
