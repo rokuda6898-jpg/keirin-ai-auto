@@ -168,11 +168,11 @@ class GradedDepartmentTests(unittest.TestCase):
                    'verified_lines':True,'main':[],'hole':[],'market_baseline':[],
                    'hole_market_baseline':[],'best_equation_status':'saved',
                    'best_equation':{'tickets':['1-2-3','2-1-3'],'probabilities':[.2,.1],
-                                    'snapshot_at':now.isoformat()}}
+                                    'snapshot_at':(now+timedelta(seconds=60)).isoformat()}}
             feed=build_feed(root,{'r':saved},[],now)
             race=feed['races'][0]
             self.assertEqual(race['best_equation']['tickets'],['1-2-3','2-1-3'])
-            self.assertEqual(race['best_equation']['snapshot_at'],now.isoformat())
+            self.assertEqual(race['best_equation']['snapshot_at'],(now+timedelta(seconds=60)).isoformat())
 
 
 if __name__=='__main__':unittest.main()

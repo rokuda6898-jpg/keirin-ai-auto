@@ -353,7 +353,7 @@ def build_feed(root, records, decisions, now):
                     'tickets': best['tickets'],
                     'marks': marks({'top12': best['tickets'], 'probabilities': best.get('probabilities', [])}),
                     'ticket_details': [{'buy': buy, 'reasons': ['過去1年検証で最良の重賞式']} for buy in best['tickets']],
-                    'snapshot_at': saved['snapshot_at_jst'],
+                    'snapshot_at': best.get('snapshot_at') or saved['snapshot_at_jst'],
                     'note': '検証成績31.48%の凍結式。締切前の保存予想です。'
                 }
             elif saved.get('best_equation_error'):
