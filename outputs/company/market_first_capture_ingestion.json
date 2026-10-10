@@ -1,5 +1,5 @@
 {
-  "checked_at_jst": "2026-10-10T16:33:00+09:00",
+  "checked_at_jst": "2026-10-10T16:55:59+09:00",
   "version": "market_first_shadow_v1",
   "input_valid": true,
   "phase": "ingestion",
@@ -10,7 +10,8 @@
   "already_saved_races": 21,
   "reason_counts": {
     "already_saved": 21,
-    "invalid_prices": 35,
+    "invalid_prices": 34,
+    "invalid_reference": 1,
     "near_or_after_close": 16
   },
   "decisions": [
@@ -250,9 +251,10 @@
     },
     {
       "race_id": "053520261010",
-      "reason": "invalid_prices",
+      "reason": "invalid_reference",
       "expected_quotes": 60,
-      "observed_quotes": 60
+      "observed_quotes": 60,
+      "oldest_quote_age_seconds": 4.532581090927124
     },
     {
       "race_id": "063520261010",
