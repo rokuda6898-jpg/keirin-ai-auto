@@ -36,8 +36,8 @@ class PublicLiveTests(unittest.TestCase):
             out = root/'outputs'
             (out/'company').mkdir(parents=True)
             (out/'latest_race_schedule.csv').write_text(
-                'race_id,date,venue,race_no,start_at,close_at\\n'
-                'a,2026-10-10,場,1,1791633000,1791632700\\n', encoding='utf-8')
+                'race_id,date,venue,race_no,start_at,close_at\n'
+                'a,2026-10-10,場,1,1791633000,1791632700\n', encoding='utf-8')
             (out/'latest_results.json').write_text(json.dumps([
                 {'race_id':'a', 'official_result_available':True,
                  'actual_trifecta':'1-2-3', 'payouts_trifecta_json':'{}'}
