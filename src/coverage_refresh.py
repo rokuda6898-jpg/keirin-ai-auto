@@ -48,6 +48,12 @@ def main():
         if mode != 'near_close':
             raise SystemExit('Upcoming company coverage incomplete: '+mode)
         return
+    if mode in ('daily', 'all_upcoming'):
+        from company_input_recovery import recover
+        if recover(ROOT, now):
+            # Raw starters only. predict.py still runs every original department
+            # and the original company aggregator; no conditional picks copied.
+            return
     if mode == 'daily':
         from fetch_today_entries import fetch_today_entries
         frame = fetch_today_entries()

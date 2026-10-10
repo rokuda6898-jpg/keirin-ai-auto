@@ -18,7 +18,7 @@ OWNERS = {
     'operations': '稼働・通知責任者',
 }
 WORKFLOWS = ('site-manager.yml','manager-watchdog.yml','daily.yml','intraday.yml',
-             'fusion-shadow-live.yml','quick-results.yml','settle.yml','public-live-data.yml','pages.yml')
+             'conditional-live.yml','quick-results.yml','settle.yml','public-live-data.yml','pages.yml')
 
 
 def workflow_findings(workflow, runs, now_s):
@@ -57,7 +57,11 @@ def valid_ticket(buy):
     return len(parts) == 3 and len(set(parts)) == 3 and all(p in '123456789' and len(p) == 1 for p in parts)
 
 
-def audit(feed, now):
+def audit(feed, now, modes=('company', 'shadow')):
+    # Explicit modes preserve historical comparison/tests while allowing a
+    # retired product to leave the live coverage and settlement requirements.
+    if not modes or any(m not in ('company', 'shadow') for m in modes):
+        raise ValueError('invalid audit modes')
     findings = []
     def add(owner, code, message, races=(), level='error'):
         findings.append(dict(owner=owner, code=code, level=level, message=message,
@@ -78,7 +82,7 @@ def audit(feed, now):
         add('data', 'duplicate_races', '公開データにレースIDの重複があります。')
     missing, late, invalid, unpaid, overdue, withdrawn = {}, [], [], [], [], []
     coverage = {}
-    for mode in ('company', 'shadow'):
+    for mode in modes:
         missing[mode] = []
         due_missing = []
         for r in current:
@@ -97,7 +101,7 @@ def audit(feed, now):
             add('coverage', 'missing_'+mode, ('会社' if mode == 'company' else '独立')+
                 '予想が締切15分前または締切後にも未作成です。後付けせず未作成として記録します。', due_missing)
     for r in feed.get('races', []):
-        for mode in ('company', 'shadow'):
+        for mode in modes:
             p = r.get(mode)
             if not p:
                 continue
@@ -128,11 +132,10 @@ def audit(feed, now):
         add('settlement', 'unknown_payout', '的中した買い目の公式払戻が未取得です。回収率を確定できません。', unpaid)
     if overdue:
         add('settlement', 'results_overdue', '発走から2時間以上経過しても結果未確認です。中止・延期も確認してください。', overdue, 'warning')
-    # Matched cohort prevents a method from benefiting from easier/missing races.
     excluded = set(late) | set(invalid) | set(withdrawn)
-    common = [r for r in current if r['id'] not in excluded and r.get('actual') and all(r.get(m, {}).get('tickets') if r.get(m) else False for m in ('company','shadow'))]
+    common = [r for r in current if r['id'] not in excluded and r.get('actual') and all(r.get(m, {}).get('tickets') if r.get(m) else False for m in modes)]
     comparison = {}
-    for mode in ('company', 'shadow'):
+    for mode in modes:
         hits, stake, returned, known, returns = 0, 0, 0, True, []
         for r in common:
             tickets = r[mode]['tickets']
@@ -159,7 +162,8 @@ def audit(feed, now):
     return {'checked_at':now.isoformat(timespec='seconds'), 'owners':OWNERS,
             'status':'error' if any(f['level']=='error' for f in findings) else 'warning' if findings else 'healthy',
             'findings':findings, 'coverage':coverage, 'matched_comparison':comparison,
-            'comparison_scope':'同じレース・初回締切前予想・各点100円。点数差は投資額に反映。因果的な優劣判定ではありません。',
+            'active_modes':list(modes),
+            'comparison_scope':('会社方式のみ・初回締切前予想・各点100円。従来の独立予想は終了。' if len(modes)==1 else '同じレース・初回締切前予想・各点100円。点数差は投資額に反映。因果的な優劣判定ではありません。'),
             'department_mean_ticket_overlap':sum(overlaps)/len(overlaps) if overlaps else None}
 
 
@@ -170,7 +174,7 @@ def main():
     now = datetime.now(ZoneInfo('Asia/Tokyo'))
     try:
         feed = json.loads((args.root/'outputs/public_live.json').read_text(encoding='utf-8'))
-        report = audit(feed, now)
+        report = audit(feed, now, modes=('company',))
         with (args.root/'outputs/latest_race_schedule.csv').open(encoding='utf-8-sig', newline='') as stream:
             expected = {r['race_id'] for r in csv.DictReader(stream) if r['date'] == now.date().isoformat()}
         omitted = expected - {r['id'] for r in feed['races']}
