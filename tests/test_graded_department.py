@@ -76,6 +76,21 @@ class GradedDepartmentTests(unittest.TestCase):
             p.write_text(json.dumps({**base,'snapshot_at_jst':(now+timedelta(seconds=1000)).isoformat()}),encoding='utf-8')
             with self.assertRaises(ValueError):load_ledger(p)
 
+    def test_best_equation_may_be_added_once_before_close_without_rewriting_original_snapshot(self):
+        now=datetime(2026,10,10,12,tzinfo=JST)
+        base={'race_id':'r','grade':'G1','close_at':now.timestamp()+1800,
+              'snapshot_at_jst':now.isoformat(),'market_available':True,'main':[],'hole':[]}
+        extension={**base,'best_equation':{'snapshot_at':(now+timedelta(seconds=30)).isoformat(),
+                   'tickets':['1-2-3']},'best_equation_status':'saved','best_equation_error':None}
+        with tempfile.TemporaryDirectory() as folder:
+            p=Path(folder)/'ledger'
+            p.write_text('\n'.join(json.dumps(r) for r in [base,extension]),encoding='utf-8')
+            self.assertEqual(load_ledger(p)['r'],extension)
+            late={**base,'best_equation':{'snapshot_at':datetime.fromtimestamp(base['close_at']+1,JST).isoformat(),
+                  'tickets':['1-2-3']},'best_equation_status':'saved'}
+            p.write_text('\n'.join(json.dumps(r) for r in [base,late]),encoding='utf-8')
+            with self.assertRaises(ValueError):load_ledger(p)
+
     def test_capture_unpriced_then_only_one_valid_market_upgrade(self):
         now=datetime(2026,10,10,12,tzinfo=JST)
         schedule=[{'race_id':'r','date':'2026-10-10','venue':'test','race_no':1,'close_at':now.timestamp()+900,'source_url':'https://example.test/r'}]
@@ -115,6 +130,23 @@ class GradedDepartmentTests(unittest.TestCase):
             feed=build_feed(root,{},decisions,now)
             self.assertEqual(feed['races'][0]['payouts'],{'1-2-3':12000.,'2-1-3':8000.})
             self.assertIsNone(feed['races'][0]['grade'])
+
+    def test_best_equation_is_separate_in_full_race_feed(self):
+        now=datetime(2026,10,10,12,tzinfo=JST)
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder);(root/'outputs').mkdir()
+            saved={'race_id':'r','date':'2026-10-10','venue':'test','race_no':1,
+                   'start_at':now.timestamp()+600,'close_at':now.timestamp()+300,
+                   'snapshot_at_jst':now.isoformat(),'grade':'G1','market_available':False,
+                   'riders':[{'car':'1','name':'選手1'}], 'cancelled_cars':[],
+                   'verified_lines':True,'main':[],'hole':[],'market_baseline':[],
+                   'hole_market_baseline':[],'best_equation_status':'saved',
+                   'best_equation':{'tickets':['1-2-3','2-1-3'],'probabilities':[.2,.1],
+                                    'snapshot_at':now.isoformat()}}
+            feed=build_feed(root,{'r':saved},[],now)
+            race=feed['races'][0]
+            self.assertEqual(race['best_equation']['tickets'],['1-2-3','2-1-3'])
+            self.assertEqual(race['best_equation']['snapshot_at'],now.isoformat())
 
 
 if __name__=='__main__':unittest.main()

@@ -146,7 +146,15 @@ def load_ledger(path):
             rid = row['race_id']
             if rid in records and records[rid] != row:
                 old = records[rid]
-                if old.get('market_available') or not row.get('market_available') or stamp <= datetime.fromisoformat(old['snapshot_at_jst']):
+                best_extension = False
+                if old.get('market_available') and row.get('market_available') and not old.get('best_equation') and row.get('best_equation'):
+                    ignored = {'best_equation', 'best_equation_status', 'best_equation_error'}
+                    previous = {k:v for k,v in old.items() if k not in ignored}
+                    current = {k:v for k,v in row.items() if k not in ignored}
+                    best_stamp = datetime.fromisoformat(row['best_equation'].get('snapshot_at', ''))
+                    best_extension = (previous == current and best_stamp.tzinfo is not None
+                                      and stamp.timestamp() < best_stamp.timestamp() < row['close_at'])
+                if not best_extension and (old.get('market_available') or not row.get('market_available') or stamp <= datetime.fromisoformat(old['snapshot_at_jst'])):
                     raise ValueError('Conflicting immutable graded records')
             records[rid] = row
     return records
@@ -166,6 +174,36 @@ def forecast(schedule, now, fetch_state, saved, clock=None):
         decision = {**row, 'race_id': rid, 'grade': saved.get(rid, {}).get('grade'), 'status': 'pending'}
         decisions.append(decision)
         if rid in saved and saved[rid].get('market_available'):
+            existing = saved[rid]
+            if not existing.get('best_equation') and number(existing.get('close_at')) - now.timestamp() > 300:
+                try:
+                    state = fetch_state(row['source_url'])
+                    data = find_query_data(state, 'FETCH_KEIRIN_RACE')
+                    if str(data.get('race', {}).get('id')) != rid or data['race'].get('cancel'):
+                        raise ValueError('Race identity mismatch or cancellation')
+                    grade = grade_of(data)
+                    if grade != existing.get('grade'):
+                        raise ValueError('Graded race changed since saved forecast')
+                    captured = clock() if clock else datetime.now(JST)
+                    if number(data['race'].get('closeAt')) - captured.timestamp() <= 300:
+                        decision['status'] = 'saved'
+                        decision['best_equation_status'] = 'near_close'
+                        continue
+                    entries = build_entry_rows(data, row['date'], row['venue'], int(row['race_no']), rid, row['source_url'], False)
+                    if not _entry_rows_complete(entries)[0]:
+                        raise ValueError('Incomplete starters')
+                    from graded_tactics_live import predict
+                    best = predict(entries, data, grade)
+                    best['snapshot_at'] = captured.isoformat(timespec='seconds')
+                    extension = dict(existing, best_equation=best, best_equation_status='saved', best_equation_error=None)
+                    additions.append(extension)
+                    saved[rid] = extension
+                    decision['best_equation_status'] = 'saved'
+                except Exception as exc:
+                    decision['best_equation_status'] = 'prediction_error'
+                    decision['best_equation_error'] = f'{type(exc).__name__}: {exc}'
+            else:
+                decision['best_equation_status'] = 'saved' if existing.get('best_equation') else 'not_backfilled'
             decision['status'] = 'saved'
             continue
         if number(row.get('close_at')) - now.timestamp() <= 300:
@@ -192,6 +230,17 @@ def forecast(schedule, now, fetch_state, saved, clock=None):
             entries = build_entry_rows(data, row['date'], row['venue'], int(row['race_no']), rid, row['source_url'], False)
             if not _entry_rows_complete(entries)[0]:
                 raise ValueError('Incomplete starters')
+            # Keep the 31.48% historical champion separate from the existing
+            # graded forecast. It uses no current odds and shares the same
+            # pre-close race snapshot.
+            best_equation = None
+            best_equation_error = None
+            try:
+                from graded_tactics_live import predict
+                best_equation = predict(entries, data, grade)
+                best_equation['snapshot_at'] = captured.isoformat(timespec='seconds')
+            except Exception as exc:
+                best_equation_error = f'{type(exc).__name__}: {exc}'
             odds_data = find_query_data(state, 'FETCH_KEIRIN_RACE_ODDS')
             if odds_data.get('oddsDelayed') or odds_data.get('finalOdds'):
                 raise ValueError('Delayed or final odds are not pre-race evidence')
@@ -225,6 +274,9 @@ def forecast(schedule, now, fetch_state, saved, clock=None):
                       'market_available': quote_ready,
                       'input_features': [{k: (None if isinstance(r.get(k), float) and not math.isfinite(r[k]) else r.get(k)) for k in ('car_no','score','win_rate','place2_rate','place3_rate','line_verification_status','line_id','line_position','style','front_runner_count')} for r in entries],
                       'market_quotes': {'-'.join(map(str,k)): v for k,v in quotes.items()},
+                      'best_equation': best_equation,
+                      'best_equation_status': 'saved' if best_equation else 'prediction_error',
+                      'best_equation_error': best_equation_error,
                       **ranked}
             additions.append(record)
             decision['status'] = 'saved' if quote_ready else 'saved_waiting_odds'
@@ -251,6 +303,8 @@ def build_feed(root, records, decisions, now):
                 'close_at': number(row.get('close_at')), 'riders': saved['riders'] if saved else [],
                 'cancelled_cars': saved.get('cancelled_cars', []) if saved else [],
                 'actual': [], 'payouts': {}, 'grade': None, 'grade_hole': None,
+                'best_equation': None,
+                'best_equation_status': row.get('best_equation_status', 'not_created'),
                 'department_status': row.get('status', 'saved')}
         outcome = normalize_outcome(latest.get(rid, {}))
         race['cancelled_cars'] = sorted(set(race['cancelled_cars']) | set(current_public.get(rid, {}).get('cancelled_cars', [])))
@@ -269,12 +323,25 @@ def build_feed(root, records, decisions, now):
                                'baseline': saved['market_baseline' if kind == 'main' else 'hole_market_baseline'],
                                'note': ('ライン確認済み' if saved['verified_lines'] else 'ライン未確認：隊列補正なし') +
                                        (' ／ オッズ確認済み' if saved['market_available'] else ' ／ オッズ待ち：通常予想のみ事前保存')}
+            best = saved.get('best_equation')
+            race['best_equation_status'] = saved.get('best_equation_status',
+                'not_backfilled' if saved.get('snapshot_at_jst') else 'unavailable')
+            if best:
+                race['best_equation'] = {
+                    'tickets': best['tickets'],
+                    'marks': marks({'top12': best['tickets'], 'probabilities': best.get('probabilities', [])}),
+                    'ticket_details': [{'buy': buy, 'reasons': ['過去1年検証で最良の重賞式']} for buy in best['tickets']],
+                    'snapshot_at': saved['snapshot_at_jst'],
+                    'note': '検証成績31.48%の凍結式。締切前の保存予想です。'
+                }
+            elif saved.get('best_equation_error'):
+                race['best_equation_error'] = saved['best_equation_error']
         races.append(race)
     races.sort(key=lambda r: (r['date'], r['start_at'], r['number']))
     return {'schema': 1, 'generated_at': now.isoformat(), 'updated_at': now.isoformat(),
             'schedule_date': now.date().isoformat(), 'races': races,
             'coverage': decisions, 'graded_department': True,
-            'note': 'G1・G2・G3専用。100倍以上でも条件を満たさない穴は追加しません。重賞で穴が増えるという仮説・重みは未検証です。'}
+            'note': 'G1・G2・G3全レースを掲載。31.48%式は過去の検証値で、当日の成績は別集計です。'}
 
 
 def run(root=ROOT, carry=None):
