@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-10-10T11:04:01+09:00",
+  "checked_at": "2026-10-10T11:11:44+09:00",
   "owners": {
     "data": "データ品質責任者",
     "coverage": "全レース予想責任者",
@@ -7,7 +7,7 @@
     "settlement": "成績・払戻責任者",
     "operations": "稼働・通知責任者"
   },
-  "status": "warning",
+  "status": "error",
   "findings": [
     {
       "owner": "settlement",
@@ -19,6 +19,14 @@
         "053520261010",
         "095320261009"
       ]
+    },
+    {
+      "owner": "operations",
+      "code": "workflow_quick-results.yml",
+      "level": "error",
+      "message": "quick-results.yml の直近完了処理が失敗しています。",
+      "race_ids": [],
+      "run_url": "https://github.com/rokuda6898-jpg/keirin-ai-auto/actions/runs/38015259169"
     }
   ],
   "coverage": {
@@ -35,23 +43,23 @@
   },
   "matched_comparison": {
     "company": {
-      "races": 6,
+      "races": 8,
       "hits": 2,
-      "stake_yen": 5900,
+      "stake_yen": 7400,
       "return_yen": 880.0,
       "largest_hit_return_share": 0.5113636363636364
     },
     "shadow": {
-      "races": 6,
-      "hits": 2,
-      "stake_yen": 7200,
-      "return_yen": 880.0,
-      "largest_hit_return_share": 0.5113636363636364
+      "races": 8,
+      "hits": 3,
+      "stake_yen": 9600,
+      "return_yen": 6270.0,
+      "largest_hit_return_share": 0.8596491228070176
     }
   },
   "comparison_scope": "同じレース・初回締切前予想・各点100円。点数差は投資額に反映。因果的な優劣判定ではありません。",
   "department_mean_ticket_overlap": 0.23316432245003674,
   "email_configured": false,
   "notification_channel": "github_actions",
-  "email_status": "github_actions_duplicate"
+  "email_status": "github_actions_alert"
 }
