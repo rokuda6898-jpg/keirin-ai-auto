@@ -72,6 +72,12 @@ def main():
         for i,future in enumerate(as_completed(futures),1):
             rid,obj=future.result();TACTICS[rid]=obj
             if i%100==0:print(f'TACTICAL_SOURCES {i}/{len(futures)}',flush=True)
+    # Rehydrate source files that were already cached; only fetched rows above
+    # were previously added to TACTICS, which silently dropped offline cache.
+    for rid in races.race_id.astype(str).unique():
+        if rid not in TACTICS:
+            cached=sources/(rid+'.json')
+            if cached.exists():TACTICS[rid]=json.loads(cached.read_text(encoding='utf-8'))
     # A cached formation is usable only if its cars match this archive race.
     for rid,race in frame.groupby('race_id'):
         obj=TACTICS.setdefault(rid,{'race_id':rid,'line_status':'not_retrieved'})
