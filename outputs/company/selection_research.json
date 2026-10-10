@@ -1,6 +1,6 @@
 {
   "exact_position_comparison": {
-    "paired_races": 8,
+    "paired_races": 9,
     "auto_promotion": false,
     "status": "chronological_comparison",
     "test_start_date": "2026-10-09",
@@ -21,71 +21,132 @@
     "later": [
       {
         "position": 2,
-        "races": 4,
-        "baseline_brier": 0.8710970510136277,
-        "challenger_brier": 1.503297346022423
+        "races": 5,
+        "baseline_brier": 0.9331713384887275,
+        "challenger_brier": 1.5049237322370006
       },
       {
         "position": 3,
-        "races": 4,
-        "baseline_brier": 1.348268534515307,
-        "challenger_brier": 1.7087650734711488
+        "races": 5,
+        "baseline_brier": 1.353673804811973,
+        "challenger_brier": 1.4966620182509
       }
     ]
   },
-  "updated_at_jst": "2026-10-10T18:28:27+09:00",
+  "updated_at_jst": "2026-10-10T18:54:10+09:00",
   "strategy_version": "position_prob_v11_high_payout_20261007",
-  "paired_races": 186,
+  "paired_races": 189,
   "probability_first": {
-    "bet_races": 161,
-    "hits": 14,
-    "hit_rate": 0.08695652173913043,
-    "stake_yen": 113700,
-    "return_yen": 82040,
-    "return_rate": 0.7215479331574318
+    "bet_races": 164,
+    "hits": 15,
+    "hit_rate": 0.09146341463414634,
+    "stake_yen": 114600,
+    "return_yen": 83800,
+    "return_rate": 0.731239092495637
   },
   "current_ev_first": {
-    "bet_races": 161,
-    "hits": 14,
-    "hit_rate": 0.08695652173913043,
-    "stake_yen": 114000,
-    "return_yen": 82040,
-    "return_rate": 0.7196491228070175
+    "bet_races": 164,
+    "hits": 15,
+    "hit_rate": 0.09146341463414634,
+    "stake_yen": 114900,
+    "return_yen": 83800,
+    "return_rate": 0.7293298520452568
   },
   "calibration": {
-    "status": "collecting",
-    "train_races": 112,
-    "test_races": 49,
+    "status": "offline_holdout",
+    "train_races": 114,
+    "test_races": 50,
     "minimum_train_races": 100,
     "minimum_test_races": 50,
     "auto_apply": false,
-    "scope": "時系列で分けた保存済み選択買い目の検証。全候補や着順確率へは適用しない。"
+    "scope": "時系列で分けた保存済み選択買い目の検証。全候補や着順確率へは適用しない。",
+    "training_bins": [
+      {
+        "lower": 0,
+        "upper": 0.01,
+        "factor": 1.0002722225983176,
+        "training_tickets": 188
+      },
+      {
+        "lower": 0.01,
+        "upper": 0.02,
+        "factor": 0.9384576853795177,
+        "training_tickets": 154
+      },
+      {
+        "lower": 0.02,
+        "upper": 0.05,
+        "factor": 0.7066733378671033,
+        "training_tickets": 347
+      },
+      {
+        "lower": 0.05,
+        "upper": 0.1,
+        "factor": 0.8518374789269829,
+        "training_tickets": 124
+      },
+      {
+        "lower": 0.1,
+        "upper": 0.2,
+        "factor": 1.0208798679553883,
+        "training_tickets": 13
+      },
+      {
+        "lower": 0.2,
+        "upper": 0.4,
+        "factor": 1.0,
+        "training_tickets": 0
+      },
+      {
+        "lower": 0.4,
+        "upper": 0.6,
+        "factor": 1.0,
+        "training_tickets": 0
+      },
+      {
+        "lower": 0.6,
+        "upper": 0.8,
+        "factor": 1.0,
+        "training_tickets": 0
+      },
+      {
+        "lower": 0.8,
+        "upper": 1.01,
+        "factor": 1.0,
+        "training_tickets": 0
+      }
+    ],
+    "test_tickets": 323,
+    "raw_brier": 0.01472477517925081,
+    "corrected_brier": 0.014526199298930316,
+    "train_last_close": 1791548700.0,
+    "test_first_close": 1791549300.0
   },
   "auto_promotion": false,
   "lower_miss_audit": {
-    "hit": 14,
-    "first_missing": 67,
+    "hit": 15,
+    "first_missing": 69,
     "second_missing_under_correct_first": 35,
     "third_missing_under_correct_first_second": 45,
     "skip": 25
   },
   "lower_comparison": {
-    "paired_races": 186,
+    "paired_races": 189,
     "coverage": {
-      "bet_races": 161,
-      "hits": 14,
-      "hit_rate": 0.08695652173913043,
-      "stake_yen": 112000,
-      "return_yen": 112210,
-      "return_rate": 1.001875
+      "bet_races": 164,
+      "hits": 15,
+      "hit_rate": 0.09146341463414634,
+      "stake_yen": 112900,
+      "return_yen": 113970,
+      "return_rate": 1.0094774136403897
     },
     "baseline": {
-      "bet_races": 161,
-      "hits": 14,
-      "hit_rate": 0.08695652173913043,
-      "stake_yen": 114000,
-      "return_yen": 82040,
-      "return_rate": 0.7196491228070175
+      "bet_races": 164,
+      "hits": 15,
+      "hit_rate": 0.09146341463414634,
+      "stake_yen": 114900,
+      "return_yen": 83800,
+      "return_rate": 0.7293298520452568
     }
   },
   "axis_comparison": {
