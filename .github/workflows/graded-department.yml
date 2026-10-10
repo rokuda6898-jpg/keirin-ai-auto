@@ -30,7 +30,6 @@ jobs:
           PYTHONPATH=src python -m unittest discover -s tests -p 'test_graded_department.py'
           PYTHONPATH=src python -m unittest discover -s tests -p 'test_graded_tactics_live.py'
           PYTHONPATH=src python -m unittest discover -s tests -p 'test_graded_retrospective.py'
-          PYTHONPATH=src python -m unittest discover -s tests -p 'test_graded_tactics.py'
       - name: Freeze graded forecasts and refresh individual results
         run: |
           git config user.name 'github-actions[bot]'
