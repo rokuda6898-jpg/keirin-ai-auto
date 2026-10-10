@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-10-11T00:02:33+09:00",
+  "checked_at": "2026-10-11T00:29:07+09:00",
   "owners": {
     "data": "データ品質責任者",
     "coverage": "全レース予想責任者",
@@ -7,7 +7,7 @@
     "settlement": "成績・払戻責任者",
     "operations": "稼働・通知責任者"
   },
-  "status": "warning",
+  "status": "error",
   "findings": [
     {
       "owner": "settlement",
@@ -19,18 +19,31 @@
         "053520261010",
         "095320261009"
       ]
+    },
+    {
+      "owner": "settlement",
+      "code": "unknown_payout",
+      "level": "error",
+      "message": "的中した買い目の公式払戻が未取得です。回収率を確定できません。",
+      "race_ids": [
+        "015320261010",
+        "034320261010",
+        "044320261010",
+        "044620261010",
+        "103520261010"
+      ]
     }
   ],
   "coverage": {
     "company": {
-      "total": 0,
+      "total": 72,
       "saved": 0,
-      "missing": 0
+      "missing": 72
     },
     "shadow": {
-      "total": 0,
+      "total": 72,
       "saved": 0,
-      "missing": 0
+      "missing": 72
     }
   },
   "matched_comparison": {
@@ -53,5 +66,5 @@
   "department_mean_ticket_overlap": null,
   "email_configured": false,
   "notification_channel": "github_actions",
-  "email_status": "github_actions_warning_only"
+  "email_status": "github_actions_alert"
 }
