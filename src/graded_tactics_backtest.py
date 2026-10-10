@@ -1,0 +1,101 @@
+"""Re-fetch archived provider formations; evaluate all eligible test races."""
+import gzip
+import hashlib
+import json
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
+import pandas as pd
+import numpy as np
+import graded_retrospective as base
+from graded_tactics import tactical_inputs, conditional_tactical_features
+from fetch_today_entries import http_get, extract_preloaded_state, find_query_data
+
+ORIGINAL=base.features
+TACTICS={}
+
+
+def enhanced(records,candidate,prefix,stages,contextual):
+    x=ORIGINAL(records,candidate,prefix,stages,contextual)
+    info=TACTICS.get(str(records[0]['race_id']))
+    return x+(conditional_tactical_features(info,candidate,prefix) if info else [np.nan]*8)
+
+
+def fetch_one(rid,url,folder):
+    file=folder/(rid+'.json')
+    if file.exists():return rid,json.loads(file.read_text(encoding='utf-8'))
+    try:
+        data=find_query_data(extract_preloaded_state(http_get(url,attempts=2)),'FETCH_KEIRIN_RACE')
+        if str(data.get('race',{}).get('id'))!=rid:raise ValueError('race identity mismatch')
+        obj=tactical_inputs(data)
+        # Do not import newly fetched scores, results or odds into model inputs.
+        obj['source_url']=url
+    except Exception as exc:obj={'race_id':rid,'line_status':'fetch_failed','error':str(exc),'source_url':url}
+    base.write(file,obj)
+    return rid,obj
+
+
+def main():
+    folder=Path('research/graded_tactics');folder.mkdir(parents=True,exist_ok=True)
+    sources=folder/'source_inputs';sources.mkdir(exist_ok=True)
+    path=Path('data/raw/history.csv')
+    assert hashlib.sha256(path.read_bytes()).hexdigest()=='9678dad40ece12b216cd5e998aae90d20f14243e8467a32db7d45cd18c906569'
+    frame=pd.read_csv(path,dtype={'race_id':str,'player_id':str},low_memory=False)
+    frame=frame[frame.date.ge(base.TRAIN_START)&frame.date.lt(base.END)&pd.to_numeric(frame.is_grade_race,errors='coerce').eq(1)]
+    frame=base.classify(frame,folder)
+    valid=[rid for rid,r in frame.groupby('race_id') if base.valid(r)]
+    frame=frame[frame.race_id.isin(valid)]
+    races=frame.drop_duplicates('race_id')
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        futures=[pool.submit(fetch_one,str(r.race_id),r.source_url,sources) for r in races.itertuples()]
+        for i,future in enumerate(as_completed(futures),1):
+            rid,obj=future.result();TACTICS[rid]=obj
+            if i%100==0:print(f'TACTICAL_SOURCES {i}/{len(futures)}',flush=True)
+    # A cached formation is usable only if its cars match this archive race.
+    for rid,race in frame.groupby('race_id'):
+        obj=TACTICS[rid]
+        if obj['line_status']=='verified' and set(obj['riders'])!=set(str(int(c)) for c in race.car_no):obj['line_status']='archive_roster_mismatch'
+    train=frame[frame.date.lt(base.START)];target=frame[frame.date.ge(base.START)]
+    coverage={}
+    for name,data in [('train',train),('test',target)]:
+        ids=data.race_id.unique();counts={}
+        for rid in ids:
+            status=TACTICS[rid]['line_status'];counts[status]=counts.get(status,0)+1
+        coverage[name]={'races':len(ids),'lines':counts,'advancement_available':sum(bool(TACTICS[r].get('advancement_text')) for r in ids)}
+    base.write(folder/'coverage.json',coverage);print('TACTICAL_COVERAGE '+json.dumps(coverage),flush=True)
+    groups=list(train.groupby('race_id',sort=False));stages=sorted(train.race_type.fillna('').astype(str).unique())
+    baseline=base.fit(groups,'stage_conditional',stages)
+    try:
+        base.features=enhanced
+        learned=base.fit(groups,'stage_conditional',stages)
+    finally:base.features=ORIGINAL
+    import joblib
+    joblib.dump({'champion':baseline,'tactical':learned,'stages':stages},folder/'models.joblib')
+    predictions=[]
+    for i,(rid,race) in enumerate(target.groupby('race_id',sort=False),1):
+        records=race.drop(columns=['finish_pos','official_finish_pos','result_available'],errors='ignore').to_dict('records')
+        dist=base.distribution(records,baseline,'stage_conditional',stages)
+        try:
+            base.features=enhanced
+            tactical=base.distribution(records,learned,'stage_conditional',stages)
+        finally:base.features=ORIGINAL
+        row={'race_id':rid,'date':str(race.iloc[0].date),'grade':str(race.iloc[0].grade),'stage':str(race.iloc[0].race_type),'field_size':len(race),
+             'tickets':{'current_v1':[r['buy'] for r in base.rank_tickets(records,{})['main']]},'probabilities':{},'line_status':TACTICS[rid]['line_status']}
+        for name,d in [('champion',dist),('tactical',tactical)]:
+            assert abs(sum(d.values())-1)<1e-8
+            row['tickets'][name]=['-'.join(map(str,k)) for k in sorted(d,key=lambda k:(-d[k],k))[:12]]
+            row['probabilities'][name]={'-'.join(map(str,k)):v for k,v in d.items()}
+        predictions.append(row)
+        if i%100==0:print(f'TACTICAL_PREDICT {i}/{target.race_id.nunique()}',flush=True)
+    with gzip.open(folder/'predictions.jsonl.gz','wt',encoding='utf-8') as f:
+        for row in predictions:f.write(json.dumps(row,ensure_ascii=False)+'\n')
+    base.METHODS=('current_v1','champion','tactical');base.assess(predictions,target,folder)
+    report=json.loads((folder/'results.json').read_text(encoding='utf-8'))
+    report.pop('paired_differences',None)
+    report['coverage']=coverage
+    report['limitations']=['Historical provider formations retrieved now; original preclose capture unverified','Advancement text not encoded without verified historical availability','No learned action timing or response scenarios; conditional formation features only','Previously inspected test year; exploratory comparison','No ROI or 100x eligibility claims']
+    report['delta_vs_champion']=report['methods']['tactical']['hit_rate']-report['methods']['champion']['hit_rate']
+    base.write(folder/'results.json',report)
+    print('TACTICAL_RESULT '+json.dumps({k:v for k,v in report.items() if k!='subgroups'}),flush=True)
+
+
+if __name__=='__main__':main()
