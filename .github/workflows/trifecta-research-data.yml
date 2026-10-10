@@ -1,0 +1,59 @@
+name: trifecta-research-data
+on:
+  push:
+    branches: [codex/trifecta-45-research]
+    paths: [.github/workflows/trifecta-research-data.yml]
+permissions:
+  contents: read
+concurrency:
+  group: trifecta-research-data
+  cancel-in-progress: false
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github
+      - uses: actions/cache/restore@v4
+        id: history
+        with:
+          path: data/raw/history.csv
+          key: keirin-central-history-v1-37796966787
+          fail-on-cache-miss: true
+      - name: Preserve research input without changing production
+        run: |
+          python - <<'PY'
+          import csv, gzip, hashlib, json, shutil
+          from pathlib import Path
+          source = Path('data/raw/history.csv')
+          assert source.is_file() and source.stat().st_size > 0
+          rows, races, dates = 0, set(), set()
+          with source.open(encoding='utf-8-sig', newline='') as handle:
+              reader = csv.DictReader(handle)
+              columns = reader.fieldnames
+              assert {'race_id', 'date', 'player_id', 'finish_pos'} <= set(columns)
+              for row in reader:
+                  rows += 1
+                  races.add(row['race_id'])
+                  dates.add(row['date'])
+          assert len(races) >= 50000, 'central archive is incomplete'
+          target = Path('research-input')
+          target.mkdir()
+          with source.open('rb') as src, gzip.open(target/'history.csv.gz', 'wb', compresslevel=6) as dest:
+              shutil.copyfileobj(src, dest)
+          digest = lambda p: hashlib.file_digest(p.open('rb'), 'sha256').hexdigest()
+          manifest = {'raw_sha256': digest(source), 'gzip_sha256': digest(target/'history.csv.gz'),
+                      'rows': rows, 'races': len(races), 'first': min(dates), 'last': max(dates),
+                      'columns': columns, 'cache_requested': 'keirin-central-history-v1-37796966787',
+                      'production_changed': False}
+          (target/'manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding='utf-8')
+          print(json.dumps({k:v for k,v in manifest.items() if k != 'columns'}, ensure_ascii=False))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: trifecta-research-input-${{ github.run_id }}
+          path: research-input/
+          if-no-files-found: error
+          retention-days: 30

@@ -1,0 +1,103 @@
+{
+  "version": "conditional_trifecta_past_only_v1",
+  "config": {
+    "train_cutoff": "2025-10-09",
+    "development_start": "2025-04-09",
+    "target_end": "2026-10-09",
+    "fit_years": 3,
+    "half_life_days": 365.0,
+    "leaves": [
+      31,
+      63
+    ],
+    "chain_weights": [
+      0.0,
+      0.5,
+      1.0
+    ],
+    "trees": 400,
+    "learning_rate": 0.035,
+    "min_child_samples": 100,
+    "reg_lambda": 3.0,
+    "threads": 2,
+    "tickets": 12,
+    "stake_per_ticket_yen": 100,
+    "already_inspected_target_year": true,
+    "automatic_promotion": false
+  },
+  "selected": {
+    "leaves": 31,
+    "chain_weight": 1.0,
+    "hits": 3217,
+    "races": 6821,
+    "rate": 0.4716317255534379
+  },
+  "trials": [
+    {
+      "leaves": 31,
+      "chain_weight": 0.0,
+      "hits": 2695,
+      "races": 6821,
+      "rate": 0.3951033572789914
+    },
+    {
+      "leaves": 31,
+      "chain_weight": 0.5,
+      "hits": 3113,
+      "races": 6821,
+      "rate": 0.4563846943263451
+    },
+    {
+      "leaves": 31,
+      "chain_weight": 1.0,
+      "hits": 3217,
+      "races": 6821,
+      "rate": 0.4716317255534379
+    },
+    {
+      "leaves": 63,
+      "chain_weight": 0.0,
+      "hits": 2711,
+      "races": 6821,
+      "rate": 0.39744905439085176
+    },
+    {
+      "leaves": 63,
+      "chain_weight": 0.5,
+      "hits": 3102,
+      "races": 6821,
+      "rate": 0.4547720275619411
+    },
+    {
+      "leaves": 63,
+      "chain_weight": 1.0,
+      "hits": 3202,
+      "races": 6821,
+      "rate": 0.46943263451106876
+    }
+  ],
+  "history_sha256": "7c7493e6eb6b1dfbf085afa8fade8de73c2bb2c458b135af7fb8c0009c154333",
+  "source_hashes": {
+    "trifecta_chain_research.py": "749c5a8187585cdb7e99a868dca46b9b4609b70efe6f9e350a82c5c3f4a88754",
+    "fixed_year_features.py": "2e3f1a5a79c8bead21377d8d3fae14b894bbbf76c8d2f81aee866491b6e54995",
+    "fixed_year_study.py": "67ae944281571a7d4774afdfa4b927afc7366bfdc5401f29f1674f331b71feb4",
+    "common.py": "c11df9da0743b96c354f4f190a5b7bf516ceda840daf469a30d288deb86a78a3",
+    "winner_pair_research.py": "686cfcc92668e4a597ba8f70e078e36773c105a8768933fb7038442464b4bf1e"
+  },
+  "model_sha256": "7934d16a8bdae91f7bcfbf671e72848727538f4c664c74a586a7c8df36077892",
+  "declaration_sha256": "0f89e27f584119811215e77f7f66c5a27b8d7b4bcc5a020ed2d995e8d41637f3",
+  "selected_sha256": "6586fa18b189b5e8ee0063eada6eedb3d36a7a76dac94b81cb9683486590fa6c",
+  "fit_first": "2022-10-09",
+  "fit_last": "2025-10-08",
+  "fit_races": 30232,
+  "development_first": "2025-04-09",
+  "development_last": "2025-10-08",
+  "target_year_used_for_selection": false,
+  "target_year_previously_inspected": true,
+  "runtime": {
+    "python": "3.12.14",
+    "lightgbm": "4.7.0",
+    "numpy": "2.5.3"
+  },
+  "production_changed": false
+}
