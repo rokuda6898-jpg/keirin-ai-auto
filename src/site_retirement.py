@@ -21,10 +21,14 @@ def apply_retirement(destination):
         text = remove_legacy_navigation(path.read_text(encoding='utf-8-sig'))
         if path == destination/'conditional.html':
             text = text.replace('独立予想', '条件付き3連単')
+        if path == destination/'company.html':
+            text = text.replace('会議の最終予想・独立予想', '会社の最終予想')
+            text = text.replace('それぞれの予想印と買い目を切り替え。', '全部署の判断を集約した予想印と買い目。')
         if path == destination/'index.html':
             text = text.replace('38.77％は過去の検証値で、将来の的中を保証しません。', '')
-        # Force the browser to load the retired-product-free scripts.
         text = re.sub(r'app\.js\?v=[^\"\']+', 'app.js?v=20261011-retirement', text)
+        text = re.sub(r'site-wide\.js(?:\?[^\"\']*)?(?=[\"\'])',
+                      'site-wide.js?v=20261011-retirement', text)
         path.write_text(text, encoding='utf-8')
     app = destination/'app.js'
     if app.exists():
@@ -33,7 +37,6 @@ def apply_retirement(destination):
         text = text.replace("state.mode==='shadow'?'独立予想'", "state.mode==='shadow'?'条件付き3連単'")
         text = text.replace('independent.html#forecast', 'conditional.html#forecast')
         app.write_text(text, encoding='utf-8')
-    # Existing bookmarks no longer expose the retired model's current picks.
     (destination/'independent.html').write_text(
         '<!doctype html><html lang="ja"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
