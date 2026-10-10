@@ -5,7 +5,8 @@ on:
     branches: [main]
     paths: ['src/conditional_live.py', 'src/trifecta_chain_research.py', 'models/conditional_trifecta_v1.*', '.github/workflows/conditional-live.yml']
   schedule:
-    - cron: '13,43 * * * *'
+    # 07:13-23:43 JST: the 06:45 daily feed must run first.
+    - cron: '13,43 0-14,22-23 * * *'
   workflow_run:
     workflows: ['daily-keirin-predict', 'intraday-keirin-odds', 'quick-keirin-results', 'settle-keirin-results']
     types: [completed]
