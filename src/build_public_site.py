@@ -1,10 +1,11 @@
-"""Publish the original company UI unchanged alongside the lightweight home."""
+"""Publish the original company UI alongside the lightweight home."""
 import argparse
 import json
 import shutil
 from pathlib import Path
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from site_retirement import apply_retirement
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -23,7 +24,7 @@ def build(root=ROOT, destination=None):
         nav = ('<div class="nexus-site-header">'
                f'<a href="{home}index.html">NEXUS トップ</a><nav aria-label="サイト案内">'
                f'<a href="{home}original/index.html">本線・穴</a>'
-               f'<a href="{home}independent.html">独立予想の買い目</a>'
+               f'<a href="{home}conditional.html">条件付き3連単</a>'
                f'<a href="{home}company.html">会社・全部署</a>'
                f'<a href="{home}archive.html">過去レース保管庫</a></nav></div>'
                f'<small class="nexus-published">画面保存 {stamp} ／ 各予想の保存時刻は本文に表示</small>')
@@ -36,7 +37,6 @@ def build(root=ROOT, destination=None):
         else:
             text = assets + text
         if not re.search(r'<body\b', text, re.I):
-            # Some original reports omit body tags; give them the same shell.
             if re.search(r'</head>', text, re.I):
                 text = re.sub(r'</head>', lambda m: m[0]+'<body>', text, count=1, flags=re.I)
             else:
@@ -54,7 +54,8 @@ def build(root=ROOT, destination=None):
         else:
             text += script + '</body>'
         path.write_text(text, encoding='utf-8')
-    (destination / 'published.json').write_text(json.dumps({'published_at': stamp}), encoding='utf-8')
+    apply_retirement(destination)
+    (destination / 'published.json').write_text(json.dumps({'published_at': stamp, 'retired_forecasts':['legacy_independent']}), encoding='utf-8')
     print(f'Published complete company pages: {destination}')
 
 
