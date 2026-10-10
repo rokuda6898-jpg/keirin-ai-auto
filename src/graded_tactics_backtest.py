@@ -2,6 +2,7 @@
 import gzip
 import hashlib
 import json
+import shutil
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 import pandas as pd
@@ -37,6 +38,9 @@ def fetch_one(rid,url,folder):
 def main():
     folder=Path('research/graded_tactics');folder.mkdir(parents=True,exist_ok=True)
     sources=folder/'source_inputs';sources.mkdir(exist_ok=True)
+    seed=Path('research/tactical_seed')
+    for file in seed.glob('*.json'):
+        shutil.copy2(file,(folder if file.name=='cup_grades.json' else sources)/file.name)
     path=Path('data/raw/history.csv')
     assert hashlib.sha256(path.read_bytes()).hexdigest()=='9678dad40ece12b216cd5e998aae90d20f14243e8467a32db7d45cd18c906569'
     frame=pd.read_csv(path,dtype={'race_id':str,'player_id':str},low_memory=False)
@@ -44,15 +48,20 @@ def main():
     frame=base.classify(frame,folder)
     valid=[rid for rid,r in frame.groupby('race_id') if base.valid(r)]
     frame=frame[frame.race_id.isin(valid)]
-    races=frame.drop_duplicates('race_id')
-    with ThreadPoolExecutor(max_workers=4) as pool:
+    # Rate-limited source: predeclare a chronological pilot, not a selected
+    # subset based on predictions or outcomes. Preserve every selected race.
+    test_ids=frame[frame.date.ge(base.START)].sort_values(['date','race_id']).drop_duplicates('race_id').head(100).race_id.tolist()
+    train_ids=[p.stem for p in sources.glob('*.json')]
+    frame=frame[frame.date.lt(base.START)|frame.race_id.isin(test_ids)]
+    races=frame[frame.race_id.isin(train_ids+test_ids)].drop_duplicates('race_id')
+    with ThreadPoolExecutor(max_workers=1) as pool:
         futures=[pool.submit(fetch_one,str(r.race_id),r.source_url,sources) for r in races.itertuples()]
         for i,future in enumerate(as_completed(futures),1):
             rid,obj=future.result();TACTICS[rid]=obj
             if i%100==0:print(f'TACTICAL_SOURCES {i}/{len(futures)}',flush=True)
     # A cached formation is usable only if its cars match this archive race.
     for rid,race in frame.groupby('race_id'):
-        obj=TACTICS[rid]
+        obj=TACTICS.setdefault(rid,{'race_id':rid,'line_status':'not_retrieved'})
         if obj['line_status']=='verified' and set(obj['riders'])!=set(str(int(c)) for c in race.car_no):obj['line_status']='archive_roster_mismatch'
     train=frame[frame.date.lt(base.START)];target=frame[frame.date.ge(base.START)]
     coverage={}
@@ -92,6 +101,7 @@ def main():
     report=json.loads((folder/'results.json').read_text(encoding='utf-8'))
     report.pop('paired_differences',None)
     report['coverage']=coverage
+    report['sample_selection']='First 100 eligible test races ordered by date and race_id before examining outcomes; pilot only'
     report['limitations']=['Historical provider formations retrieved now; original preclose capture unverified','Advancement text not encoded without verified historical availability','No learned action timing or response scenarios; conditional formation features only','Previously inspected test year; exploratory comparison','No ROI or 100x eligibility claims']
     report['delta_vs_champion']=report['methods']['tactical']['hit_rate']-report['methods']['champion']['hit_rate']
     base.write(folder/'results.json',report)
