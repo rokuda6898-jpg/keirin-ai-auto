@@ -13,9 +13,13 @@ from zoneinfo import ZoneInfo
 
 import pandas as pd
 
-from fetch_today_entries import _entry_rows_complete, parse_race_page
+from fetch_today_entries import (
+    _entry_rows_complete, extract_preloaded_state, find_query_data,
+    get_venue_name, http_get, normalize_date,
+)
+from race_features import build_entry_rows
 from fixed_year_study import input_reason
-from public_live import frozen, read_csv
+from public_live import finite, frozen, read_csv
 
 ROOT = Path(__file__).resolve().parents[1]
 INPUT = Path("data/raw/conditional_today_entries.csv")
@@ -29,9 +33,42 @@ def now_jst():
     return datetime.now(ZoneInfo("Asia/Tokyo"))
 
 
+def fetch_racecard_only(url, completeness_attempts=1):
+    """Use the existing feature builder, without fetching or writing market odds.
+
+    The conditional model does not consume these market quotes. Its input path
+    must not block on three unrelated providers or dirty shared market reports.
+    Completeness failures remain explicit and are retried on the next run.
+    """
+    state = extract_preloaded_state(http_get(url, attempts=2))
+    data = find_query_data(state, "FETCH_KEIRIN_RACE")
+    if not data:
+        raise ValueError("race data not found")
+    schedule, race = data["schedule"], data["race"]
+    raw_entries = data.get("entries", []) or []
+    declared = int(race.get("entriesNumber") or len(raw_entries) or 0)
+    raw_cars = sorted(
+        int(entry["number"]) for entry in raw_entries
+        if entry.get("number") is not None
+        and not (entry.get("absent") and int(entry["number"]) == 0)
+    )
+    if declared <= 0 or len(raw_cars) != declared or set(raw_cars) != set(range(1, declared + 1)):
+        raise ValueError("incomplete raw race field")
+    rows = build_entry_rows(
+        data, race_date=normalize_date(schedule["date"]),
+        venue=get_venue_name(state, data), race_no=int(race["number"]),
+        race_id=str(race["id"]), source_url=url, include_results=False,
+    )
+    complete, _, _ = _entry_rows_complete(rows)
+    if not complete:
+        raise ValueError("incomplete race field")
+    return rows, []
+
+
 def valid_race(frame, race_id, date, close_at):
     """Require complete and consistent starters; no partial/cross-date fallback."""
-    if frame.empty or not {"race_id", "date", "car_no", "player_id", "close_at"}.issubset(frame):
+    required = {"race_id", "date", "car_no", "player_id", "close_at", "entries_number"}
+    if frame.empty or not required.issubset(frame):
         return False
     if frame["race_id"].astype(str).nunique() != 1 or str(frame["race_id"].iloc[0]) != str(race_id):
         return False
@@ -43,9 +80,11 @@ def valid_race(frame, race_id, date, close_at):
     closes = pd.to_numeric(frame["close_at"], errors="coerce")
     if closes.isna().any() or closes.nunique() != 1:
         return False
-    # A changed deadline needs independent confirmation; do not freeze using
-    # conflicting provider and schedule snapshots.
-    return abs(float(closes.iloc[0]) - float(close_at)) <= 300
+    source_close, scheduled_close = finite(closes.iloc[0]), finite(close_at)
+    if source_close is None or scheduled_close is None:
+        return False
+    # Prediction uses the earlier deadline; never extend it from a newer card.
+    return abs(source_close - scheduled_close) <= 300
 
 
 def read_valid_cache(path, schedule, date):
@@ -67,7 +106,7 @@ def read_valid_cache(path, schedule, date):
     return cached
 
 
-def refresh(root=ROOT, clock=now_jst, fetcher=parse_race_page,
+def refresh(root=ROOT, clock=now_jst, fetcher=fetch_racecard_only,
             min_seconds_to_close=MIN_SECONDS_TO_CLOSE,
             max_fetches=MAX_FETCHES, max_wall_seconds=MAX_WALL_SECONDS):
     now = clock()
@@ -100,6 +139,9 @@ def refresh(root=ROOT, clock=now_jst, fetcher=parse_race_page,
         if not str(url).startswith("https://www.winticket.jp/keirin/"):
             failures.append({"race_id": rid, "reason": "invalid_source_url"})
             continue
+        print("CONDITIONAL_ENTRY_FETCH " + json.dumps({
+            "race_id": rid, "attempt": attempted, "requested": len(upcoming)
+        }), flush=True)
         try:
             rows, _ = fetcher(url, completeness_attempts=1)
             frame = pd.DataFrame(rows)
