@@ -1,0 +1,48 @@
+name: history-feature-audit-58
+on:
+  push:
+    branches: [codex/history-feature-audit-58]
+    paths:
+      - .github/workflows/history-feature-audit.yml
+      - research/export_historical_odds.py
+      - research/test_export_historical_odds.py
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: history-feature-audit-58
+  cancel-in-progress: false
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github
+            research
+      - name: Check quote export boundaries
+        run: python -m unittest discover -s research -p 'test_export_historical_odds.py' -v
+      - uses: actions/cache/restore@v4
+        id: history
+        with:
+          path: |
+            data/raw/history.csv
+            data/raw/history_odds.csv
+            data/raw/history_trifecta_odds.csv
+            data/raw/history_metadata.json
+            data/raw/race_cache
+          key: keirin-history-v4-feature-audit-${{ github.run_id }}
+          restore-keys: |
+            keirin-history-v4-
+      - name: Inventory existing data without predictions or cache writes
+        env:
+          MATCHED_CACHE_KEY: ${{ steps.history.outputs.cache-matched-key }}
+        run: python research/export_historical_odds.py --root data/raw --output research-input --cache-key "$MATCHED_CACHE_KEY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: historical-final-odds-audit-${{ github.run_id }}
+          path: research-input/
+          retention-days: 30
+          if-no-files-found: error
