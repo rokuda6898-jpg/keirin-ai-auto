@@ -96,6 +96,12 @@ def build(root=ROOT, now=None):
             race_map.setdefault(rid, {key: row.get(key) for key in
                 ('race_id','date','venue','race_no','close_at','start_at')})
     results = {str(r['race_id']): r for r in read_json(out/'latest_results.json', [])}
+    # The daily result file rolls to the next day. The independent conditional
+    # feed may still retain a previously confirmed ticket-level official payout.
+    archived_conditional = read_json(out/'conditional_live.json', {})
+    archived_payouts = {str(r['id']): r for r in archived_conditional.get('races', [])
+                        if isinstance(r, dict) and r.get('id')}
+
     riders = defaultdict(list)
     previous = read_json(out/'public_live.json', {})
     cancelled = defaultdict(set, {r['id']:set(r.get('cancelled_cars', []))
@@ -126,6 +132,14 @@ def build(root=ROOT, now=None):
                 if len(hits) == len(odds):
                     payouts = {buy: finite(price)*100 for buy, price in zip(hits, odds)
                                if buy in actual and finite(price) is not None and finite(price) > 0}
+        saved_result = archived_payouts.get(rid)
+        # Never invent a payoff or transfer odds across inconsistent results.
+        # Match the FULL official winning-ticket set (ties included) first.
+        if saved_result and actual and set(saved_result.get('actual') or []) == set(actual):
+            for buy, raw in (saved_result.get('payouts') or {}).items():
+                payout = finite(raw)
+                if buy in actual and payout is not None and payout > 0 and buy not in payouts:
+                    payouts[buy] = payout
         races.append({'id':rid, 'date':row['date'], 'venue':row['venue'],
                       'number':int(float(row['race_no'])), 'start_at':finite(row.get('start_at')),
                       'close_at':finite(row.get('close_at')), 'riders':riders.get(rid, []),
