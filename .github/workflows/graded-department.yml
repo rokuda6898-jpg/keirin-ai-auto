@@ -25,6 +25,11 @@ jobs:
           python-version: '3.12'
           cache: pip
       - run: pip install -r requirements.txt
+      - name: Verify the graded forecast and frozen best-equation paths
+        run: |
+          PYTHONPATH=src python -m unittest discover -s tests -p 'test_graded_department.py'
+          PYTHONPATH=src python -m unittest discover -s tests -p 'test_graded_tactics_live.py'
+          PYTHONPATH=src python -m unittest discover -s tests -p 'test_graded_retrospective.py'
       - name: Freeze graded forecasts and refresh individual results
         run: |
           git config user.name 'github-actions[bot]'
