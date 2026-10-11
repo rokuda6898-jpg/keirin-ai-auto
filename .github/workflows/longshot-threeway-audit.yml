@@ -1,0 +1,65 @@
+name: longshot-threeway-audit
+on:
+  push:
+    branches: [codex/longshot-threeway-audit-20261011]
+    paths: [.github/workflows/longshot-threeway-audit.yml]
+permissions:
+  contents: read
+concurrency:
+  group: longshot-threeway-audit
+  cancel-in-progress: false
+jobs:
+  evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Export code and available market evidence
+        run: |
+          python - <<'PY'
+          import hashlib, json, shutil
+          from pathlib import Path
+          dest = Path('longshot-evidence')
+          dest.mkdir()
+          inventory, selected, omitted = [], [], []
+          total = 0
+          candidates = []
+          for folder in ['src', 'tests', 'models', 'data', 'outputs', 'docs']:
+              base = Path(folder)
+              if not base.exists():
+                  continue
+              for p in base.rglob('*'):
+                  if not p.is_file() or '.git' in p.parts:
+                      continue
+                  name = str(p)
+                  size = p.stat().st_size
+                  inventory.append({'path': name, 'bytes': size})
+                  wanted = (folder in ['src', 'tests', 'models'] or
+                            (folder == 'data' and any(s in name.lower() for s in ['odds', 'snapshot', 'entries', 'payout', 'result'])) or
+                            (folder == 'outputs' and p.suffix in ['.json', '.jsonl', '.csv'] and
+                             any(s in name.lower() for s in ['snapshot', 'conditional', 'high_payout', 'latest_race_strategy', 'latest_results', 'latest_odds', 'latest_predictions', 'latest_race_schedule', 'settled'])))
+                  if wanted:
+                      candidates.append((size, name, p))
+          for size, name, p in sorted(candidates):
+              if size > 40000000 or total + size > 180000000:
+                  omitted.append({'path':name, 'bytes':size, 'reason':'export size budget'})
+                  continue
+              target = dest / name
+              target.parent.mkdir(parents=True, exist_ok=True)
+              shutil.copyfile(p, target)
+              selected.append({'path':name,'bytes':size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
+              total += size
+          report = {'source_commit': __import__('os').environ['GITHUB_SHA'],
+                    'production_changed':False,'automatic_purchase':False,
+                    'inventory':sorted(inventory,key=lambda x:x['path']),
+                    'exported':selected,'omitted':omitted,'bytes':total}
+          (dest/'inventory.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
+          print(json.dumps({'files':len(selected),'bytes':total,'omitted':len(omitted),'production_changed':False}))
+          print('\n'.join(x['path']+' '+str(x['bytes']) for x in inventory if any(s in x['path'].lower() for s in ['odds','snapshot','payout','high_payout'])))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: longshot-threeway-evidence-${{ github.run_id }}
+          path: longshot-evidence/
+          if-no-files-found: error
+          retention-days: 7
