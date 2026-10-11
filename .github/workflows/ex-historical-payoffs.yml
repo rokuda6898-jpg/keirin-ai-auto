@@ -1,0 +1,85 @@
+name: EX historical pilot payoffs
+on:
+  push:
+    branches: [research/ex-historical-20261011]
+    paths: ['.github/workflows/ex-historical-payoffs.yml']
+permissions:
+  contents: read
+jobs:
+  acquire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            outputs/ex_data
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pandas
+      - uses: actions/cache/restore@v4
+        with:
+          path: data/raw/history.csv
+          key: keirin-central-history-v1-37796966787
+          restore-keys: |
+            keirin-central-history-v1-
+      - run: |
+          python -u - <<'PY'
+          import concurrent.futures,gzip,hashlib,json,re,threading,time,urllib.request,urllib.error
+          from datetime import datetime,timezone
+          from pathlib import Path
+          import pandas as pd
+          out=Path('research/ex_payoff_acquisition');out.mkdir(parents=True,exist_ok=True)
+          df=pd.read_csv('data/raw/history.csv',usecols=['race_id','date','source_url'],dtype=str).drop_duplicates('race_id')
+          df=df[df.date.ge('2026-08-01')&df.date.lt('2026-10-09')&df.source_url.fillna('').str.fullmatch(r'https://www\.winticket\.jp/keirin/[^/]+/racecard/\d{10}/\d+/\d+')].copy()
+          df['selection_hash']=df.race_id.map(lambda r:hashlib.sha256(('EX-PILOT-v1|'+r).encode()).hexdigest())
+          targets=df.sort_values('selection_hash').head(400).sort_values(['date','race_id']).to_dict('records')
+          lock=threading.Lock();next_at=0.
+          def slot():
+              global next_at
+              with lock:
+                  t=max(time.monotonic(),next_at);next_at=t+.5
+              time.sleep(max(0,t-time.monotonic()))
+          def fetch(task):
+              error=None
+              for attempt in range(3):
+                  slot()
+                  try:
+                      req=urllib.request.Request(task['source_url'],headers={'User-Agent':'Mozilla/5.0 (compatible; keirin-ai-auto/1.0)','Accept-Language':'ja'})
+                      with urllib.request.urlopen(req,timeout=25) as r:html=r.read().decode('utf-8')
+                      m=re.search(r'window\.__PRELOADED_STATE__\s*=\s*(\{.*?\});\s*window\.__CONFIG__',html,re.S)
+                      if not m:raise ValueError('state missing')
+                      state=json.loads(m.group(1));common={};odds={}
+                      for q in state.get('tanStackQuery',{}).get('queries',[]):
+                          key=q.get('queryKey') or [];d=q.get('state',{}).get('data')
+                          if 'FETCH_KEIRIN_RACE' in key:common=d
+                          if 'FETCH_KEIRIN_RACE_ODDS' in key:odds=d
+                      if str(common.get('race',{}).get('id','')).zfill(12)!=task['race_id'].zfill(12):raise ValueError('race mismatch')
+                      winners=set(map(str,common.get('trifectaWinningOddsIds') or []))
+                      winning=[x for x in odds.get('trifecta',[]) if str(x.get('id')) in winners or (x.get('payoffUnitPrice') or 0)>0]
+                      return {**task,'captured_at':datetime.now(timezone.utc).isoformat(),'html_sha256':hashlib.sha256(html.encode()).hexdigest(),'winning_ids':list(winners),'winning_records':winning,'trifectaPayoffStatus':odds.get('trifectaPayoffStatus'),'finalOdds':odds.get('finalOdds'),'results':common.get('results'),'entries':common.get('entries'),'preclose_odds_available':False}
+                  except urllib.error.HTTPError as e:
+                      error=f'HTTP {e.code}'
+                      if e.code not in (429,500,502,503,504):break
+                      try:delay=float(e.headers.get('Retry-After','0'))
+                      except ValueError:delay=30
+                      time.sleep(max(delay,2**(attempt+1)))
+                  except Exception as e:error=str(e);time.sleep(2**attempt)
+              return {**task,'error':error}
+          count=0;bad=0
+          with gzip.open(out/'payoffs.jsonl.gz','wt',encoding='utf-8') as f:
+              with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+                  for r in pool.map(fetch,targets):
+                      f.write(json.dumps(r,ensure_ascii=False)+'\n');count+=1;bad+=bool(r.get('error'))
+                      if count%50==0:print('SETTLEMENT',count,'failures',bad,flush=True)
+          (out/'summary.json').write_text(json.dumps({'requested':len(targets),'processed':count,'failures':bad,'official_operator_record_retrieval':True,'independent_JKA_recheck':False,'source_used':'WINTICKET payoffUnitPrice; never odds*100','production_changed':False},indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ex-pilot-payoffs-${{ github.run_id }}
+          path: research/ex_payoff_acquisition/
+          retention-days: 7
+          if-no-files-found: error
