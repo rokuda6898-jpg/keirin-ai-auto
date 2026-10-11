@@ -20,6 +20,8 @@ from fixed_year_study import input_reason
 from official_outcomes import normalize_outcome
 from public_live import finite, forecast_view, frozen, read_csv, read_json
 from conditional_input_refresh import valid_race
+from conditional_budget import freeze as freeze_budget, settle as settle_budget
+from conditional_budget_odds import capture as capture_budget_odds
 
 ROOT = Path(__file__).resolve().parents[1]
 LEDGER = 'outputs/company/conditional_live_ledger.jsonl'
@@ -65,7 +67,8 @@ def now_jst():
     return datetime.now(ZoneInfo('Asia/Tokyo'))
 
 
-def run(root=ROOT, predict_new=True, clock=now_jst, model_loader=load_model, predictor=chain.predict):
+def run(root=ROOT, predict_new=True, clock=now_jst, model_loader=load_model, predictor=chain.predict,
+        odds_loader=capture_budget_odds):
     now = clock()
     if now.tzinfo is None:
         raise ValueError('timezone-aware clock required')
@@ -151,6 +154,20 @@ def run(root=ROOT, predict_new=True, clock=now_jst, model_loader=load_model, pre
                          'actual': [], 'payouts': {}, 'cancelled_cars': [],
                          'purchase_authorized': False}
             forecast_view(rows[rid])  # Validate tickets before persistence.
+            # Only NEW forecasts receive a quote. Existing forecasts are never
+            # retrofitted with later odds, even when the race is still open.
+            rows[rid]['budget'] = freeze_budget(rows[rid], odds_loader, clock)
+            saved = clock()
+            if saved.timestamp() >= closes[rid]:
+                del rows[rid]
+                errors[rid] = 'オッズ取得中に締切を経過・後付け保存なし'
+                continue
+            rows[rid]['snapshot_at_jst'] = saved.isoformat()
+            rows[rid]['budget_settlement'] = settle_budget(
+                rows[rid]['budget'], rows[rid]['top12'], None)
+            # Checkpoint before fetching another race; later failures cannot
+            # silently replace an earlier allocation with a new market quote.
+            save_ledger(root/LEDGER, rows)
     for rid, row in rows.items():
         if rid in results:
             outcome = normalize_outcome(results[rid])
@@ -160,6 +177,12 @@ def run(root=ROOT, predict_new=True, clock=now_jst, model_loader=load_model, pre
         if rid in fields:
             row['cancelled_cars'] = sorted({c for raw in fields[rid].get('cancelled_car_numbers', [])
                                             for c in re.findall('[1-9]', str(raw))})
+        if 'budget' in row:
+            if rid in results:
+                row['budget_official_outcome'] = normalize_outcome(results[rid])
+            row['budget_settlement'] = settle_budget(
+                row['budget'], row['top12'], row.get('budget_official_outcome'),
+                row.get('cancelled_cars', []))
         metadata.setdefault(rid, row)
     save_ledger(root/LEDGER, rows)
     # The feed always includes every scheduled race, including missing forecasts.
@@ -177,11 +200,16 @@ def run(root=ROOT, predict_new=True, clock=now_jst, model_loader=load_model, pre
                       'cancelled_cars': row.get('cancelled_cars', []) if row else [],
                       'actual': row.get('actual', []) if row else outcome['winning_buys'] if outcome else [],
                       'payouts': row.get('payouts', {}) if row else outcome['payouts'] if outcome else {},
-                      'forecast_error': errors.get(rid, '')})
+                      'forecast_error': errors.get(rid, ''),
+                      'budget': row.get('budget') if row else None,
+                      'budget_settlement': row.get('budget_settlement') if row else None})
     races.sort(key=lambda r: (r['date'], r['start_at'] or r['close_at'] or 1e12, r['venue'], r['number']))
     completed = clock()
     payload = {'schema': 1, 'updated_at': completed.isoformat(), 'generated_at': completed.isoformat(),
                'schedule_date': max(s['date'] for s in schedule), 'races': races,
+               'budget_policy': {'budget_yen': 10000, 'unit_yen': 100,
+                   'mode': 'simulation', 'odds_policy': 'freeze_at_prediction',
+                   'settlement_policy': 'official_payout_only', 'backfill': False},
                'historical_reference': {'hits': 6242, 'races': 13612, 'rate': 6242/13612,
                    'scope': '過去ページを用いた再検証。未来の成績ではありません。'},
                'coverage': {'scheduled': len(schedule), 'saved': sum(s['race_id'] in rows for s in schedule),
