@@ -1,0 +1,65 @@
+name: WINTICKET EX schema probe
+on:
+  push:
+    branches: [feature/winticket-ex-snapshots-20261011]
+    paths: [.github/workflows/winticket-ex-probe.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Inspect public racecard records
+        run: |
+          python - <<'PY'
+          import json, re, time, urllib.request
+          from datetime import datetime, timezone
+          from pathlib import Path
+          urls = [
+            'https://www.winticket.jp/keirin/yahiko/racecard/2026100921/3/12',
+            'https://www.winticket.jp/keirin/takeo/racecard/2026100984/3/7',
+          ]
+          out = []
+          for url in urls:
+              try:
+                  req = urllib.request.Request(url, headers={'User-Agent':'Mozilla/5.0 (compatible; keirin-ai-auto/1.0)', 'Accept-Language':'ja'})
+                  with urllib.request.urlopen(req, timeout=30) as r:
+                      html = r.read().decode('utf-8')
+                  captured = datetime.now(timezone.utc).isoformat()
+                  m = re.search(r'window\.__PRELOADED_STATE__\s*=\s*(\{.*?\});\s*window\.__CONFIG__', html, re.S)
+                  if not m:
+                      raise ValueError('preloaded state missing')
+                  state = json.loads(m.group(1))
+                  queries = state.get('tanStackQuery', {}).get('queries', [])
+                  payloads = []
+                  for q in queries:
+                      key = q.get('queryKey')
+                      data = q.get('state', {}).get('data')
+                      if isinstance(data, dict) and ('records' in data or 'FETCH_KEIRIN_RACE' in json.dumps(key)):
+                          payloads.append({'query_key':key,'data':data,'updated_at':q.get('state',{}).get('dataUpdatedAt')})
+                  out.append({'source_url':url,'captured_at':captured,'payloads':payloads})
+                  print('SOURCE', url, 'CAPTURED', captured)
+                  for p in payloads:
+                      d = p['data']
+                      print('QUERY',json.dumps(p['query_key']), 'KEYS', list(d))
+                      print('RACE',json.dumps(d.get('race',{}),ensure_ascii=False))
+                      records = d.get('records',[])
+                      print('RECORDS',len(records))
+                      for record in records[:2]:
+                          print('RECORD',json.dumps({k:v for k,v in record.items() if not isinstance(v,list)},ensure_ascii=False))
+                  time.sleep(1)
+              except Exception as e:
+                  print('FETCH_ERROR',url,type(e).__name__,str(e))
+                  out.append({'source_url':url,'error':str(e)})
+          Path('ex_probe.json').write_text(json.dumps(out,ensure_ascii=False),encoding='utf-8')
+          if not any(x.get('payloads') for x in out):
+              raise SystemExit('No public race records retrieved')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: winticket-ex-schema-probe
+          path: ex_probe.json
+          retention-days: 7
