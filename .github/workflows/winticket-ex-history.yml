@@ -1,0 +1,72 @@
+name: WINTICKET EX historical acquisition
+on:
+  push:
+    branches: [research/ex-backfill-20261012]
+    paths: ['src/collect_ex_history.py', '.github/workflows/winticket-ex-history.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: winticket-ex-history-${{ github.ref_name }}
+  cancel-in-progress: false
+jobs:
+  acquire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/ex-backfill-20261012
+          fetch-depth: 1
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /src/winticket_ex.py
+            /src/collect_ex_history.py
+            /tests/test_winticket_ex.py
+            /outputs/ex_data/
+      - name: Verify EX contracts before acquisition
+        env:
+          PYTHONPATH: src
+        run: |
+          python -m unittest discover -s tests -p test_winticket_ex.py -v
+          python - <<'PY'
+          from collect_ex_history import manifest, wrap_observation
+          assert len(manifest()) == 214
+          assert wrap_observation({'preclose_eligible': False}, '2026-10-08')['eligible_for_backtest'] is False
+          try:
+              wrap_observation({'preclose_eligible': True}, '2026-10-08')
+          except ValueError:
+              pass
+          else:
+              raise AssertionError('Historical guard failed')
+          PY
+      - name: Acquire retrospective observations separately
+        id: collect
+        continue-on-error: true
+        env:
+          PYTHONPATH: src
+        run: python src/collect_ex_history.py --root . --limit 214 --interval 1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: winticket-ex-history-${{ github.run_id }}
+          path: |
+            outputs/ex_data/historical/
+            outputs/ex_data/snapshots/
+            src/collect_ex_history.py
+            src/winticket_ex.py
+          retention-days: 30
+          if-no-files-found: error
+      - name: Persist collected data on research branch only
+        if: always()
+        run: |
+          test -f outputs/ex_data/historical/20261006_20261008/summary.json || exit 1
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- outputs/ex_data/historical/
+          git diff --cached --quiet && exit 0
+          git commit -m 'Archive historical EX candidates; as-of unverified, predictions unchanged'
+          git push origin HEAD:research/ex-backfill-20261012
+      - name: Surface incomplete acquisition
+        if: steps.collect.outcome != 'success'
+        run: exit 1
