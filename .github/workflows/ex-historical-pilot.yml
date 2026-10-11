@@ -1,0 +1,131 @@
+name: EX historical pilot acquisition
+on:
+  push:
+    branches: [research/ex-historical-20261011]
+    paths: ['.github/workflows/ex-historical-pilot.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ex-historical-pilot
+  cancel-in-progress: false
+jobs:
+  acquire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            outputs/ex_data
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pandas
+      - uses: actions/cache/restore@v4
+        with:
+          path: data/raw/history.csv
+          key: keirin-central-history-v1-37796966787
+          restore-keys: |
+            keirin-central-history-v1-
+      - name: Recover historical records without selecting on outcomes
+        run: |
+          python -u - <<'PY'
+          import concurrent.futures, csv, gzip, hashlib, json, re, threading, time, urllib.request, urllib.error
+          from datetime import datetime, timezone
+          from pathlib import Path
+          import pandas as pd
+          out=Path('research/ex_historical_acquisition');out.mkdir(parents=True,exist_ok=True)
+          history=Path('data/raw/history.csv')
+          if not history.exists():raise SystemExit('Central history cache unavailable; do not invent a cohort')
+          cols=['race_id','date','source_url','entries_number','gender']
+          df=pd.read_csv(history,usecols=cols,dtype={'race_id':str,'date':str,'source_url':str},low_memory=False)
+          races=df.drop_duplicates('race_id').copy()
+          races=races[races.source_url.fillna('').str.fullmatch(r'https://www\.winticket\.jp/keirin/[^/]+/racecard/\d{10}/\d+/\d+')]
+          # Cohort membership uses dates and a deterministic race-ID hash, never odds or finish.
+          splits=[('train','2025-10-09','2026-07-01',800),('validation','2026-07-01','2026-08-01',200),('test','2026-08-01','2026-10-09',400)]
+          targets=[]
+          for name,start,end,n in splits:
+              group=races[races.date.ge(start)&races.date.lt(end)].copy()
+              group['selection_hash']=group.race_id.map(lambda r:hashlib.sha256(('EX-PILOT-v1|'+r).encode()).hexdigest())
+              group=group.sort_values('selection_hash').head(n).sort_values(['date','race_id'])
+              for r in group.to_dict('records'):
+                  targets.append({'split':name,'race_id':str(r['race_id']),'date':r['date'],'source_url':r['source_url']})
+          temporal=[]
+          seen=set()
+          for p in sorted(Path('outputs/ex_data/snapshots').glob('2026-10-11/*.json')):
+              s=json.loads(p.read_text());rid=str(s.get('race_id',''))
+              if rid in seen:continue
+              seen.add(rid)
+              url=s.get('source_url')
+              if url:temporal.append({'split':'temporal_probe','race_id':rid,'date':'2026-10-11','source_url':url,'preclose_snapshot':s})
+          config={'splits':splits,'selection':'sha256(EX-PILOT-v1|race_id), smallest hashes','tickets':12,'stake_yen_per_ticket':100,'historical_capture_is_not_preclose_evidence':True,'history_sha256':hashlib.sha256(history.read_bytes()).hexdigest(),'cohort':targets,'temporal_probe_count':len(temporal),'created_at':datetime.now(timezone.utc).isoformat()}
+          (out/'cohort_manifest.json').write_text(json.dumps(config,ensure_ascii=False,indent=2))
+          print('COHORT',len(targets),{x:sum(t['split']==x for t in targets) for x,_,_,_ in splits},flush=True)
+          metrics=['exThrust','exSpurt','exLeftBehind','exSplitLine','exSnatch','exCompete']
+          eventkeys=['raceId','playerId','order','factor','back','standing','spurtSucceeded','thrustSucceeded','leftBehind','splitLine','snatchSucceeded','competeSucceeded','hasAccident','displayType']
+          lock=threading.Lock();next_at=0.
+          def slot():
+              global next_at
+              with lock:
+                  t=max(time.monotonic(),next_at);next_at=t+.4
+              time.sleep(max(0,t-time.monotonic()))
+          def fetch(task):
+              url=task['source_url'];error=None
+              for attempt in range(3):
+                  slot()
+                  try:
+                      req=urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0 (compatible; keirin-ai-auto/1.0)','Accept-Language':'ja'})
+                      with urllib.request.urlopen(req,timeout=25) as r:html=r.read().decode('utf-8')
+                      captured=datetime.now(timezone.utc).isoformat()
+                      m=re.search(r'window\.__PRELOADED_STATE__\s*=\s*(\{.*?\});\s*window\.__CONFIG__',html,re.S)
+                      if not m:raise ValueError('preloaded state not found')
+                      state=json.loads(m.group(1));data=None
+                      for q in state.get('tanStackQuery',{}).get('queries',[]):
+                          if 'FETCH_KEIRIN_RACE' in (q.get('queryKey') or []):data=q.get('state',{}).get('data');break
+                      if not isinstance(data,dict):raise ValueError('race payload missing')
+                      if str(data.get('race',{}).get('id','')).zfill(12)!=str(task['race_id']).zfill(12):raise ValueError('race ID mismatch')
+                      recs=[]
+                      for rec in data.get('records',[]):
+                          rr={k:rec[k] for k in ['playerId','racePoint','style','comment','standing','back','frontRunner','stalker','deepCloser','marker','first','second','third','others','linePositionFirst','linePositionSecond','linePositionThird','lineSingleHorseman']+metrics if k in rec}
+                          priors=[]
+                          for k in ['currentCupResults','previousCupResults']:priors.extend(rec.get(k,[]) or [])
+                          for cup in rec.get('latestCupResults',[]) or []:priors.extend(cup.get('raceResults',[]) or [])
+                          rr['prior_results']=[{k:v for k,v in ev.items() if k in eventkeys} for ev in priors]
+                          recs.append(rr)
+                      compact={k:data.get(k) for k in ['race','schedule','entries','linePrediction','results','trifectaWinningOddsIds','trifectaPayoffStatus','specialPayoffUnitPrice']}
+                      # Preserve winning pool records only for settlement; not model features.
+                      winners=set(str(x) for x in (data.get('trifectaWinningOddsIds') or []))
+                      compact['trifecta']=[x for x in data.get('trifecta',[]) if str(x.get('id')) in winners or x.get('payoff') or x.get('payoffUnitPrice')]
+                      compact['records']=recs
+                      return {**task,'captured_at':captured,'html_sha256':hashlib.sha256(html.encode()).hexdigest(),'data':compact,'historical_only':True}
+                  except urllib.error.HTTPError as e:
+                      error=f'HTTP {e.code}'
+                      if e.code not in (429,500,502,503,504):break
+                      retry=e.headers.get('Retry-After','0')
+                      try:delay=float(retry)
+                      except ValueError:delay=30
+                      time.sleep(max(delay,2**(attempt+1)))
+                  except Exception as e:error=f'{type(e).__name__}: {e}';time.sleep(2**attempt)
+              return {**task,'error':error}
+          tasks=temporal+targets;ok=0;bad=0;probe=[]
+          with gzip.open(out/'records.jsonl.gz','wt',encoding='utf-8') as f:
+              with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+                  for i,row in enumerate(pool.map(fetch,tasks)):
+                      f.write(json.dumps(row,ensure_ascii=False)+'\n');f.flush()
+                      if row.get('error'):bad+=1
+                      else:ok+=1
+                      if row['split']=='temporal_probe':probe.append(row)
+                      if i<3 or (i+1)%50==0:print('FETCH',i+1,'ok',ok,'failed',bad,'last',row['race_id'],row.get('error',''),flush=True)
+          (out/'temporal_probes.json').write_text(json.dumps(probe,ensure_ascii=False))
+          report={'requested':len(tasks),'downloaded':ok,'failed':bad,'historical_races':len(targets),'temporal_probes':len(temporal),'finished_at':datetime.now(timezone.utc).isoformat(),'production_changed':False,'backtest_run':False}
+          (out/'acquisition_summary.json').write_text(json.dumps(report,indent=2));print('DONE',json.dumps(report),flush=True)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ex-historical-acquisition-${{ github.run_id }}
+          path: research/ex_historical_acquisition/
+          retention-days: 7
+          if-no-files-found: error
