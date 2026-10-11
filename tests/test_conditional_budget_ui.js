@@ -1,0 +1,12 @@
+'use strict';
+const assert = require('node:assert/strict');
+const {conditionalBudgetStats: stats} = require('../site/conditional-budget.js');
+const allocated = (status, paid = null, hit = null) => ({budget: {status:'allocated'}, budget_settlement: {status, invested_yen:10000, payout_yen:paid, hit}});
+assert.equal(stats([allocated('pending')]).roi, null);
+let s = stats([allocated('settled', 20000, true), allocated('settled', 0, false), allocated('pending')]);
+assert.equal(s.roi, 1); assert.equal(s.stake, 20000); assert.equal(s.pending, 1); assert.equal(s.hitRate, .5);
+assert.equal(stats([allocated('settled', 20000, true), allocated('payout_pending')]).roi, null);
+assert.equal(stats([allocated('settled', 20000, true), allocated('refund_pending')]).roi, null);
+s = stats([{shadow:{tickets:['1-2-3']}}, {budget:{status:'infeasible'}}, {budget:{status:'unavailable'}}]);
+assert.equal(s.legacy, 1); assert.equal(s.skipped, 1); assert.equal(s.unavailable, 1); assert.equal(s.roi, null);
+console.log('conditional-budget UI assertions passed');
