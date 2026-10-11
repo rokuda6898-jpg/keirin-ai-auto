@@ -1,0 +1,65 @@
+name: WINTICKET EX collection
+on:
+  push:
+    branches: [main, feature/winticket-ex-snapshots-20261011]
+    paths: ['src/winticket_ex.py', 'tests/test_winticket_ex.py', '.github/workflows/winticket-ex-capture.yml']
+  schedule:
+    - cron: '17,47 * * * *'
+  workflow_dispatch:
+  workflow_run:
+    workflows: ['daily-keirin-predict', 'intraday-keirin-odds']
+    types: [completed]
+permissions:
+  contents: write
+concurrency:
+  group: winticket-ex-${{ github.ref_name }}
+  cancel-in-progress: false
+jobs:
+  collect:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && 'main' || github.ref_name }}
+          fetch-depth: 1
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /src/winticket_ex.py
+            /tests/test_winticket_ex.py
+            /outputs/latest_race_schedule.csv
+            /outputs/ex_data/
+      - name: Verify EX data contracts
+        env:
+          PYTHONPATH: src
+        run: python -m unittest discover -s tests -p test_winticket_ex.py -v
+      - name: Freeze complete pre-close EX records
+        id: capture
+        continue-on-error: true
+        run: python src/winticket_ex.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: winticket-ex-${{ github.run_id }}
+          path: outputs/ex_data/
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Persist EX observations only
+        if: github.ref_name == 'main' && steps.capture.outcome != 'skipped'
+        run: |
+          test -f outputs/ex_data/collection.json || exit 1
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- outputs/ex_data/
+          git diff --cached --quiet && exit 0
+          git commit -m 'Archive pre-close WINTICKET EX observations'
+          for attempt in 1 2 3; do
+            git push origin HEAD:main && exit 0
+            git fetch origin main
+            git rebase origin/main || exit 1
+          done
+          exit 1
+      - name: Surface collection failures
+        if: steps.capture.outcome != 'success'
+        run: exit 1
