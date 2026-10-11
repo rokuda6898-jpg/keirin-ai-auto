@@ -1,0 +1,35 @@
+name: longshot-market-export
+on:
+  push:
+    branches: [codex/longshot-threeway-audit-20261011]
+    paths: [.github/workflows/longshot-market-export.yml]
+permissions:
+  contents: read
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: outputs
+      - name: Copy market snapshots only
+        run: |
+          python - <<'PY'
+          import json,shutil,hashlib,os
+          from pathlib import Path
+          out=Path('longshot-markets'); out.mkdir()
+          files=[]
+          for p in sorted(Path('outputs').rglob('market_odds_*.json')):
+              target=out/p;target.parent.mkdir(parents=True,exist_ok=True)
+              shutil.copyfile(p,target)
+              files.append({'path':str(p),'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
+          (out/'market_manifest.json').write_text(json.dumps({'source_commit':os.environ['GITHUB_SHA'],'files':files,'production_changed':False},indent=2))
+          print('EXPORTED_MARKETS',len(files))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: longshot-markets-${{ github.run_id }}
+          path: longshot-markets/
+          if-no-files-found: error
+          retention-days: 7
