@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['src/conditional_live.py', 'src/conditional_input_refresh.py', 'src/trifecta_chain_research.py', 'models/conditional_trifecta_v1.*', '.github/workflows/conditional-live.yml']
+    paths: ['src/conditional_live.py', 'src/conditional_budget*.py', 'src/conditional_input_refresh.py', 'src/trifecta_chain_research.py', 'models/conditional_trifecta_v1.*', '.github/workflows/conditional-live.yml']
   schedule:
     - cron: '13,43 * * * *'
   workflow_run:
@@ -31,6 +31,14 @@ jobs:
             requirements.txt
             requirements-conditional.txt
       - run: pip install -r requirements-conditional.txt
+      - name: Verify allocation invariants before publishing amounts
+        env:
+          PYTHONPATH: src
+        run: python -m unittest discover -s tests -p 'test_conditional_budget*.py'
+      - name: First allocation for still-open forecasts without a budget
+        env:
+          PYTHONPATH: src
+        run: python src/conditional_budget_initial.py
       - name: Retrieve and verify missing pre-close racecards for conditional model
         env:
           PYTHONPATH: src
@@ -49,6 +57,9 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add outputs/conditional_live.json outputs/company/conditional_live_ledger.jsonl
+          if test -f outputs/conditional_budget_initialization.json; then
+            git add outputs/conditional_budget_initialization.json
+          fi
           if test -f data/raw/conditional_today_entries.csv; then
             git add -f data/raw/conditional_today_entries.csv
           fi
