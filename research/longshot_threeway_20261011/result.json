@@ -1,0 +1,46 @@
+{
+  "version": "longshot_threeway_exploratory_v1",
+  "evaluated_races": 41,
+  "first_date": "2026-10-06",
+  "last_date": "2026-10-08",
+  "source_export_commit": "6110d6e975c6f6627166b71b68e2f8addc03373b",
+  "model_sha256": "7934d16a8bdae91f7bcfbf671e72848727538f4c664c74a586a7c8df36077892",
+  "model_training_last": "2025-10-08",
+  "line_verified_races": 20,
+  "verified_competing_leader_races": 20,
+  "production_changed": false,
+  "automatic_promotion": false,
+  "actual_purchase": false,
+  "unit_tests_passed": 13,
+  "outcome_field_mutation_test": "passed",
+  "paired_hit_discordance": {"current_only":1,"conditional_only":3,"exact_two_sided_pvalue":0.625,"interpretation":"exploratory, tiny nonrandom cohort; not proof of superiority"},
+  "scope": "retrospective_replay_not_fresh_holdout; payouts_from_saved_ledger_not_independently_refetched",
+  "common_conditions": {"min_odds":100,"max_tickets":12,"stake_per_ticket_yen":100,"min_probability":0.001,"min_estimated_ev":1.25,"conditional_order":"probability desc, EV desc, buy asc","no_probability_renormalization":true},
+  "main": {
+    "current_rule_replay": {"bet_races":33,"hits":2,"hit_rate":0.06060606060606061,"skip_rate":0.1951219512195122,"ticket_count":233,"stake_yen":23300,"return_yen":35030,"return_rate":1.5034334763948498,"max_losing_streak":13,"return_rate_without_largest_return":0.6094420600858369},
+    "conditional_probability": {"bet_races":41,"hits":4,"hit_rate":0.0975609756097561,"skip_rate":0.0,"ticket_count":461,"stake_yen":46100,"return_yen":100150,"return_rate":2.1724511930585684,"max_losing_streak":17,"return_rate_without_largest_return":1.3670281995661606},
+    "conditional_scenario": {"bet_races":39,"hits":1,"hit_rate":0.02564102564102564,"skip_rate":0.04878048780487805,"ticket_count":365,"stake_yen":36500,"return_yen":19630,"return_rate":0.5378082191780822,"max_losing_streak":27,"return_rate_without_largest_return":0.0}
+  },
+  "equal_count": {
+    "current_rule_replay": {"bet_races":33,"hits":2,"hit_rate":0.06060606060606061,"skip_rate":0.1951219512195122,"ticket_count":217,"stake_yen":21700,"return_yen":35030,"return_rate":1.6142857142857143,"max_losing_streak":13,"return_rate_without_largest_return":0.6543778801843319},
+    "conditional_probability": {"bet_races":33,"hits":2,"hit_rate":0.06060606060606061,"skip_rate":0.1951219512195122,"ticket_count":217,"stake_yen":21700,"return_yen":43390,"return_rate":1.9995391705069125,"max_losing_streak":21,"return_rate_without_largest_return":0.6543778801843319},
+    "conditional_scenario": {"bet_races":33,"hits":0,"hit_rate":0.0,"skip_rate":0.1951219512195122,"ticket_count":217,"stake_yen":21700,"return_yen":0,"return_rate":0.0,"max_losing_streak":33,"return_rate_without_largest_return":0.0}
+  },
+  "excluded_counts": {"no_raw_history_for_date":120,"no_archived_market":20,"no_complete_nonconflicting_market":103,"frozen_score_field_mismatch":1},
+  "scenario_filter_removed_conditional_hits": 3,
+  "daily_conditional_return_rate": {"2026-10-06":0.0,"2026-10-07":4.2549504950495045,"2026-10-08":0.6042553191489362},
+  "limitations": [
+    "Retrospective rule replay, NOT actual published performance or freshly untouched validation.",
+    "All-permutation quotes were recorded before close; raw historical feature availability and original immutable capture times are not fully verified.",
+    "Frozen model has already been evaluated on the target year containing these races; no fresh holdout performance claim.",
+    "Some original second/third scores are cumulative-place based, not calibrated exact-position probabilities; baseline retains those stored scores.",
+    "Payout amounts come from the repository settled ledger; podium agrees with central history but payout amounts were not independently re-fetched.",
+    "Sparse nonconflicting complete-market cohort is not a random sample of all races.",
+    "100 yen per ticket, not the separate 10000 yen allocation feature; maximum 12 tickets is not equal expenditure.",
+    "Estimated EV thresholds are uncalibrated estimates, not guaranteed returns."
+  ],
+  "environment_note": "A LabelEncoder 1.9.1-to-1.8.0 load warning occurred. Booster inference and each encoder class mapping were checked; no full identical-environment reproduction.",
+  "research_script_sha256": "36e779b79bf0f42c6710521f626fe2df812fc084563370eecc031ce5c4d77557",
+  "full_race_results_sha256": "d3bc053edfb4eabc580b3d5041cae478a3c8a5a69b4f74f960f6a505dc25b395",
+  "specification_sha256": "c58ae07b3f2a0ad96cda631d372b3f42665767e967be97ee59ba6a3f385552d4"
+}
