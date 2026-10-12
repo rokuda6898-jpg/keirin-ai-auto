@@ -70,7 +70,7 @@ def targets(history, asof=None, min_date=None):
         cup_url=f"https://www.winticket.jp/keirin/{winner.slug}/racecard/{winner.cup_id}"
         meta[str(rid)]={
             "race_id":str(rid),"venue":str(winner.venue),
-            "date":str(pd.Timestamp(winner._date).date()),
+            "date":str(pd.Timestamp(winner["_date"]).date()),
             "cup_url":cup_url,"index":int(winner.day_index),
             "winner_id":str(winner.player_id),"second_id":str(second.player_id),
         }
