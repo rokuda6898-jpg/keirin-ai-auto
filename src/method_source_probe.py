@@ -6,12 +6,12 @@ from pathlib import Path
 from fetch_today_entries import http_get, extract_preloaded_state, tanstack_queries
 
 BASE="https://www.winticket.jp/keirin/gifu/racecard/2026101043"
-URLS=[BASE+"/results",BASE+"/1/1",BASE+"/2/results",BASE+"/results/2",BASE+"/results?index=2"]
+URLS=[BASE+"/results",BASE+"/1/1",BASE+"/2/results",BASE+"/results/2",BASE+"/results?index=2","https://www.winticket.jp/keirin/kishiwada/racecard/2024061156/results?index=1"]
 DEST=Path("research/method_probe")
 DEST.mkdir(parents=True,exist_ok=True)
 report={}
 for url in URLS:
-    slot=url.split("/racecard/2026101043")[-1].replace("/","_").replace("?","_") or "root"
+    slot=url.split("/racecard/")[-1].replace("/","_").replace("?","_") or "root"
     out={"url":url}
     try:
         html=http_get(url,attempts=2)
