@@ -18,7 +18,8 @@ import pandas as pd
 from official_method_archive import FIRST,SECOND,OUTPUT_COLUMNS,method_stats
 from venue_time_learning import EXPECTED_VENUES,JST,classify,jst_hour,time_band,venue_name
 
-VERSION="venue_time_actual_decisive_methods_v1"
+VERSION="venue_time_actual_decisive_methods_v2"
+PAIRS=tuple(a+b for a in FIRST for b in SECOND)
 LEVELS=("national","venue","venue_band","venue_hour")
 
 
@@ -79,6 +80,7 @@ def load_records(path,asof):
     df["hour_jst"]=pd.to_numeric(df.hour_jst,errors="coerce")
     df=df[df.field.between(3,9) & df.venue.isin(EXPECTED_VENUES)]
     df=df[df.winner_method.isin(FIRST)&df.second_method.isin(SECOND)]
+    df["method_pair"]=df.winner_method.astype(str)+df.second_method.astype(str)
     return df
 
 
@@ -93,7 +95,8 @@ def train_validate(df,asof):
     if len(train)<400 or len(test)<100:
         return data
     models={"first":Distribution(train,"winner_method",FIRST),
-            "second":Distribution(train,"second_method",SECOND)}
+            "second":Distribution(train,"second_method",SECOND),
+            "pair":Distribution(train,"method_pair",PAIRS)}
     scores=defaultdict(list)
     correct=defaultdict(list)
     for row in test.itertuples(index=False):
@@ -113,7 +116,7 @@ def train_validate(df,asof):
     return data
 
 
-def infer_today(today_path, first_model, second_model):
+def infer_today(today_path, first_model, second_model, pair_model):
     if not today_path or not Path(today_path).is_file():return pd.DataFrame()
     frame=pd.read_csv(today_path,dtype={"race_id":str},low_memory=False)
     required={'race_id','car_no','venue','date'}
@@ -130,6 +133,7 @@ def infer_today(today_path, first_model, second_model):
              "field":len(g),"time_band":time_band(hour),"hour_jst":hour})()
         first=first_model.predict(context)
         second=second_model.predict(context)
+        pairs=pair_model.predict(context)
         result={"race_id":str(rid),"date":str(row.date),"venue":v,"tier":tier,
                 "division":division,"field":len(g),"hour_jst":hour,
                 "time_band":time_band(hour),"is_shadow":True,
@@ -137,6 +141,7 @@ def infer_today(today_path, first_model, second_model):
         for level in LEVELS:
             for m in FIRST: result[f"p_first_{m}_{level}"]=round(first[level][m],6)
             for m in SECOND: result[f"p_second_{m}_{level}"]=round(second[level][m],6)
+            for m in PAIRS: result[f"p_pair_{m}_{level}"]=round(pairs[level][m],6)
         rows.append(result)
     return pd.DataFrame(rows)
 
@@ -156,17 +161,19 @@ def main():
         (dest/"method_training_summary.json").write_text(json.dumps(summary,indent=2,ensure_ascii=False))
         print(json.dumps(summary,ensure_ascii=False));return
     models={"first":Distribution(df,"winner_method",FIRST),
-            "second":Distribution(df,"second_method",SECOND)}
+            "second":Distribution(df,"second_method",SECOND),
+            "pair":Distribution(df,"method_pair",PAIRS)}
     for which,model in models.items():
         (dest/f"{which}_smoothed_profile.json").write_text(
             json.dumps(model.export(),ensure_ascii=False,indent=2),encoding="utf-8")
-    preview=infer_today(args.today,models["first"],models["second"])
+    preview=infer_today(args.today,models["first"],models["second"],models["pair"])
     preview.to_csv(dest/"today_method_shadow.csv",index=False)
     holdout=train_validate(df,args.asof)
     summary={"version":VERSION,"trained_actual_races":int(len(df)),
              "venue_count":int(df.venue.nunique()),"tier_counts":df.tier.value_counts().to_dict(),
              "first_methods":df.winner_method.value_counts().to_dict(),
              "second_methods":df.second_method.value_counts().to_dict(),
+             "pair_methods":df.method_pair.value_counts().to_dict(),
              "holdout":holdout,
              "status":"shadow_only_waiting_validation" if holdout["status"]!="evaluated_shadow_only"
                 else "shadow_only_evaluated",
