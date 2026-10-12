@@ -6,16 +6,17 @@ from pathlib import Path
 from fetch_today_entries import http_get, extract_preloaded_state, tanstack_queries
 
 BASE="https://www.winticket.jp/keirin/gifu/racecard/2026101043"
-URLS=[BASE+"/results",BASE+"/1/1"]
+URLS=[BASE+"/results",BASE+"/1/1",BASE+"/2/results",BASE+"/results/2",BASE+"/results?index=2"]
 DEST=Path("research/method_probe")
 DEST.mkdir(parents=True,exist_ok=True)
 report={}
 for url in URLS:
-    slot=url.rsplit("/",1)[-1]
+    slot=url.split("/racecard/2026101043")[-1].replace("/","_").replace("?","_") or "root"
     out={"url":url}
     try:
         html=http_get(url,attempts=2)
         out["html_bytes"]=len(html)
+        out["result_links"]=sorted(set(re.findall(r'href="([^"]*2026101043[^"]*)"',html)))[:80]
         pos=html.find("着順・決まり手")
         out["text_decisive_excerpt"]=re.sub("<[^>]+>"," ",html[max(0,pos-100):pos+400]) if pos>=0 else "not found"
         state=extract_preloaded_state(html)
