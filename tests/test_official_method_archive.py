@@ -52,7 +52,7 @@ class MethodArchiveTests(unittest.TestCase):
         self.assertEqual(actual[0]["winner_method"],"逃")
         self.assertEqual(actual[0]["second_method"],"マ")
         self.assertEqual(actual[0]["division"],"A_challenge")
-        self.assertEqual(actual[0]["time_band"],"day")
+        self.assertEqual(actual[0]["time_band"],"evening")
         self.assertFalse(errors)
 
     def test_wrong_player_or_day_cannot_be_labeled(self):
