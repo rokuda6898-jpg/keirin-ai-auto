@@ -1,0 +1,62 @@
+name: V4 Adaptive One-Year Isolated Research
+
+on:
+  push:
+    branches: [research/v4-adaptive-backtest-20261012]
+    paths:
+      - research/v4_adaptive_backtest.py
+      - .github/workflows/v4_adaptive_backtest_20261012.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v4-adaptive-one-year-research
+  cancel-in-progress: false
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      PYTHONPATH: src
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install existing project dependencies
+        run: pip install -r requirements.txt
+      - name: Restore cached historical race archive
+        id: history
+        uses: actions/cache/restore@v4
+        with:
+          path: data/raw/history.csv
+          key: keirin-central-history-v1-${{ github.run_id }}
+          restore-keys: |
+            keirin-central-history-v1-
+      - name: Require authentic history with results
+        run: |
+          test -s data/raw/history.csv || { echo 'V4_BACKTEST_ABORT_NO_CACHED_HISTORY'; exit 1; }
+          python - <<'PY'
+          import pandas as pd
+          df=pd.read_csv('data/raw/history.csv',usecols=['race_id','date','finish_pos'],dtype={'race_id':str})
+          count=df.race_id.nunique()
+          recent=df[(df.date >= '2025-10-13') & (df.date <= '2026-10-12')].race_id.nunique()
+          print(f'V4_REAL_HISTORY_RACES {count} TARGET_YEAR_RACES {recent}', flush=True)
+          if count < 20000 or recent < 200:
+              raise SystemExit('Insufficient actual cached race results')
+          PY
+      - name: Run frozen V4 chronological adaptive-ticket backtest
+        run: python research/v4_adaptive_backtest.py
+      - name: Store read-only validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v4-adaptive-backtest-20261012
+          path: reports/v4_adaptive_20261012.*
+          if-no-files-found: warn
+          retention-days: 30
