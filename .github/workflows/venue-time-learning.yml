@@ -1,0 +1,102 @@
+name: venue-time-shadow-learning
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - src/venue_time_learning.py
+      - tests/test_venue_time_learning.py
+      - .github/workflows/venue-time-learning.yml
+  schedule:
+    # Weekly Monday 06:15 JST. Shadow-only, independent from daily predictions.
+    - cron: '15 21 * * 0'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: keirin-venue-time-research
+  cancel-in-progress: false
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      PYTHONPATH: src
+      OPENBLAS_NUM_THREADS: '2'
+      OMP_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Verify data isolation, classification and end-to-end training
+        run: python -m unittest discover -s tests -p test_venue_time_learning.py -v
+      - name: Restore current 60k central race history
+        uses: actions/cache/restore@v4
+        with:
+          path: data/raw/history.csv
+          key: keirin-central-history-v1-${{ github.run_id }}
+          restore-keys: |
+            keirin-central-history-v1-
+      - name: Reject damaged / undersized central cache before fallback
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import pandas as pd
+          path=Path('data/raw/history.csv')
+          if path.exists():
+              try:
+                  n=pd.read_csv(path,usecols=['race_id'],dtype={'race_id':str}).race_id.nunique()
+              except Exception: n=0
+              print(f'central cache races={n}')
+              if n < 30000: path.unlink()
+          PY
+      - name: Restore weekly history fallback if no usable central cache
+        if: hashFiles('data/raw/history.csv') == ''
+        uses: actions/cache/restore@v4
+        with:
+          path: data/raw/history.csv
+          key: keirin-history-v4-${{ github.run_id }}
+          restore-keys: |
+            keirin-history-v4-
+      - name: Restore validation history fallback
+        if: hashFiles('data/raw/history.csv') == ''
+        uses: actions/cache/restore@v4
+        with:
+          path: data/raw/history.csv
+          key: keirin-v4-validation-${{ github.run_id }}
+          restore-keys: |
+            keirin-v4-validation-
+      - name: Enforce full historical evidence floor
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import pandas as pd
+          path=Path('data/raw/history.csv')
+          if not path.is_file():
+              raise SystemExit('No history restored: no training claimed')
+          count=int(pd.read_csv(path,usecols=['race_id'],dtype={'race_id':str}).race_id.nunique())
+          print(f'actual restored historical races: {count}')
+          if count < 30000:
+              raise SystemExit('Under 30000 distinct races: no full-history training claimed')
+          PY
+      - name: Fit all observed venues and compare chronological holdout
+        run: |
+          python src/venue_time_learning.py \
+            --history data/raw/history.csv \
+            --today data/raw/today_entries.csv \
+            --out-dir research/venue_time_latest \
+            --min-races 30000
+      - name: Upload separated, non-production model and evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: venue-time-learning-${{ github.run_id }}
+          path: research/venue_time_latest/
+          if-no-files-found: warn
+          retention-days: 90
