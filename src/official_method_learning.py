@@ -77,7 +77,7 @@ def load_records(path,asof):
     df=df[df.method_status.eq("confirmed_by_podium_ids")].drop_duplicates("race_id",keep="last")
     df["field"]=pd.to_numeric(df.field,errors="coerce")
     df["hour_jst"]=pd.to_numeric(df.hour_jst,errors="coerce")
-    df=df[df.field.between(6,9) & df.venue.isin(EXPECTED_VENUES)]
+    df=df[df.field.between(3,9) & df.venue.isin(EXPECTED_VENUES)]
     df=df[df.winner_method.isin(FIRST)&df.second_method.isin(SECOND)]
     return df
 
@@ -120,7 +120,7 @@ def infer_today(today_path, first_model, second_model):
     if not required.issubset(frame):return pd.DataFrame()
     rows=[]
     for rid,g in frame.groupby("race_id",sort=False):
-        if g.car_no.nunique()!=len(g) or len(g) not in (6,7,8,9):continue
+        if g.car_no.nunique()!=len(g) or not 3<=len(g)<=9:continue
         row=g.iloc[0]
         tier,division=classify(row)
         v=venue_name(row.venue)
