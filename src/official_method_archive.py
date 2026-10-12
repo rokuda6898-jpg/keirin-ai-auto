@@ -218,6 +218,14 @@ def method_stats(frame,destination):
             for x in SECOND:
                 record[f"second_{x}_n"]=int(seen2.second_method.eq(x).sum())
                 record[f"second_{x}_pct"]=round(100*seen2.second_method.eq(x).mean(),2) if len(seen2) else None
+            paired=g[g.eligible_1st & g.eligible_2nd]
+            pair_labels=paired.winner_method.astype(str)+paired.second_method.astype(str)
+            record["observed_pairs"]=len(paired)
+            for a in FIRST:
+                for b in SECOND:
+                    pattern=a+b
+                    record[f"pair_{pattern}_n"]=int(pair_labels.eq(pattern).sum())
+                    record[f"pair_{pattern}_pct"]=round(100*pair_labels.eq(pattern).mean(),2) if len(paired) else None
             records.append(record)
         return pd.DataFrame(records)
     overall=grouped(["venue"])
