@@ -88,8 +88,19 @@ def distribute_across_venues(days, already, max_pages):
         current=max(x["date"] for x in races)
         venue=races[0]["venue"]
         by_venue[venue].append((current,key))
-    for key,items in by_venue.items():
-        items.sort(key=lambda x:(x[0],x[1]),reverse=True)
+    # Do not let a new collector see only the most recent 2026 races.
+    # Cycle years within each venue to build genuine train-before-test
+    # evidence while preserving equal geographic coverage.
+    for venue,items in list(by_venue.items()):
+        year_buckets=defaultdict(deque)
+        for entry in sorted(items,key=lambda x:(x[0],x[1]),reverse=True):
+            year_buckets[str(entry[0])[:4]].append(entry)
+        balanced=[]
+        while year_buckets:
+            for year in sorted(list(year_buckets),reverse=True):
+                balanced.append(year_buckets[year].popleft())
+                if not year_buckets[year]:del year_buckets[year]
+        by_venue[venue]=balanced
     queues={k:deque(v) for k,v in sorted(by_venue.items())}
     answer=[]
     while queues and (not max_pages or len(answer)<max_pages):
