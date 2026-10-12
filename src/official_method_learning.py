@@ -85,6 +85,10 @@ def load_records(path,asof):
 
 
 def train_validate(df,asof):
+    # A joint label is deterministic from the two verified result factors.
+    # Accept either an already-enriched archive or raw confirmed observations.
+    df=df.copy()
+    df["method_pair"]=df.winner_method.astype(str)+df.second_method.astype(str)
     cutoff=pd.Timestamp(asof)-pd.DateOffset(months=3)
     train=df[df.date.lt(cutoff)]
     test=df[df.date.ge(cutoff)]
