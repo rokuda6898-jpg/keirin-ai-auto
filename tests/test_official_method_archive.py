@@ -72,6 +72,18 @@ class MethodArchiveTests(unittest.TestCase):
         self.assertEqual(len(selected),2)
         self.assertEqual(len(set(rows[0]["venue"] for _,rows in selected)),2)
 
+    def test_rotate_historical_years_before_one_year_dominates(self):
+        chunks=[
+            sample_rows("岐阜","2026090143","2026-09-01",1,"014320260901"),
+            sample_rows("岐阜","2026080143","2026-08-01",1,"014320260801"),
+            sample_rows("岐阜","2025090143","2025-09-01",1,"014320250901"),
+            sample_rows("岐阜","2024090143","2024-09-01",1,"014320240901"),
+        ]
+        days=targets(pd.concat(chunks),asof="2026-10-13")
+        selected=distribute_across_venues(days,set(),3)
+        years=[items[0]["date"][:4] for _,items in selected]
+        self.assertEqual(years,["2026","2025","2024"])
+
     def test_full_venue_output_and_mark_column(self):
         expected=next(iter(targets(sample_rows()).values()))
         records,_=decode_cup_results(fake_state(),1,expected)
