@@ -1,0 +1,34 @@
+name: Probe real winner decision-method source
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - src/method_source_probe.py
+      - .github/workflows/method-source-probe.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PYTHONPATH: src
+      WINTICKET_MIN_REQUEST_INTERVAL_SEC: '0.7'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python src/method_source_probe.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: method-source-probe
+          path: research/method_probe/schema.json
+          if-no-files-found: warn
