@@ -49,7 +49,8 @@ class ObservedMethodLearningTests(unittest.TestCase):
 
     def test_exact_chronological_test_partition(self):
         df=observed(760)
-        outcome=train_validate(df,"2027-04-01")
+        df["date"]=pd.date_range("2026-02-01",periods=760,freq="6h")
+        outcome=train_validate(df,"2026-09-01")
         self.assertEqual(outcome["status"],"evaluated_shadow_only")
         self.assertGreater(outcome["train_races"],400)
         self.assertGreater(outcome["test_races"],100)
