@@ -96,6 +96,8 @@ class MethodArchiveTests(unittest.TestCase):
             actual=overview.set_index("venue").loc["岐阜"]
             self.assertEqual(actual["first_逃_n"],1)
             self.assertEqual(actual["second_マ_n"],1)
+            self.assertEqual(actual["pair_逃マ_n"],1)
+            self.assertAlmostEqual(actual["pair_逃マ_pct"],100.0)
 
 
 if __name__=="__main__":
