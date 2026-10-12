@@ -1,0 +1,90 @@
+name: actual-decision-method-learning
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - src/official_method_archive.py
+      - tests/test_official_method_archive.py
+      - .github/workflows/official-method-archive.yml
+  workflow_dispatch:
+  schedule:
+    # Every day 03:00 JST: bounded catch-up, no attempt to overload provider.
+    - cron: '0 18 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: keirin-official-method-archive
+  cancel-in-progress: false
+
+jobs:
+  gather:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    env:
+      PYTHONPATH: src
+      WINTICKET_MIN_REQUEST_INTERVAL_SEC: '0.85'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Check official result parsing and identity matching
+        run: python -m unittest discover -s tests -p test_official_method_archive.py -v
+      - name: Restore nationwide historical race source URLs
+        uses: actions/cache/restore@v4
+        with:
+          path: data/raw/history.csv
+          key: keirin-central-history-v1-${{ github.run_id }}
+          restore-keys: |
+            keirin-central-history-v1-
+      - name: Verify central archive has broad actual coverage
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import pandas as pd
+          p=Path('data/raw/history.csv')
+          if not p.is_file():raise SystemExit('No actual central history available')
+          d=pd.read_csv(p,usecols=['race_id','source_url'],dtype={'race_id':str})
+          n=d.race_id.nunique()
+          valid=d.source_url.astype(str).str.contains('/racecard/').sum()
+          print(f'central_races={n} source_url_rows={valid}')
+          if n < 30000 or valid < 50000:raise SystemExit('Central history/source URLs incomplete; cannot train')
+          PY
+      - name: Restore previously verified decisive methods
+        uses: actions/cache/restore@v4
+        with:
+          path: data/raw/official_methods.csv
+          key: keirin-official-methods-v1-${{ github.run_id }}
+          restore-keys: |
+            keirin-official-methods-v1-
+      - name: Backfill first/second methods across venues, classes and clock times
+        run: |
+          PAGES=240
+          if [ "${{ github.event_name }}" = "push" ]; then PAGES=60; fi
+          python src/official_method_archive.py \
+            --since 2021-01-01 \
+            --max-pages "$PAGES" \
+            --history data/raw/history.csv \
+            --output data/raw/official_methods.csv \
+            --report-dir research/official_method_analysis
+      - name: Preserve verified method archive for future runs
+        if: hashFiles('data/raw/official_methods.csv') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: data/raw/official_methods.csv
+          key: keirin-official-methods-v1-${{ github.run_id }}
+      - name: Upload independently sourced methods and all-track summaries
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-methods-${{ github.run_id }}
+          path: |
+            data/raw/official_methods.csv
+            research/official_method_analysis/
+          if-no-files-found: warn
+          retention-days: 90
