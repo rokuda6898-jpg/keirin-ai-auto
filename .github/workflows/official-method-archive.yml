@@ -68,7 +68,7 @@ jobs:
             keirin-official-methods-v1-
       - name: Backfill first/second methods across venues, classes and clock times
         run: |
-          PAGES=240
+          PAGES=600
           if [ "${{ github.event_name }}" = "push" ]; then PAGES=60; fi
           python src/official_method_archive.py \
             --since 2021-01-01 \
