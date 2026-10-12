@@ -7,6 +7,8 @@ on:
     paths:
       - src/venue_time_learning.py
       - tests/test_venue_time_learning.py
+      - src/venue_time_position_learning.py
+      - tests/test_venue_time_position_learning.py
       - .github/workflows/venue-time-learning.yml
   schedule:
     # Weekly Monday 06:15 JST. Shadow-only, independent from daily predictions.
@@ -36,6 +38,8 @@ jobs:
       - run: pip install -r requirements.txt
       - name: Verify data isolation, classification and end-to-end training
         run: python -m unittest discover -s tests -p test_venue_time_learning.py -v
+      - name: Verify winner and podium shadow feature isolation
+        run: python -m unittest discover -s tests -p test_venue_time_position_learning.py -v
       - name: Restore current 60k central race history
         uses: actions/cache/restore@v4
         with:
@@ -92,11 +96,20 @@ jobs:
             --today data/raw/today_entries.csv \
             --out-dir research/venue_time_latest \
             --min-races 30000
+      - name: Fit nationwide win and podium models with frozen prior-year split
+        run: |
+          python src/venue_time_position_learning.py \
+            --history data/raw/history.csv \
+            --today data/raw/today_entries.csv \
+            --out-dir research/venue_time_positions \
+            --min-races 30000
       - name: Upload separated, non-production model and evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: venue-time-learning-${{ github.run_id }}
-          path: research/venue_time_latest/
+          path: |
+            research/venue_time_latest/
+            research/venue_time_positions/
           if-no-files-found: warn
           retention-days: 90
