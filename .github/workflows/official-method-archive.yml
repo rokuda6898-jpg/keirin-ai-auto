@@ -6,6 +6,8 @@ on:
     paths:
       - src/official_method_archive.py
       - tests/test_official_method_archive.py
+      - src/official_method_learning.py
+      - tests/test_official_method_learning.py
       - .github/workflows/official-method-archive.yml
   workflow_dispatch:
   schedule:
@@ -35,6 +37,8 @@ jobs:
       - run: pip install -r requirements.txt
       - name: Check official result parsing and identity matching
         run: python -m unittest discover -s tests -p test_official_method_archive.py -v
+      - name: Check method-only probabilities and strict chronological validation
+        run: python -m unittest discover -s tests -p test_official_method_learning.py -v
       - name: Restore nationwide historical race source URLs
         uses: actions/cache/restore@v4
         with:
@@ -72,6 +76,8 @@ jobs:
             --history data/raw/history.csv \
             --output data/raw/official_methods.csv \
             --report-dir research/official_method_analysis
+      - name: Learn method probabilities from only confirmed 1st and 2nd results
+        run: python src/official_method_learning.py --archive data/raw/official_methods.csv --out-dir research/official_method_analysis
       - name: Preserve verified method archive for future runs
         if: hashFiles('data/raw/official_methods.csv') != ''
         uses: actions/cache/save@v4
