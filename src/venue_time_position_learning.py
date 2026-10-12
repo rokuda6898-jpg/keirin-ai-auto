@@ -15,6 +15,8 @@ import joblib
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
 
 from venue_time_learning import (EXPECTED_VENUES, JST, classify, jst_hour,
                                  USED, time_band, to_races, venue_name)
@@ -83,11 +85,21 @@ def fit_model(train, variant, target, max_iter=85, min_leaf=55):
     y=train[target].astype(int)
     if len(train)<100 or y.nunique()<2:
         raise ValueError(f'Insufficient training samples or labels: {len(train)}')
-    model=HistGradientBoostingClassifier(max_iter=max_iter,
+    # Select usable inputs on training rows only. Sklearn histograms can fail
+    # with all-null/constant columns under different NumPy builds.
+    retained=[c for c in xx if xx[c].nunique(dropna=True)>1]
+    if not retained:
+        raise ValueError('No nonconstant pre-race features available for fitting')
+    estimator=HistGradientBoostingClassifier(max_iter=max_iter,
         max_leaf_nodes=15,min_samples_leaf=min_leaf,l2_regularization=2.0,
         learning_rate=.06,early_stopping=False,random_state=20261013,
-        categorical_features=[c for c in xx.columns if c in CATEGORICAL])
-    model.fit(xx,y,sample_weight=train.race_weight.astype(float))
+        categorical_features=[i for i,c in enumerate(retained) if c in CATEGORICAL])
+    model=Pipeline([
+        ('retain_train_only_features', ColumnTransformer(
+            [('used','passthrough',retained)],remainder='drop',sparse_threshold=0)),
+        ('estimator',estimator),
+    ])
+    model.fit(xx,y,estimator__sample_weight=train.race_weight.astype(float))
     return model
 
 
