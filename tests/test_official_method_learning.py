@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from official_method_learning import (Distribution, load_records, train_validate,
+from official_method_learning import (Distribution, load_records, train_validate, PAIRS,
                                        infer_today)
 from official_method_archive import FIRST, SECOND, OUTPUT_COLUMNS
 
@@ -37,6 +37,12 @@ class ObservedMethodLearningTests(unittest.TestCase):
                 self.assertTrue(all(0 < p < 1 for p in result[stage].values()))
         self.assertNotIn("マ",first.predict(df.iloc[0])["venue_hour"])
         self.assertIn("マ",second.predict(df.iloc[0])["venue_hour"])
+        df["method_pair"]=df.winner_method+df.second_method
+        pairs=Distribution(df,"method_pair",PAIRS)
+        pred=pairs.predict(df.iloc[0])["venue_hour"]
+        self.assertAlmostEqual(sum(pred.values()),1,places=12)
+        self.assertIn("逃マ",pred)
+        self.assertGreater(pred["逃マ"],0)
 
     def test_target_labels_do_not_affect_prediction(self):
         df=observed(600)
@@ -54,7 +60,7 @@ class ObservedMethodLearningTests(unittest.TestCase):
         self.assertEqual(outcome["status"],"evaluated_shadow_only")
         self.assertGreater(outcome["train_races"],400)
         self.assertGreater(outcome["test_races"],100)
-        for col in ("first","second"):
+        for col in ("first","second","pair"):
             self.assertIn("venue_hour",outcome["metrics"][col])
 
     def test_current_race_needs_no_result_label(self):
@@ -67,10 +73,13 @@ class ObservedMethodLearningTests(unittest.TestCase):
                 "car_no":i,"venue":"奈良","race_class":"A級",
                 "race_type":"一般","start_at":1791892200} for i in range(1,8)])
             today.to_csv(dest,index=False)
-            preview=infer_today(dest,fm,sm)
+            df["method_pair"]=df.winner_method+df.second_method
+            pm=Distribution(df,"method_pair",PAIRS)
+            preview=infer_today(dest,fm,sm,pm)
             self.assertEqual(len(preview),1)
             self.assertAlmostEqual(sum(float(preview.iloc[0][f"p_first_{m}_venue_hour"]) for m in FIRST),1,places=5)
             self.assertAlmostEqual(sum(float(preview.iloc[0][f"p_second_{m}_venue_hour"]) for m in SECOND),1,places=5)
+            self.assertAlmostEqual(sum(float(preview.iloc[0][f"p_pair_{m}_venue_hour"]) for m in PAIRS),1,places=5)
             self.assertFalse(bool(preview.iloc[0]["purchase_authorized"]))
 
 
