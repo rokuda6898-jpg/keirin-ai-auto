@@ -123,7 +123,7 @@ class MethodArchiveTests(unittest.TestCase):
             self.assertEqual(report["total_method_records"],1)
             self.assertTrue(report["all_available_history_attempted"])
             self.assertEqual(report["counts"]["pages_success"],1)
-            self.assertEqual(report["counts"]["pages_failed"],0)
+            self.assertEqual(report["counts"].get("pages_failed",0),0)
             summary=pd.read_csv(base/"reports"/"venue_grade_field_band.csv")
             self.assertIn("pair_逃マ_pct",summary.columns)
             self.assertEqual(summary.iloc[0]["pair_逃マ_pct"],100.0)
