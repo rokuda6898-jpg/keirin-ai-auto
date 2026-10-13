@@ -79,7 +79,9 @@ def load_records(path,asof):
     df["field"]=pd.to_numeric(df.field,errors="coerce")
     df["hour_jst"]=pd.to_numeric(df.hour_jst,errors="coerce")
     df=df[df.field.between(3,9) & df.venue.isin(EXPECTED_VENUES)]
-    df=df[df.winner_method.isin(FIRST)&df.second_method.isin(SECOND)]
+    # Keep independent confirmed 1st and 2nd observations even when the
+    # other finisher's official method was omitted by the source.
+    df=df[df.winner_method.isin(FIRST)|df.second_method.isin(SECOND)]
     df["method_pair"]=df.winner_method.astype(str)+df.second_method.astype(str)
     return df
 
@@ -106,6 +108,8 @@ def train_validate(df,asof):
     for row in test.itertuples(index=False):
         for key,model in models.items():
             label=getattr(row,model.label)
+            if label not in model.methods:
+                continue
             stages=model.predict(row)
             for stage, probs in stages.items():
                 scores[(key,stage)].append(-math.log(max(1e-10,probs[label])))
@@ -114,8 +118,9 @@ def train_validate(df,asof):
         data["metrics"][key]={}
         for stage in LEVELS:
             data["metrics"][key][stage]={
-                "mean_logloss":float(np.mean(scores[(key,stage)])),
-                "accuracy":float(np.mean(correct[(key,stage)]))}
+                "n_evaluated":int(len(scores[(key,stage)])),
+                "mean_logloss":float(np.mean(scores[(key,stage)])) if scores[(key,stage)] else None,
+                "accuracy":float(np.mean(correct[(key,stage)])) if correct[(key,stage)] else None}
     data["status"]="evaluated_shadow_only"
     return data
 

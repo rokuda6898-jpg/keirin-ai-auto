@@ -11,6 +11,7 @@ import json
 import os
 import re
 from collections import Counter, defaultdict, deque
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -21,19 +22,67 @@ import pandas as pd
 from fetch_today_entries import http_get, extract_preloaded_state, find_query_data
 from venue_time_learning import EXPECTED_VENUES, JST, classify, jst_hour, time_band, venue_name, winner_method
 
-VERSION="official_winticket_methods_v1"
+VERSION="official_winticket_methods_v2"
 CUP_LINK=re.compile(r"^https://www\.winticket\.jp/keirin/([a-z0-9-]+)/racecard/(\d{10})/(\d+)/(\d+)(?:[/?#].*)?$")
 FIRST=("逃","捲","差")
 SECOND=("逃","捲","差","マ")
 OUTPUT_COLUMNS=("race_id","date","venue","race_class","race_type","tier","division",
     "field","hour_jst","time_band","grade_race","winner_method","second_method",
-    "winner_player_id","second_player_id","result_source","source_url","method_status")
+    "winner_player_id","second_player_id","result_source","source_url","method_status",
+    "meeting_grade","track_meters","wind_speed","weather",
+    "first_final_half_sec","second_final_half_sec",
+    "first_line_role","second_line_role","forecast_suji","score_top2_pair_proxy")
 
 
 def second_method(raw):
     name=str(raw or "").strip()
     if name in ("マ","マーク","ﾏ"):return "マ"
     return winner_method(name)
+
+
+def line_role(row):
+    position=pd.to_numeric(row.get("line_position"),errors="coerce")
+    size=pd.to_numeric(row.get("line_size"),errors="coerce")
+    if pd.isna(position) or pd.isna(size) or size<1 or position<1 or position>size:
+        return None
+    if size==1:return "単騎"
+    if position==1:return "先頭"
+    if position==2:return "2番手"
+    if position==3:return "3番手"
+    return "4番手以降"
+
+
+def bank_meters(venue):
+    # 43-track reference includes Chiba 250m: not observed by normal KEIRIN history.
+    if venue=="千葉":return 250
+    if venue in {"前橋","松戸","小田原","伊東","富山","奈良","防府"}:return 333
+    if venue in {"宇都宮","大宮","高知"}:return 500
+    return 400
+
+
+def observed_line_metadata(group, winner, second):
+    verified="line_verification_status" in group and group.line_verification_status.astype(str).eq("verified").all()
+    if not verified:return {"first_line_role":None,"second_line_role":None,"forecast_suji":None}
+    first_role=line_role(winner);second_role=line_role(second)
+    x=pd.to_numeric(winner.get("line_position"),errors="coerce")
+    y=pd.to_numeric(second.get("line_position"),errors="coerce")
+    id_first=winner.get("line_id")
+    id_second=second.get("line_id")
+    if any(pd.isna(v) for v in (x,y,id_first,id_second)):
+        suji=None
+    else:
+        suji=bool(str(id_first)==str(id_second) and abs(x-y)==1)
+    return {"first_line_role":first_role,"second_line_role":second_role,"forecast_suji":suji}
+
+
+def score_two_proxy(group, winner, second):
+    # Not Gamboo's proprietary G-index; explicitly a distinct score-based proxy.
+    if "score" not in group:return None
+    scores=pd.to_numeric(group["score"],errors="coerce")
+    if scores.notna().sum()!=len(group) or len(group)<3:return None
+    ranked=group.assign(_score=scores).sort_values(["_score","car_no"],ascending=[False,True])
+    return bool({str(ranked.iloc[0]["player_id"]),str(ranked.iloc[1]["player_id"])}==
+                {str(winner["player_id"]),str(second["player_id"])})
 
 
 def targets(history, asof=None, min_date=None):
@@ -68,11 +117,14 @@ def targets(history, asof=None, min_date=None):
         winner=g.loc[g.finish_pos.eq(1)].iloc[0]
         second=g.loc[g.finish_pos.eq(2)].iloc[0]
         cup_url=f"https://www.winticket.jp/keirin/{winner.slug}/racecard/{winner.cup_id}"
+        extra=observed_line_metadata(g,winner,second)
         meta[str(rid)]={
             "race_id":str(rid),"venue":str(winner.venue),
             "date":str(pd.Timestamp(winner["_date"]).date()),
             "cup_url":cup_url,"index":int(winner.day_index),
             "winner_id":str(winner.player_id),"second_id":str(second.player_id),
+            **extra,
+            "score_top2_pair_proxy":score_two_proxy(g,winner,second),
         }
     days=defaultdict(list)
     for info in meta.values():
@@ -130,6 +182,8 @@ def decode_cup_results(state,index,expected):
     if not isinstance(cup,dict) or not cup.get("races"):
         raise ValueError("Missing cup race metadata")
     cup_venue=venue_name((cup.get("venue") or {}).get("name",""))
+    cup_meta=cup.get("cup") or {}
+    cup_grade={3:"G3",4:"G2",5:"G1"}.get(cup_meta.get("grade"),"other")
     races={str(r.get("id")):r for r in cup.get("races",[])}
     schedules={str(s.get("id")):s for s in cup.get("schedules",[])}
     expectations={x["race_id"]:x for x in expected}
@@ -154,14 +208,20 @@ def decode_cup_results(state,index,expected):
             errors["archive_result_mismatch"]+=1;continue
         m1=winner_method(first.get("factor"))
         m2=second_method(second.get("factor"))
-        if not m1 or not m2:
-            errors["missing_official_factor"]+=1;continue
+        if not m1 and not m2:
+            errors["missing_both_official_factors"]+=1;continue
+        if not m1:errors["missing_first_official_factor"]+=1
+        if not m2:errors["missing_second_official_factor"]+=1
         start=jst_hour(race.get("startAt"))
         rc=str(race.get("class") or "")
         tier,division=classify({"race_class":rc,"race_type":race.get("raceType"),
                                 "is_grade_race":race.get("isGradeRace")})
         if tier=="unknown":
             errors["unknown_grade"]+=1;continue
+        def finisher_half(record):
+            value=pd.to_numeric(record.get("finalHalfRecord"),errors="coerce")
+            return float(value) if pd.notna(value) and 8.0<=value<=20.0 else None
+        wind=pd.to_numeric(race.get("windSpeed"),errors="coerce")
         saved.append({
             "race_id":rid,"date":ref["date"],"venue":ref["venue"],"race_class":rc,
             "race_type":str(race.get("raceType") or ""), "tier":tier,"division":division,
@@ -172,6 +232,16 @@ def decode_cup_results(state,index,expected):
             "result_source":"WINTICKET:FETCH_KEIRIN_CUP_RACE_RESULT",
             "source_url":ref["cup_url"]+f"/results?index={index}",
             "method_status":"confirmed_by_podium_ids",
+            "meeting_grade":cup_grade,
+            "track_meters":bank_meters(ref["venue"]),
+            "wind_speed":float(wind) if pd.notna(wind) else None,
+            "weather":str(race.get("weather") or ""),
+            "first_final_half_sec":finisher_half(first),
+            "second_final_half_sec":finisher_half(second),
+            "first_line_role":ref.get("first_line_role"),
+            "second_line_role":ref.get("second_line_role"),
+            "forecast_suji":ref.get("forecast_suji"),
+            "score_top2_pair_proxy":ref.get("score_top2_pair_proxy"),
         })
     return saved,errors
 
@@ -201,11 +271,17 @@ def method_stats(frame,destination):
         base=pd.DataFrame(columns=list(OUTPUT_COLUMNS))
     for c in ("field","hour_jst"):
         if c in base:base[c]=pd.to_numeric(base[c],errors="coerce")
+    base["year"]=pd.to_datetime(base["date"],errors="coerce").dt.year
+    base["wind_bucket"]=pd.cut(
+        pd.to_numeric(base["wind_speed"],errors="coerce"),
+        bins=[-float("inf"),1,3,float("inf")],
+        labels=["0-1m","1-3m","3m+"],
+    ) if "wind_speed" in base else pd.Series(index=base.index,dtype=str)
     base["eligible_1st"]=base.winner_method.isin(FIRST)
     base["eligible_2nd"]=base.second_method.isin(SECOND)
     def grouped(columns):
         records=[]
-        for key,g in base.groupby(columns,dropna=False):
+        for key,g in base.groupby(columns,dropna=False,observed=True):
             if not isinstance(key,tuple):key=(key,)
             seen=g[g.eligible_1st]
             seen2=g[g.eligible_2nd]
@@ -226,6 +302,21 @@ def method_stats(frame,destination):
                     pattern=a+b
                     record[f"pair_{pattern}_n"]=int(pair_labels.eq(pattern).sum())
                     record[f"pair_{pattern}_pct"]=round(100*pair_labels.eq(pattern).mean(),2) if len(paired) else None
+            for field,tag in (("first_final_half_sec","first_half"),("second_final_half_sec","second_half")):
+                if field in g:
+                    values=pd.to_numeric(g[field],errors="coerce").dropna()
+                    record[tag+"_n"]=int(len(values))
+                    record[tag+"_mean_sec"]=round(float(values.mean()),3) if len(values) else None
+            for field,tag in (("forecast_suji","forecast_suji"),("score_top2_pair_proxy","score_top2_proxy")):
+                if field in g:
+                    known=g[field].dropna()
+                    record[tag+"_n"]=int(len(known))
+                    record[tag+"_pct"]=round(float(known.astype(float).mean()*100),2) if len(known) else None
+            for role in ("先頭","2番手","3番手","4番手以降","単騎"):
+                for field,tag in (("first_line_role","first"),("second_line_role","second")):
+                    if field in g:
+                        valid=g[field].dropna()
+                        record[tag+"_role_"+role+"_pct"]=round(100*float(valid.eq(role).mean()),2) if len(valid) else None
             records.append(record)
         return pd.DataFrame(records)
     overall=grouped(["venue"])
@@ -234,6 +325,10 @@ def method_stats(frame,destination):
     overall.to_csv(destination/"venue_methods.csv",index=False)
     grouped(["venue","tier","division","field","time_band"]).to_csv(destination/"venue_grade_field_band.csv",index=False)
     grouped(["venue","tier","division","field","hour_jst"]).to_csv(destination/"venue_grade_field_hour.csv",index=False)
+    grouped(["track_meters","tier","division","field","time_band"]).to_csv(destination/"bank_length_class_time.csv",index=False)
+    grouped(["venue","meeting_grade","tier","division","field"]).to_csv(destination/"venue_meeting_grade.csv",index=False)
+    grouped(["venue","year","tier","division","field"]).to_csv(destination/"venue_year_class.csv",index=False)
+    grouped(["venue","tier","division","field","weather","wind_bucket"]).to_csv(destination/"venue_weather_wind.csv",index=False)
     grouped(["tier","division","field","time_band"]).to_csv(destination/"national_class_time.csv",index=False)
     return {"observed_races":int(len(base)),
             "complete_first":int(base.eligible_1st.sum()),
@@ -244,8 +339,20 @@ def method_stats(frame,destination):
             "method_counts_second":base.second_method.value_counts().to_dict()}
 
 
-def run(history_path,output_path,report_dir,asof,minimum_date,max_pages=80):
-    columns={"race_id","date","venue","source_url","finish_pos","player_id"}
+def _fetch_one(item):
+    (cup_url,index),expected=item
+    url=cup_url+f"/results?index={index}"
+    try:
+        state=extract_preloaded_state(http_get(url,attempts=3))
+        rows,errors=decode_cup_results(state,index,expected)
+        return rows,errors,None,len(expected)
+    except Exception as exc:
+        return [],Counter(),{"url":url,"reason":str(exc)[:180],"expected_races":len(expected)},len(expected)
+
+
+def run(history_path,output_path,report_dir,asof,minimum_date,max_pages=80,workers=8,checkpoint_pages=150):
+    columns={"race_id","date","venue","source_url","finish_pos","player_id",
+             "car_no","score","line_id","line_position","line_size","line_verification_status"}
     history=pd.read_csv(history_path,usecols=lambda c:c in columns,
         dtype={"race_id":str,"player_id":str},low_memory=False)
     days=targets(history,asof=asof,min_date=minimum_date)
@@ -256,37 +363,46 @@ def run(history_path,output_path,report_dir,asof,minimum_date,max_pages=80):
     else:already=set()
     todo=distribute_across_venues(days,already,max_pages)
     failures=[];counts=Counter();new_rows=[]
-    for i,((cup_url,index),expected) in enumerate(todo,1):
-        url=cup_url+f"/results?index={index}"
-        try:
-            state=extract_preloaded_state(http_get(url,attempts=3))
-            rows,err=decode_cup_results(state,index,expected)
-            new_rows.extend(rows)
-            counts.update(err)
-            counts["pages_success"]+=1
-            counts["verified_new_races"]+=len(rows)
-            counts["eligible_races_on_pages"]+=len(expected)
-        except Exception as exc:
-            failures.append({"url":url,"reason":str(exc)[:180],"expected_races":len(expected)})
-            counts["pages_failed"]+=1
-        if i%10==0 or i==len(todo):
-            print("PROGRESS",json.dumps({"pages":i,"of":len(todo),
-                    "verified":len(new_rows),"errors":dict(counts),
-                    "failures":len(failures)},ensure_ascii=False),flush=True)
-        # Checkpoint even if process fails later: no loss of already validated rows.
-        if i%25==0:
+    def checkpoint():
+        nonlocal new_rows
+        if new_rows:
             merge_verified(output_path,new_rows)
             new_rows=[]
-    combined=merge_verified(output_path,new_rows)
+    with ThreadPoolExecutor(max_workers=max(1,min(int(workers),20))) as pool:
+        tasks=[pool.submit(_fetch_one,item) for item in todo]
+        for i,future in enumerate(as_completed(tasks),1):
+            rows,errors,error,expected_count=future.result()
+            new_rows.extend(rows)
+            counts.update(errors)
+            counts["verified_new_races"]+=len(rows)
+            counts["eligible_races_on_pages"]+=expected_count
+            if error:
+                failures.append(error)
+                counts["pages_failed"]+=1
+            else:
+                counts["pages_success"]+=1
+            if i%max(1,checkpoint_pages)==0:
+                checkpoint()
+            if i%100==0 or i==len(todo):
+                print("PROGRESS",json.dumps({"pages":i,"of":len(todo),
+                        "verified_this_run":counts["verified_new_races"],
+                        "failed_pages":counts["pages_failed"],
+                        "invalid_or_missing_factors":counts["missing_official_factor"]},
+                        ensure_ascii=False),flush=True)
+    checkpoint()
+    combined=merge_verified(output_path,[])
     aggregate=method_stats(combined,report_dir)
+    captured=set(combined.race_id.astype(str))
     result={"version":VERSION,"asof_exclusive":asof,"minimum_date_inclusive":minimum_date,
         "history_race_days_with_source":int(len(days)),"pages_this_run":len(todo),
         "days_remaining_with_uncaptured_races":int(sum(
-            any(x["race_id"] not in set(combined.race_id) for x in expected) for expected in days.values())),
+            any(x["race_id"] not in captured for x in expected) for expected in days.values())),
         "new_method_records_this_run":int(counts["verified_new_races"]),
         "total_method_records":int(len(combined)),
         "counts":dict(counts),"samples":aggregate,
         "failures":failures[:40],
+        "page_worker_count":int(workers),
+        "all_available_history_attempted":bool(max_pages==0 or max_pages>=len(todo)),
         "production_changed":False,"purchase_authorized":False,
         "data_origin":"published WINTICKET confirmed results / not style inference",
         "commercial_use_status":"review_required"}
@@ -303,8 +419,10 @@ def main():
     p.add_argument("--asof",default=datetime.now(JST).strftime("%Y-%m-%d"))
     p.add_argument("--since",default="2021-01-01")
     p.add_argument("--max-pages",type=int,default=80)
+    p.add_argument("--workers",type=int,default=8)
+    p.add_argument("--checkpoint-pages",type=int,default=150)
     a=p.parse_args()
-    run(a.history,a.output,a.report_dir,a.asof,a.since,a.max_pages)
+    run(a.history,a.output,a.report_dir,a.asof,a.since,a.max_pages,a.workers,a.checkpoint_pages)
 
 
 if __name__=="__main__":

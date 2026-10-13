@@ -24,10 +24,10 @@ concurrency:
 jobs:
   gather:
     runs-on: ubuntu-latest
-    timeout-minutes: 75
+    timeout-minutes: 340
     env:
       PYTHONPATH: src
-      WINTICKET_MIN_REQUEST_INTERVAL_SEC: '0.85'
+      WINTICKET_MIN_REQUEST_INTERVAL_SEC: '0.72'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -68,11 +68,15 @@ jobs:
             keirin-official-methods-v1-
       - name: Backfill first/second methods across venues, classes and clock times
         run: |
+          # Complete the entire retained historical source in one initial push.
+          # Later scheduled runs only fill missing pages, at a modest rate.
           PAGES=600
-          if [ "${{ github.event_name }}" = "push" ]; then PAGES=60; fi
+          if [ "${{ github.event_name }}" = "push" ]; then PAGES=0; fi
           python src/official_method_archive.py \
-            --since 2021-01-01 \
+            --since 2020-10-01 \
             --max-pages "$PAGES" \
+            --workers 10 \
+            --checkpoint-pages 150 \
             --history data/raw/history.csv \
             --output data/raw/official_methods.csv \
             --report-dir research/official_method_analysis
