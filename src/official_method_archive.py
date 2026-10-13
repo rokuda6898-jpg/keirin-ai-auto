@@ -329,8 +329,20 @@ def method_stats(frame,destination):
             "method_counts_second":base.second_method.value_counts().to_dict()}
 
 
-def run(history_path,output_path,report_dir,asof,minimum_date,max_pages=80):
-    columns={"race_id","date","venue","source_url","finish_pos","player_id"}
+def _fetch_one(item):
+    (cup_url,index),expected=item
+    url=cup_url+f"/results?index={index}"
+    try:
+        state=extract_preloaded_state(http_get(url,attempts=3))
+        rows,errors=decode_cup_results(state,index,expected)
+        return rows,errors,None,len(expected)
+    except Exception as exc:
+        return [],Counter(),{"url":url,"reason":str(exc)[:180],"expected_races":len(expected)},len(expected)
+
+
+def run(history_path,output_path,report_dir,asof,minimum_date,max_pages=80,workers=8,checkpoint_pages=150):
+    columns={"race_id","date","venue","source_url","finish_pos","player_id",
+             "car_no","score","line_id","line_position","line_size","line_verification_status"}
     history=pd.read_csv(history_path,usecols=lambda c:c in columns,
         dtype={"race_id":str,"player_id":str},low_memory=False)
     days=targets(history,asof=asof,min_date=minimum_date)
@@ -341,37 +353,46 @@ def run(history_path,output_path,report_dir,asof,minimum_date,max_pages=80):
     else:already=set()
     todo=distribute_across_venues(days,already,max_pages)
     failures=[];counts=Counter();new_rows=[]
-    for i,((cup_url,index),expected) in enumerate(todo,1):
-        url=cup_url+f"/results?index={index}"
-        try:
-            state=extract_preloaded_state(http_get(url,attempts=3))
-            rows,err=decode_cup_results(state,index,expected)
-            new_rows.extend(rows)
-            counts.update(err)
-            counts["pages_success"]+=1
-            counts["verified_new_races"]+=len(rows)
-            counts["eligible_races_on_pages"]+=len(expected)
-        except Exception as exc:
-            failures.append({"url":url,"reason":str(exc)[:180],"expected_races":len(expected)})
-            counts["pages_failed"]+=1
-        if i%10==0 or i==len(todo):
-            print("PROGRESS",json.dumps({"pages":i,"of":len(todo),
-                    "verified":len(new_rows),"errors":dict(counts),
-                    "failures":len(failures)},ensure_ascii=False),flush=True)
-        # Checkpoint even if process fails later: no loss of already validated rows.
-        if i%25==0:
+    def checkpoint():
+        nonlocal new_rows
+        if new_rows:
             merge_verified(output_path,new_rows)
             new_rows=[]
-    combined=merge_verified(output_path,new_rows)
+    with ThreadPoolExecutor(max_workers=max(1,min(int(workers),20))) as pool:
+        tasks=[pool.submit(_fetch_one,item) for item in todo]
+        for i,future in enumerate(as_completed(tasks),1):
+            rows,errors,error,expected_count=future.result()
+            new_rows.extend(rows)
+            counts.update(errors)
+            counts["verified_new_races"]+=len(rows)
+            counts["eligible_races_on_pages"]+=expected_count
+            if error:
+                failures.append(error)
+                counts["pages_failed"]+=1
+            else:
+                counts["pages_success"]+=1
+            if i%max(1,checkpoint_pages)==0:
+                checkpoint()
+            if i%100==0 or i==len(todo):
+                print("PROGRESS",json.dumps({"pages":i,"of":len(todo),
+                        "verified_this_run":counts["verified_new_races"],
+                        "failed_pages":counts["pages_failed"],
+                        "invalid_or_missing_factors":counts["missing_official_factor"]},
+                        ensure_ascii=False),flush=True)
+    checkpoint()
+    combined=merge_verified(output_path,[])
     aggregate=method_stats(combined,report_dir)
+    captured=set(combined.race_id.astype(str))
     result={"version":VERSION,"asof_exclusive":asof,"minimum_date_inclusive":minimum_date,
         "history_race_days_with_source":int(len(days)),"pages_this_run":len(todo),
         "days_remaining_with_uncaptured_races":int(sum(
-            any(x["race_id"] not in set(combined.race_id) for x in expected) for expected in days.values())),
+            any(x["race_id"] not in captured for x in expected) for expected in days.values())),
         "new_method_records_this_run":int(counts["verified_new_races"]),
         "total_method_records":int(len(combined)),
         "counts":dict(counts),"samples":aggregate,
         "failures":failures[:40],
+        "page_worker_count":int(workers),
+        "all_available_history_attempted":bool(max_pages==0 or max_pages>=len(todo)),
         "production_changed":False,"purchase_authorized":False,
         "data_origin":"published WINTICKET confirmed results / not style inference",
         "commercial_use_status":"review_required"}
@@ -388,8 +409,10 @@ def main():
     p.add_argument("--asof",default=datetime.now(JST).strftime("%Y-%m-%d"))
     p.add_argument("--since",default="2021-01-01")
     p.add_argument("--max-pages",type=int,default=80)
+    p.add_argument("--workers",type=int,default=8)
+    p.add_argument("--checkpoint-pages",type=int,default=150)
     a=p.parse_args()
-    run(a.history,a.output,a.report_dir,a.asof,a.since,a.max_pages)
+    run(a.history,a.output,a.report_dir,a.asof,a.since,a.max_pages,a.workers,a.checkpoint_pages)
 
 
 if __name__=="__main__":
