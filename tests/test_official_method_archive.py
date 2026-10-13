@@ -1,11 +1,12 @@
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import pandas as pd
 
 from official_method_archive import (SECOND, decode_cup_results, distribute_across_venues,
-                                    method_stats, second_method, targets)
+                                    method_stats, second_method, targets, run)
 
 
 def sample_rows(venue="岐阜", cup_id="2026101043", date="2026-10-10", day=1, prefix="014320261010"):
@@ -83,6 +84,49 @@ class MethodArchiveTests(unittest.TestCase):
         selected=distribute_across_venues(days,set(),3)
         years=[items[0]["date"][:4] for _,items in selected]
         self.assertEqual(years,["2026","2025","2024"])
+
+    def test_pre_race_line_position_and_lap_time_are_kept_separately(self):
+        source=sample_rows().copy()
+        source["car_no"]=range(1,8)
+        source["line_verification_status"]="verified"
+        source["line_id"]=[1,1,1,2,2,2,3]
+        source["line_position"]=[1,2,3,1,2,3,1]
+        source["line_size"]=[3,3,3,3,3,3,1]
+        source["score"]=[100,99,96,91,90,89,88]
+        expected=next(iter(targets(source).values()))
+        state=fake_state()
+        state["tanStackQuery"]["queries"][0]["state"]["data"]["races"][0]["weather"]="晴れ"
+        state["tanStackQuery"]["queries"][0]["state"]["data"]["races"][0]["windSpeed"]="1.2"
+        result=state["tanStackQuery"]["queries"][1]["state"]["data"]["raceResults"][0]["results"]
+        result[0]["finalHalfRecord"]="11.4"
+        result[1]["finalHalfRecord"]="11.8"
+        observed, errors=decode_cup_results(state,1,expected)
+        self.assertFalse(errors)
+        self.assertEqual(observed[0]["first_line_role"],"先頭")
+        self.assertEqual(observed[0]["second_line_role"],"2番手")
+        self.assertTrue(observed[0]["forecast_suji"])
+        self.assertTrue(observed[0]["score_top2_pair_proxy"])
+        self.assertEqual(observed[0]["track_meters"],400)
+        self.assertAlmostEqual(observed[0]["first_final_half_sec"],11.4)
+        self.assertAlmostEqual(observed[0]["wind_speed"],1.2)
+
+    def test_parallel_run_uses_observed_pages_no_synthetic_labels(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base=Path(tmp)
+            path=base/"history.csv"
+            sample_rows().to_csv(path,index=False)
+            fake_html="unimportant"
+            with patch("official_method_archive.http_get",return_value=fake_html),patch(
+                "official_method_archive.extract_preloaded_state",return_value=fake_state()):
+                report=run(path,base/"official.csv",base/"reports",
+                    "2026-10-13","2026-01-01",max_pages=0,workers=2,checkpoint_pages=1)
+            self.assertEqual(report["total_method_records"],1)
+            self.assertTrue(report["all_available_history_attempted"])
+            self.assertEqual(report["counts"]["pages_success"],1)
+            self.assertEqual(report["counts"]["pages_failed"],0)
+            summary=pd.read_csv(base/"reports"/"venue_grade_field_band.csv")
+            self.assertIn("pair_逃マ_pct",summary.columns)
+            self.assertEqual(summary.iloc[0]["pair_逃マ_pct"],100.0)
 
     def test_full_venue_output_and_mark_column(self):
         expected=next(iter(targets(sample_rows()).values()))
