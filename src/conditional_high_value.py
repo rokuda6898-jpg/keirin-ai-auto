@@ -14,7 +14,7 @@ import re
 VERSION = 'conditional-50plus-overlay-v1'
 MIN_ODDS = Decimal('50')
 CENSORED_ODDS = Decimal('9999.9')
-MIN_PROXY = 1.05
+MIN_PROXY = 1.0
 MAX_NEW_HIGH = 4
 
 
@@ -84,6 +84,8 @@ def select(keys, probabilities, baseline, quote, max_new_high=MAX_NEW_HIGH):
     candidates.sort(key=lambda item: (-item[4], -item[2], ranks[item[0]], item[0]))
     chosen, prefixes = [], Counter()
     for key, odds, p, proxy, score in candidates:
+        if len(chosen) >= max_new_high:
+            break
         prefix = tuple(key.split('-')[:2])
         if prefixes[prefix] >= 2:
             continue
@@ -113,5 +115,5 @@ def select(keys, probabilities, baseline, quote, max_new_high=MAX_NEW_HIGH):
             'market_sha256': digest,
             'source_url': quote['source_url'], 'provider': quote['provider'],
             'captured_at_jst': quote['captured_at_jst'],
-            'selection_rule': '8-12 probability tickets + up to 4 new >=50x candidates; p*odds>=1.05; rank=p^1.25*odds; pair cap=2',
+            'selection_rule': '8-12 probability tickets + up to 4 new >=50x candidates; p*odds>=1.0; rank=p^1.25*odds; pair cap=2',
             'validated_roi': False}
