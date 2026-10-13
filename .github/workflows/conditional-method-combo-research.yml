@@ -1,0 +1,67 @@
+name: conditional-method-combo-research
+
+on:
+  push:
+    branches: [research/conditional-method-combos]
+    paths:
+      - src/conditional_method_combo.py
+      - src/conditional_method_combo_study.py
+      - tests/test_conditional_method_combo.py
+      - tests/test_conditional_method_combo_study.py
+      - .github/workflows/conditional-method-combo-research.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: conditional-method-combo-research
+  cancel-in-progress: false
+
+jobs:
+  retrospective:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    env:
+      PYTHONPATH: src
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '2'
+      MKL_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Restore conditional model compatible environment
+        run: pip install -r requirements.txt numpy==2.5.3 pandas==3.0.6 scikit-learn==1.9.1 joblib==1.6.0 scipy==1.18.1 lightgbm==4.7.0
+      - name: Unit-test complete distribution, first locking and odds candidate selection
+        run: |
+          python -m unittest discover -s tests -p test_conditional_method_combo.py -v
+          python -m unittest discover -s tests -p test_conditional_method_combo_study.py -v
+      - name: Restore original entire historical race source
+        uses: actions/cache/restore@v4
+        with:
+          path: data/raw/history.csv
+          key: keirin-central-history-v1-37796966787
+          fail-on-cache-miss: true
+      - name: Restore independently confirmed winner and second methods
+        uses: actions/download-artifact@v4
+        with:
+          name: official-methods-38326215428
+          run-id: 38326215428
+          github-token: ${{ github.token }}
+          path: .
+      - name: Freeze conditional AI plus eleven variants without result labels
+        run: python src/conditional_method_combo_study.py --stage predict
+      - name: Score frozen full-cohort forecast against actual podiums
+        run: python src/conditional_method_combo_study.py --stage assess
+      - name: Publish isolated immutable research evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: conditional-method-combo-${{ github.run_id }}
+          path: research/conditional_method_combo/
+          if-no-files-found: warn
+          retention-days: 30
