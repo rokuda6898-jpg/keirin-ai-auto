@@ -51,6 +51,16 @@ class TestConditionalHighValue(unittest.TestCase):
             select(KEYS, PROBS, BASE, quote({}, capped=[BASE[0]]))
         self.assertEqual(unavailable('late')['status'], 'unavailable')
 
+    def test_50x_selected_even_if_uncalibrated_proxy_is_below_one(self):
+        # The original problem: a rank-13 outcome at 50x is discarded before
+        # market inspection. Here it is a prospective RESEARCH candidate, not
+        # a claim of positive EV or an authorized bet.
+        p = select(KEYS, PROBS, BASE, quote({KEYS[12]: 50}))
+        self.assertEqual(p['new_high'][0]['buy'], KEYS[12])
+        self.assertLess(p['new_high'][0]['probability_x_odds_proxy'], 1.0)
+        self.assertFalse(p['new_high'][0]['proxy_above_one'])
+        self.assertFalse(p['validated_roi'])
+
     def test_high_censored_never_selected(self):
         p = select(KEYS, PROBS, BASE, quote({KEYS[19]: 110}, capped=[KEYS[20]]))
         self.assertEqual([x['buy'] for x in p['new_high']], [KEYS[19]])
