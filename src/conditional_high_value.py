@@ -14,7 +14,6 @@ import re
 VERSION = 'conditional-50plus-overlay-v1'
 MIN_ODDS = Decimal('50')
 CENSORED_ODDS = Decimal('9999.9')
-MIN_PROXY = 1.0
 MAX_NEW_HIGH = 4
 
 
@@ -75,7 +74,7 @@ def select(keys, probabilities, baseline, quote, max_new_high=MAX_NEW_HIGH):
             continue
         p = probs[key]
         proxy = p * float(odds)
-        if proxy < MIN_PROXY:
+        if p <= 0:
             continue
         # Probability-regularized pricing signal: reduces tail-model noise
         # versus sorting by p*odds alone. This is NOT a calibrated EV.
@@ -95,6 +94,7 @@ def select(keys, probabilities, baseline, quote, max_new_high=MAX_NEW_HIGH):
                        'model_rank': ranks[key],
                        'model_probability': p,
                        'probability_x_odds_proxy': round(proxy, 6),
+                       'proxy_above_one': proxy >= 1.0,
                        'ranking_signal': round(score, 8)})
         if len(chosen) >= max_new_high:
             break
@@ -115,5 +115,5 @@ def select(keys, probabilities, baseline, quote, max_new_high=MAX_NEW_HIGH):
             'market_sha256': digest,
             'source_url': quote['source_url'], 'provider': quote['provider'],
             'captured_at_jst': quote['captured_at_jst'],
-            'selection_rule': '8-12 probability tickets + up to 4 new >=50x candidates; p*odds>=1.0; rank=p^1.25*odds; pair cap=2',
+            'selection_rule': '8-12 probability tickets + up to 4 new >=50x candidates; rank=p^1.25*odds; no hard EV gate (research only); pair cap=2',
             'validated_roi': False}
