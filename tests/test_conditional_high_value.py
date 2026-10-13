@@ -52,7 +52,7 @@ class TestConditionalHighValue(unittest.TestCase):
         self.assertEqual(unavailable('late')['status'], 'unavailable')
 
     def test_high_censored_never_selected(self):
-        p = select(KEYS, PROBS, BASE, quote({KEYS[19]: 100}, capped=[KEYS[20]]))
+        p = select(KEYS, PROBS, BASE, quote({KEYS[19]: 110}, capped=[KEYS[20]]))
         self.assertEqual([x['buy'] for x in p['new_high']], [KEYS[19]])
 
     def test_candidate_distribution_and_baseline_cannot_be_falsified(self):
