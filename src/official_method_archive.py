@@ -269,6 +269,12 @@ def method_stats(frame,destination):
         base=pd.DataFrame(columns=list(OUTPUT_COLUMNS))
     for c in ("field","hour_jst"):
         if c in base:base[c]=pd.to_numeric(base[c],errors="coerce")
+    base["year"]=pd.to_datetime(base["date"],errors="coerce").dt.year
+    base["wind_bucket"]=pd.cut(
+        pd.to_numeric(base["wind_speed"],errors="coerce"),
+        bins=[-float("inf"),1,3,float("inf")],
+        labels=["0-1m","1-3m","3m+"],
+    ) if "wind_speed" in base else pd.Series(index=base.index,dtype=str)
     base["eligible_1st"]=base.winner_method.isin(FIRST)
     base["eligible_2nd"]=base.second_method.isin(SECOND)
     def grouped(columns):
@@ -319,6 +325,8 @@ def method_stats(frame,destination):
     grouped(["venue","tier","division","field","hour_jst"]).to_csv(destination/"venue_grade_field_hour.csv",index=False)
     grouped(["track_meters","tier","division","field","time_band"]).to_csv(destination/"bank_length_class_time.csv",index=False)
     grouped(["venue","meeting_grade","tier","division","field"]).to_csv(destination/"venue_meeting_grade.csv",index=False)
+    grouped(["venue","year","tier","division","field"]).to_csv(destination/"venue_year_class.csv",index=False)
+    grouped(["venue","tier","division","field","weather","wind_bucket"]).to_csv(destination/"venue_weather_wind.csv",index=False)
     grouped(["tier","division","field","time_band"]).to_csv(destination/"national_class_time.csv",index=False)
     return {"observed_races":int(len(base)),
             "complete_first":int(base.eligible_1st.sum()),
