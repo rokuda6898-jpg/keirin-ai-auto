@@ -22,6 +22,7 @@ from public_live import finite, forecast_view, frozen, read_csv, read_json
 from conditional_input_refresh import valid_race
 from conditional_budget import freeze as freeze_budget, settle as settle_budget
 from conditional_budget_odds import capture as capture_budget_odds
+from conditional_high_value import select as select_high_value, unavailable as high_value_unavailable
 
 ROOT = Path(__file__).resolve().parents[1]
 LEDGER = 'outputs/company/conditional_live_ledger.jsonl'
@@ -154,9 +155,44 @@ def run(root=ROOT, predict_new=True, clock=now_jst, model_loader=load_model, pre
                          'actual': [], 'payouts': {}, 'cancelled_cars': [],
                          'purchase_authorized': False}
             forecast_view(rows[rid])  # Validate tickets before persistence.
-            # Only NEW forecasts receive a quote. Existing forecasts are never
-            # retrofitted with later odds, even when the race is still open.
-            rows[rid]['budget'] = freeze_budget(rows[rid], odds_loader, clock)
+            # Query the FULL trifecta market BEFORE narrowing the additional
+            # 50x+ research selections. The original frozen top12 remains the
+            # verified probability benchmark. No forecast/quote is backfilled.
+            market_quote, market_error = None, ''
+            try:
+                market_quote = odds_loader(
+                    {**rows[rid], 'market_candidates': list(prediction['keys'])}, clock)
+                if market_quote.get('market_complete') is not True:
+                    raise ValueError('source did not confirm complete trifecta market')
+            except Exception as error:
+                market_quote = None
+                market_error = str(error)[:180]
+            if market_quote is None:
+                # Baseline budget is still allowed to use its original twelve
+                # quotes. An incomplete market must not masquerade as "no edge".
+                rows[rid]['budget'] = freeze_budget(rows[rid], odds_loader, clock)
+                rows[rid]['high_value'] = high_value_unavailable(
+                    '全組み合わせの締切前オッズ未取得: ' + market_error)
+            else:
+                # BOTH simulations use exactly one captured market snapshot.
+                once = lambda unused_row, unused_clock: market_quote
+                rows[rid]['budget'] = freeze_budget(rows[rid], once, clock)
+                if rows[rid]['budget']['status'] == 'unavailable':
+                    rows[rid]['high_value'] = high_value_unavailable(
+                        rows[rid]['budget']['reason'])
+                else:
+                    try:
+                        overlay = select_high_value(
+                            prediction['keys'], probabilities.tolist(),
+                            rows[rid]['top12'], market_quote)
+                        rows[rid]['high_value'] = overlay
+                        if overlay['new_high']:
+                            alternative = {**rows[rid], 'top12': overlay['tickets']}
+                            rows[rid]['high_value_budget'] = freeze_budget(
+                                alternative, once, clock)
+                    except Exception as error:
+                        rows[rid]['high_value'] = high_value_unavailable(
+                            '選別不可: ' + str(error))
             saved = clock()
             if saved.timestamp() >= closes[rid]:
                 del rows[rid]
@@ -165,6 +201,10 @@ def run(root=ROOT, predict_new=True, clock=now_jst, model_loader=load_model, pre
             rows[rid]['snapshot_at_jst'] = saved.isoformat()
             rows[rid]['budget_settlement'] = settle_budget(
                 rows[rid]['budget'], rows[rid]['top12'], None)
+            if rows[rid].get('high_value_budget'):
+                rows[rid]['high_value_settlement'] = settle_budget(
+                    rows[rid]['high_value_budget'],
+                    rows[rid]['high_value']['tickets'], None)
             # Checkpoint before fetching another race; later failures cannot
             # silently replace an earlier allocation with a new market quote.
             save_ledger(root/LEDGER, rows)
@@ -183,6 +223,10 @@ def run(root=ROOT, predict_new=True, clock=now_jst, model_loader=load_model, pre
             row['budget_settlement'] = settle_budget(
                 row['budget'], row['top12'], row.get('budget_official_outcome'),
                 row.get('cancelled_cars', []))
+            if row.get('high_value_budget') and row.get('high_value', {}).get('new_high'):
+                row['high_value_settlement'] = settle_budget(
+                    row['high_value_budget'], row['high_value']['tickets'],
+                    row.get('budget_official_outcome'), row.get('cancelled_cars', []))
         metadata.setdefault(rid, row)
     save_ledger(root/LEDGER, rows)
     # The feed always includes every scheduled race, including missing forecasts.
@@ -202,7 +246,10 @@ def run(root=ROOT, predict_new=True, clock=now_jst, model_loader=load_model, pre
                       'payouts': row.get('payouts', {}) if row else outcome['payouts'] if outcome else {},
                       'forecast_error': errors.get(rid, ''),
                       'budget': row.get('budget') if row else None,
-                      'budget_settlement': row.get('budget_settlement') if row else None})
+                      'budget_settlement': row.get('budget_settlement') if row else None,
+                      'high_value': row.get('high_value') if row else None,
+                      'high_value_budget': row.get('high_value_budget') if row else None,
+                      'high_value_settlement': row.get('high_value_settlement') if row else None})
     races.sort(key=lambda r: (r['date'], r['start_at'] or r['close_at'] or 1e12, r['venue'], r['number']))
     completed = clock()
     payload = {'schema': 1, 'updated_at': completed.isoformat(), 'generated_at': completed.isoformat(),
