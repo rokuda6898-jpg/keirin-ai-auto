@@ -208,8 +208,10 @@ def decode_cup_results(state,index,expected):
             errors["archive_result_mismatch"]+=1;continue
         m1=winner_method(first.get("factor"))
         m2=second_method(second.get("factor"))
-        if not m1 or not m2:
-            errors["missing_official_factor"]+=1;continue
+        if not m1 and not m2:
+            errors["missing_both_official_factors"]+=1;continue
+        if not m1:errors["missing_first_official_factor"]+=1
+        if not m2:errors["missing_second_official_factor"]+=1
         start=jst_hour(race.get("startAt"))
         rc=str(race.get("class") or "")
         tier,division=classify({"race_class":rc,"race_type":race.get("raceType"),
@@ -279,7 +281,7 @@ def method_stats(frame,destination):
     base["eligible_2nd"]=base.second_method.isin(SECOND)
     def grouped(columns):
         records=[]
-        for key,g in base.groupby(columns,dropna=False):
+        for key,g in base.groupby(columns,dropna=False,observed=True):
             if not isinstance(key,tuple):key=(key,)
             seen=g[g.eligible_1st]
             seen2=g[g.eligible_2nd]
