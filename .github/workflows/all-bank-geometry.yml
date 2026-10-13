@@ -1,0 +1,60 @@
+name: all-velodrome-geometry-method-study
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - data/reference/bank_geometry_43.csv
+      - src/bank_geometry.py
+      - src/bank_geometry_study.py
+      - tests/test_bank_geometry.py
+      - .github/workflows/all-bank-geometry.yml
+  schedule:
+    # Weekly Monday 06:30 JST; follows daily archive backfill.
+    - cron: "30 21 * * 0"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: all-velodrome-geometry-study
+  cancel-in-progress: false
+
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      PYTHONPATH: src
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Check forty-three bank measurements and as-of feature safety
+        run: python -m unittest discover -s tests -p test_bank_geometry.py -v
+      - name: Restore own verified first and second finishing-technique records
+        uses: actions/cache/restore@v4
+        with:
+          path: data/raw/official_methods.csv
+          key: keirin-official-methods-v1-${{ github.run_id }}
+          restore-keys: |
+            keirin-official-methods-v1-
+      - name: Group observed decisive methods by confirmed physical bank characteristics
+        run: |
+          python src/bank_geometry_study.py \
+            --archive data/raw/official_methods.csv \
+            --out-dir research/bank_geometry_study
+      - name: Preserve independent bank/technique evidence and frozen research fits
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-bank-geometry-study-${{ github.run_id }}
+          path: research/bank_geometry_study/
+          if-no-files-found: warn
+          retention-days: 90
