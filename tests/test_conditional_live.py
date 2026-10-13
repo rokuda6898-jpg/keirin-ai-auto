@@ -139,7 +139,7 @@ class ConditionalLiveTests(unittest.TestCase):
                     'source_url': 'https://winticket.jp/example',
                     'captured_at_jst': clock().isoformat(),
                     'market_complete': 'market_candidates' in row,
-                    'odds': {t: '200' if t == new_buy else '20' for t in wanted}}
+                    'odds': {t: '250' if t == new_buy else '20' for t in wanted}}
             feed, missing = execute(root, odds_loader=loader)
             self.assertEqual(missing, ['missing'])
             item = next(r for r in feed['races'] if r['id'] == 'open')
