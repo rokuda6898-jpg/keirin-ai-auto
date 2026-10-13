@@ -41,7 +41,9 @@ class ScenarioStudyReplayTests(unittest.TestCase):
                     'car_no':car,'player_id':str(100+car),'entries_number':7,
                     'line_id':1 if car<4 else 2 if car<6 else 3,
                     'line_position':car if car<4 else car-3 if car<6 else car-5,
-                    'line_verification_status':'verified','finish_pos':((car+i)%7)+1})
+                    'line_verification_status':'verified','source_url':
+                    'https://www.winticket.jp/keirin/nara/racecard/2025100912/1/1',
+                    'finish_pos':((car+i)%7)+1})
         with self.history.open('w',newline='',encoding='utf-8') as f:
             w=csv.DictWriter(f,fieldnames=list(entries[0]));w.writeheader();w.writerows(entries)
         with gzip.open(self.predictions,'wt',encoding='utf-8') as f:
@@ -58,16 +60,36 @@ class ScenarioStudyReplayTests(unittest.TestCase):
         manifest=read(self.out/'scenario_prediction_manifest.json')
         self.assertEqual(manifest['predicted_races'],105)
         self.assertFalse(manifest['results_loaded_during_prediction'])
+        self.assertEqual(manifest['archived_structured_unverified_line_races'],0)
         with gzip.open(self.out/'scenario_predictions.jsonl.gz','rt',encoding='utf-8') as f:
             sample=json.loads(next(f))
         self.assertNotIn('finish_pos',sample)
         self.assertNotIn('actual_trifecta',sample)
         self.assertAlmostEqual(sum(sample['probabilities']['rider_line_035']),1.)
+        self.assertAlmostEqual(sum(sample['probabilities']['archive_geometry_010']),1.)
         assess(self.args)
         output=read(self.out/'scenario_results.json')
         self.assertEqual(output['assessment_races'],105)
         self.assertIn('top8_hit_rate',output['methods']['rider_line_035'])
         self.assertIsNone(output['return_rate'])
+
+    def test_geometry_shadow_never_upgrades_missing_line_status(self):
+        rows=[]
+        with self.history.open(newline='',encoding='utf-8') as f:
+            rows=list(csv.DictReader(f))
+        for row in rows:
+            row['line_verification_status']=''
+        with self.history.open('w',newline='',encoding='utf-8') as f:
+            writer=csv.DictWriter(f,fieldnames=list(rows[0]));writer.writeheader();writer.writerows(rows)
+        predict(self.args)
+        manifest=read(self.out/'scenario_prediction_manifest.json')
+        self.assertEqual(manifest['fully_verified_forecast_line_races'],0)
+        self.assertEqual(manifest['archived_structured_unverified_line_races'],105)
+        with gzip.open(self.out/'scenario_predictions.jsonl.gz','rt',encoding='utf-8') as f:
+            sample=json.loads(next(f))
+        self.assertFalse(sample['line_verified'])
+        self.assertTrue(sample['line_structured_unverified'])
+        self.assertAlmostEqual(sum(sample['probabilities']['archive_geometry_030']),1.)
 
     def test_assessment_rejects_altered_predictions(self):
         predict(self.args)

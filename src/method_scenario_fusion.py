@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import csv
 import math
+import re
 from collections import Counter, defaultdict
 from datetime import date
 from itertools import permutations
@@ -37,12 +38,10 @@ def _valid_player(value):
     return value is not None and str(value).strip().lower() not in ('', 'none', 'nan')
 
 
-def _verified_line(entrants):
-    """Only forecast geometry verified for *every* active starter is usable."""
+def _line_geometry(entrants):
+    """Check the shape of a saved formation; does NOT prove provider verification."""
     grouping = defaultdict(list)
     for row in entrants:
-        if row.get('line_verification_status') != 'verified':
-            return None
         if not _valid_player(row.get('line_id')):
             return None
         try:
@@ -56,6 +55,28 @@ def _verified_line(entrants):
         return None
     return {int(row['car_no']): (str(row['line_id']), int(float(row['line_position'])))
             for row in entrants}
+
+
+def _verified_line(entrants):
+    if any(row.get('line_verification_status') != 'verified' for row in entrants):
+        return None
+    return _line_geometry(entrants)
+
+
+def _archived_structured_line(entrants):
+    """Unverified WINTICKET-sourced *research hypothesis* only, never verified."""
+    # Explicit incomplete/ambiguous are not missing: they veto this fallback.
+    for row in entrants:
+        status = str(row.get('line_verification_status') or '').strip().lower()
+        if status not in ('', 'none', 'nan', 'null'):
+            return None
+    urls = {str(row.get('source_url') or '') for row in entrants}
+    if len(urls) != 1 or not re.fullmatch(
+            r'https://www\.winticket\.jp/keirin/[a-z0-9-]+/racecard/\d{10}/\d+/\d+',
+            next(iter(urls))):
+        return None
+    # No inferred rider/line memberships: require all saved car IDs and positions.
+    return _line_geometry(entrants)
 
 
 def _line_signal(first_method, second_method, a, b, lines):
@@ -156,9 +177,10 @@ class MethodScenarioFusion:
         fitted = _distribution(counts,FIRST if side == 1 else SECOND,prior,20.)
         return {m: min(3.,max(1/3,fitted[m]/prior[m])) for m in prior}
 
-    def pair_factors(self, entrants, race, *, line_weight=0.):
-        if not math.isfinite(line_weight) or not 0 <= line_weight <= 1:
-            raise ValueError('line weight must be a finite hypothesis coefficient in [0,1]')
+    def pair_factors(self, entrants, race, *, line_weight=0., unverified_line_weight=0.):
+        for value in (line_weight, unverified_line_weight):
+            if not math.isfinite(value) or not 0 <= value <= 1:
+                raise ValueError('line weight must be a finite hypothesis coefficient in [0,1]')
         cars = [int(r['car_no']) for r in entrants]
         if not 3 <= len(cars) <= 9 or len(set(cars)) != len(cars) or any(not 1<=c<=9 for c in cars):
             raise ValueError('invalid complete active starters')
@@ -169,9 +191,13 @@ class MethodScenarioFusion:
         inputs = {'venue':race['venue'], 'race_class':race['race_class'], 'race_type':race.get('race_type',''),
                   'is_grade_race':race.get('is_grade_race',False), 'field':len(cars)}
         prior = self._prior(inputs)
-        lines = _verified_line(entrants)
-        if lines is None:
-            line_weight = 0.
+        verified = _verified_line(entrants)
+        # A self-consistent historical lineup without a stored verification flag
+        # has an unknown provenance/time boundary, so segregate it explicitly.
+        archive_only = _archived_structured_line(entrants) if verified is None else None
+        lines = verified if verified is not None else archive_only
+        if verified is None:
+            line_weight = unverified_line_weight if archive_only is not None else 0.
         riders = {int(r['car_no']): r for r in entrants}
         p1 = {car:self._rider(row['player_id'],1) for car,row in riders.items()}
         p2 = {car:self._rider(row['player_id'],2) for car,row in riders.items()}
@@ -183,11 +209,14 @@ class MethodScenarioFusion:
                 factors[a,b] = sum(prior[m+n]*p1[a][m]*p2[b][n]*
                                    math.exp(line_weight*_line_signal(m,n,a,b,lines))
                                    for m in FIRST for n in SECOND)
-        return factors, {'line_verified':lines is not None,
+        return factors, {'line_verified':verified is not None,
+                         'line_structured_unverified':archive_only is not None,
+                         'line_evidence':'provider_verified' if verified is not None else
+                            'archive_geometry_unverified' if archive_only is not None else 'unavailable',
                          'first_riders_with_history':sum(bool(self.rider_first.get(str(r['player_id']))) for r in entrants),
                          'second_riders_with_history':sum(bool(self.rider_second.get(str(r['player_id']))) for r in entrants)}
 
-    def rerank(self, baseline, entrants, race, *, strength=.35, line_weight=0.):
+    def rerank(self, baseline, entrants, race, *, strength=.35, line_weight=0., unverified_line_weight=0.):
         """Use strictly pre-race rows and all N*(N-1)*(N-2) ordered triples."""
         if not math.isfinite(strength) or not 0 <= strength <= 1:
             raise ValueError('strength must be finite in [0,1]')
@@ -197,7 +226,7 @@ class MethodScenarioFusion:
             raise ValueError('baseline must have all strictly positive ordered triple probabilities')
         if not math.isclose(sum(map(float,baseline.values())),1.,rel_tol=0,abs_tol=1e-8):
             raise ValueError('baseline must already be normalized')
-        factors, diagnostics = self.pair_factors(entrants,race,line_weight=line_weight)
+        factors, diagnostics = self.pair_factors(entrants,race,line_weight=line_weight,unverified_line_weight=unverified_line_weight)
         if strength == 0:
             return dict(baseline),diagnostics
         adjusted = {}

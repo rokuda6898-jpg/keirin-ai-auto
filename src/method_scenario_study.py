@@ -20,15 +20,17 @@ import pandas as pd
 from method_scenario_fusion import MethodScenarioFusion, VERSION
 
 VARIANTS = {
-    'baseline': (0.,0.),
-    'rider_035': (.35,0.),
-    'rider_line_035': (.35,.30),
-    'rider_line_070': (.70,.30),
+    'baseline': (0.,0.,0.),
+    'rider_035': (.35,0.,0.),
+    'rider_line_035': (.35,.30,0.),
+    'rider_line_070': (.70,.30,0.),
+    'archive_geometry_010': (.35,.30,.10),
+    'archive_geometry_030': (.35,.30,.30),
 }
 TOP_K = (3,8,12,18)
 ENTRY_COLUMNS = {'race_id','date','venue','race_class','race_type','is_grade_race',
                  'car_no','player_id','entries_number','line_id','line_position',
-                 'line_verification_status'}
+                 'line_verification_status','source_url'}
 
 
 def sha(path):
@@ -82,7 +84,7 @@ def predict(args):
     groups = {str(rid):group for rid,group in entries.groupby('race_id',sort=False)}
     out_dir = Path(args.out_dir);out_dir.mkdir(parents=True,exist_ok=True)
     output = out_dir/'scenario_predictions.jsonl.gz'
-    rejected=Counter();count=0;lines=0;rider_support=Counter()
+    rejected=Counter();count=0;lines=0;archive_geometry=0;rider_support=Counter()
     with gzip.open(args.predictions,'rt',encoding='utf-8') as prev, gzip.open(output,'wt',encoding='utf-8') as dst:
         for line in prev:
             row=json.loads(line)
@@ -97,7 +99,8 @@ def predict(args):
             meta['date']=str(row['date'])
             riders=[{'car_no':int(g['car_no']),'player_id':str(g['player_id']),
                      'line_id':g['line_id'],'line_position':g['line_position'],
-                     'line_verification_status':g['line_verification_status']}
+                     'line_verification_status':g['line_verification_status'],
+                     'source_url':g['source_url']}
                     for g in group.to_dict('records')]
             # No normalizations or substitutions for missing frozen baseline odds.
             keys=list(row['keys']); probs=list(row['distributions']['fusion'])
@@ -107,16 +110,17 @@ def predict(args):
             baseline=dict(zip(keys,probs))
             alternatives={}
             diagnostics=None
-            for name,(strength,line_weight) in VARIANTS.items():
-                reranked,diag=model.rerank(baseline,riders,meta,strength=strength,line_weight=line_weight)
+            for name,(strength,line_weight,unverified_weight) in VARIANTS.items():
+                reranked,diag=model.rerank(baseline,riders,meta,strength=strength,line_weight=line_weight,unverified_line_weight=unverified_weight)
                 alternatives[name]=[reranked[k] for k in keys]
                 if diagnostics is None:
                     diagnostics=diag
             dst.write(json.dumps({'race_id':rid,'date':meta['date'],'venue':str(meta['venue']),
                 'race_class':str(meta['race_class']),'field':len(riders),
                 'line_verified':diagnostics['line_verified'],
+                'line_structured_unverified':diagnostics['line_structured_unverified'],
                 'keys':keys,'probabilities':alternatives},ensure_ascii=False,allow_nan=False,separators=(',',':'))+'\n')
-            count+=1;lines+=int(diagnostics['line_verified'])
+            count+=1;lines+=int(diagnostics['line_verified']);archive_geometry+=int(diagnostics['line_structured_unverified'])
             for k in ('first_riders_with_history','second_riders_with_history'):
                 rider_support[k]+=diagnostics[k]
             if count%1000==0:
@@ -133,6 +137,8 @@ def predict(args):
         'scenario_predictions_sha256':sha(output),
         'predicted_races':count,'excluded_prediction_races':dict(rejected),
         'fully_verified_forecast_line_races':lines,
+        'archived_structured_unverified_line_races':archive_geometry,
+        'archive_geometry_is_research_only':True,
         'rider_profile_support_count':dict(rider_support),
         'variants':{k:list(v) for k,v in VARIANTS.items()},
         'used_columns':sorted(ENTRY_COLUMNS),
@@ -145,7 +151,7 @@ def predict(args):
     if count<100:
         raise ValueError(f'insufficient paired real baseline predictions: {count}')
     print('METHOD_SCENARIO_FROZEN '+json.dumps({k:manifest[k] for k in
-          ('trained_confirmed_races','predicted_races','fully_verified_forecast_line_races','excluded_prediction_races')},ensure_ascii=False),flush=True)
+          ('trained_confirmed_races','predicted_races','fully_verified_forecast_line_races','archived_structured_unverified_line_races','excluded_prediction_races')},ensure_ascii=False),flush=True)
 
 
 def assess(args):
@@ -185,7 +191,9 @@ def assess(args):
                 t['first_pair_hit']+=int(race['keys'][order[0]].split('-')[:2]==winner.split('-')[:2])
                 for k in TOP_K:t[f'top{k}_hits']+=hit[k]
                 for key in (f'field:{race["field"]}',f'class:{race["race_class"][:1]}',
-                            f'line_verified:{bool(race["line_verified"])}'):
+                            f'line_verified:{bool(race["line_verified"])}',
+                            f'line_archive_geometry:{bool(race["line_structured_unverified"])}'):
+
                     s=sub[key][name];s['races']+=1;s['top12_hits']+=hit[12]
             for name in VARIANTS:
                 paired[race['date']][name]=paired[race['date']].get(name,[]) + [ranks[name][12]]
@@ -226,6 +234,7 @@ def assess(args):
             'third_place_method_improvement_assumption':False,
             'preclose_odds_available':False,'return_rate':None,
             'line_history_point_in_time_verified':False,
+            'archive_geometry_not_verified_preclose_line':True,
             'fresh_untouched_test':False,
             'production_modified':False,'purchase_authorized':False}
     save(out_dir/'scenario_results.json',report)

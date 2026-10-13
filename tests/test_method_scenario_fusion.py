@@ -5,7 +5,7 @@ from datetime import date,timedelta
 from itertools import permutations
 from pathlib import Path
 
-from method_scenario_fusion import MethodScenarioFusion, _verified_line
+from method_scenario_fusion import MethodScenarioFusion, _verified_line, _archived_structured_line
 
 
 def observed():
@@ -86,6 +86,30 @@ class MethodScenarioTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'duplicated'):
             e=entrants();e[1]['player_id']=e[0]['player_id']
             self.model.rerank(baseline(),e,self.race)
+
+    def test_archive_geometry_is_separate_from_provider_verified(self):
+        entries=[dict(r, source_url='https://www.winticket.jp/keirin/nara/racecard/2025010153/1/1',
+                      line_verification_status=None) for r in entrants()]
+        self.assertIsNone(_verified_line(entries))
+        self.assertIsNotNone(_archived_structured_line(entries))
+        ref,meta=self.model.rerank(baseline(),entries,self.race,line_weight=.5)
+        research,diag=self.model.rerank(baseline(),entries,self.race,unverified_line_weight=.2)
+        self.assertEqual(ref,self.model.rerank(baseline(),entries,self.race)[0])
+        self.assertFalse(diag['line_verified'])
+        self.assertTrue(diag['line_structured_unverified'])
+        self.assertNotEqual(ref,research)
+        for r in entries: r['line_verification_status']='incomplete'
+        self.assertIsNone(_archived_structured_line(entries))
+        blocked=self.model.rerank(baseline(),entries,self.race,unverified_line_weight=.2)[0]
+        self.assertEqual(blocked,ref)
+
+    def test_unverified_geometry_requires_exact_provider_url(self):
+        entries=[dict(r, line_verification_status=None, source_url='https://example.com/race') for r in entrants()]
+        self.assertIsNone(_archived_structured_line(entries))
+        no=self.model.rerank(baseline(),entries,self.race,unverified_line_weight=.5)[0]
+        assert no==self.model.rerank(baseline(),entries,self.race)[0]
+        entries[1]['source_url']='https://www.winticket.jp/keirin/nara/racecard/2025010153/1/1'
+        self.assertIsNone(_archived_structured_line(entries))
 
     def test_no_train_with_unobserved_or_insufficient_history(self):
         bad=[dict(r,method_status='style_inference') for r in self.records]
