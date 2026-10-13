@@ -2,6 +2,9 @@ name: all-velodrome-geometry-method-study
 
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: ["actual-decision-method-learning"]
+    types: [completed]
   push:
     branches: [main]
     paths:
@@ -23,6 +26,7 @@ concurrency:
 
 jobs:
   research:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
