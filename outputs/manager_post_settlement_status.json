@@ -1,15 +1,24 @@
 {
-  "checked_at_jst": "2026-10-13T19:27:50+09:00",
+  "checked_at_jst": "2026-10-13T19:52:35+09:00",
   "status": "waiting_results",
   "repaired": false,
   "check_source": "post_settlement_read_only_audit",
   "attempts": [
     {
       "attempt": 0,
-      "problems": [],
+      "problems": [
+        {
+          "type": "results_waiting",
+          "race_ids": [
+            "108120261013"
+          ]
+        }
+      ],
       "health": {
-        "severity": "ok",
-        "problem_types": [],
+        "severity": "warning",
+        "problem_types": [
+          "results_waiting"
+        ],
         "race_count": 60,
         "expected_riders": 416,
         "actual_riders": 416,
@@ -920,8 +929,10 @@
     }
   },
   "health": {
-    "severity": "ok",
-    "problem_types": [],
+    "severity": "warning",
+    "problem_types": [
+      "results_waiting"
+    ],
     "race_count": 60,
     "expected_riders": 416,
     "actual_riders": 416,
