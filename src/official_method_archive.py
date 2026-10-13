@@ -11,6 +11,7 @@ import json
 import os
 import re
 from collections import Counter, defaultdict, deque
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -21,19 +22,67 @@ import pandas as pd
 from fetch_today_entries import http_get, extract_preloaded_state, find_query_data
 from venue_time_learning import EXPECTED_VENUES, JST, classify, jst_hour, time_band, venue_name, winner_method
 
-VERSION="official_winticket_methods_v1"
+VERSION="official_winticket_methods_v2"
 CUP_LINK=re.compile(r"^https://www\.winticket\.jp/keirin/([a-z0-9-]+)/racecard/(\d{10})/(\d+)/(\d+)(?:[/?#].*)?$")
 FIRST=("逃","捲","差")
 SECOND=("逃","捲","差","マ")
 OUTPUT_COLUMNS=("race_id","date","venue","race_class","race_type","tier","division",
     "field","hour_jst","time_band","grade_race","winner_method","second_method",
-    "winner_player_id","second_player_id","result_source","source_url","method_status")
+    "winner_player_id","second_player_id","result_source","source_url","method_status",
+    "meeting_grade","track_meters","wind_speed","weather",
+    "first_final_half_sec","second_final_half_sec",
+    "first_line_role","second_line_role","forecast_suji","score_top2_pair_proxy")
 
 
 def second_method(raw):
     name=str(raw or "").strip()
     if name in ("マ","マーク","ﾏ"):return "マ"
     return winner_method(name)
+
+
+def line_role(row):
+    position=pd.to_numeric(row.get("line_position"),errors="coerce")
+    size=pd.to_numeric(row.get("line_size"),errors="coerce")
+    if pd.isna(position) or pd.isna(size) or size<1 or position<1 or position>size:
+        return None
+    if size==1:return "単騎"
+    if position==1:return "先頭"
+    if position==2:return "2番手"
+    if position==3:return "3番手"
+    return "4番手以降"
+
+
+def bank_meters(venue):
+    # 43-track reference includes Chiba 250m: not observed by normal KEIRIN history.
+    if venue=="千葉":return 250
+    if venue in {"前橋","松戸","小田原","伊東","富山","奈良","防府"}:return 333
+    if venue in {"宇都宮","大宮","高知"}:return 500
+    return 400
+
+
+def observed_line_metadata(group, winner, second):
+    verified="line_verification_status" in group and group.line_verification_status.astype(str).eq("verified").all()
+    if not verified:return {"first_line_role":None,"second_line_role":None,"forecast_suji":None}
+    first_role=line_role(winner);second_role=line_role(second)
+    x=pd.to_numeric(winner.get("line_position"),errors="coerce")
+    y=pd.to_numeric(second.get("line_position"),errors="coerce")
+    id_first=winner.get("line_id")
+    id_second=second.get("line_id")
+    if any(pd.isna(v) for v in (x,y,id_first,id_second)):
+        suji=None
+    else:
+        suji=bool(str(id_first)==str(id_second) and abs(x-y)==1)
+    return {"first_line_role":first_role,"second_line_role":second_role,"forecast_suji":suji}
+
+
+def score_two_proxy(group, winner, second):
+    # Not Gamboo's proprietary G-index; explicitly a distinct score-based proxy.
+    if "score" not in group:return None
+    scores=pd.to_numeric(group["score"],errors="coerce")
+    if scores.notna().sum()!=len(group) or len(group)<3:return None
+    ranked=group.assign(_score=scores).sort_values(["_score","car_no"],ascending=[False,True])
+    return bool({str(ranked.iloc[0]["player_id"]),str(ranked.iloc[1]["player_id"])}==
+                {str(winner["player_id"]),str(second["player_id"])})
 
 
 def targets(history, asof=None, min_date=None):
@@ -68,11 +117,14 @@ def targets(history, asof=None, min_date=None):
         winner=g.loc[g.finish_pos.eq(1)].iloc[0]
         second=g.loc[g.finish_pos.eq(2)].iloc[0]
         cup_url=f"https://www.winticket.jp/keirin/{winner.slug}/racecard/{winner.cup_id}"
+        extra=observed_line_metadata(g,winner,second)
         meta[str(rid)]={
             "race_id":str(rid),"venue":str(winner.venue),
             "date":str(pd.Timestamp(winner["_date"]).date()),
             "cup_url":cup_url,"index":int(winner.day_index),
             "winner_id":str(winner.player_id),"second_id":str(second.player_id),
+            **extra,
+            "score_top2_pair_proxy":score_two_proxy(g,winner,second),
         }
     days=defaultdict(list)
     for info in meta.values():
@@ -130,6 +182,8 @@ def decode_cup_results(state,index,expected):
     if not isinstance(cup,dict) or not cup.get("races"):
         raise ValueError("Missing cup race metadata")
     cup_venue=venue_name((cup.get("venue") or {}).get("name",""))
+    cup_meta=cup.get("cup") or {}
+    cup_grade={3:"G3",4:"G2",5:"G1"}.get(cup_meta.get("grade"),"other")
     races={str(r.get("id")):r for r in cup.get("races",[])}
     schedules={str(s.get("id")):s for s in cup.get("schedules",[])}
     expectations={x["race_id"]:x for x in expected}
@@ -162,6 +216,10 @@ def decode_cup_results(state,index,expected):
                                 "is_grade_race":race.get("isGradeRace")})
         if tier=="unknown":
             errors["unknown_grade"]+=1;continue
+        def finisher_half(record):
+            value=pd.to_numeric(record.get("finalHalfRecord"),errors="coerce")
+            return float(value) if pd.notna(value) and 8.0<=value<=20.0 else None
+        wind=pd.to_numeric(race.get("windSpeed"),errors="coerce")
         saved.append({
             "race_id":rid,"date":ref["date"],"venue":ref["venue"],"race_class":rc,
             "race_type":str(race.get("raceType") or ""), "tier":tier,"division":division,
@@ -172,6 +230,16 @@ def decode_cup_results(state,index,expected):
             "result_source":"WINTICKET:FETCH_KEIRIN_CUP_RACE_RESULT",
             "source_url":ref["cup_url"]+f"/results?index={index}",
             "method_status":"confirmed_by_podium_ids",
+            "meeting_grade":cup_grade,
+            "track_meters":bank_meters(ref["venue"]),
+            "wind_speed":float(wind) if pd.notna(wind) else None,
+            "weather":str(race.get("weather") or ""),
+            "first_final_half_sec":finisher_half(first),
+            "second_final_half_sec":finisher_half(second),
+            "first_line_role":ref.get("first_line_role"),
+            "second_line_role":ref.get("second_line_role"),
+            "forecast_suji":ref.get("forecast_suji"),
+            "score_top2_pair_proxy":ref.get("score_top2_pair_proxy"),
         })
     return saved,errors
 
@@ -226,6 +294,21 @@ def method_stats(frame,destination):
                     pattern=a+b
                     record[f"pair_{pattern}_n"]=int(pair_labels.eq(pattern).sum())
                     record[f"pair_{pattern}_pct"]=round(100*pair_labels.eq(pattern).mean(),2) if len(paired) else None
+            for field,tag in (("first_final_half_sec","first_half"),("second_final_half_sec","second_half")):
+                if field in g:
+                    values=pd.to_numeric(g[field],errors="coerce").dropna()
+                    record[tag+"_n"]=int(len(values))
+                    record[tag+"_mean_sec"]=round(float(values.mean()),3) if len(values) else None
+            for field,tag in (("forecast_suji","forecast_suji"),("score_top2_pair_proxy","score_top2_proxy")):
+                if field in g:
+                    known=g[field].dropna()
+                    record[tag+"_n"]=int(len(known))
+                    record[tag+"_pct"]=round(float(known.astype(float).mean()*100),2) if len(known) else None
+            for role in ("先頭","2番手","3番手","4番手以降","単騎"):
+                for field,tag in (("first_line_role","first"),("second_line_role","second")):
+                    if field in g:
+                        valid=g[field].dropna()
+                        record[tag+"_role_"+role+"_pct"]=round(100*float(valid.eq(role).mean()),2) if len(valid) else None
             records.append(record)
         return pd.DataFrame(records)
     overall=grouped(["venue"])
@@ -234,6 +317,8 @@ def method_stats(frame,destination):
     overall.to_csv(destination/"venue_methods.csv",index=False)
     grouped(["venue","tier","division","field","time_band"]).to_csv(destination/"venue_grade_field_band.csv",index=False)
     grouped(["venue","tier","division","field","hour_jst"]).to_csv(destination/"venue_grade_field_hour.csv",index=False)
+    grouped(["track_meters","tier","division","field","time_band"]).to_csv(destination/"bank_length_class_time.csv",index=False)
+    grouped(["venue","meeting_grade","tier","division","field"]).to_csv(destination/"venue_meeting_grade.csv",index=False)
     grouped(["tier","division","field","time_band"]).to_csv(destination/"national_class_time.csv",index=False)
     return {"observed_races":int(len(base)),
             "complete_first":int(base.eligible_1st.sum()),
