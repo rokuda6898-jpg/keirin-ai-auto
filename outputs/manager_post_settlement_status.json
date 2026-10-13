@@ -1,15 +1,24 @@
 {
-  "checked_at_jst": "2026-10-13T18:43:32+09:00",
-  "status": "healthy",
+  "checked_at_jst": "2026-10-13T19:03:31+09:00",
+  "status": "waiting_results",
   "repaired": false,
   "check_source": "post_settlement_read_only_audit",
   "attempts": [
     {
       "attempt": 0,
-      "problems": [],
+      "problems": [
+        {
+          "type": "results_overdue",
+          "race_ids": [
+            "088120261013"
+          ]
+        }
+      ],
       "health": {
-        "severity": "ok",
-        "problem_types": [],
+        "severity": "warning",
+        "problem_types": [
+          "results_overdue"
+        ],
         "race_count": 60,
         "expected_riders": 416,
         "actual_riders": 416,
@@ -920,8 +929,10 @@
     }
   },
   "health": {
-    "severity": "ok",
-    "problem_types": [],
+    "severity": "warning",
+    "problem_types": [
+      "results_overdue"
+    ],
     "race_count": 60,
     "expected_riders": 416,
     "actual_riders": 416,
