@@ -1,5 +1,5 @@
 {
-  "updated_at_jst": "2026-10-15T23:15:28+09:00",
+  "updated_at_jst": "2026-10-15T23:51:51+09:00",
   "role": "executive_officer",
   "source": "ceo_decision_support",
   "status": "dissemination_package_pending_ceo_or_owner_decision",
@@ -84,19 +84,24 @@
       "evidence": {
         "variant": "core_model",
         "department": "model_audit_office",
-        "races": 787,
+        "races": 790,
         "production_hits": 361,
         "challenger_hits": 374,
-        "production_hit_rate": 0.45870393900889456,
-        "challenger_hit_rate": 0.47522236340533675,
-        "delta_hit_rate": 0.01651842439644219,
-        "delta_pp": 1.6518424396442188,
+        "production_hit_rate": 0.4569620253164557,
+        "challenger_hit_rate": 0.47341772151898737,
+        "delta_hit_rate": 0.016455696202531678,
+        "delta_pp": 1.6455696202531678,
         "changed_races": 93,
         "flip_gains": 32,
         "flip_losses": 19,
         "net_hits": 13,
         "promotion_status": "eligible_for_external_validation"
       }
+    },
+    {
+      "priority": 1,
+      "type": "deterioration_watch",
+      "action": "freeze automatic weight promotion; require shadow validation before production changes"
     },
     {
       "priority": 2,
@@ -115,15 +120,15 @@
       "evidence": {
         "rule": "switch_to_second_when_margin<=0.03",
         "margin_threshold": 0.03,
-        "switched_races": 73,
+        "switched_races": 74,
         "production_hits_in_switched_races": 18,
         "second_pick_hits_in_switched_races": 23,
         "net_hits": 5,
         "baseline_total_hits": 476,
         "hypothetical_total_hits": 481,
-        "baseline_hit_rate": 0.4477892756349953,
-        "hypothetical_hit_rate": 0.4524929444967074,
-        "global_delta_pp": 0.4703668861712135,
+        "baseline_hit_rate": 0.44652908067542213,
+        "hypothetical_hit_rate": 0.45121951219512196,
+        "global_delta_pp": 0.46904315196998125,
         "status": "shadow_candidate_only",
         "promotion_requirement": "must beat production prospectively on >=300 settled races and pass external validation"
       }
@@ -134,9 +139,9 @@
       "action": "keep multi-head coverage for near-tie races; do not collapse to a single head",
       "evidence": {
         "segment": "near_tie_<=0.03",
-        "races": 73,
+        "races": 74,
         "hits": 18,
-        "hit_rate": 0.246575
+        "hit_rate": 0.243243
       }
     }
   ],
