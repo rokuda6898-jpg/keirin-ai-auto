@@ -1,7 +1,7 @@
 {
-  "checked_at_jst": "2026-10-15T13:07:28+09:00",
-  "status": "repaired",
-  "repaired": true,
+  "checked_at_jst": "2026-10-15T13:33:30+09:00",
+  "status": "waiting_results",
+  "repaired": false,
   "attempts": [
     {
       "attempt": 0,
@@ -9,35 +9,15 @@
         {
           "type": "results_waiting",
           "race_ids": [
-            "056120261015"
-          ]
-        },
-        {
-          "type": "results_overdue",
-          "race_ids": [
-            "055320261015"
+            "066120261015"
           ]
         }
       ],
       "health": {
         "severity": "warning",
         "problem_types": [
-          "results_overdue",
           "results_waiting"
         ],
-        "race_count": 72,
-        "expected_riders": 501,
-        "actual_riders": 501,
-        "rider_integrity_ok": true
-      },
-      "repair_action": "settlement_refresh"
-    },
-    {
-      "attempt": 1,
-      "problems": [],
-      "health": {
-        "severity": "ok",
-        "problem_types": [],
         "race_count": 72,
         "expected_riders": 501,
         "actual_riders": 501,
@@ -1125,8 +1105,10 @@
     }
   },
   "health": {
-    "severity": "ok",
-    "problem_types": [],
+    "severity": "warning",
+    "problem_types": [
+      "results_waiting"
+    ],
     "race_count": 72,
     "expected_riders": 501,
     "actual_riders": 501,
@@ -1134,6 +1116,8 @@
   },
   "recurrence": {
     "level": 0,
-    "counts": {}
+    "counts": {
+      "results_waiting:066120261015": 0
+    }
   }
 }
