@@ -75,7 +75,13 @@ def audit(feed, now, modes=('company', 'shadow')):
         add('data', 'schedule_stale', '本日の開催日程がまだ反映されていません。休催日か取得失敗か確認が必要です。')
     active = any((number(r.get('close_at')) or 0) > now_s for r in current)
     updated = timestamp(feed.get('updated_at'))
-    if active and (updated is None or now_s-updated > 45*60 or updated > now_s+60):
+    # The morning input refresh is scheduled for 06:45 JST. Do not flag the
+    # previous day's snapshot before the first refresh is due, except when
+    # an unusually early race closes before 07:00.
+    morning_gate = now.replace(hour=7, minute=0, second=0, microsecond=0).timestamp()
+    earliest_close = min((v for r in current if (v := number(r.get('close_at'))) is not None), default=None)
+    freshness_due = now_s >= morning_gate or (earliest_close is not None and earliest_close < morning_gate)
+    if active and freshness_due and (updated is None or now_s-updated > 45*60 or updated > now_s+60):
         add('data', 'feed_stale', '締切前レースがありますが公開データが45分以上古い、または時刻が不正です。')
     ids = [r.get('id') for r in feed.get('races', [])]
     if len(set(ids)) != len(ids):
