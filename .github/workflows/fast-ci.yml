@@ -42,6 +42,7 @@ jobs:
           PYTHONPATH: src
         run: |
           python -m compileall -q src tests
+          node --check site/conditional-high-value.js
           python -m unittest discover -s tests -p "test_*.py"
       - name: Verify checked-in race and rider identity snapshot
         env:

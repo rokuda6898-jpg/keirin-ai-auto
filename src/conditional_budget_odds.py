@@ -25,8 +25,8 @@ def _winticket(html, row):
             or get_venue_name(state, data) != row['venue']):
         raise ValueError('winticket race identity mismatch')
     absent = {str(e.get('number')) for e in data.get('entries', []) if e.get('absent')}
-    if any(set(t.split('-')) & absent for t in row['top12']):
-        raise ValueError('withdrawn rider in selected tickets')
+    if any(set(t.split('-')) & absent for t in row['top12']) or (absent and row.get('market_candidates')):
+        raise ValueError('withdrawn rider in selected tickets or market')
     raw = build_odds_rows(find_query_data(state, 'FETCH_KEIRIN_RACE_ODDS'),
                           row['date'], row['venue'], int(float(row['race_no'])),
                           str(row['race_id']), row['source_url'])
@@ -59,6 +59,14 @@ def capture(row, clock, get_html=None):
             or match is None or match[2][-2:] != rid[2:4]
             or int(match[4]) != int(rid[:2])):
         raise ValueError('invalid prediction source URL')
+    full_market = 'market_candidates' in row
+    wanted = row['market_candidates'] if full_market else row['top12']
+    if (not isinstance(wanted, list) or not 0 < len(wanted) <= 504
+            or len(set(wanted)) != len(wanted)
+            or not set(row['top12']).issubset(wanted)
+            or any(not isinstance(t, str) or not re.fullmatch(r'[1-9]-[1-9]-[1-9]', t)
+                   or len(set(t.split('-'))) != 3 for t in wanted)):
+        raise ValueError('invalid candidate market')
     get_html = get_html or _get_html
     alternatives = [
         ('winticket', url, _winticket),
@@ -73,15 +81,16 @@ def capture(row, clock, get_html=None):
             raise ValueError('quote request outside pre-close current-day window')
         try:
             quotes = parser(get_html(source), row)
-            selected = {t: number(quotes[t]) for t in row['top12']}
-            if any(p >= number('9999.9') for p in selected.values()):
-                raise ValueError('censored odds cannot establish exact payout')
+            selected = {t: number(quotes[t]) for t in wanted}
+            if any(selected[t] >= number('9999.9') for t in row['top12']):
+                raise ValueError('censored baseline odds cannot establish exact payout')
             captured = clock()
             if captured.timestamp() >= float(row['close_at']):
                 raise ValueError('closed during odds capture')
             return {key: row[key] for key in ('race_id', 'date', 'venue', 'race_no')} | {
                 'bet_type': 'trifecta', 'provider': provider, 'source_url': source,
                 'captured_at_jst': captured.isoformat(),
+                'market_complete': full_market, 'market_quoted_count': len(selected),
                 'odds': {t: str(v) for t, v in selected.items()}}
         except Exception as error:
             failures.append(provider + ': ' + str(error)[:100])

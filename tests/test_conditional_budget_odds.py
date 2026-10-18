@@ -47,5 +47,27 @@ class ConditionalBudgetOddsTests(unittest.TestCase):
                 market.capture(fixture(), lambda:NOW, get_html=lambda url:'fixture')
             fallback.assert_not_called()
 
+
+    def test_complete_market_quote_precedes_extra_50x_selection(self):
+        from itertools import permutations
+        row = fixture()
+        row['market_candidates'] = ['-'.join(p) for p in permutations('1234567', 3)]
+        full = dict.fromkeys(row['market_candidates'], 20)
+        full[row['market_candidates'][-1]] = '9999.9'
+        with patch.object(market, '_winticket', return_value=full):
+            q = market.capture(row, lambda: NOW, get_html=lambda url: 'fixture')
+        self.assertTrue(q['market_complete'])
+        self.assertEqual(len(q['odds']), 210)
+        self.assertEqual(q['odds'][row['market_candidates'][-1]], '9999.9')
+
+    def test_incomplete_full_market_falls_back_without_mixing_sources(self):
+        from itertools import permutations
+        row = fixture()
+        row['market_candidates'] = ['-'.join(p) for p in permutations('1234567', 3)]
+        with patch.object(market, '_winticket', return_value=dict.fromkeys(row['market_candidates'][:-1], 30)), patch.object(market, '_oddspark', return_value=dict.fromkeys(row['market_candidates'][1:], 30)):
+            with self.assertRaises(ValueError):
+                market.capture(row, lambda: NOW, get_html=lambda url: 'fixture')
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -124,5 +124,54 @@ class ConditionalLiveTests(unittest.TestCase):
             self.assertTrue(all(r['shadow'] is None for r in feed['races']))
 
 
+
+    def test_50plus_overlay_is_saved_from_full_quote_without_changing_original(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp); fixture(root)
+            keys = ['-'.join(map(str, p)) for p in permutations(range(1, 8), 3)]
+            new_buy = keys[40]
+            quotes_seen = []
+            def loader(row, clock):
+                wanted = row.get('market_candidates', row['top12'])
+                quotes_seen.append(tuple(wanted))
+                return {key: row[key] for key in ('race_id','date','venue','race_no')} | {
+                    'bet_type': 'trifecta', 'provider': 'test',
+                    'source_url': 'https://winticket.jp/example',
+                    'captured_at_jst': clock().isoformat(),
+                    'market_complete': 'market_candidates' in row,
+                    'odds': {t: '250' if t == new_buy else '20' for t in wanted}}
+            feed, missing = execute(root, odds_loader=loader)
+            self.assertEqual(missing, ['missing'])
+            item = next(r for r in feed['races'] if r['id'] == 'open')
+            self.assertEqual(item['shadow']['tickets'], keys[:12])
+            overlay = item['high_value']
+            self.assertEqual(overlay['status'], 'ready')
+            self.assertIn(new_buy, overlay['tickets'])
+            self.assertEqual(overlay['new_high'][0]['buy'], new_buy)
+            self.assertEqual(item['high_value_budget']['status'], 'allocated')
+            self.assertEqual(item['budget']['status'], 'allocated')
+            self.assertEqual(len(quotes_seen), 1)
+            self.assertEqual(len(quotes_seen[0]), 210)
+            before = (root/LEDGER).read_bytes()
+            execute(root, odds_loader=lambda *_: self.fail('requoted frozen race'))
+            self.assertEqual((root/LEDGER).read_bytes(), before)
+
+    def test_partial_market_never_claims_zero_high_value(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp); fixture(root)
+            def loader(row, clock):
+                tickets = row['top12']
+                return {key: row[key] for key in ('race_id','date','venue','race_no')} | {
+                    'bet_type': 'trifecta', 'provider': 'test',
+                    'source_url': 'https://winticket.jp/example',
+                    'captured_at_jst': clock().isoformat(),
+                    'odds': dict.fromkeys(tickets, '20')}
+            feed, _ = execute(root, odds_loader=loader)
+            item = next(r for r in feed['races'] if r['id'] == 'open')
+            self.assertEqual(item['budget']['status'], 'allocated')
+            self.assertEqual(item['high_value']['status'], 'unavailable')
+            self.assertEqual(item['shadow']['tickets'][0], '1-2-3')
+
+
 if __name__ == '__main__':
     unittest.main()
