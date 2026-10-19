@@ -1,15 +1,25 @@
 {
-  "checked_at_jst": "2026-10-19T16:04:27+09:00",
-  "status": "healthy",
+  "checked_at_jst": "2026-10-19T17:58:30+09:00",
+  "status": "unhealthy",
   "repaired": false,
   "check_source": "post_settlement_read_only_audit",
   "attempts": [
     {
       "attempt": 0,
-      "problems": [],
+      "problems": [
+        {
+          "type": "site_release_stale",
+          "count": 1,
+          "details": [
+            "code changed since generation: src/settle_results.py"
+          ]
+        }
+      ],
       "health": {
-        "severity": "ok",
-        "problem_types": [],
+        "severity": "warning",
+        "problem_types": [
+          "site_release_stale"
+        ],
         "race_count": 78,
         "expected_riders": 564,
         "actual_riders": 564,
@@ -1208,8 +1218,10 @@
     }
   },
   "health": {
-    "severity": "ok",
-    "problem_types": [],
+    "severity": "warning",
+    "problem_types": [
+      "site_release_stale"
+    ],
     "race_count": 78,
     "expected_riders": 564,
     "actual_riders": 564,
