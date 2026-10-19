@@ -28,7 +28,7 @@ def apply_retirement(destination):
             text = text.replace('38.77％は過去の検証値で、将来の的中を保証しません。', '')
         text = re.sub(r'app\.js\?v=[^\"\']+', 'app.js?v=20261011-retirement', text)
         text = re.sub(r'site-wide\.js(?:\?[^\"\']*)?(?=[\"\'])',
-                      'site-wide.js?v=20261011-retirement', text)
+                      'site-wide.js?v=20261019-forecast', text)
         path.write_text(text, encoding='utf-8')
     app = destination/'app.js'
     if app.exists():

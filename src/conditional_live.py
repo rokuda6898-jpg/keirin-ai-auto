@@ -20,7 +20,8 @@ from fixed_year_study import input_reason
 from official_outcomes import normalize_outcome
 from public_live import finite, forecast_view, frozen, read_csv, read_json
 from conditional_input_refresh import valid_race
-from conditional_budget import freeze as freeze_budget, settle as settle_budget
+from conditional_budget import (freeze as freeze_budget, settle as settle_budget,
+                                MIN_BUDGET, BUDGET, UNIT, RANGE_VERSION)
 from conditional_budget_odds import capture as capture_budget_odds
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -193,23 +194,39 @@ def run(root=ROOT, predict_new=True, clock=now_jst, model_loader=load_model, pre
         view = forecast_view(row)
         if view:
             view['note'] = '条件付き3連単：1着に応じた2着、その1・2着に応じた3着を評価。'
+        cancelled = row.get('cancelled_cars', []) if row else []
+        cancelled_set = set(map(str, cancelled))
+        reported_buys = row.get('actual', []) if row else outcome['winning_buys'] if outcome else []
+        reported_payouts = row.get('payouts', {}) if row else outcome['payouts'] if outcome else {}
+        # Some providers list refunded tickets beside the winning order. A
+        # withdrawn rider cannot be part of the official finishing order.
+        returned_buys = [buy for buy in reported_buys if cancelled_set.intersection(buy.split('-'))]
+        actual = [buy for buy in reported_buys if buy not in returned_buys]
         races.append({'id': rid, 'date': item['date'], 'venue': item.get('venue', ''),
                       'number': int(float(item['race_no'])), 'start_at': finite(item.get('start_at')),
                       'close_at': finite(item.get('close_at')), 'shadow': view,
                       'riders': row.get('riders', []) if row else [],
-                      'cancelled_cars': row.get('cancelled_cars', []) if row else [],
-                      'actual': row.get('actual', []) if row else outcome['winning_buys'] if outcome else [],
-                      'payouts': row.get('payouts', {}) if row else outcome['payouts'] if outcome else {},
+                      'cancelled_cars': cancelled, 'returned_buys': returned_buys,
+                      'actual': actual,
+                      'payouts': {buy: reported_payouts[buy] for buy in actual if buy in reported_payouts},
                       'forecast_error': errors.get(rid, ''),
+                      'result_observed_at': row.get('result_observed_at_jst') if row else None,
                       'budget': row.get('budget') if row else None,
                       'budget_settlement': row.get('budget_settlement') if row else None})
     races.sort(key=lambda r: (r['date'], r['start_at'] or r['close_at'] or 1e12, r['venue'], r['number']))
     completed = clock()
     payload = {'schema': 1, 'updated_at': completed.isoformat(), 'generated_at': completed.isoformat(),
                'schedule_date': max(s['date'] for s in schedule), 'races': races,
-               'budget_policy': {'budget_yen': 10000, 'unit_yen': 100,
+               'model': {'id': 'conditional_trifecta_v1',
+                   'name': '条件付き3連単・上位12点', 'ticket_count': 12,
+                   'selection_evidence': 'model_selection.json'},
+               'budget_policy': {'budget_yen': BUDGET, 'minimum_budget_yen': MIN_BUDGET,
+                   'maximum_budget_yen': BUDGET, 'unit_yen': UNIT, 'version': RANGE_VERSION,
+                   'budget_selection': 'smallest_feasible_no_loss',
                    'mode': 'simulation', 'odds_policy': 'freeze_at_prediction',
-                   'settlement_policy': 'official_payout_only', 'backfill': False},
+                   'settlement_policy': 'official_payout_only', 'backfill': False,
+                   'unpriced_retry': 'pre_close_only_30_minutes',
+                   'legacy_allocations': 'preserve_saved_v1'},
                'historical_reference': {'hits': 6242, 'races': 13612, 'rate': 6242/13612,
                    'scope': '過去ページを用いた再検証。未来の成績ではありません。'},
                'coverage': {'scheduled': len(schedule), 'saved': sum(s['race_id'] in rows for s in schedule),

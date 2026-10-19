@@ -1,0 +1,138 @@
+{
+  "schema": 1,
+  "selection_cutoff_date": "2026-10-18",
+  "selected_model": {
+    "id": "conditional_trifecta_past_only_v1",
+    "name": "条件付き3連単・上位12点",
+    "path": "models/conditional_trifecta_v1.joblib",
+    "sha256": "7934d16a8bdae91f7bcfbf671e72848727538f4c664c74a586a7c8df36077892",
+    "entrypoint": "src/conditional_live.py",
+    "feed": "outputs/conditional_live.json"
+  },
+  "selection_basis": "同じ締切前保存レース・各12点・1点100円で的中率と回収率を比較",
+  "best_on_both_metrics_in_common_cohort": true,
+  "common_cohort": {
+    "race_ids": [
+      "012120261011",
+      "012120261012",
+      "012720261017",
+      "012720261018",
+      "022120261011",
+      "022120261012",
+      "022720261017",
+      "022720261018",
+      "032120261011",
+      "032120261012",
+      "032720261017",
+      "032720261018",
+      "042120261011",
+      "042120261012",
+      "042720261017",
+      "042720261018",
+      "052120261011",
+      "052120261012",
+      "052720261017",
+      "052720261018",
+      "062120261011",
+      "062120261012",
+      "062720261017",
+      "062720261018",
+      "072120261011",
+      "072120261012",
+      "072720261017",
+      "072720261018",
+      "082120261011",
+      "082120261012",
+      "082720261017",
+      "082720261018",
+      "092120261011",
+      "092120261012",
+      "092720261017",
+      "092720261018",
+      "102120261011",
+      "102120261012",
+      "102720261017",
+      "102720261018",
+      "112120261011",
+      "112120261012",
+      "112720261017",
+      "112720261018",
+      "122120261011",
+      "122120261012",
+      "122720261017",
+      "122720261018"
+    ],
+    "dates": [
+      "2026-10-11",
+      "2026-10-12",
+      "2026-10-17",
+      "2026-10-18"
+    ],
+    "methods": {
+      "conditional": {
+        "races": 48,
+        "hits": 19,
+        "hit_rate": 0.3958333333333333,
+        "stake_yen": 57600,
+        "return_yen": 66210,
+        "profit_yen": 8610,
+        "return_rate": 1.1494791666666666,
+        "first_date": "2026-10-11",
+        "last_date": "2026-10-18"
+      },
+      "graded_normal": {
+        "races": 48,
+        "hits": 13,
+        "hit_rate": 0.2708333333333333,
+        "stake_yen": 57600,
+        "return_yen": 33980,
+        "profit_yen": -23620,
+        "return_rate": 0.5899305555555555,
+        "first_date": "2026-10-11",
+        "last_date": "2026-10-18"
+      },
+      "graded_previous_best": {
+        "races": 48,
+        "hits": 16,
+        "hit_rate": 0.3333333333333333,
+        "stake_yen": 57600,
+        "return_yen": 31110,
+        "profit_yen": -26490,
+        "return_rate": 0.5401041666666667,
+        "first_date": "2026-10-11",
+        "last_date": "2026-10-18"
+      }
+    }
+  },
+  "conditional_all_settled": {
+    "races": 572,
+    "hits": 272,
+    "hit_rate": 0.4755244755244755,
+    "stake_yen": 686400,
+    "return_yen": 581220,
+    "profit_yen": -105180,
+    "return_rate": 0.8467657342657343,
+    "first_date": "2026-10-10",
+    "last_date": "2026-10-18"
+  },
+  "historical_reference": {
+    "races": 13612,
+    "hits": 6242,
+    "hit_rate": 0.4585659712018807,
+    "annual_return_rate": null,
+    "annual_return_rate_verified": false,
+    "source": "outputs/conditional_research/results.json"
+  },
+  "limitations": [
+    "保存済み予想の比較で、再学習・再予想はしていません。",
+    "同一48レースでの優位は、全方式・全期間での最良や将来成績を保証しません。",
+    "回収率は100円均等。5,000〜10,000円の新しい配分の実績ではありません。",
+    "公式払戻未確認のレースは除外。返還対象の買い目は投資額から除外。",
+    "年間回収率は未検証。過去1年の的中率は過去ページからの再検証です。"
+  ],
+  "source_sha256": {
+    "outputs/conditional_live.json": "bb8393029581c77619fa35b6feaa10a21bdbc43fdf77e7cc5c58b70fda3e2f96",
+    "outputs/graded_live.json": "3ab08267282702f506b65495dce97a0ccf9ee194d846b73f966ceefcf61b59fd",
+    "models/conditional_trifecta_v1.json": "e43ffb06931decd5a9e7b8ded067d55039d47d2b10d2000462e94d3fd0eaf49f"
+  }
+}
