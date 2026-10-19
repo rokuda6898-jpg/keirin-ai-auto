@@ -63,12 +63,13 @@ function render(){
   $('#race-view').classList.toggle('hidden',tab==='model');$('#model-view').classList.toggle('hidden',tab!=='model');
   const day=$('#date').value,venue=$('#venue').value;
   const dayRows=(data.races||[]).filter(r=>r.date===day);
-  $$('[data-session]').forEach(b=>{const n=dayRows.filter(r=>(b.dataset.session==='all'||r.session===b.dataset.session)&&(tab==='results'?C.closed(r)||r.settlement:day!==data.date||!C.closed(r)&&!r.cancelled)).length;b.innerHTML=`${esc(b.dataset.session==='all'?'すべて':sessions[b.dataset.session])}<span class="session-count">${n}</span>`;});
+  $$('[data-session]').forEach(b=>{const n=dayRows.filter(r=>(!venue||r.venue===venue)&&(b.dataset.session==='all'||r.session===b.dataset.session)&&(tab==='results'?C.closed(r)||r.settlement:day!==data.date||!C.closed(r)&&!r.cancelled)).length;b.innerHTML=`${esc(b.dataset.session==='all'?'すべて':sessions[b.dataset.session])}<span class="session-count">${n}</span>`;});
   let rows=dayRows.filter(r=>(session==='all'||r.session===session)&&(!venue||r.venue===venue));renderStats(rows);
   if(tab==='results')rows=rows.filter(r=>C.closed(r)||r.settlement||r.cancelled);
   else if(day===data.date)rows=rows.filter(r=>!C.closed(r)&&!r.cancelled);
-  rows.sort((a,b)=>(a.start_at||'').localeCompare(b.start_at||'')||a.race_id.localeCompare(b.race_id));
-  const groups=session==='all'?[...Object.keys(sessions),'unknown'].map(k=>[k,rows.filter(r=>(r.session||'unknown')===k)]).filter(([,rr])=>rr.length):[[session,rows]];
+  rows.sort((a,b)=>(tab==='results'?-1:1)*((a.start_at||'').localeCompare(b.start_at||'')||a.race_id.localeCompare(b.race_id)));
+  const sessionOrder=tab==='results'?Object.keys(sessions).reverse():Object.keys(sessions);
+  const groups=session==='all'?[...sessionOrder,'unknown'].map(k=>[k,rows.filter(r=>(r.session||'unknown')===k)]).filter(([,rr])=>rr.length):[[session,rows]];
   $('#races').innerHTML=rows.length?groups.map(([k,rr])=>`${session==='all'?`<h3 class="session-heading">${esc(sessions[k]||'時間帯未確認')} <small>${rr.length}レース</small></h3>`:''}${rr.map(raceHTML).join('')}`).join(''):'<div class="empty">この条件のレースはありません。</div>';
   $('#list-title').textContent=tab==='results'?'結果一覧':'これからのレース';$('#race-count').textContent=rows.length+'レース';
   const stale=Date.now()-Date.parse(data.updated_at)>30*60000;
@@ -90,12 +91,12 @@ for(const [id,direction]of[['prev-day',-1],['next-day',1]])$('#'+id).addEventLis
 async function load(quiet=false){
   if(loading)return;loading=true;$('#refresh').disabled=true;
   const oldDate=$('#date').value,oldVenue=$('#venue').value;let fresh=null;
-  for(const url of ['https://raw.githubusercontent.com/rokuda6898-jpg/keirin-ai-auto/main/outputs/nexus_live.json','original/nexus_live.json','../outputs/nexus_live.json']){
-    try{const response=await fetch(url+'?t='+Math.floor(Date.now()/60000),{cache:'no-store',signal:AbortSignal.timeout(12000)});if(!response.ok)continue;const candidate=await response.json();if(candidate.schema===1&&Array.isArray(candidate.races)){fresh=candidate;break;}}catch{}
-  }
+  const readFeed=async url=>{try{const response=await fetch(url+'?t='+Math.floor(Date.now()/60000),{cache:'no-store',signal:AbortSignal.timeout(12000)});return response.ok?await response.json():null;}catch{return null;}};
+  fresh=C.latestFeed(await Promise.all(['https://raw.githubusercontent.com/rokuda6898-jpg/keirin-ai-auto/main/outputs/nexus_live.json','original/nexus_live.json'].map(readFeed)));
+  if(!fresh)fresh=C.latestFeed([await readFeed('../outputs/nexus_live.json')]);
   loading=false;$('#refresh').disabled=false;$('#loading').classList.add('hidden');
   if(!fresh){if(data){render();if(!quiet)toast('通信できませんでした。保存済みの表示を維持しています。');return;}$('#races').innerHTML='<div class="empty">予想データを読み込めませんでした。更新ボタンで再読み込みしてください。</div>';$('#updated').textContent='通信を確認してください';return;}
-  data=fresh;const dates=[...new Set([...data.races.map(r=>r.date),data.date].filter(Boolean))].sort();$('#date').innerHTML=dates.map(d=>`<option value="${esc(d)}">${esc(d.replaceAll('-','/'))}</option>`).join('');$('#date').value=dates.includes(oldDate)?oldDate:data.date||dates.at(-1);
+  data=C.latestFeed([fresh,data]);const dates=[...new Set([...data.races.map(r=>r.date),data.date].filter(Boolean))].sort();$('#date').innerHTML=dates.map(d=>`<option value="${esc(d)}">${esc(d.replaceAll('-','/'))}</option>`).join('');$('#date').value=dates.includes(oldDate)?oldDate:data.date||dates.at(-1);
   const venues=[...new Set(data.races.map(r=>r.venue).filter(Boolean))].sort();$('#venue').innerHTML='<option value="">全開催場</option>'+venues.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');$('#venue').value=venues.includes(oldVenue)?oldVenue:'';
   $('#updated').textContent='取得 '+new Date(data.updated_at).toLocaleString('ja-JP',{timeZone:'Asia/Tokyo',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});render();
 }

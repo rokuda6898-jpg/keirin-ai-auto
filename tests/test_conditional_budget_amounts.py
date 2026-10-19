@@ -1,9 +1,22 @@
 from pathlib import Path
+from html.parser import HTMLParser
 import shutil
 import subprocess
 import unittest
 
 ROOT=Path(__file__).resolve().parents[1]
+
+class AssetLinks(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.styles=[]
+        self.scripts=[]
+    def handle_starttag(self,tag,attrs):
+        attributes=dict(attrs)
+        if tag=='link' and 'stylesheet' in attributes.get('rel','').split():
+            self.styles.append(attributes.get('href','').split('?',1)[0])
+        if tag=='script' and attributes.get('src'):
+            self.scripts.append(attributes['src'].split('?',1)[0])
 
 class AmountDisplayTests(unittest.TestCase):
     def test_ticket_amount_mapping_and_missing_states(self):
@@ -12,12 +25,18 @@ class AmountDisplayTests(unittest.TestCase):
     def test_main_forecast_assets_and_legacy_redirect(self):
         html=(ROOT/'site/index.html').read_text(encoding='utf-8')
         redirect=(ROOT/'site/conditional.html').read_text(encoding='utf-8')
-        self.assertIn('forecast.css?v=20261019',html)
-        self.assertLess(html.index('forecast-math.js?'),html.index('forecast.js?'))
+        assets=AssetLinks();assets.feed(html)
+        self.assertIn('nexus.css',assets.styles)
+        self.assertIn('nexus-core.js',assets.scripts)
+        self.assertIn('nexus.js',assets.scripts)
+        self.assertLess(assets.scripts.index('nexus-core.js'),assets.scripts.index('nexus.js'))
+        for asset in ('nexus.css','nexus-core.js','nexus.js'):
+            self.assertTrue((ROOT/'site'/asset).is_file(),asset)
         self.assertEqual(html.count('id="races"'),1)
-        self.assertIn('id="performance-cards"',html)
-        self.assertIn('id="results-tab"',html)
-        self.assertIn('original/model_selection.json',html)
+        self.assertIn('id="stats"',html)
+        self.assertIn('data-tab="results"',html)
+        self.assertIn('data-tab="model"',html)
+        self.assertIn('id="model-view"',html)
         self.assertIn('location.replace',redirect)
         self.assertIn('./index.html',redirect)
         self.assertIn('条件付き3連単',redirect)
@@ -59,3 +78,4 @@ assert.equal(ui.aggregate([allocated,waiting],'allocated').settled,1);
         self.assertIn('git add outputs/conditional_budget_initialization.json',text)
 
 if __name__=='__main__':unittest.main()
+

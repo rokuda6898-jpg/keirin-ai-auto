@@ -46,7 +46,8 @@
     }
     out.hitRate=out.settled?out.hits/out.settled:null;out.roi=out.stake?out.returned/out.stake:null;out.profit=out.returned-out.stake;return out;
   }
-  const api={expand,openPodium,closed,allocation,packTickets,amountGroups,totals};
+  const latestFeed=feeds=>feeds.filter(f=>f?.schema===1&&Array.isArray(f.races)).sort((a,b)=>(Date.parse(b.updated_at)||0)-(Date.parse(a.updated_at)||0)||(Date.parse(b.policy_updated_at)||0)-(Date.parse(a.policy_updated_at)||0))[0]||null;
+  const api={expand,openPodium,closed,allocation,packTickets,amountGroups,totals,latestFeed};
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
   root.NexusCore=api;
 })(typeof globalThis==='undefined'?this:globalThis);

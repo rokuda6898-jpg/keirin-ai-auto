@@ -1,3 +1,5 @@
+import ast
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -27,7 +29,11 @@ class DepartmentPublicationTests(unittest.TestCase):
 
     def test_selected_model_publication_preserves_visible_incomplete_coverage(self):
         workflow = (ROOT/'.github/workflows/pages.yml').read_text(encoding='utf-8')
-        self.assertIn("workflows: ['conditional-trifecta-live']", workflow)
+        trigger = re.search(r"(?m)^    workflows:\s*(\[[^\n]*\])\s*$", workflow)
+        self.assertIsNotNone(trigger, 'workflow_run must list publishing workflows')
+        workflows = ast.literal_eval(trigger.group(1))
+        self.assertIn('conditional-trifecta-live', workflows)
+        self.assertIn('nexus-formation-publish', workflows)
         self.assertIn("github.event.workflow_run.head_branch == 'main'", workflow)
         self.assertIn("contains(fromJSON('[\"success\", \"failure\"]'), github.event.workflow_run.conclusion)", workflow)
         self.assertIn('ref: main', workflow)
@@ -38,3 +44,4 @@ class DepartmentPublicationTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+

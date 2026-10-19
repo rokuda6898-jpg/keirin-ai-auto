@@ -13,4 +13,10 @@ const rows=[{prediction:{},settlement:{flat:{hit:true,stake:1000,returned:2100,r
 const total=C.totals(rows,'flat');assert.equal(total.settled,2);assert.equal(total.hits,1);assert.equal(total.stake,1900);assert.equal(total.returned,2000);assert.equal(total.profit,100);assert.equal(total.void,1);assert.equal(total.pending,1);assert.equal(total.unpredicted,1);assert.equal(total.roi,2000/1900);
 const p={tickets:['1-2-3','2-1-3'],auto_budget:5000,allocations:{5000:{available:true,quote_break_even:true,budget:5000,minimum_return:7500,stakes:{'1-2-3':2500,'2-1-3':2500}}}};
 assert.equal(C.allocation(p,'auto').key,'5000');p.allocations[5000].quote_break_even=false;assert.equal(C.allocation(p,'auto'),null);
-console.log('Nexus UI: amount formations, fixed-podium exclusion, settlement and allocation contracts passed');
+const oldFeed={schema:1,races:[],updated_at:'2026-10-19T13:56:00+09:00'};
+const allocatedFeed={...oldFeed,policy_updated_at:'2026-10-19T14:11:00+09:00'};
+const newerFeed={...oldFeed,updated_at:'2026-10-19T14:16:00+09:00'};
+assert.equal(C.latestFeed([oldFeed,allocatedFeed]),allocatedFeed);
+assert.equal(C.latestFeed([allocatedFeed,null,newerFeed]),newerFeed);
+assert.equal(C.latestFeed([null,{schema:2,races:[]}]),null);
+console.log('Nexus UI: amount formations, flexible first place, settlement, allocation and feed freshness passed');
