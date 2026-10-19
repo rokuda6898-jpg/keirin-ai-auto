@@ -10,11 +10,14 @@ import numpy as np
 class Contract(unittest.TestCase):
     def test_allocation_and_low_odds_order(self):
         for n in [6,12,15,24]:
-            tickets=['-'.join(map(str,z)) for z in list(itertools.permutations(range(1,8),3))[:n]];odds={t:2.1+3.7*j for j,t in enumerate(tickets)}
-            for b in range(5000,10001,1000):
-                a=allocate(tickets,odds,b);v=list(a['stakes'].values());self.assertEqual(sum(v),b);self.assertTrue(all(x>=100 and x%100==0 for x in v));self.assertEqual(v,sorted(v,reverse=True));self.assertEqual(a['quote_break_even'],a['minimum_return']>=b)
+            tickets=['-'.join(map(str,z)) for z in list(itertools.permutations(range(1,8),3))[:n]];odds={t:Fraction(21+37*j,10) for j,t in enumerate(tickets)}
+            for b in range(5000,10001,100):
+                a=allocate(tickets,odds,b)
+                if not a['available']:
+                    self.assertEqual(a['reason_code'],'no_break_even');self.assertLess(a['best_possible_return'],b);self.assertNotIn('stakes',a);continue
+                v=list(a['stakes'].values());self.assertEqual(sum(v),b);self.assertTrue(all(x>=100 and x%100==0 for x in v));self.assertEqual(v,sorted(v,reverse=True));self.assertTrue(a['quote_break_even']);self.assertGreaterEqual(a['minimum_return'],b)
     def test_no_missing_odds_fabrication(self):
-        self.assertFalse(allocate(['1-2-3'],{},5000)['available'])
+        a=allocate(['1-2-3'],{},5000);self.assertFalse(a['available']);self.assertEqual(a['reason_code'],'missing_odds');self.assertNotIn('stakes',a)
     def test_tie_and_refund_accounting(self):
         x=settle({'1-2-3':200,'2-1-3':100,'4-5-6':100},{'1-2-3':400,'2-1-3':500},['4-5-6']);self.assertTrue(x['hit']);self.assertEqual(x['returned'],1400)
         self.assertTrue(settle({'1-2-3':100},{},refund_all=True)['void'])
@@ -40,3 +43,4 @@ class Contract(unittest.TestCase):
         self.assertFalse(outcomes({'race':{'cancel':False,'decidedAt':0},'trifectaPayoffStatus':3,'trifecta':[]})[2])
 
 if __name__=='__main__':unittest.main()
+

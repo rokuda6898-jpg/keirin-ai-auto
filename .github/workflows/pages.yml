@@ -2,7 +2,7 @@ name: deploy-pages
 on:
   push:
     branches: [main]
-    paths: ['site/**', 'outputs/nexus_live.json', 'src/build_public_site.py', 'src/site_retirement.py', '.github/workflows/pages.yml']
+    paths: ['site/**', 'tests/test_nexus_core.js', 'outputs/nexus_live.json', 'src/build_public_site.py', 'src/site_retirement.py', '.github/workflows/pages.yml']
   workflow_dispatch:
   workflow_run:
     workflows: ['conditional-trifecta-live', 'nexus-formation-publish']
@@ -32,6 +32,8 @@ jobs:
         run: |
           node --check site/app.js
           node --check site/nexus.js
+          node --check site/nexus-core.js
+          node tests/test_nexus_core.js
           node --check site/archive.js
           node --check site/forecast.js
           node --check site/forecast-math.js
@@ -81,3 +83,4 @@ jobs:
           path: public-build
       - uses: actions/deploy-pages@v4
         id: deployment
+
