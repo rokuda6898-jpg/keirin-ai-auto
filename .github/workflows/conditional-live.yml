@@ -34,7 +34,9 @@ jobs:
       - name: Verify allocation invariants before publishing amounts
         env:
           PYTHONPATH: src
-        run: python -m unittest discover -s tests -p 'test_conditional_budget*.py'
+        run: |
+          python -m unittest discover -s tests -p 'test_conditional_budget*.py'
+          python -m unittest discover -s tests -p 'test_conditional_refund_evidence.py'
       - name: First allocation for still-open forecasts without a budget
         env:
           PYTHONPATH: src

@@ -1,5 +1,6 @@
 import csv
 from copy import deepcopy
+from itertools import permutations
 import json
 from pathlib import Path
 import sys
@@ -59,7 +60,8 @@ class NexusResultSync(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
-        self.outputs = Path(self.temporary.name)
+        self.outputs = Path(self.temporary.name) / 'outputs'
+        self.outputs.mkdir()
 
     def write(self, relative, value):
         path = self.outputs / relative
@@ -282,6 +284,67 @@ class NexusResultSync(unittest.TestCase):
         (self.outputs / 'nexus_live.json').write_text('{', encoding='utf-8')
         with self.assertRaises(json.JSONDecodeError):
             sync_latest_results(self.outputs)
+
+    def test_explicit_keio_winner_excludes_all_car3_refunds_despite_compact_timestamp(self):
+        # Nine-car 京王閣8R: 168 refunded permutations involving car 3.
+        rid = '082720261019'
+        quotes = [dict(id=rid+':2:'+'.'.join(map(str, key)), raceId=rid, key=list(key),
+                       absent=3 in key, payoffUnitPrice=3120 if key == (9, 1, 2) else 100 if 3 in key else 0)
+                  for key in permutations(range(1, 10), 3)]
+        refunds = ['-'.join(map(str, q['key'])) for q in quotes if q['absent']]
+        snap = dict(schema=1, source_kind='existing_public_page_response', captured_at=OBSERVED,
+                    sha256='explicit-source-sha', url='https://example.test/keio8',
+                    meta=dict(race_id=rid, date=DAY, venue_id='27', race_number=8),
+                    data=dict(race=dict(id=rid, number=8, entriesNumber=9, cancel=False,
+                                        decidedAt=1792379100), schedule=dict(date='20261019'),
+                              entries=[dict(number=c, raceId=rid, absent=c == 3) for c in range(1, 10)],
+                              trifecta=quotes, trifectaWinningOddsIds=[rid+':2:9.1.2'], trifectaPayoffStatus=1))
+        raw_path = self.outputs.parent / 'data/raw/nexus_page_snapshots' / DAY / 'outcomes' / (rid+'.json')
+        raw_path.parent.mkdir(parents=True)
+        raw_path.write_text(json.dumps(snap))
+        row = race(rid, race_no=8, venue='京王閣')
+        row['prediction']['tickets'] = ['9-1-2', '1-2-3', '2-1-3']
+        row['prediction']['allocations']['5000']['stakes'] = {'9-1-2': 3000, '1-2-3': 1000, '2-1-3': 1000}
+        corrupt = {t: 100 for t in refunds} | {'9-1-2': 3120}
+        # source.outcomes is pure; accommodate minimal local environments while
+        # explicitly forbidding its network entry point during this regression.
+        try:
+            import requests
+        except ModuleNotFoundError:
+            import types
+            self.addCleanup(lambda: sys.modules.pop('requests', None))
+            sys.modules['requests'] = types.ModuleType('requests')
+        for observed in ('2026-10-19T12:09:00+09:00', OBSERVED, '2026-10-19T12:30:00+09:00'):
+            with self.subTest(observed=observed):
+                original = self.prepare([row], [outcome(rid, tuple(corrupt), corrupt,
+                                                       result_observed_at_jst=observed)], ledger=[])
+                with patch('nexus_model.source.fetch', side_effect=AssertionError('network forbidden')):
+                    _, live = self.sync()
+                    fixed = live['races'][0]
+                    self.assertEqual(fixed['winners'], ['9-1-2'])
+                    self.assertEqual(fixed['payouts'], {'9-1-2': 3120})
+                    self.assertEqual(set(fixed['refunded']), set(refunds))
+                    self.assertEqual(len(fixed['refunded']), 168)
+                    self.assertEqual(fixed['prediction'], original['races'][0]['prediction'])
+                    self.assertEqual(fixed['result_source_sha256'], 'original-evidence-sha')
+                    self.assertEqual(fixed['settlement']['flat']['winnings'], 3120)
+                    self.assertEqual(fixed['settlement']['flat']['refund'], 200)
+                    self.assertEqual(fixed['settlement']['auto']['winnings'], 93600)
+                    self.assertEqual(fixed['settlement']['auto']['refund'], 2000)
+                    self.assertEqual(self.sync()[1]['races'][0], fixed)
+        raw_path.unlink()
+        self.write('latest_results.json', [outcome(rid, tuple(corrupt), corrupt,
+                                                 result_observed_at_jst='2026-10-19T12:40:00+09:00')])
+        self.assertEqual(self.sync()[1]['races'][0], fixed)
+        corrupted = dict(fixed, winners=list(corrupt), payouts=corrupt,
+                         result_sync_source='latest_results.json',
+                         results_updated_at='2026-10-19T12:50:00+09:00')
+        mixed_live = self.read('nexus_live.json')
+        mixed_live['races'] = [corrupted]
+        self.write('nexus_live.json', mixed_live)
+        self.assertEqual(self.sync()[1]['races'][0]['winners'], ['9-1-2'])
+        self.write('nexus_forecasts/' + DAY + '.json', [corrupted])
+        self.assertEqual(self.sync()[1]['races'][0]['winners'], ['9-1-2'])
 
 
 if __name__ == '__main__':

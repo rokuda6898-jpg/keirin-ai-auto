@@ -165,10 +165,15 @@ def _merge_race(live_row, ledger_row):
         return merged
     if ledger_row.get('refund_all') or ledger_row.get('cancelled'):
         return merged
+    live_explicit = live_row.get('result_sync_source') == 'nexus_page_snapshot' and _complete(live_row)
+    ledger_explicit = ledger_row.get('result_sync_source') == 'nexus_page_snapshot' and _complete(ledger_row)
+    if ledger_explicit and not live_explicit and not (live_row.get('refund_all') or live_row.get('cancelled')):
+        return merged
     live_stamp = _timestamp(_latest_stamp([live_row.get('results_updated_at'), live_row.get('result_captured_at')]))
     ledger_stamp = _timestamp(_latest_stamp([ledger_row.get('results_updated_at'), ledger_row.get('result_captured_at')]))
     newer = live_stamp is not None and (ledger_stamp is None or live_stamp > ledger_stamp)
-    prefer_live = (live_row.get('refund_all') or live_row.get('cancelled') or
+    prefer_live = ((live_explicit and not ledger_explicit) or
+                   live_row.get('refund_all') or live_row.get('cancelled') or
                    (_complete(live_row) and not _complete(ledger_row)) or
                    (newer and not (_complete(ledger_row) and not _complete(live_row))))
     if prefer_live:
@@ -189,6 +194,11 @@ def _merge_race(live_row, ledger_row):
 
 
 def _apply_result(row, outcome):
+    if row.get('result_sync_source') == 'nexus_page_snapshot' and _complete(row):
+        # Compact feeds can list 100-yen refunds as winning payouts. They lack
+        # the explicit winning IDs / absence flags that certified this result.
+        _settle_saved(row)
+        return
     incoming_stamp = _timestamp(outcome.get('source_observed_at'))
     existing_stamp = _timestamp(_latest_stamp([
         row.get('results_updated_at'), row.get('result_captured_at'),
@@ -222,6 +232,74 @@ def _apply_result(row, outcome):
         # A known finish without every winning payout is not a settled bet.
         row.pop('settlement', None)
         row.pop('settlement_unavailable_reason', None)
+
+
+def _apply_saved_outcome(outputs, row):
+    """Prefer a complete, identity-checked original result over compact rows."""
+    race_id, day = str(row.get('race_id', '')), _date(row)
+    if (not day or len(race_id) != 12 or not race_id.isdigit()
+            or race_id[4:] != day.replace('-', '') or row.get('refund_all') or row.get('cancelled')):
+        return False
+    path = outputs.parent / 'data/raw/nexus_page_snapshots' / day / 'outcomes' / (race_id + '.json')
+    if not path.exists():
+        return False
+    snapshot = _read(path)
+    if not isinstance(snapshot, dict):
+        return False
+    data, meta = snapshot.get('data', {}), snapshot.get('meta', {})
+    race, schedule = data.get('race', {}), data.get('schedule', {})
+    captured = _timestamp(snapshot.get('captured_at'))
+    decided = _timestamp(race.get('decidedAt')) if race.get('decidedAt') else None
+    if (snapshot.get('schema') != 1 or snapshot.get('source_kind') != 'existing_public_page_response'
+            or str(meta.get('race_id')) != race_id or str(race.get('id')) != race_id
+            or meta.get('date') != day or str(schedule.get('date')) != race_id[4:]
+            or str(meta.get('venue_id')).zfill(2) != race_id[2:4]
+            or meta.get('race_number') != int(race_id[:2]) or race.get('number') != int(race_id[:2])
+            or not captured or not decided or captured < decided
+            or data.get('trifectaPayoffStatus') != 1):
+        return False
+    old_capture = _timestamp(row.get('result_sync_captured_at'))
+    if row.get('result_sync_source') == 'nexus_page_snapshot' and old_capture and captured < old_capture:
+        return False
+    entries, quotes = data.get('entries', []), data.get('trifecta', [])
+    count = race.get('entriesNumber')
+    if (type(count) is not int or not 3 <= count <= 9 or len(entries) != count
+            or any(not isinstance(e, dict) or type(e.get('number')) is not int
+                   or type(e.get('absent')) is not bool or str(e.get('raceId')) != race_id for e in entries)
+            or sorted(e['number'] for e in entries) != list(range(1, count + 1))
+            or len(quotes) != count * (count - 1) * (count - 2)):
+        return False
+    keys, ids = set(), set()
+    for quote in quotes:
+        key = quote.get('key', [])
+        if (not isinstance(key, list) or len(key) != 3 or any(type(c) is not int or not 1 <= c <= count for c in key)
+                or len(set(key)) != 3 or tuple(key) in keys or quote.get('id') in ids
+                or type(quote.get('absent')) is not bool or str(quote.get('raceId')) != race_id):
+            return False
+        keys.add(tuple(key))
+        ids.add(quote.get('id'))
+    winning_ids = data.get('trifectaWinningOddsIds')
+    if not isinstance(winning_ids, list) or not winning_ids or not set(winning_ids).issubset(ids):
+        return False
+    from nexus_model.source import outcomes
+    payouts, refunded, refund_all, complete = outcomes(data)
+    if (not complete or refund_all or set(payouts).intersection(refunded)
+            or any(_whole_yen(value) is None for value in payouts.values())):
+        return False
+    row.update(winners=sorted(payouts), payouts={k: _whole_yen(v) for k, v in payouts.items()},
+               refunded=sorted(refunded), result_complete=True, payout_pending=False, closed=True,
+               result_sync_source='nexus_page_snapshot',
+               result_sync_captured_at=snapshot['captured_at'])
+    # Keep original result/source receipts intact; record correction provenance
+    # separately, using only the observed capture time (never the repair time).
+    if snapshot.get('sha256'):
+        row['result_sync_source_sha256'] = snapshot['sha256']
+    if snapshot.get('url'):
+        row['result_sync_source_url'] = snapshot['url']
+    row.setdefault('result_captured_at', snapshot['captured_at'])
+    row['results_updated_at'] = _latest_stamp([row.get('results_updated_at'), snapshot['captured_at']])
+    _settle_saved(row)
+    return True
 
 
 def _write(path, content):
@@ -294,6 +372,11 @@ def sync_latest_results(outputs_dir=None):
             order.append(race_id)
         stamps.append(result.get('result_observed_at_jst'))
         _apply_result(rows[race_id], outcome)
+    summary['explicit_source_results'] = 0
+    for row in rows.values():
+        if _apply_saved_outcome(outputs, row):
+            summary['explicit_source_results'] += 1
+            stamps.append(row.get('results_updated_at'))
     summary['updated_races'] = sum(row != before_results.get(race_id) for race_id, row in rows.items())
     live['races'] = [rows[race_id] for race_id in order]
     updated = _latest_stamp(stamps)

@@ -69,6 +69,99 @@ def now_jst():
     return datetime.now(ZoneInfo('Asia/Tokyo'))
 
 
+def saved_outcome_evidence(root, item):
+    """Read explicit winners/withdrawals from an already captured same-race page."""
+    try:
+        rid, day = str(item['race_id']), str(item['date'])
+        number = int(float(item['race_no']))
+        if (not re.fullmatch(r'\d{12}', rid) or rid[4:] != day.replace('-', '')
+                or int(rid[:2]) != number):
+            return None
+        snap = read_json(root/'data/raw/nexus_page_snapshots'/day/'outcomes'/(rid+'.json'), {})
+        if not isinstance(snap, dict):
+            return None
+        meta, data = snap['meta'], snap['data']
+        if not isinstance(meta, dict) or not isinstance(data, dict):
+            return None
+        race, schedule = data['race'], data['schedule']
+        if not isinstance(race, dict) or not isinstance(schedule, dict):
+            return None
+        if (snap.get('schema') != 1 or snap.get('source_kind') != 'existing_public_page_response'
+                or str(meta.get('race_id')) != rid or str(race.get('id')) != rid
+                or meta.get('date') != day or str(schedule.get('date')) != rid[4:]
+                or meta.get('race_number') != number or race.get('number') != number):
+            return None
+        captured = datetime.fromisoformat(snap['captured_at'])
+        if captured.tzinfo is None:
+            return None
+        entries = data.get('entries', [])
+        declared = race.get('entriesNumber')
+        if (type(declared) is not int or not 3 <= declared <= 9
+                or not isinstance(entries, list) or len(entries) != declared
+                or any(not isinstance(e, dict) or str(e.get('raceId')) != rid
+                       or type(e.get('number')) is not int or type(e.get('absent')) is not bool
+                       for e in entries)
+                or sorted(e['number'] for e in entries) != list(range(1, declared+1))):
+            return None
+        cancelled = sorted(str(e['number']) for e in entries if e['absent'])
+        wins = data.get('trifectaWinningOddsIds') or []
+        payouts = {}
+        if (not isinstance(wins, list) or any(not isinstance(w, str) for w in wins)
+                or len(wins) != len(set(wins))):
+            return None
+        for quote in data.get('trifecta', []):
+            if not isinstance(quote, dict):
+                return None
+            if quote.get('id') not in wins:
+                continue
+            key, price = quote.get('key', []), finite(quote.get('payoffUnitPrice'))
+            if (str(quote.get('raceId')) != rid or quote.get('absent') is True
+                    or not isinstance(key, list) or len(key) != 3 or len(set(key)) != 3
+                    or any(type(c) is not int or not 1 <= c <= declared for c in key)
+                    or set(map(str, key)) & set(cancelled)
+                    or price is None or price <= 0 or not price.is_integer()):
+                return None
+            buy = '-'.join(map(str, key))
+            if buy in payouts:
+                return None
+            payouts[buy] = int(price)
+        outcome = None
+        if race.get('decidedAt') and wins and len(payouts) == len(wins):
+            outcome = dict(winning_buys=sorted(payouts), payouts=payouts, payout_complete=True,
+                           source_url=snap.get('url', ''), result_source='winticket',
+                           source_observed_at=captured.isoformat(), decided_at=race['decidedAt'],
+                           evidence='existing_public_page_response')
+        return dict(cancelled_cars=cancelled, outcome=outcome)
+    except (ValueError, TypeError, KeyError, OSError):
+        return None
+
+
+def apply_result_evidence(row, result, evidence=None, csv_cancelled=()):
+    """Keep frozen bets intact and never turn refunded combinations into hits."""
+    cancelled = set(map(str, row.get('cancelled_cars', []))) | set(map(str, csv_cancelled))
+    if evidence:
+        cancelled.update(evidence['cancelled_cars'])
+    row['cancelled_cars'] = sorted(cancelled)
+    previous = row.get('budget_official_outcome') or {}
+    trusted_previous = previous if previous.get('evidence') == 'existing_public_page_response' else None
+    outcome = (evidence or {}).get('outcome') or trusted_previous or normalize_outcome(result or {})
+    if outcome:
+        outcome = dict(outcome)
+        winners = [t for t in outcome['winning_buys'] if not set(t.split('-')) & cancelled]
+        outcome['winning_buys'] = winners
+        outcome['payouts'] = {t: outcome['payouts'][t] for t in winners if t in outcome['payouts']}
+        outcome['payout_complete'] = bool(winners) and outcome.get('payout_complete', False) and set(outcome['payouts']) == set(winners)
+        row['actual'], row['payouts'] = winners, outcome['payouts']
+        row['budget_official_outcome'] = outcome
+        row['result_observed_at_jst'] = outcome.get('source_observed_at')
+    elif result:
+        row['actual'], row['payouts'] = [], {}
+        row['budget_official_outcome'] = None
+    if 'budget' in row:
+        row['budget_settlement'] = settle_budget(row['budget'], row['top12'],
+                                                row.get('budget_official_outcome'), row['cancelled_cars'])
+
+
 def run(root=ROOT, predict_new=True, clock=now_jst, model_loader=load_model, predictor=chain.predict,
         odds_loader=capture_budget_odds):
     now = clock()
@@ -171,20 +264,9 @@ def run(root=ROOT, predict_new=True, clock=now_jst, model_loader=load_model, pre
             # silently replace an earlier allocation with a new market quote.
             save_ledger(root/LEDGER, rows)
     for rid, row in rows.items():
-        if rid in results:
-            outcome = normalize_outcome(results[rid])
-            row['actual'] = outcome['winning_buys'] if outcome else []
-            row['payouts'] = outcome['payouts'] if outcome else {}
-            row['result_observed_at_jst'] = results[rid].get('result_observed_at_jst')
-        if rid in fields:
-            row['cancelled_cars'] = sorted({c for raw in fields[rid].get('cancelled_car_numbers', [])
-                                            for c in re.findall('[1-9]', str(raw))})
-        if 'budget' in row:
-            if rid in results:
-                row['budget_official_outcome'] = normalize_outcome(results[rid])
-            row['budget_settlement'] = settle_budget(
-                row['budget'], row['top12'], row.get('budget_official_outcome'),
-                row.get('cancelled_cars', []))
+        csv_cancelled = {c for raw in fields[rid].get('cancelled_car_numbers', [])
+                         for c in re.findall('[1-9]', str(raw))} if rid in fields else set()
+        apply_result_evidence(row, results.get(rid), saved_outcome_evidence(root, row), csv_cancelled)
         metadata.setdefault(rid, row)
     save_ledger(root/LEDGER, rows)
     # The feed always includes every scheduled race, including missing forecasts.
