@@ -8,6 +8,8 @@ on:
       - '.github/workflows/intraday.yml'
       - 'src/fetch_today_entries.py'
       - 'src/nexus_input_snapshots.py'
+      # An odds-dependent allocation change also needs a fresh collector cycle.
+      - 'src/conditional_budget_near_close.py'
   schedule:
     # Every 15 minutes from 07:00 through 23:59 JST.
     - cron: "0,15,30,45 0-14,22-23 * * *"
