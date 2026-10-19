@@ -1,4 +1,4 @@
-import sys,unittest,itertools,json
+import sys,unittest,itertools,json,hashlib
 from pathlib import Path
 from fractions import Fraction
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'src'))
@@ -28,6 +28,9 @@ class Contract(unittest.TestCase):
     def test_input_and_model_portability_receipts(self):
         self.assertTrue(json.loads((ROOT/'models/nexus53/portability_check.json').read_text())['passed'])
         self.assertTrue(all(not r['differences'] for r in json.loads((ROOT/'models/nexus53/input_adapter_check.json').read_text())))
+        folder=ROOT/'models/nexus53'
+        for name,record in json.loads((folder/'manifest.json').read_text(encoding='utf-8'))['assets'].items():
+            self.assertEqual(hashlib.sha256((folder/name).read_bytes()).hexdigest(),record['sha'],name)
     def test_today_history_rejected(self):
         h=inputs.History();h.data['through']='2026-10-19'
         with self.assertRaisesRegex(ValueError,'before race day'):inputs.build(h,{},dict(date='2026-10-19'))
