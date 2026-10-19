@@ -24,7 +24,8 @@ function renderStats(rows){
   const clean=rows.map(r=>effectivePrediction(r)?r:{...r,prediction:null});
   $('#stats').innerHTML=['flat',budget].map((mode,i)=>{
     const a=C.totals(clean,mode);
-    return `<div class="stat-card"><div class="stat-label">${i?moneyTitle():'1点100円'} · 確定成績</div><div class="stat-row"><div class="metric"><b>${pct(a.hitRate)}</b><span>的中率 · ${a.hits}/${a.settled}レース</span></div><div class="metric"><b>${pct(a.roi)}</b><span>回収率</span></div></div><div class="stat-profit ${a.profit>=0?'positive':'negative'}">収支 ${profit(a.profit)}</div><p>購入 ${yen(a.stake)} ／ 払戻 ${yen(a.returned)}${a.refund?' ／ 返還 '+yen(a.refund):''}<br>結果待ち ${a.pending} · 配分なし ${a.unavailable} · 予想なし ${a.unpredicted} · 全返還 ${a.void}</p></div>`;
+    const breakdown=`<p>購入 ${yen(a.stake)} ／ 払戻 ${yen(a.returned)}${a.refund?' ／ 返還 '+yen(a.refund):''}<br>結果待ち ${a.pending} · 配分なし ${a.unavailable} · 予想なし ${a.unpredicted} · 全返還 ${a.void}</p>`;
+    return `<div class="stat-card"><div class="stat-label">${i?moneyTitle():'1点100円'} · 確定成績</div><div class="stat-row"><div class="metric"><b>${pct(a.hitRate)}</b><span>的中率 · ${a.hits}/${a.settled}レース</span></div><div class="metric"><b>${pct(a.roi)}</b><span>回収率</span></div></div><div class="stat-profit ${a.profit>=0?'positive':'negative'}">収支 ${profit(a.profit)}</div>${tab==='results'?`<details class="stat-breakdown"><summary>購入・払戻と対象件数</summary>${breakdown}</details>`:breakdown}</div>`;
   }).join('');
 }
 function allocationNote(p,a){
@@ -83,8 +84,7 @@ function render(){
   $('#races').innerHTML=rows.length?groups.map(([k,rr])=>`${session==='all'?`<h3 class="session-heading">${esc(sessions[k]||'時間帯未確認')} <small>${rr.length}レース</small></h3>`:''}${rr.map(raceHTML).join('')}`).join(''):`<div class="empty">${tab==='results'&&resultFilter==='confirmed'?'この条件の公式結果はまだありません。取得後にここへ表示します。':tab==='results'&&resultFilter==='pending'?'この条件で結果待ちのレースはありません。':'この条件のレースはありません。'}</div>`;
   $('#list-title').textContent=tab==='results'?'レース結果':'これからのレース';$('#race-count').textContent=rows.length+'レース';
   const stale=Date.now()-Date.parse(data.updated_at)>30*60000;
-  const resultStale=finished.length>confirmed&&(!resultAt||Date.now()-Date.parse(resultAt)>30*60000);
-  const note=[data.notice,tab==='results'?resultStale?'未取得のレースは「結果待ち」で確認できます。公式結果の取得後に着順・払戻と成績を反映します。':'':stale?'予想・オッズの取得から30分以上経過しています。最新オッズ・欠場をご確認ください。':''].filter(Boolean).join(' ');$('#status-note').classList.toggle('hidden',!note);$('#status-note').textContent=note;
+  const note=[data.notice,tab!=='results'&&stale?'予想・オッズの取得から30分以上経過しています。最新オッズ・欠場をご確認ください。':''].filter(Boolean).join(' ');$('#status-note').classList.toggle('hidden',!note);$('#status-note').textContent=note;
   $('#updated').innerHTML=`<span>予想 ${esc(shortStamp(data.updated_at))}</span><span>結果 ${esc(shortStamp(resultAt))}</span>`;
   $('#model-view').innerHTML=modelHTML();
   $('#prev-day').disabled=$('#date').selectedIndex<=0;$('#next-day').disabled=$('#date').selectedIndex>=$('#date').options.length-1;
@@ -96,7 +96,7 @@ $('#races').addEventListener('click',async e=>{
   if(button.dataset.amounts){const a=C.allocation(p,budget);if(!a)return;text+=`\n\n金額配分・計${yen(a.budget)}\n`+C.amountGroups(a.stakes).map(g=>`各${yen(g.amount)}（${g.count}点）\n`+g.blocks.map(x=>`${x.first.join('・')} → ${x.second.join('・')} → ${x.third.join('・')}`).join('\n')).join('\n')+`\nオッズ取得 ${stamp(p.odds_at)}\n最低払戻見込み ${yen(a.minimum_return)}`;}
   try{await navigator.clipboard.writeText(text);toast('フォーメーションをコピーしました');}catch{toast('コピーできませんでした。表示を選択してコピーしてください。');}
 });
-function selectTab(next,updateUrl=true){tab=['forecast','results','model'].includes(next)?next:'forecast';$$('[data-tab]').forEach(x=>{x.classList.toggle('active',x.dataset.tab===tab);x.setAttribute('aria-pressed',String(x.dataset.tab===tab));});if(updateUrl&&location.hash!=='#'+tab)location.hash=tab;render();}
+function selectTab(next,updateUrl=true){tab=['forecast','results','model'].includes(next)?next:'forecast';document.body.classList.toggle('results-mode',tab==='results');$$('[data-tab]').forEach(x=>{x.classList.toggle('active',x.dataset.tab===tab);x.setAttribute('aria-pressed',String(x.dataset.tab===tab));});if(updateUrl&&location.hash!=='#'+tab)location.hash=tab;render();}
 $$('[data-tab]').forEach(b=>b.addEventListener('click',()=>selectTab(b.dataset.tab)));
 window.addEventListener('hashchange',()=>selectTab(location.hash.slice(1),false));
 $$('[data-result-filter]').forEach(b=>b.addEventListener('click',()=>{resultFilter=b.dataset.resultFilter;render();}));
