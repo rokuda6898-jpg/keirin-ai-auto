@@ -21,15 +21,15 @@ class DepartmentPublicationTests(unittest.TestCase):
             self.assertNotIn('独立予想', text)
             self.assertIn('会社の最終予想', text)
             self.assertIn('all_department_predictions.html', text)
-            self.assertIn('site-wide.js?v=20261011-retirement', text)
+            self.assertIn('site-wide.js?v=20261019-forecast', text)
             apply_retirement(root)
             self.assertEqual(text, (root/'company.html').read_text(encoding='utf-8'))
 
-    def test_detail_publication_is_triggered_only_by_successful_main_forecasts(self):
+    def test_selected_model_publication_preserves_visible_incomplete_coverage(self):
         workflow = (ROOT/'.github/workflows/pages.yml').read_text(encoding='utf-8')
-        self.assertIn("workflows: ['daily-keirin-predict', 'intraday-keirin-odds']", workflow)
+        self.assertIn("workflows: ['conditional-trifecta-live']", workflow)
         self.assertIn("github.event.workflow_run.head_branch == 'main'", workflow)
-        self.assertIn("github.event.workflow_run.conclusion == 'success'", workflow)
+        self.assertIn("contains(fromJSON('[\"success\", \"failure\"]'), github.event.workflow_run.conclusion)", workflow)
         self.assertIn('ref: main', workflow)
         self.assertIn('PUBLISHED_FORECAST_SNAPSHOT', workflow)
         self.assertIn('company/all_department_predictions.json', workflow)
