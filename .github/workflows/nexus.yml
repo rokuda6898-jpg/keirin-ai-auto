@@ -3,57 +3,28 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['src/nexus_model/**', 'src/nexus_publish.py', 'models/nexus53/**', '.github/workflows/nexus.yml']
-  schedule:
-    - cron: '3,23,43 * * * *'
+    paths: ['src/nexus_model/**', 'src/nexus_publish.py', 'models/nexus53/**', 'tests/test_nexus.py', '.github/workflows/nexus.yml']
 permissions:
-  contents: write
+  contents: read
 concurrency:
-  group: nexus-formation-publish
+  group: nexus-formation-verify
   cancel-in-progress: false
 jobs:
-  publish:
+  verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: main
-          fetch-depth: 1
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: pip
       - run: pip install numpy==2.4.2 lightgbm==4.7.0 requests
-      - uses: actions/cache@v4
-        with:
-          path: data/nexus/sources
-          key: nexus-sources-${{ github.run_id }}
-          restore-keys: nexus-sources-
-      - name: Validate formation and money contracts
+      - name: Validate formation, money and exact model assets
         run: python -m unittest discover -s tests -p 'test_nexus*.py'
-      - name: Predict before close and settle saved forecasts
-        run: python src/nexus_publish.py
-      - name: Save forecast and history checkpoints
-        if: always()
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -f outputs/nexus_live.json outputs/nexus_forecasts data/nexus/history.json.gz data/nexus/run_status.json 2>/dev/null || true
-          if ! git diff --cached --quiet; then
-            git commit -m 'Update formation forecasts and settled results'
-            for attempt in 1 2 3; do
-              git pull --rebase origin main && git push origin HEAD:main && break
-              if [ "$attempt" = 3 ]; then exit 1; fi
-              sleep 3
-            done
-          fi
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: nexus-publication-record
-          path: |
-            data/nexus/run_status.json
-            outputs/nexus_live.json
-            outputs/nexus_forecasts
-          retention-days: 30
+      - name: Load the saved model without accessing the restricted data source
+        env:
+          PYTHONPATH: src
+        run: python -c "from nexus_model.engine import Engine; print('Loaded',len(Engine('models/nexus53').models),'verified models')"
+# Data collection and publishing run on the owner's existing local PC.
+# The source rejects overseas CI; no proxy or access-restriction bypass is used.

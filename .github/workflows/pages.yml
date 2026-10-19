@@ -2,7 +2,7 @@ name: deploy-pages
 on:
   push:
     branches: [main]
-    paths: ['site/**', 'src/build_public_site.py', 'src/site_retirement.py', '.github/workflows/pages.yml']
+    paths: ['site/**', 'outputs/nexus_live.json', 'src/build_public_site.py', 'src/site_retirement.py', '.github/workflows/pages.yml']
   workflow_dispatch:
   workflow_run:
     workflows: ['conditional-trifecta-live', 'nexus-formation-publish']

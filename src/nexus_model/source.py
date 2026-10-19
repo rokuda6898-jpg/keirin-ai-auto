@@ -14,12 +14,12 @@ def fetch(url):
         if wait:time.sleep(wait)
         try:
             r=requests.get(url,headers={'User-Agent':'Mozilla/5.0 (compatible; keirin-ai-auto/1.0)'},timeout=25)
-            if r.status_code in (401,403):r.raise_for_status()
+            if r.status_code in (401,403,477):r.raise_for_status()
             if r.status_code==429 or r.status_code>=500:
                 if attempt<3:time.sleep(min(30,2**attempt+1));continue
             r.raise_for_status();return r.content
         except requests.HTTPError as e:
-            if e.response.status_code in (401,403) or attempt==3:raise
+            if e.response.status_code in (401,403,477) or attempt==3:raise
         except requests.RequestException:
             if attempt==3:raise
             time.sleep(2**attempt)

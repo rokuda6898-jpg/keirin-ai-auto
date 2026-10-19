@@ -4,6 +4,7 @@ const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const yen=x=>x==null?'—':Math.round(x).toLocaleString('ja-JP')+'円',pct=x=>x==null?'—':(x*100).toFixed(2)+'％';
 const cats={FAVORITE:'本命',MAIN:'本線',MEDIUM:'中穴',HIGH:'大穴'},sessions={morning:'モーニング',day:'デイ',night:'ナイト',midnight:'ミッドナイト'};
 let data=null,tab='forecast',session='all',budget=5000;
+const isClosed=r=>r.closed||Boolean(r.close_at&&Date.now()>=Date.parse(r.close_at));
 const car=n=>`<span class="car c${Number(n)}">${Number(n)}</span>`;
 function renderStats(rows){
   $('#stats').innerHTML=['flat',String(budget)].map((mode,index)=>{
@@ -13,7 +14,7 @@ function renderStats(rows){
   }).join('');
 }
 function raceHTML(r){
-  const p=r.prediction,al=p?.allocations?.[budget],ss=r.settlement,status=r.cancelled?'中止・返還':ss?'結果確定':r.closed?'締切済み':'受付中';
+  const p=r.prediction,al=p?.allocations?.[budget],ss=r.settlement,status=r.cancelled?'中止・返還':ss?'結果確定':isClosed(r)?'締切済み':'受付中';
   const time=r.start_at?new Date(r.start_at).toLocaleTimeString('ja-JP',{timeZone:'Asia/Tokyo',hour:'2-digit',minute:'2-digit'}):'時刻未確認';
   const close=r.close_at?new Date(r.close_at).toLocaleTimeString('ja-JP',{timeZone:'Asia/Tokyo',hour:'2-digit',minute:'2-digit'}):'—';
   const head=`<div class="race-head"><div><div class="venue-title">${esc(r.venue)}<span class="race-number">${Number(r.race_no)}R</span></div><div class="race-meta">${esc(r.class_name)} ${esc(r.stage)} · ${esc(sessions[r.session]||'時間帯未確認')}</div></div><div class="time"><b>${time}</b><span>${status} · 締切 ${close}</span></div></div>`;
@@ -31,12 +32,12 @@ function raceHTML(r){
 function render(){
   if(!data)return;$('#race-view').classList.toggle('hidden',tab==='model');$('#model-view').classList.toggle('hidden',tab!=='model');
   const day=$('#date').value;let rows=(data.races||[]).filter(r=>r.date===day&&(session==='all'||r.session===session));renderStats(rows);
-  if(tab==='results')rows=rows.filter(r=>r.closed||r.settlement||r.cancelled);
-  else if(day===data.date)rows=rows.filter(r=>!r.closed&&!r.cancelled);
+  if(tab==='results')rows=rows.filter(r=>isClosed(r)||r.settlement||r.cancelled);
+  else if(day===data.date)rows=rows.filter(r=>!isClosed(r)&&!r.cancelled);
   rows.sort((a,b)=>(a.start_at||'').localeCompare(b.start_at||'')||a.race_id.localeCompare(b.race_id));
   $('#races').innerHTML=rows.length?rows.map(raceHTML).join(''):'<div class="empty">この条件のレースはありません。</div>';
   $('#list-title').textContent=tab==='results'?'結果一覧':'レース一覧';$('#race-count').textContent=rows.length+'レース';
-  $('#status-note').classList.toggle('hidden',!data.notice);$('#status-note').textContent=data.notice||'';
+  const stale=Date.now()-Date.parse(data.updated_at)>30*60000;const note=[data.notice,stale?'更新から30分以上経過しています。オッズ・欠場・結果の最新情報を確認してください。':''].filter(Boolean).join(' ');$('#status-note').classList.toggle('hidden',!note);$('#status-note').textContent=note;
   const h=data.model?.historical||{};
   $('#model-view').innerHTML=`<div class="research"><div class="eyebrow">採用済み / COMPLETE FORMATION</div><h2>隊列・役割フォーメーション</h2><p>レースごとに1〜3着の候補を評価して、最大4本のフォーメーションを組みます。1・2着を固定する前提は置いていません。</p><div class="stat-row"><div class="metric"><b>${pct(h.hit_rate)}</b><span>過去検証の的中率</span></div><div class="metric"><b>${pct(h.roi)}</b><span>各100円の回収率</span></div><div class="metric"><b>${Number(h.races||0).toLocaleString()}</b><span>検証レース数</span></div></div><p>学習：2023/10/9〜2025/10/8<br>検証：2025/10/9〜2026/10/8（繰り返し研究に使用した期間）</p><ul><li>本命6点・本線15点・中穴15点・大穴24点。全組み合わせを維持。</li><li>開催場、隊列、先頭・番手などの役割、強さ、過去の戦法、時間帯、14・30・90日の調子を評価。</li><li>予想印は選手評価の目安です。実際の買い目はフォーメーションを確認してください。</li></ul><p>上の数字は過去検証です。公開後の成績は「結果・成績」に分けて表示します。回収率は100％を下回っており、利益や的中を保証するモデルではありません。</p><details><summary>データと集計の注意点</summary><p>当日の結果・確定オッズは予想入力に使いません。欠測は埋めず、過去の出走表や開催場形状には取得時点の限界があります。返還は的中率から除外。配分成績は締切前にオッズと金額を保存できたレースのみ集計します。</p></details></div>`;
   $$('.copy').forEach(b=>b.addEventListener('click',async()=>{const r=data.races.find(x=>x.race_id===b.dataset.copy),p=r.prediction;const text=`${r.date} ${r.venue} ${r.race_no}R 3連単 ${p.count}点\n`+p.blocks.map(x=>`${x.first.join('・')} → ${x.second.join('・')} → ${x.third.join('・')}`).join('\n');try{await navigator.clipboard.writeText(text);toast('フォーメーションをコピーしました');}catch{toast('コピーできませんでした。買い目を選択してコピーしてください。');}}));
@@ -54,4 +55,6 @@ async function load(){
   if(!data){$('#races').innerHTML='<div class="empty">予想データを読み込めませんでした。しばらくしてから再読み込みしてください。</div>';$('#updated').textContent='通信を確認してください';return;}
   const dates=[...new Set([...(data.races||[]).map(r=>r.date),data.date].filter(Boolean))].sort();$('#date').innerHTML=dates.map(d=>`<option value="${esc(d)}">${esc(d.replaceAll('-','/'))}</option>`).join('');$('#date').value=data.date||dates.at(-1);$('#updated').textContent='更新 '+new Date(data.updated_at).toLocaleString('ja-JP',{timeZone:'Asia/Tokyo',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});render();
 }
+$('#refresh').addEventListener('click',load);
+setInterval(render,60000);
 load();
