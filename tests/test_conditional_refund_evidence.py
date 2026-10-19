@@ -52,7 +52,9 @@ class ConditionalRefundEvidenceTests(unittest.TestCase):
         self.tickets = refunds[:12]
         plan = allocate(self.tickets, {t: '100' for t in self.tickets}, budget=5000)
         plan['version'] = RANGE_VERSION
+        close = datetime.fromisoformat('2026-10-19T17:30:00+09:00').timestamp()
         self.row = dict(race_id=self.rid, date='2026-10-19', race_no='8',
+                        close_at=close,
                         snapshot_at_jst='2026-10-19T07:00:00+09:00',
                         top12=self.tickets, probabilities=[.025]*12,
                         budget=plan, cancelled_cars=[], actual=refunds+['9-1-2'])
@@ -60,15 +62,17 @@ class ConditionalRefundEvidenceTests(unittest.TestCase):
                            actual_trifecta_buys=refunds+['9-1-2'],
                            payouts_trifecta_json={**{t: 100 for t in refunds}, '9-1-2': 3120},
                            result_observed_at_jst='2026-10-19T23:00:00+09:00')
-        quotes = [dict(id=f'{self.rid}:2:'+t.replace('-', '.'), raceId=self.rid,
-                       key=[int(c) for c in t.split('-')], payoffUnitPrice=100, absent=True)
-                  for t in refunds]
-        quotes.append(dict(id=f'{self.rid}:2:9.1.2', raceId=self.rid,
-                           key=[9, 1, 2], payoffUnitPrice=3120, absent=False))
+        quotes = [dict(id=f'{self.rid}:2:'+'.'.join(map(str, key)), raceId=self.rid,
+                       key=list(key), unitPrice=100,
+                       payoffUnitPrice=3120 if key == (9, 1, 2) else 100 if 3 in key else 0,
+                       absent=3 in key) for key in itertools.permutations(range(1, 10), 3)]
         self.snapshot = dict(schema=1, source_kind='existing_public_page_response',
+            sha256='a'*64,
             captured_at='2026-10-19T18:00:00+09:00', url='https://example.invalid/recorded-page',
-            meta=dict(race_id=self.rid, date='2026-10-19', race_number=8),
-            data=dict(race=dict(id=self.rid, number=8, entriesNumber=9, decidedAt=1792380000),
+            meta=dict(race_id=self.rid, date='2026-10-19', race_number=8, venue_id='27',
+                      cancel=False, close_at=close),
+            data=dict(race=dict(id=self.rid, number=8, entriesNumber=9, closeAt=close, cancel=False,
+                               decidedAt=close+900),
                       schedule=dict(date='20261019'),
                       entries=[dict(raceId=self.rid, number=c, absent=c == 3) for c in range(1, 10)],
                       trifectaWinningOddsIds=[f'{self.rid}:2:9.1.2'], trifectaPayoffStatus=1,

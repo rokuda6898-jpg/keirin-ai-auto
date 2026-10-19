@@ -1,5 +1,6 @@
 import csv
 from copy import deepcopy
+from datetime import datetime
 from itertools import permutations
 import json
 from pathlib import Path
@@ -288,15 +289,18 @@ class NexusResultSync(unittest.TestCase):
     def test_explicit_keio_winner_excludes_all_car3_refunds_despite_compact_timestamp(self):
         # Nine-car 京王閣8R: 168 refunded permutations involving car 3.
         rid = '082720261019'
+        close_epoch = datetime.fromisoformat(CLOSE).timestamp()
         quotes = [dict(id=rid+':2:'+'.'.join(map(str, key)), raceId=rid, key=list(key),
+                       unitPrice=100,
                        absent=3 in key, payoffUnitPrice=3120 if key == (9, 1, 2) else 100 if 3 in key else 0)
                   for key in permutations(range(1, 10), 3)]
         refunds = ['-'.join(map(str, q['key'])) for q in quotes if q['absent']]
         snap = dict(schema=1, source_kind='existing_public_page_response', captured_at=OBSERVED,
-                    sha256='explicit-source-sha', url='https://example.test/keio8',
-                    meta=dict(race_id=rid, date=DAY, venue_id='27', race_number=8),
+                    sha256='a'*64, url='https://example.test/keio8',
+                    meta=dict(race_id=rid, date=DAY, venue_id='27', race_number=8,
+                              close_at=close_epoch, cancel=False),
                     data=dict(race=dict(id=rid, number=8, entriesNumber=9, cancel=False,
-                                        decidedAt=1792379100), schedule=dict(date='20261019'),
+                                        closeAt=close_epoch, decidedAt=close_epoch+300), schedule=dict(date='20261019'),
                               entries=[dict(number=c, raceId=rid, absent=c == 3) for c in range(1, 10)],
                               trifecta=quotes, trifectaWinningOddsIds=[rid+':2:9.1.2'], trifectaPayoffStatus=1))
         raw_path = self.outputs.parent / 'data/raw/nexus_page_snapshots' / DAY / 'outcomes' / (rid+'.json')

@@ -70,70 +70,9 @@ def now_jst():
 
 
 def saved_outcome_evidence(root, item):
-    """Read explicit winners/withdrawals from an already captured same-race page."""
-    try:
-        rid, day = str(item['race_id']), str(item['date'])
-        number = int(float(item['race_no']))
-        if (not re.fullmatch(r'\d{12}', rid) or rid[4:] != day.replace('-', '')
-                or int(rid[:2]) != number):
-            return None
-        snap = read_json(root/'data/raw/nexus_page_snapshots'/day/'outcomes'/(rid+'.json'), {})
-        if not isinstance(snap, dict):
-            return None
-        meta, data = snap['meta'], snap['data']
-        if not isinstance(meta, dict) or not isinstance(data, dict):
-            return None
-        race, schedule = data['race'], data['schedule']
-        if not isinstance(race, dict) or not isinstance(schedule, dict):
-            return None
-        if (snap.get('schema') != 1 or snap.get('source_kind') != 'existing_public_page_response'
-                or str(meta.get('race_id')) != rid or str(race.get('id')) != rid
-                or meta.get('date') != day or str(schedule.get('date')) != rid[4:]
-                or meta.get('race_number') != number or race.get('number') != number):
-            return None
-        captured = datetime.fromisoformat(snap['captured_at'])
-        if captured.tzinfo is None:
-            return None
-        entries = data.get('entries', [])
-        declared = race.get('entriesNumber')
-        if (type(declared) is not int or not 3 <= declared <= 9
-                or not isinstance(entries, list) or len(entries) != declared
-                or any(not isinstance(e, dict) or str(e.get('raceId')) != rid
-                       or type(e.get('number')) is not int or type(e.get('absent')) is not bool
-                       for e in entries)
-                or sorted(e['number'] for e in entries) != list(range(1, declared+1))):
-            return None
-        cancelled = sorted(str(e['number']) for e in entries if e['absent'])
-        wins = data.get('trifectaWinningOddsIds') or []
-        payouts = {}
-        if (not isinstance(wins, list) or any(not isinstance(w, str) for w in wins)
-                or len(wins) != len(set(wins))):
-            return None
-        for quote in data.get('trifecta', []):
-            if not isinstance(quote, dict):
-                return None
-            if quote.get('id') not in wins:
-                continue
-            key, price = quote.get('key', []), finite(quote.get('payoffUnitPrice'))
-            if (str(quote.get('raceId')) != rid or quote.get('absent') is True
-                    or not isinstance(key, list) or len(key) != 3 or len(set(key)) != 3
-                    or any(type(c) is not int or not 1 <= c <= declared for c in key)
-                    or set(map(str, key)) & set(cancelled)
-                    or price is None or price <= 0 or not price.is_integer()):
-                return None
-            buy = '-'.join(map(str, key))
-            if buy in payouts:
-                return None
-            payouts[buy] = int(price)
-        outcome = None
-        if race.get('decidedAt') and wins and len(payouts) == len(wins):
-            outcome = dict(winning_buys=sorted(payouts), payouts=payouts, payout_complete=True,
-                           source_url=snap.get('url', ''), result_source='winticket',
-                           source_observed_at=captured.isoformat(), decided_at=race['decidedAt'],
-                           evidence='existing_public_page_response')
-        return dict(cancelled_cars=cancelled, outcome=outcome)
-    except (ValueError, TypeError, KeyError, OSError):
-        return None
+    """Use the same saved-page payoff checks as Nexus and near-close stakes."""
+    from nexus_results_sync import read_saved_page_outcome
+    return read_saved_page_outcome(root, item)
 
 
 def apply_result_evidence(row, result, evidence=None, csv_cancelled=()):
@@ -144,7 +83,13 @@ def apply_result_evidence(row, result, evidence=None, csv_cancelled=()):
     row['cancelled_cars'] = sorted(cancelled)
     previous = row.get('budget_official_outcome') or {}
     trusted_previous = previous if previous.get('evidence') == 'existing_public_page_response' else None
-    outcome = (evidence or {}).get('outcome') or trusted_previous or normalize_outcome(result or {})
+    explicit = [o for o in ((evidence or {}).get('outcome'), trusted_previous) if o]
+    def observed(value):
+        try:
+            return datetime.fromisoformat(value.get('source_observed_at', '')).timestamp()
+        except (TypeError, ValueError):
+            return float('-inf')
+    outcome = max(explicit, key=observed) if explicit else normalize_outcome(result or {})
     if outcome:
         outcome = dict(outcome)
         winners = [t for t in outcome['winning_buys'] if not set(t.split('-')) & cancelled]

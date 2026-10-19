@@ -13,6 +13,7 @@ from fractions import Fraction
 import json
 import os
 from pathlib import Path
+import re
 import tempfile
 
 from official_outcomes import normalize_outcome
@@ -234,70 +235,145 @@ def _apply_result(row, outcome):
         row.pop('settlement_unavailable_reason', None)
 
 
+def _strict_timestamp(value):
+    """Recorded page evidence must not rely on an assumed timezone."""
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        return _timestamp(value) if value > 0 else None
+    try:
+        parsed = datetime.fromisoformat(str(value).replace('Z', '+00:00'))
+        return parsed if parsed.tzinfo else None
+    except (TypeError, ValueError):
+        return None
+
+
+def read_saved_page_outcome(root, row):
+    """Verify a saved official payoff, including when decidedAt is still zero.
+
+    This reads only an existing same-race outcome capture. A completed payoff
+    status, explicit winning IDs and complete ticket/refund evidence certify
+    the result; odds and predicted finishing orders are never used.
+    """
+    try:
+        race_id, day = str(row.get('race_id', '')), _date(row)
+        number = _whole_yen(row.get('race_no'))
+        close = _strict_timestamp(row.get('close_at'))
+        if (not day or row.get('date') != day or not re.fullmatch(r'\d{12}', race_id)
+                or race_id[4:] != day.replace('-', '') or number != int(race_id[:2])
+                or close is None or close.astimezone(JST).date().isoformat() != day):
+            return None
+        path = Path(root) / 'data/raw/nexus_page_snapshots' / day / 'outcomes' / (race_id + '.json')
+        if not path.exists():
+            return None
+        snapshot = _read(path)
+        if not isinstance(snapshot, dict):
+            return None
+        data, meta = snapshot.get('data'), snapshot.get('meta')
+        if not isinstance(data, dict) or not isinstance(meta, dict):
+            return None
+        race, schedule = data.get('race'), data.get('schedule')
+        if not isinstance(race, dict) or not isinstance(schedule, dict):
+            return None
+        captured = _strict_timestamp(snapshot.get('captured_at'))
+        decided = _strict_timestamp(race.get('decidedAt')) if race.get('decidedAt') else None
+        if (type(snapshot.get('schema')) is not int or snapshot['schema'] != 1
+                or snapshot.get('source_kind') != 'existing_public_page_response'
+                or str(meta.get('race_id')) != race_id or str(race.get('id')) != race_id
+                or meta.get('date') != day or str(schedule.get('date')) != race_id[4:]
+                or str(meta.get('venue_id')).zfill(2) != race_id[2:4]
+                or meta.get('race_number') != number or race.get('number') != number
+                or _strict_timestamp(meta.get('close_at')) != close
+                or _strict_timestamp(race.get('closeAt')) != close
+                or captured is None or captured <= close
+                or (race.get('decidedAt') and (decided is None or not close < decided <= captured))
+                or race.get('cancel') is not False or meta.get('cancel') is not False
+                or type(data.get('trifectaPayoffStatus')) is not int or data['trifectaPayoffStatus'] != 1
+                or not re.fullmatch(r'[a-f0-9]{64}', str(snapshot.get('sha256', '')))
+                or not isinstance(snapshot.get('url'), str) or not snapshot['url']):
+            return None
+        entries, quotes = data.get('entries'), data.get('trifecta')
+        count = race.get('entriesNumber')
+        if (type(count) is not int or not 3 <= count <= 9
+                or not isinstance(entries, list) or len(entries) != count
+                or any(not isinstance(e, dict) or type(e.get('number')) is not int
+                       or type(e.get('absent')) is not bool or str(e.get('raceId')) != race_id for e in entries)
+                or sorted(e['number'] for e in entries) != list(range(1, count + 1))
+                or not isinstance(quotes, list) or len(quotes) != count * (count - 1) * (count - 2)):
+            return None
+        cancelled = {e['number'] for e in entries if e['absent']}
+        keys, ids = set(), set()
+        for quote in quotes:
+            if not isinstance(quote, dict):
+                return None
+            key = quote.get('key')
+            if (not isinstance(key, list) or len(key) != 3
+                    or any(type(c) is not int or not 1 <= c <= count for c in key)
+                    or len(set(key)) != 3 or tuple(key) in keys
+                    or quote.get('id') != race_id + ':2:' + '.'.join(map(str, key))
+                    or quote['id'] in ids or str(quote.get('raceId')) != race_id
+                    or quote.get('unitPrice') != 100 or type(quote.get('absent')) is not bool
+                    or quote['absent'] != bool(cancelled.intersection(key))):
+                return None
+            keys.add(tuple(key))
+            ids.add(quote['id'])
+        winning_ids = data.get('trifectaWinningOddsIds')
+        if (not isinstance(winning_ids, list) or not winning_ids
+                or any(not isinstance(w, str) for w in winning_ids)
+                or len(set(winning_ids)) != len(winning_ids) or not set(winning_ids).issubset(ids)):
+            return None
+        payouts, refunded = {}, []
+        for quote in quotes:
+            ticket = '-'.join(map(str, quote['key']))
+            price = _whole_yen(quote.get('payoffUnitPrice'))
+            if quote['id'] in winning_ids:
+                if quote['absent'] or price is None:
+                    return None
+                payouts[ticket] = price
+            elif quote['absent']:
+                if price != 100:
+                    return None
+                refunded.append(ticket)
+            elif quote.get('payoffUnitPrice') != 0:
+                # An unlisted positive payoff could be an omitted dead-heat
+                # winner. Never reconstruct a result by guessing from prices.
+                return None
+        outcome = dict(winning_buys=sorted(payouts), payouts=payouts, payout_complete=True,
+                       source_url=snapshot['url'], result_source='winticket',
+                       source_observed_at=snapshot['captured_at'], decided_at=race.get('decidedAt') or None,
+                       evidence='existing_public_page_response')
+        return dict(outcome=outcome, cancelled_cars=sorted(map(str, cancelled)),
+                    refunded=sorted(refunded), captured_at=snapshot['captured_at'],
+                    source_sha256=snapshot['sha256'], source_url=snapshot['url'])
+    except (ValueError, TypeError, KeyError, OSError):
+        return None
+
+
 def _apply_saved_outcome(outputs, row):
     """Prefer a complete, identity-checked original result over compact rows."""
-    race_id, day = str(row.get('race_id', '')), _date(row)
-    if (not day or len(race_id) != 12 or not race_id.isdigit()
-            or race_id[4:] != day.replace('-', '') or row.get('refund_all') or row.get('cancelled')):
+    if row.get('refund_all') or row.get('cancelled'):
         return False
-    path = outputs.parent / 'data/raw/nexus_page_snapshots' / day / 'outcomes' / (race_id + '.json')
-    if not path.exists():
+    evidence = read_saved_page_outcome(outputs.parent, row)
+    if not evidence:
         return False
-    snapshot = _read(path)
-    if not isinstance(snapshot, dict):
-        return False
-    data, meta = snapshot.get('data', {}), snapshot.get('meta', {})
-    race, schedule = data.get('race', {}), data.get('schedule', {})
-    captured = _timestamp(snapshot.get('captured_at'))
-    decided = _timestamp(race.get('decidedAt')) if race.get('decidedAt') else None
-    if (snapshot.get('schema') != 1 or snapshot.get('source_kind') != 'existing_public_page_response'
-            or str(meta.get('race_id')) != race_id or str(race.get('id')) != race_id
-            or meta.get('date') != day or str(schedule.get('date')) != race_id[4:]
-            or str(meta.get('venue_id')).zfill(2) != race_id[2:4]
-            or meta.get('race_number') != int(race_id[:2]) or race.get('number') != int(race_id[:2])
-            or not captured or not decided or captured < decided
-            or data.get('trifectaPayoffStatus') != 1):
-        return False
+    captured = _strict_timestamp(evidence['captured_at'])
     old_capture = _timestamp(row.get('result_sync_captured_at'))
     if row.get('result_sync_source') == 'nexus_page_snapshot' and old_capture and captured < old_capture:
         return False
-    entries, quotes = data.get('entries', []), data.get('trifecta', [])
-    count = race.get('entriesNumber')
-    if (type(count) is not int or not 3 <= count <= 9 or len(entries) != count
-            or any(not isinstance(e, dict) or type(e.get('number')) is not int
-                   or type(e.get('absent')) is not bool or str(e.get('raceId')) != race_id for e in entries)
-            or sorted(e['number'] for e in entries) != list(range(1, count + 1))
-            or len(quotes) != count * (count - 1) * (count - 2)):
+    outcome = evidence['outcome']
+    refunded = set(row.get('refunded', ())) | set(evidence['refunded'])
+    if refunded.intersection(outcome['winning_buys']):
         return False
-    keys, ids = set(), set()
-    for quote in quotes:
-        key = quote.get('key', [])
-        if (not isinstance(key, list) or len(key) != 3 or any(type(c) is not int or not 1 <= c <= count for c in key)
-                or len(set(key)) != 3 or tuple(key) in keys or quote.get('id') in ids
-                or type(quote.get('absent')) is not bool or str(quote.get('raceId')) != race_id):
-            return False
-        keys.add(tuple(key))
-        ids.add(quote.get('id'))
-    winning_ids = data.get('trifectaWinningOddsIds')
-    if not isinstance(winning_ids, list) or not winning_ids or not set(winning_ids).issubset(ids):
-        return False
-    from nexus_model.source import outcomes
-    payouts, refunded, refund_all, complete = outcomes(data)
-    if (not complete or refund_all or set(payouts).intersection(refunded)
-            or any(_whole_yen(value) is None for value in payouts.values())):
-        return False
-    row.update(winners=sorted(payouts), payouts={k: _whole_yen(v) for k, v in payouts.items()},
+    row.update(winners=outcome['winning_buys'], payouts=outcome['payouts'],
                refunded=sorted(refunded), result_complete=True, payout_pending=False, closed=True,
                result_sync_source='nexus_page_snapshot',
-               result_sync_captured_at=snapshot['captured_at'])
+               result_sync_captured_at=evidence['captured_at'])
     # Keep original result/source receipts intact; record correction provenance
     # separately, using only the observed capture time (never the repair time).
-    if snapshot.get('sha256'):
-        row['result_sync_source_sha256'] = snapshot['sha256']
-    if snapshot.get('url'):
-        row['result_sync_source_url'] = snapshot['url']
-    row.setdefault('result_captured_at', snapshot['captured_at'])
-    row['results_updated_at'] = _latest_stamp([row.get('results_updated_at'), snapshot['captured_at']])
+    row['result_sync_source_sha256'] = evidence['source_sha256']
+    row['result_sync_source_url'] = evidence['source_url']
+    row.setdefault('result_captured_at', evidence['captured_at'])
+    row['results_updated_at'] = _latest_stamp([row.get('results_updated_at'), evidence['captured_at']])
     _settle_saved(row)
     return True
 
@@ -337,6 +413,12 @@ def sync_latest_results(outputs_dir=None):
     rows = {str(row['race_id']): deepcopy(row) for row in live['races']}
     order = list(rows)
     dates = {day for row in [*rows.values(), *results] if isinstance(row, dict) and (day := _date(row))}
+    # A new day's compact feed can omit an older unfinished race. Its existing
+    # ledger and already captured official page remain sufficient to settle it.
+    for path in (outputs / 'nexus_forecasts').glob('????-??-??.json'):
+        if (_date({'date': path.stem}) and
+                (outputs.parent / 'data/raw/nexus_page_snapshots' / path.stem / 'outcomes').is_dir()):
+            dates.add(path.stem)
     originals = {}
     for day in sorted(dates):
         path = outputs / 'nexus_forecasts' / (day + '.json')

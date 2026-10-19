@@ -13,6 +13,7 @@ from pathlib import Path
 
 from conditional_budget import allocate, check_saved_plan, number, settle
 from nexus_input_snapshots import ROOT, JST, SNAPSHOTS, now_jst, read_json, save_json, timestamp
+from nexus_results_sync import read_saved_page_outcome
 from official_outcomes import normalize_outcome
 
 FEED = Path("outputs/conditional_near_close.json")
@@ -129,23 +130,22 @@ def _quotes(snapshot, row, current):
     return quotes, captured
 
 
-def _settlements(row, original, result, nexus=None):
-    if _refund(original) or _refund(result) or _refund(nexus):
+def _settlements(row, original, result, nexus=None, evidence=None):
+    if _refund(original) or _refund(result) or _refund(nexus) or _refund(evidence):
         row["refund_pending"] = True
-    outcome = normalize_outcome(result or {})
-    if not outcome and original:
-        outcome = original.get("budget_official_outcome")
-    previous = row.get("official_outcome")
-    if outcome:
-        # Never downgrade a complete payoff, or replace it by an older result.
+    candidates = [o for o in (row.get("official_outcome"), (evidence or {}).get("outcome"),
+                  (original or {}).get("budget_official_outcome"), normalize_outcome(result or {})) if o]
+    if candidates:
+        # Prefer explicit official payoff IDs over compact results, including
+        # after a day rollover. Preserve a complete/newer accepted payoff.
         def rank(value):
             try:
                 observed = timestamp(value.get("source_observed_at", "")).timestamp()
             except (ValueError, TypeError):
                 observed = float("-inf")
-            return bool(value.get("payout_complete")), observed
-        if not previous or rank(outcome) > rank(previous):
-            row["official_outcome"] = copy.deepcopy(outcome)
+            return (bool(value.get("payout_complete")),
+                    value.get("evidence") == "existing_public_page_response", observed)
+        row["official_outcome"] = copy.deepcopy(max(candidates, key=rank))
     for plan_key, settlement_key in (("initial_budget", "initial_budget_settlement"),
                                       ("budget", "budget_settlement")):
         plan = row.get(plan_key)
@@ -262,7 +262,9 @@ def run(root=ROOT, clock=now_jst):
                                source_sha256=snapshot["sha256"])
                 except (ValueError, TypeError, KeyError, OSError) as exc:
                     row["reason"] = str(exc)[:240]
-        _settlements(row, original, result, nexus)
+        evidence = read_saved_page_outcome(root, dict(race_id=rid, date=row["date"],
+                      race_no=row["number"], close_at=row["close_at"]))
+        _settlements(row, original, result, nexus, evidence)
     payload["races"] = list(rows.values())
     _write(root, payload, _now(clock))
     gate_publication(root, baseline, clock=clock, lead_seconds=0)
