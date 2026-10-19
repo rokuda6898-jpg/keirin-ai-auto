@@ -218,11 +218,15 @@ def actual_buy_sets(top3, bracket_by_car):
 
 def parse_result_page(url):
     html = http_get(url)
+    nexus_captured_at = datetime.now(ZoneInfo("Asia/Tokyo")).isoformat()
     state = extract_preloaded_state(html)
     race_data = find_query_data(state, "FETCH_KEIRIN_RACE")
     odds_data = find_query_data(state, "FETCH_KEIRIN_RACE_ODDS")
     if not race_data:
         raise ValueError(f"race data not found: {url}")
+
+    from nexus_input_snapshots import capture_existing_page
+    capture_existing_page(state, url, html, nexus_captured_at)
 
     race = race_data["race"]
     race_id = str(race["id"])

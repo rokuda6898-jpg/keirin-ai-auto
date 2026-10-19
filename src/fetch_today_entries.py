@@ -270,10 +270,16 @@ def parse_race_page(url, completeness_attempts=5, completeness_retry_sec=5.0, ma
     last_incomplete = None
     for completeness_attempt in range(max(int(completeness_attempts), 1)):
         html = http_get(url)
+        nexus_captured_at = datetime.now(ZoneInfo("Asia/Tokyo")).isoformat()
         state = extract_preloaded_state(html)
         race_data = find_query_data(state, "FETCH_KEIRIN_RACE")
         if not race_data:
             raise ValueError(f"race data not found: {url}")
+
+        # Reuse this successful response before CSV conversion and unrelated
+        # market verification. The capture helper performs no HTTP requests.
+        from nexus_input_snapshots import capture_existing_page
+        capture_existing_page(state, url, html, nexus_captured_at)
 
         schedule = race_data["schedule"]
         race = race_data["race"]
@@ -497,7 +503,14 @@ def fetch_today_entries(race_date=None, max_races=None, sleep_sec=0.2):
     ensure_dirs()
     race_date = race_date or datetime.now(ZoneInfo("Asia/Tokyo")).strftime("%Y-%m-%d")
     index_html = http_get(RACECARD_URL)
+    nexus_index_captured_at = datetime.now(ZoneInfo("Asia/Tokyo")).isoformat()
     links = collect_race_links(index_html, race_date)
+    if links:
+        try:
+            from nexus_input_snapshots import capture_expected_schedule
+            capture_expected_schedule(links, race_date, nexus_index_captured_at)
+        except Exception as exc:
+            print(f"::warning::NEXUS schedule index capture failed: {type(exc).__name__}: {exc}", flush=True)
     if max_races:
         links = links[:max_races]
     if not links:
@@ -557,6 +570,11 @@ def fetch_today_entries(race_date=None, max_races=None, sleep_sec=0.2):
     schedule = entries_df[schedule_columns].drop_duplicates("race_id").sort_values(["date", "close_at", "venue", "race_no"])
     schedule["schedule_fetched_at_jst"] = datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(timespec="seconds")
     schedule.to_csv(RACE_SCHEDULE_CSV, index=False)
+    from nexus_input_snapshots import capture_schedule
+    try:
+        capture_schedule(schedule.to_dict("records"), datetime.now(ZoneInfo("Asia/Tokyo")).isoformat())
+    except Exception as exc:
+        print(f"::warning::NEXUS schedule capture failed: {type(exc).__name__}: {exc}", flush=True)
 
     metadata = {
         "source": "WINTICKET racecard",
@@ -586,3 +604,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

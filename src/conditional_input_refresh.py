@@ -40,10 +40,14 @@ def fetch_racecard_only(url, completeness_attempts=1):
     must not block on three unrelated providers or dirty shared market reports.
     Completeness failures remain explicit and are retried on the next run.
     """
-    state = extract_preloaded_state(http_get(url, attempts=2))
+    html = http_get(url, attempts=2)
+    nexus_captured_at = now_jst().isoformat()
+    state = extract_preloaded_state(html)
     data = find_query_data(state, "FETCH_KEIRIN_RACE")
     if not data:
         raise ValueError("race data not found")
+    from nexus_input_snapshots import capture_existing_page
+    capture_existing_page(state, url, html, nexus_captured_at)
     schedule, race = data["schedule"], data["race"]
     raw_entries = data.get("entries", []) or []
     declared = int(race.get("entriesNumber") or len(raw_entries) or 0)
@@ -183,3 +187,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 import lightgbm as lgb
 from . import base,team,role,v2,optimizer,pair,open_formation
+from .forecast_confidence import from_joint
 
 class Engine:
     def __init__(self,root):
@@ -49,5 +50,6 @@ class Engine:
         marks={cars[j]:'◎○▲△☆'[k] if k<5 else '' for k,j in enumerate(order)}
         return dict(model_id=spec['id'],policy_id=plan['policy_id'],plan_changed=plan['plan_changed'],search=plan['search'],category=cat,count=cap,blocks=plan['blocks'],tickets=['-'.join(map(str,t)) for t in tickets],
             marks=marks,band_probabilities=dict(zip(['MAIN','MEDIUM','HIGH'],team.three(pp).tolist())),
-            first_probabilities={c:float(cube[j].sum()) for j,c in enumerate(cars)},q=q.tolist())
+            first_probabilities={c:float(cube[j].sum()) for j,c in enumerate(cars)},q=q.tolist(),
+            confidence=from_joint(cars,q,tickets))
 

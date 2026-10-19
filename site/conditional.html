@@ -1,2 +1,51 @@
 <!doctype html>
-<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#102822"><meta http-equiv="refresh" content="0;url=./index.html"><title>KEIRIN NEXUS｜条件付き3連単・予想と結果</title><link rel="stylesheet" href="forecast.css?v=20261019"><script>location.replace('./index.html'+location.search+(location.hash==='#budget-panel'?'#results':location.hash));</script></head><body><main><section class="page-heading"><div><p class="eyebrow">KEIRIN NEXUS</p><h1>条件付き3連単・予想と結果</h1><p><a href="./index.html">予想印・フォーメーション・購入額を見る →</a></p></div></section></main></body></html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#102822">
+  <meta name="description" content="競輪の予想印、3連単フォーメーション、100円均等と予算配分、結果・的中率・回収率をまとめて確認。">
+  <title>条件付き3連単｜KEIRIN NEXUS</title>
+  <link rel="stylesheet" href="site-wide.css?v=20261019">
+  <link rel="stylesheet" href="forecast.css?v=20261019-conditional-restored">
+</head>
+<body class="forecast-page conditional-page">
+  <a class="skip-link" href="#main">本文へ</a>
+  <header class="app-header">
+    <a class="brand" href="./" aria-label="KEIRIN NEXUS ホーム"><span class="brand-monogram">N</span><span>KEIRIN<strong>NEXUS</strong></span></a>
+    <nav aria-label="メインメニュー"><a href="index.html#forecast">NEXUS予想</a><a href="conditional.html#forecast" aria-current="page">条件付き3連単</a><a href="index.html#results">NEXUS結果</a><a href="company.html">会社・全部署</a><a href="archive.html">保管庫</a></nav>
+  </header>
+  <main id="main">
+    <section class="page-heading">
+      <div><p class="eyebrow">CONDITIONAL TRIFECTA / 12 PICKS</p><h1>条件付き3連単</h1><p class="lead">全開催・全レースの上位12点。予想印とフォーメーション、100円買いと予算配分を確認。</p></div>
+      <div class="update-control"><span>データ更新 <strong id="updated">読み込み中</strong><small>日本時間</small></span><button type="button" id="refresh" class="quiet-button">↻ 更新</button></div>
+    </section>
+    <p id="notice" class="notice" role="status" aria-live="polite">予想データを読み込んでいます。</p>
+    <button id="next-race" type="button" class="next-race" hidden><span class="next-label"><span class="live-dot"></span>次の発走</span><strong id="next-race-name"></strong><span id="next-race-time"></span><b aria-hidden="true">→</b></button>
+    <section class="finder" aria-label="レースを選ぶ">
+      <div class="finder-top">
+        <div class="view-tabs" role="tablist" aria-label="予想と結果"><button id="forecast-tab" role="tab" aria-selected="true" aria-controls="race-area" data-view="forecast" type="button">予想を見る</button><button id="results-tab" role="tab" aria-selected="false" aria-controls="race-area" data-view="results" type="button">結果・成績</button></div>
+        <div class="date-picker"><button id="previous-day" type="button" aria-label="前の開催日">‹</button><label for="day" class="sr-only">開催日</label><select id="day" aria-label="開催日"></select><button id="next-day" type="button" aria-label="次の開催日">›</button></div>
+      </div>
+      <div id="band-tabs" class="band-tabs" role="group" aria-label="開催時間帯"></div>
+      <div id="venue-tabs" class="venue-tabs" role="group" aria-label="開催場"></div>
+    </section>
+    <section class="performance" aria-labelledby="performance-heading">
+      <div class="section-heading"><h2 id="performance-heading">選択中の成績</h2><span id="performance-scope"></span></div>
+      <div id="performance-cards" class="performance-cards"></div>
+      <p class="stat-note">精算済みの仮想購入を集計。結果待ち・精算保留は別表示。回収率＝払戻÷投資。</p>
+    </section>
+    <section id="race-area" tabindex="-1" aria-labelledby="race-heading">
+      <div class="section-heading race-section-heading"><h2 id="race-heading">開催レース</h2><span id="race-count"></span></div>
+      <div id="races"></div>
+      <button type="button" id="load-more" class="load-more" hidden>さらに結果を表示</button>
+    </section>
+    <details id="model-details" class="model-details"><summary>使用モデル・成績の見方</summary><div id="model-information"><h3>条件付き3連単・上位12点</h3><p>1着に応じた2着、その1・2着に応じた3着を評価して、上位12点を選ぶ既存モデルです。全開催・全レースを予想対象とし、選手の予想印と買い目を保存しています。</p><p>保存した同じ買い目を、各点100円と予算5,000〜10,000円の配分で比較します。配分は保存済みの金額を表示し、結果確定後は公式払戻で精算します。NEXUSの隊列・役割モデルとは別の予想・成績として確認できます。</p></div><p>自信度は予想時点のモデル支持度で、S（65％以上）・A（45％以上）・B（45％未満）の3段階を表示します。支持度は選んだ12点へのモデル評価の合計です。確定成績の的中率は上の集計欄で確認できます。元の指標が保存されていない予想は「B・参考／未評価」と表示します。</p><p>的中率＝的中レース数÷精算済みレース数。回収率＝払戻額÷投資額。配分版は配分が成立したレースだけが対象なので、各点100円版と母数が異なります。</p><p>フォーメーションは行ごとに購入してください。同じ車番の重複を除き、各行の点数を合計すると保存した買い目と一致します。</p><p>配分時のオッズで元本以上の想定払戻になる額を保存します。その後のオッズ下落により、的中しても購入額を下回る場合があります。旧記録の1万円配分は保存時の金額で表示します。</p><p><a href="conditional-study.html">条件付き3連単の過去検証 →</a>　<a href="index.html#model">NEXUS採用モデル →</a></p></details>
+    <noscript><p class="empty-state">予想表示にはJavaScriptを有効にしてください。</p></noscript>
+    <footer><strong>KEIRIN NEXUS</strong><p>締切前の予想・配分を保存し、公式結果で検証。実投票を行う機能はありません。</p><nav aria-label="関連する予想"><a href="index.html#forecast">NEXUS予想</a> · <a href="index.html#results">NEXUS結果・成績</a> · <a href="company.html">会社・全部署</a> · <a href="archive.html">過去レース保管庫</a></nav></footer>
+  </main>
+  <script src="forecast-math.js?v=20261019"></script>
+  <script src="forecast.js?v=20261019-conditional-restored"></script>
+  <script src="site-wide.js?v=20261019" data-root="./"></script>
+</body>
+</html>

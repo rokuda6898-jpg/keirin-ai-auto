@@ -36,7 +36,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r requirements.txt numpy==2.4.2 lightgbm==4.7.0
 
       - name: Restore real pre-race learning snapshots
         uses: actions/cache/restore@v4
@@ -176,6 +176,14 @@ jobs:
           else
             echo "KEIRIN_TODAY_CSV_URL is configured; skip WINTICKET fetch"
           fi
+
+      - name: Publish NEXUS from original source snapshots before legacy model work
+        id: nexus_early
+        if: always()
+        continue-on-error: true
+        env:
+          OMP_NUM_THREADS: '2'
+        run: python src/nexus_publish_saved_inputs.py --publish
 
       - name: Freeze morning raw feed before enrichment
         run: python src/live_snapshot_store.py --capture-raw
@@ -317,3 +325,4 @@ jobs:
 
       - name: Verify every upcoming race has a frozen company forecast
         run: python src/coverage_refresh.py --verify
+

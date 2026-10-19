@@ -20,6 +20,7 @@ from fixed_year_study import input_reason
 from official_outcomes import normalize_outcome
 from public_live import finite, forecast_view, frozen, read_csv, read_json
 from conditional_input_refresh import valid_race
+from nexus_model.forecast_confidence import annotate_conditional_view
 from conditional_budget import (freeze as freeze_budget, settle as settle_budget,
                                 MIN_BUDGET, BUDGET, UNIT, RANGE_VERSION)
 from conditional_budget_odds import capture as capture_budget_odds
@@ -193,6 +194,7 @@ def run(root=ROOT, predict_new=True, clock=now_jst, model_loader=load_model, pre
         outcome = normalize_outcome(results.get(rid, {}))
         view = forecast_view(row)
         if view:
+            annotate_conditional_view(view, row)
             view['note'] = '条件付き3連単：1着に応じた2着、その1・2着に応じた3着を評価。'
         cancelled = row.get('cancelled_cars', []) if row else []
         cancelled_set = set(map(str, cancelled))
@@ -246,3 +248,4 @@ if __name__ == '__main__':
     print(json.dumps(report['coverage'], ensure_ascii=False))
     if missing:
         raise SystemExit('Upcoming forecasts missing: '+', '.join(missing))
+

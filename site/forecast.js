@@ -100,7 +100,14 @@
       held: held.length, skipped: states.filter(s => s.status === 'skipped').length,
       unavailable: states.filter(s => ['missing', 'unavailable'].includes(s.status)).length};
   }
-  const API = {tickets, allocation, baseSettlement, allocatedSettlement, aggregate, meetingBands, normalizeBand, officialResults};
+  function confidence(r) {
+    if (!tickets(r).length) return null;
+    const c = r.shadow?.confidence;
+    if (c?.status === 'assessed' && c.policy_id === 'selected-mass-v1'
+      && ['S', 'A', 'B'].includes(c.grade) && isNumber(c.model_mass) && c.model_mass >= 0 && c.model_mass <= 1) return c;
+    return {grade: 'B', status: 'insufficient', model_mass: null, reason: 'モデル支持度の保存がないため未評価'};
+  }
+  const API = {tickets, allocation, baseSettlement, allocatedSettlement, aggregate, meetingBands, normalizeBand, officialResults, confidence};
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   if (typeof document === 'undefined') return;
   window.ForecastUI = API;
@@ -108,8 +115,16 @@
   const el = (tag, text, cls) => {const n = document.createElement(tag); if (text !== undefined && text !== null) n.textContent = text; if (cls) n.className = cls; return n;};
   const car = c => {const n = el('span', String(c), 'car c' + String(c)); n.setAttribute('aria-label', String(c) + '番'); return n;};
   const badge = status => el('span', LABELS[status] || '確認中', 'status ' + status);
+  function confidenceBadge(r, compact = false) {
+    const c = confidence(r); if (!c) return null;
+    const assessed = c.status === 'assessed';
+    const text = '自信度 ' + c.grade + (assessed ? '' : '・参考');
+    const b = el(compact ? 'em' : 'span', text, 'forecast-confidence grade-' + c.grade + (compact ? ' compact' : '') + (assessed ? '' : ' unassessed'));
+    const explanation = assessed ? '予想時点のモデル支持度 ' + percent(c.model_mass) + 'を3段階にした参考評価。的中率は確定成績を参照。' : 'モデル支持度の保存がないため未評価。';
+    b.title = text + '。' + explanation; b.setAttribute('aria-label', b.title); return b;
+  }
   const moneyClass = n => n > 0 ? 'profit-positive' : n < 0 ? 'profit-negative' : '';
-  const state = {data: null, bands: new Map(), date: '', band: 'all', venue: 'all', view: location.hash === '#results' ? 'results' : 'forecast', active: new Map(), expanded: new Set(), limit: 30, dates: [], loading: false, lastError: false};
+  const state = {data: null, bands: new Map(), date: '', band: 'all', venue: 'all', view: ['#results', '#budget-panel'].includes(location.hash) ? 'results' : 'forecast', active: new Map(), expanded: new Set(), limit: 30, dates: [], loading: false, lastError: false};
   const filtered = (includeVenue = true, includeBand = true) => (state.data?.races || []).filter(r => (state.date === 'all' || r.date === state.date) && (!includeBand || state.band === 'all' || state.bands.get(bandKey(r)) === state.band) && (!includeVenue || state.venue === 'all' || r.venue === state.venue));
   function exactFormations(r, weighted) {
     const buys = tickets(r);
@@ -154,7 +169,7 @@
     const total = weighted ? (list ? r.budget.total_stake_yen : null) : selected.length ? selected.length * 100 : null;
     const section = el('section', null, 'purchase-card ' + (weighted ? 'allocated' : 'uniform'));
     const header = el('div', null, 'purchase-header'), heading = el('div');
-    heading.append(el('h6', weighted ? 'B 予算配分' : 'A 各点100円'), el('strong', yen(total)));
+    heading.append(el('h6', weighted ? '予算配分' : '各点100円'), el('strong', yen(total)));
     header.append(heading, el('p', weighted ? '予算5,000〜10,000円 · 同じ' + selected.length + '点' : selected.length + '点 × 100円 · 均等購入'));
     section.append(header);
     if (!selected.length) {
@@ -188,7 +203,9 @@
   function raceContent(r) {
     const box = el('div', null, 'race-content'); box.dataset.raceId = r.id;
     const title = el('div', null, 'race-title'), heading = el('h4', r.venue + ' ' + r.number + 'R');
-    heading.append(el('small', '発走 ' + time(r.start_at) + ' / 締切 ' + time(r.close_at))); title.append(heading, badge(baseSettlement(r).status)); box.append(title);
+    heading.append(el('small', '発走 ' + time(r.start_at) + ' / 締切 ' + time(r.close_at))); title.append(heading);
+    const confidenceMark = confidenceBadge(r); if (confidenceMark) title.append(confidenceMark);
+    title.append(badge(baseSettlement(r).status)); box.append(title);
     const rh = el('div', null, 'rider-heading'); rh.append(el('h5', '出走選手・予想印'), el('span', (r.riders || []).length + '名 · ◎ ○ ▲ △ ☆')); box.append(rh);
     const grid = el('div', null, 'rider-grid'), marks = riderMarks(r), withdrawn = new Set((r.cancelled_cars || []).map(String));
     for (const rider of [...(r.riders || [])].sort((a, b) => Number(a.car) - Number(b.car))) {
@@ -212,6 +229,8 @@
     }
     const meta = el('details', null, 'race-meta'); meta.append(el('summary', '予想保存 ' + stamp(r.shadow?.snapshot_at) + ' · 配分・保存時刻の詳細'));
     meta.append(el('p', '予想：条件付き3連単・上位' + tickets(r).length + '点。'));
+    const c = confidence(r);
+    if (c) meta.append(el('p', '自信度 ' + c.grade + (c.status === 'assessed' ? ' · 予想時点のモデル支持度 ' + percent(c.model_mass) + '。S/A/Bは買い目の支持度を示す参考評価です。' : '・参考 · モデル支持度未保存のため未評価。')));
     if (r.budget?.odds_captured_at_jst) meta.append(el('p', (r.budget.odds_basis === 'initial_allocation_after_forecast' ? '初回配分時オッズ ' : '予想時オッズ ') + stamp(r.budget.odds_captured_at_jst)));
     if (r.budget?.allocation_frozen_at_jst) meta.append(el('p', '配分保存 ' + stamp(r.budget.allocation_frozen_at_jst)));
     meta.append(el('p', '配分後のオッズ下落で、的中しても購入額を下回る場合があります。')); box.append(meta);
@@ -219,7 +238,7 @@
   }
   function performanceCard(races, weighted) {
     const s = aggregate(races, weighted ? 'allocated' : 'uniform'), card = el('article', null, 'performance-card ' + (weighted ? 'allocated' : 'uniform'));
-    const h = el('h3'); h.append(el('span', weighted ? 'B' : 'A', 'variant-index'), document.createTextNode(weighted ? '予算配分の成績' : '各点100円の成績')); card.append(h);
+    const h = el('h3'); h.append(el('span', weighted ? '配' : '均', 'variant-index'), document.createTextNode(weighted ? '予算配分の成績' : '各点100円の成績')); card.append(h);
     const rates = el('div', null, 'metric-rates');
     for (const [label, value, note] of [['的中率', percent(s.hitRate), s.hits + ' / ' + s.settled + 'R'], ['回収率', percent(s.roi), '精算済み ' + s.settled + 'R']]) {
       const d = el('div'); d.append(el('span', label), el('strong', value), el('small', note)); rates.append(d);
@@ -264,7 +283,9 @@
     const contentId = 'race-panel-' + group[0].id;
     for (const r of group) {
       const status = baseSettlement(r).status, b = el('button'); b.type = 'button'; b.dataset.race = r.id; b.id = 'race-tab-' + r.id; b.setAttribute('role', 'tab'); b.setAttribute('aria-controls', contentId); b.setAttribute('aria-selected', String(r.id === active.id)); b.tabIndex = r.id === active.id ? 0 : -1; b.dataset.status = status;
-      b.append(el('strong', r.number + 'R'), el('small', time(r.start_at)), el('span', LABELS[status] || '確認中')); tabs.append(b);
+      b.append(el('strong', r.number + 'R'), el('small', time(r.start_at)), el('span', LABELS[status] || '確認中'));
+      const confidenceMark = confidenceBadge(r, true); if (confidenceMark) b.append(confidenceMark);
+      tabs.append(b);
     }
     section.append(tabs);
     const content = raceContent(active); content.id = contentId; content.setAttribute('role', 'tabpanel'); content.setAttribute('aria-labelledby', 'race-tab-' + active.id); section.append(content);
@@ -285,7 +306,7 @@
   }
   function resultAmount(r, weighted) {
     const s = weighted ? allocatedSettlement(r) : baseSettlement(r), box = el('div', null, 'result-amount');
-    box.append(el('small', weighted ? 'B 予算配分' : 'A 各点100円'));
+    box.append(el('small', weighted ? '予算配分' : '各点100円'));
     const row = el('div'); row.append(badge(s.status), el('strong', s.net === null ? '—' : profit(s.net), moneyClass(s.net))); box.append(row);
     box.append(el('span', s.paid === null ? ['before', 'pending', 'held'].includes(s.status) ? '払戻未確定' : '購入記録なし' : '投資 ' + yen(s.invested) + ' / 払戻 ' + yen(s.paid)));
     return box;
@@ -301,6 +322,7 @@
       const item = el('details', null, 'result-item'); item.dataset.raceId = r.id;
       const summary = el('summary'), label = el('div', null, 'result-race-label');
       label.append(el('strong', r.venue + ' ' + r.number + 'R'), el('small', dayLabel(r.date) + ' ' + time(r.start_at) + ' · ' + bandLabel(state.bands.get(bandKey(r)))));
+      const confidenceMark = confidenceBadge(r, true); if (confidenceMark) label.append(confidenceMark);
       const finishes = officialResults(r);
       if (finishes.length) label.append(el('small', '着順 ' + finishes.map(b => b.replaceAll('-', '→')).join(' / '), 'result-finish'));
       summary.append(label, resultAmount(r, false), resultAmount(r, true)); item.append(summary);
@@ -412,7 +434,7 @@
   });
   window.addEventListener('hashchange', () => {
     if (location.hash === '#model-details') {$('#model-details').open = true; return;}
-    const view = location.hash === '#results' ? 'results' : location.hash === '#forecast' ? 'forecast' : null;
+    const view = ['#results', '#budget-panel'].includes(location.hash) ? 'results' : location.hash === '#forecast' ? 'forecast' : null;
     if (view && view !== state.view) {state.view = view; state.limit = 30; render();}
   });
   if (location.hash === '#model-details') $('#model-details').open = true;

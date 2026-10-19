@@ -22,9 +22,9 @@ class AmountDisplayTests(unittest.TestCase):
     def test_ticket_amount_mapping_and_missing_states(self):
         if not shutil.which('node'):self.skipTest('Node unavailable')
         subprocess.run(['node',str(ROOT/'tests/test_conditional_budget_amounts.js')],check=True)
-    def test_main_forecast_assets_and_legacy_redirect(self):
+    def test_main_forecast_assets_and_conditional_page(self):
         html=(ROOT/'site/index.html').read_text(encoding='utf-8')
-        redirect=(ROOT/'site/conditional.html').read_text(encoding='utf-8')
+        conditional=(ROOT/'site/conditional.html').read_text(encoding='utf-8')
         assets=AssetLinks();assets.feed(html)
         self.assertIn('nexus.css',assets.styles)
         self.assertIn('nexus-core.js',assets.scripts)
@@ -37,9 +37,37 @@ class AmountDisplayTests(unittest.TestCase):
         self.assertIn('data-tab="results"',html)
         self.assertIn('data-tab="model"',html)
         self.assertIn('id="model-view"',html)
-        self.assertIn('location.replace',redirect)
-        self.assertIn('./index.html',redirect)
-        self.assertIn('条件付き3連単',redirect)
+        self.assertNotIn('location.replace',conditional)
+        self.assertNotIn('http-equiv="refresh"',conditional)
+        self.assertIn('条件付き3連単',conditional)
+        self.assertIn('index.html#forecast',conditional)
+        self.assertIn('index.html#results',conditional)
+        conditional_assets=AssetLinks();conditional_assets.feed(conditional)
+        self.assertIn('forecast.css',conditional_assets.styles)
+        self.assertIn('forecast-math.js',conditional_assets.scripts)
+        self.assertIn('forecast.js',conditional_assets.scripts)
+        self.assertLess(conditional_assets.scripts.index('forecast-math.js'),conditional_assets.scripts.index('forecast.js'))
+        for element in ('races','day','band-tabs','venue-tabs','performance-cards','model-details'):
+            self.assertEqual(conditional.count('id="'+element+'"'),1,element)
+    def test_conditional_confidence_uses_frozen_model_support(self):
+        if not shutil.which('node'):self.skipTest('Node unavailable')
+        script=r"""
+const assert=require('node:assert/strict');
+const ui=require('./site/forecast.js');
+const shadow={tickets:['1-2-3','1-3-2']};
+for(const [grade,mass] of [['S',.8],['A',.5],['B',.3]]) {
+ const row={shadow:{...shadow,confidence:{grade,status:'assessed',policy_id:'selected-mass-v1',model_mass:mass}}};
+ assert.equal(ui.confidence(row).grade,grade);
+ assert.equal(ui.confidence(row).model_mass,mass);
+ assert.equal(ui.confidence({...row,actual:['1-2-3'],payouts:{'1-2-3':100}}).grade,grade,'results cannot change the frozen grade');
+}
+assert.equal(ui.confidence({}),null,'a missing prediction has no grade');
+const unscored={shadow,budget:{snapshot_odds:{'1-2-3':1.1,'1-3-2':1.2}}};
+assert.equal(ui.confidence(unscored).grade,'B');
+assert.equal(ui.confidence(unscored).status,'insufficient','odds do not replace missing model scores');
+assert.equal(ui.confidence({shadow:{...shadow,confidence:{grade:'S',status:'assessed',policy_id:'selected-mass-v1',model_mass:null}}}).status,'insufficient');
+"""
+        subprocess.run(['node','-e',script],cwd=ROOT,check=True)
     def test_forecast_settlement_and_meeting_boundaries(self):
         if not shutil.which('node'):self.skipTest('Node unavailable')
         script=r"""

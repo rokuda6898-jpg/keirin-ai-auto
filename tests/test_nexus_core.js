@@ -32,4 +32,33 @@ const incomplete={prediction:{tickets:['1-2-3']},result_complete:false,winners:[
 assert.equal(C.settlement(incomplete,'flat'),null,'incomplete payouts cannot expose a premature settlement');
 assert.equal(C.totals([incomplete],'flat').settled,0);
 assert.equal(C.totals([incomplete],'flat').pending,1);
+// Every real forecast gets a grade; absent forecasts never get a fabricated one.
+assert.equal(C.confidence(null),null);
+assert.equal(C.confidence({tickets:[]}),null);
+assert.equal(C.confidence({tickets:['1-2-3']}).assessed,false);
+for(const [mass,grade]of [[0,'B'],[0.44999,'B'],[0.45,'A'],[0.65,'S'],[1,'S']]){
+  assert.equal(C.confidence({tickets:['1-2-3'],confidence:{status:'assessed',policy_id:'selected-mass-v1',model_mass:mass}}).grade,grade);
+}
+assert.equal(C.confidence({tickets:['1-2-3'],confidence:{status:'assessed',policy_id:'selected-mass-v1',model_mass:NaN,grade:'S'}}).assessed,false);
+const conditional={id:'r2',date:'2026-10-19',venue:'青森',number:2,start_at:1792366800,close_at:1792366500,shadow:{tickets:['1-2-3','2-1-3'],snapshot_at:'2026-10-19T07:00:00+09:00',marks:[{mark:'◎',car:'1'}],confidence:{grade:'S',status:'assessed',policy_id:'selected-mass-v1',model_mass:0.7}},budget:{status:'allocated',total_stake_yen:5000,minimum_payout_yen:6500,odds_captured_at_jst:'2026-10-19T07:01:00+09:00',allocation_frozen_at_jst:'2026-10-19T07:02:00+09:00',allocations:[{buy:'1-2-3',stake_yen:2500},{buy:'2-1-3',stake_yen:2500}]},actual:['1-2-3'],payouts:{'1-2-3':980}};
+const cp=C.conditionalPrediction(conditional);
+assert.deepEqual(C.expand(cp.blocks),[...conditional.shadow.tickets].sort());
+assert.deepEqual(C.allocation(cp,'auto').stakes,{'1-2-3':2500,'2-1-3':2500});
+assert.equal(C.confidence(cp).grade,'S');
+assert.equal(C.conditionalPrediction({...conditional,shadow:{...conditional.shadow,snapshot_at:'2026-10-20T07:00:00+09:00'}}),null,'post-close forecasts cannot become a fallback');
+assert.equal(C.allocation(C.conditionalPrediction({...conditional,budget:{...conditional.budget,allocation_frozen_at_jst:'2026-10-20T07:00:00+09:00'}}),'auto'),null,'post-close allocation is never displayed');
+assert.equal(C.allocation(C.conditionalPrediction({...conditional,budget:{...conditional.budget,allocations:[{buy:'1-2-3',stake_yen:2500},{buy:'1-2-3',stake_yen:2500}]}}),'auto'),null,'duplicate stakes must not get collapsed and accepted');
+const malformedBudget=C.conditionalPrediction({...conditional,budget:{...conditional.budget,allocations:[null,null]}});
+assert.deepEqual(malformedBudget.tickets,conditional.shadow.tickets,'malformed allocation must not remove the forecast');
+assert.equal(C.allocation(malformedBudget,'auto'),null);
+const mainRow={race_id:'r1',date:'2026-10-19',venue:'青森',race_no:1,session:'morning',prediction:{tickets:['3-2-1']},settlement:{flat:{hit:false,stake:100,returned:0}}};
+const merged=C.mergeForecastRows({date:'2026-10-19',races:[mainRow]},{schedule_date:'2026-10-19',races:[conditional]});
+assert.equal(merged.length,2);assert.equal(merged[1].session,'morning');
+assert.equal(merged[1].prediction,undefined,'conditional forecasts must stay out of primary predictions');
+assert.equal(C.totals(merged,'flat').settled,1);assert.equal(C.totals(merged,'flat').hits,0);assert.equal(C.totals(merged,'flat').stake,100);
+assert.equal(C.resultState(merged[1]),'confirmed');
+assert.equal(mainRow.conditional_prediction,undefined,'raw feed is not mutated');
+assert.equal(C.mergeForecastRows({date:'2026-10-19',races:[{...mainRow,race_id:'r2'}]},{races:[conditional]})[0].conditional_prediction,undefined,'identity mismatch cannot join a forecast');
+const annotatedFeed={...resultsFeed,confidence_updated_at:'2026-10-19T18:30:00+09:00'};
+assert.equal(C.latestFeed([resultsFeed,annotatedFeed]),annotatedFeed);
 console.log('Nexus UI: amount formations, flexible first place, settlement, allocation and feed freshness passed');

@@ -209,6 +209,11 @@ jobs:
           # Only publish generated artifacts. Central history is persisted by
           # the cache step above and must not block or race the live writers.
           git add models outputs || true
+          if [ -d data/raw/nexus_page_snapshots ]; then
+            git add -f -- data/raw/nexus_page_snapshots
+            mkdir -p /tmp/settle_nexus_saved_inputs/data/raw
+            cp -a data/raw/nexus_page_snapshots /tmp/settle_nexus_saved_inputs/data/raw/
+          fi
 
           if git diff --staged --quiet; then
             echo "no settlement changes to publish"
@@ -233,6 +238,20 @@ jobs:
             # -X ours must not discard concurrent frozen predictions/outcomes
             # or publish an aggregate built before those records arrived.
             python src/reconcile_position_experiment.py --ref origin/main
+
+            # Keep the freshest source capture if another collector ran while
+            # this result job was building its legacy reports.
+            if git cat-file -e origin/main:data/raw/nexus_page_snapshots 2>/dev/null; then
+              git restore --source=origin/main --staged --worktree -- data/raw/nexus_page_snapshots
+            fi
+            PYTHONPATH=src python - <<'PY'
+          from pathlib import Path
+          from nexus_publish_saved_inputs import copy_newer_inputs
+          copy_newer_inputs(Path('/tmp/settle_nexus_saved_inputs'), Path('.'))
+          PY
+            if [ -d data/raw/nexus_page_snapshots ]; then
+              git add -f -- data/raw/nexus_page_snapshots
+            fi
 
             # NEXUS forecasts can arrive from the owner's PC during settlement.
             # This job only changes their outcomes: restore the newest frozen

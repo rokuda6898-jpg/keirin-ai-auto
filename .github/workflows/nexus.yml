@@ -3,7 +3,10 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['src/nexus_model/**', 'src/nexus_publish.py', 'models/nexus53/**', 'tests/test_nexus*.py', '.github/workflows/nexus.yml']
+    paths: ['src/nexus_model/**', 'src/nexus_*.py', 'models/nexus53/**', 'tests/test_nexus*.py', '.github/workflows/nexus.yml']
+  workflow_run:
+    workflows: ['daily-keirin-predict', 'intraday-keirin-odds', 'quick-keirin-results', 'settle-keirin-results']
+    types: [completed]
 permissions:
   contents: read
 concurrency:
@@ -11,6 +14,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   verify:
+    if: github.event_name != 'workflow_run'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -26,5 +30,26 @@ jobs:
         env:
           PYTHONPATH: src
         run: python -c "from nexus_model.engine import Engine; print('Loaded',len(Engine('models/nexus53').models),'verified models')"
-# Data collection and publishing run on the owner's existing local PC.
-# The source rejects overseas CI; no proxy or access-restriction bypass is used.
+  publish-existing-inputs:
+    needs: verify
+    if: always() && ((github.event_name != 'workflow_run' && needs.verify.result == 'success') || (github.event_name == 'workflow_run' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.conclusion == 'success'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: pip install numpy==2.4.2 lightgbm==4.7.0 requests
+      - name: Publish only from responses already obtained by the existing collectors
+        env:
+          OMP_NUM_THREADS: '2'
+        run: python src/nexus_publish_saved_inputs.py --publish
+# The original source API is not called by CI. The owner's PC path remains
+# available; this job only consumes successful existing page-response captures.
