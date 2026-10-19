@@ -7,6 +7,7 @@ on:
     paths:
       - "src/settle_results.py"
       - "src/nexus_results_sync.py"
+      - "src/quick_results_retry.py"
       - "src/nexus_model/budget.py"
       - "src/official_outcomes.py"
       - "src/site_manager.py"
@@ -22,7 +23,7 @@ concurrency:
   # Keep rapid result refreshes independent from the shared repository-writer
   # queue. GitHub retains only one pending run per concurrency group, so sharing
   # that group can evict a waiting result refresh when settle/manager starts.
-  # Push races are handled safely below by clean-worktree + rebase retries.
+  # Push races reuse captured results against latest main without another fetch.
   group: keirin-quick-results-writer
   cancel-in-progress: true
 
@@ -33,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
       - uses: actions/setup-python@v5
         with:
@@ -87,6 +88,8 @@ jobs:
           PY
 
       - name: Publish result JSON immediately
+        env:
+          QUICK_RESULTS_CACHE: ${{ runner.temp }}/keirin-quick-results-${{ github.run_id }}-${{ github.run_attempt }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -102,6 +105,9 @@ jobs:
               fi
             done
           }
+          # Keep the source observations outside the runner checkout so a
+          # concurrent prediction update never makes us fetch every race again.
+          python src/quick_results_retry.py snapshot --cache "$QUICK_RESULTS_CACHE"
           stage_result_outputs
           git diff --cached --quiet && exit 0
           git commit -m "Quick refresh official keirin results"
@@ -114,37 +120,17 @@ jobs:
           git clean -fd
 
           for attempt in 1 2 3 4; do
-            git fetch origin main
+            git fetch --no-tags origin main
             if git rebase origin/main && git push origin main; then
               exit 0
             fi
             git rebase --abort || true
-            git reset --hard origin/main
-            # The committed daily snapshot already carries stable result URLs.
-            # Only rebuild it when the retry landed on a stale/missing day.
-            if ! python - <<'PY'
-          from datetime import datetime
-          from pathlib import Path
-          from zoneinfo import ZoneInfo
-          import pandas as pd
-
-          p = Path("data/raw/today_entries.csv")
-          if not p.exists() or not p.stat().st_size:
-              raise SystemExit(1)
-          df = pd.read_csv(p, dtype={"race_id": str})
-          today = datetime.now(ZoneInfo("Asia/Tokyo")).strftime("%Y-%m-%d")
-          ok = (
-              len(df)
-              and {"date", "source_url"}.issubset(df.columns)
-              and df["date"].astype(str).eq(today).all()
-              and ~df["source_url"].fillna("").astype(str).str.len().eq(0).any()
-          )
-          raise SystemExit(0 if ok else 1)
-          PY
-            then
-              python src/fetch_today_entries.py || true
+            if [ "$attempt" -eq 4 ]; then
+              break
             fi
-            python src/settle_results.py
+            git reset --hard origin/main
+            echo "Result publication raced with another update; reusing captured results on latest main"
+            python src/quick_results_retry.py replay --cache "$QUICK_RESULTS_CACHE"
             stage_result_outputs
             git diff --cached --quiet && exit 0
             git commit -m "Quick refresh official keirin results"
