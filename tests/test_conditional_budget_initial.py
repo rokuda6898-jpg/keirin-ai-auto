@@ -30,20 +30,45 @@ class FirstAllocationTests(unittest.TestCase):
     def test_still_open_gets_amounts_with_separate_time_not_reprediction(self):
         original=record(); row, report=invoke(deepcopy(original))
         self.assertEqual(report['allocated'],1)
-        self.assertEqual(sum(a['stake_yen'] for a in row['budget']['allocations']),10000)
+        self.assertEqual(sum(a['stake_yen'] for a in row['budget']['allocations']),5000)
         self.assertEqual(row['budget']['odds_basis'],'initial_allocation_after_forecast')
         self.assertEqual(row['budget']['prediction_snapshot_at_jst'],original['snapshot_at_jst'])
         self.assertEqual(row['budget']['allocation_frozen_at_jst'],NOW.isoformat())
         for key in original: self.assertEqual(row[key],original[key],key)
         self.assertIsNone(row['budget_settlement']['roi'])
 
-    def test_existing_allocated_infeasible_unavailable_are_never_repriced(self):
-        for status in ('allocated','infeasible','unavailable'):
+    def test_existing_priced_decisions_are_never_repriced(self):
+        for status in ('allocated','infeasible'):
             with self.subTest(status=status):
                 row=record(); row['budget']={'status':status}; original=deepcopy(row)
                 def forbid(*args): self.fail('existing decision repriced')
                 _,r=invoke(row,loader=forbid)
                 self.assertEqual(r['attempted'],0);self.assertEqual(row,original)
+        row=record(); row['budget']={'status':'unavailable','snapshot_odds':{'1-2-3':'20'}}
+        _,r=invoke(row); self.assertEqual(r['attempted'],0)
+
+    def test_unpriced_failure_retries_after_thirty_minutes_then_freezes_success(self):
+        row=record(); row['budget']={'status':'unavailable','allocations':[],
+                                   'allocation_attempted_at_jst':NOW.isoformat()}
+        original=deepcopy(row)
+        _,r=invoke(row,clock=lambda:NOW+timedelta(minutes=29))
+        self.assertEqual(r['attempted'],0); self.assertEqual(row,original)
+        row,r=invoke(row,clock=lambda:NOW+timedelta(minutes=30))
+        self.assertEqual(r['allocated'],1)
+        self.assertEqual(row['budget']['budget_yen'],5000)
+        self.assertEqual(row['snapshot_at_jst'],original['snapshot_at_jst'])
+        plan=deepcopy(row['budget'])
+        def forbid(*args): self.fail('the first usable quote was refetched')
+        _,r=invoke(row,loader=forbid,clock=lambda:NOW+timedelta(minutes=40))
+        self.assertEqual(r['attempted'],0); self.assertEqual(row['budget'],plan)
+
+    def test_failed_retry_records_time_and_legacy_missing_time_can_retry_once(self):
+        row=record(); row['budget']={'status':'unavailable','allocations':[]}
+        def missing(*args): raise ValueError('not on sale')
+        row,r=invoke(row,loader=missing)
+        self.assertEqual(r['unavailable'],1)
+        self.assertEqual(row['budget']['allocation_attempted_at_jst'],NOW.isoformat())
+        _,r=invoke(row); self.assertEqual(r['attempted'],0)
 
     def test_closed_and_near_close_get_no_backfill(self):
         for seconds in (-3600,0,60):
@@ -88,7 +113,7 @@ class FirstAllocationTests(unittest.TestCase):
         self.assertEqual(len(saved),1);plan=deepcopy(row['budget']);buy=row['top12'][0]
         result=settle(plan,row['top12'],{'winning_buys':[buy],'payout_complete':True,'payouts':{buy:1100}})
         self.assertEqual(result['payout_yen'],plan['allocations'][0]['stake_yen']//100*1100)
-        self.assertEqual(result['profit_yen'],result['payout_yen']-10000)
+        self.assertEqual(result['profit_yen'],result['payout_yen']-plan['budget_yen'])
         self.assertEqual(row['budget'],plan)
         again,r=invoke(row);self.assertEqual(r['attempted'],0);self.assertEqual(again['budget'],plan)
 

@@ -45,6 +45,21 @@ def execute(root, **kwargs):
 
 
 class ConditionalLiveTests(unittest.TestCase):
+    def test_refunded_tickets_are_not_displayed_as_winning_orders(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp); fixture(root); execute(root)
+            entries = pd.read_csv(root/'data/raw/today_entries.csv')
+            entries['cancelled_car_numbers'] = '[3]'
+            entries.to_csv(root/'data/raw/today_entries.csv', index=False)
+            atomic_json(root/'outputs/latest_results.json', [dict(race_id='open',
+                official_result_available=True, actual_trifecta='1-2-3|1-2-4',
+                payouts_trifecta_json={'1-2-3': 100, '1-2-4': 1700})])
+            feed, _ = execute(root, predict_new=False)
+            race = next(r for r in feed['races'] if r['id'] == 'open')
+            self.assertEqual(race['actual'], ['1-2-4'])
+            self.assertEqual(race['payouts'], {'1-2-4': 1700})
+            self.assertEqual(race['returned_buys'], ['1-2-3'])
+
     def test_all_races_remain_but_closed_and_missing_are_never_backfilled(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp); fixture(root)

@@ -1,7 +1,9 @@
 """Give still-open, previously unallocated forecasts their FIRST priced plan.
 
-Never changes a forecast or any existing budget decision. Later first quotes are
-explicitly labeled as allocation-time odds, not the original prediction's odds.
+Never changes a forecast or a successfully priced budget decision. A failed
+quote with no saved odds may retry after 30 minutes while the race is open.
+Later first quotes are explicitly labeled as allocation-time odds, not the
+original prediction's odds.
 This migration is a separate stage; conditional_live's new-forecast path is kept.
 """
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -15,15 +17,34 @@ from conditional_budget import freeze, settle
 ROOT = Path(__file__).resolve().parents[1]
 LEDGER = 'outputs/company/conditional_live_ledger.jsonl'
 REPORT = 'outputs/conditional_budget_initialization.json'
+RETRY_SECONDS = 30 * 60
 
 
 def now_jst():
     return datetime.now(ZoneInfo('Asia/Tokyo'))
 
 
+def needs_first_quote(row, now):
+    if 'budget' not in row:
+        return True
+    plan = row['budget']
+    if (not isinstance(plan, dict) or plan.get('status') != 'unavailable'
+            or plan.get('snapshot_odds') or plan.get('allocations')):
+        return False
+    attempted = plan.get('allocation_attempted_at_jst')
+    if not attempted:
+        return True  # Legacy failed quotes had no attempt timestamp.
+    try:
+        when = datetime.fromisoformat(attempted)
+        return (now.tzinfo is not None and when.tzinfo is not None
+                and (now - when).total_seconds() >= RETRY_SECONDS)
+    except (ValueError, TypeError):
+        return False
+
+
 def eligible(row, scheduled, result, now):
     """A late first allocation is prospective only; known results forbid it."""
-    if not scheduled or 'budget' in row or row.get('actual'):
+    if not scheduled or row.get('actual') or not needs_first_quote(row, now):
         return False
     if str(result.get('official_result_available', '')).lower() in ('true', '1'):
         return False
@@ -61,6 +82,9 @@ def initialize(rows, schedule, results, quote_loader, clock=now_jst, persist=Non
         target['close_at'] = min(float(original['close_at']), float(schedule[rid]['close_at']))
         if not eligible(original, schedule.get(rid), results.get(rid, {}), clock()):
             return rid, None
+        # Only a missing quote reaches here. Keep the published forecast and
+        # any real priced plan immutable; freeze the first usable quote once.
+        target.pop('budget', None)
         plan = freeze(target, quote_loader, clock)
         # The old forecast time is immutable. Never relabel today's quote as old.
         plan['odds_basis'] = 'initial_allocation_after_forecast'

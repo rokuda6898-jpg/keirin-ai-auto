@@ -3,7 +3,8 @@ from datetime import datetime, timedelta
 from fractions import Fraction
 from itertools import permutations, combinations
 import unittest
-from conditional_budget import allocate, freeze, settle, unavailable
+from conditional_budget import (allocate, allocate_range, check_saved_plan, freeze,
+                                settle, unavailable, RANGE_VERSION, VERSION)
 
 TICKETS = ['-'.join(p) for p in permutations('1234567', 3)][:12]
 NOW = datetime.fromisoformat('2026-10-11T09:00:00+09:00')
@@ -29,6 +30,50 @@ def result(winners=None, pays=None, complete=True):
 
 
 class ConditionalBudgetTests(unittest.TestCase):
+    def test_new_range_uses_five_thousand_and_settles_the_actual_stake(self):
+        p = allocate_range(TICKETS, dict.fromkeys(TICKETS, 20))
+        self.assertEqual((p['version'], p['budget_yen']), (RANGE_VERSION, 5000))
+        self.assertTrue(check_saved_plan(p, TICKETS))
+        self.assertEqual(p['minimum_payout_yen'], 8000)
+        self.assertEqual(sum(x['stake_yen'] for x in p['allocations']), 5000)
+        s = settle(p, TICKETS, result(pays={TICKETS[0]: 1000}))
+        self.assertEqual(s['invested_yen'], 5000)
+        self.assertEqual(s['profit_yen'], s['payout_yen'] - 5000)
+        self.assertEqual(s['roi'], s['payout_yen'] / 5000)
+        self.assertEqual(settle(p, TICKETS, result(), ['1'])['status'], 'refund_pending')
+
+    def test_range_finds_feasible_interior_budget_despite_rounding_at_endpoints(self):
+        odds = dict.fromkeys(TICKETS, '12.1')
+        self.assertEqual(allocate(TICKETS, odds)['status'], 'infeasible')
+        p = allocate_range(TICKETS, odds)
+        self.assertEqual((p['status'], p['budget_yen'], p['minimum_profit_yen']),
+                         ('allocated', 6000, 50))
+        self.assertTrue(all(a['stake_yen'] == 500 for a in p['allocations']))
+        for budget in range(5000, 6000, 100):
+            self.assertEqual(allocate(TICKETS, odds, budget=budget)['status'], 'infeasible')
+
+    def test_range_impossible_keeps_every_ticket_and_does_not_fabricate_stakes(self):
+        p = allocate_range(TICKETS, dict.fromkeys(TICKETS, 10))
+        self.assertEqual(p['status'], 'infeasible')
+        self.assertEqual(p['allocations'], [])
+        self.assertEqual(set(p['snapshot_odds']), set(TICKETS))
+        self.assertEqual(p['total_stake_yen'], 0)
+        with self.assertRaises(KeyError):
+            allocate_range(TICKETS, {})
+
+    def test_legacy_ten_thousand_plan_and_new_quote_are_not_rewritten(self):
+        p = allocate(TICKETS, dict.fromkeys(TICKETS, 20))
+        self.assertEqual(p['version'], VERSION)
+        self.assertTrue(check_saved_plan(p, TICKETS))
+        r = row(); r['budget'] = p
+        def forbidden(*args):
+            self.fail('a saved plan must not request another quote')
+        self.assertIs(freeze(r, forbidden, lambda: NOW), p)
+        self.assertEqual(settle(p, TICKETS, None)['invested_yen'], 10000)
+        wrong = allocate_range(TICKETS, dict.fromkeys(TICKETS, 20))
+        wrong['version'] = VERSION
+        self.assertFalse(check_saved_plan(wrong, TICKETS))
+
     def test_twenty_times_feasible_and_uses_exact_budget(self):
         p = allocate(TICKETS, dict.fromkeys(TICKETS, 20))
         self.assertEqual(p['status'], 'allocated')
@@ -80,6 +125,8 @@ class ConditionalBudgetTests(unittest.TestCase):
             self.fail('frozen quote was refetched')
         self.assertIs(freeze(r, forbidden, lambda: NOW), p)
         self.assertEqual(p['snapshot_odds'][TICKETS[0]], '20.0')
+        self.assertEqual(p['version'], RANGE_VERSION)
+        self.assertEqual(p['allocation_attempted_at_jst'], NOW.isoformat())
 
     def test_identity_timestamp_and_bet_type_guards(self):
         changes = [{'race_id': 'other'}, {'date': '2026-10-10'}, {'venue': '別場'},

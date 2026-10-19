@@ -1,7 +1,9 @@
-"""Immutable JPY 10,000 conditional-trifecta simulation; never places bets.
+"""Immutable conditional-trifecta stake simulations; never places bets.
 
 Allocation uses only a quote captured while publishing a NEW prediction.
 Settlement uses only official ticket-level payouts, never the saved quote.
+Legacy v1 plans keep their JPY 10,000 stakes. New v2 plans use the smallest
+feasible budget between JPY 5,000 and 10,000, in JPY 100 increments.
 """
 from decimal import Decimal, InvalidOperation
 from fractions import Fraction
@@ -10,8 +12,10 @@ import json
 import re
 
 BUDGET = 10_000
+MIN_BUDGET = 5_000
 UNIT = 100
 VERSION = 'conditional-budget-10000-v1'
+RANGE_VERSION = 'conditional-budget-5000-10000-v2'
 
 
 def valid_tickets(tickets):
@@ -58,7 +62,7 @@ def allocate(tickets, odds, budget=BUDGET, unit=UNIT):
     minimum = required(budget)
     if sum(minimum) > units:
         return {**base, 'status': 'infeasible',
-                'reason': '全買い目を残すと1万円でトリガミ回避が成立しません。見送り。',
+                'reason': f'全買い目を残すと{budget:,}円でトリガミ回避が成立しません。見送り。',
                 'required_stake_yen': sum(minimum) * unit}
     # The optimum must be a payout reachable by one ticket's integer stake.
     candidates = sorted({p * k for p in fractions
@@ -89,16 +93,55 @@ def allocate(tickets, odds, budget=BUDGET, unit=UNIT):
                 for t, p, s, pay in zip(tickets, prices, amounts, payouts)]}
 
 
-def unavailable(reason):
-    return {'version': VERSION, 'status': 'unavailable', 'reason': reason,
+def allocate_range(tickets, odds, min_budget=MIN_BUDGET, max_budget=BUDGET):
+    """Keep every ticket and choose the smallest no-loss budget, exactly.
+
+    For each candidate budget, the sum of ceil(budget / return-per-unit)
+    is a necessary and sufficient feasibility check. Only the first feasible
+    budget needs the existing exact maximin allocator. Quote values never
+    change during the search, and an impossible plan never drops selections.
+    """
+    if not valid_tickets(tickets):
+        raise ValueError('invalid or duplicate trifecta tickets')
+    if (type(min_budget) is not int or type(max_budget) is not int
+            or not MIN_BUDGET <= min_budget <= max_budget <= BUDGET
+            or min_budget % UNIT or max_budget % UNIT):
+        raise ValueError('budget range must be 5,000–10,000 yen in 100-yen steps')
+    prices = {t: number(odds[t]) for t in tickets}
+    returns = [Fraction(prices[t]) * UNIT for t in tickets]
+    chosen = max_budget
+    for budget in range(min_budget, max_budget + UNIT, UNIT):
+        ratios = [Fraction(budget) / payout for payout in returns]
+        required = sum(max(1, (r.numerator + r.denominator - 1) // r.denominator)
+                       for r in ratios)
+        if required <= budget // UNIT:
+            chosen = budget
+            break
+    plan = allocate(tickets, prices, budget=chosen)
+    plan.update(version=RANGE_VERSION, minimum_budget_yen=min_budget,
+                maximum_budget_yen=max_budget,
+                budget_selection='smallest_feasible_no_loss')
+    if plan['status'] == 'infeasible':
+        plan['reason'] = (f'全買い目を残すと{min_budget:,}〜{max_budget:,}円の範囲で'
+                          'トリガミ回避が成立しません。配分版は見送り。')
+    return plan
+
+
+def unavailable(reason, version=VERSION):
+    plan = {'version': version, 'status': 'unavailable', 'reason': reason,
             'mode': 'simulation', 'budget_yen': BUDGET, 'unit_yen': UNIT,
             'total_stake_yen': 0, 'allocations': []}
+    if version == RANGE_VERSION:
+        plan.update(minimum_budget_yen=MIN_BUDGET, maximum_budget_yen=BUDGET,
+                    budget_selection='smallest_feasible_no_loss')
+    return plan
 
 
 def freeze(row, quote_loader, clock):
     """Called once, only for new forecasts. No retry/backfill on later runs."""
     if 'budget' in row:
         return row['budget']
+    attempted = clock()
     try:
         tickets = row['top12']
         if not valid_tickets(tickets):
@@ -119,25 +162,37 @@ def freeze(row, quote_loader, clock):
                 or quote.get('bet_type') != 'trifecta'
                 or not quote.get('source_url') or not quote.get('provider')):
             raise ValueError('quote race/bet/source mismatch')
-        plan = allocate(tickets, quote['odds'])
+        plan = allocate_range(tickets, quote['odds'])
         plan.update(odds_captured_at_jst=captured.isoformat(),
                     allocation_frozen_at_jst=saved.isoformat(),
+                    allocation_attempted_at_jst=attempted.isoformat(),
                     source_url=quote['source_url'], provider=quote['provider'])
         return plan
     except Exception as error:
         # Quotes must never prevent saving the unchanged model prediction.
-        return unavailable('予想時オッズを利用できません: ' + str(error)[:220])
+        return unavailable('予想時オッズを利用できません: ' + str(error)[:220],
+                           version=RANGE_VERSION) | {
+            'allocation_attempted_at_jst': attempted.isoformat()}
 
 
 def check_saved_plan(plan, tickets):
+    if not isinstance(plan, dict):
+        return False
     lines = plan.get('allocations', [])
-    return (plan.get('version') == VERSION and plan.get('budget_yen') == BUDGET
-            and plan.get('unit_yen') == UNIT and plan.get('total_stake_yen') == BUDGET
+    budget = plan.get('budget_yen')
+    version = plan.get('version')
+    budget_valid = (type(budget) is int and (
+        (version == VERSION and budget == BUDGET)
+        or (version == RANGE_VERSION and MIN_BUDGET <= budget <= BUDGET
+            and budget % UNIT == 0)))
+    return (budget_valid and isinstance(lines, list)
+            and all(isinstance(x, dict) for x in lines)
+            and plan.get('unit_yen') == UNIT and plan.get('total_stake_yen') == budget
             and valid_tickets(tickets) and plan.get('ticket_sha256') == fingerprint(tickets)
             and [x.get('buy') for x in lines] == tickets
             and all(type(x.get('stake_yen')) is int and x['stake_yen'] >= UNIT
                     and x['stake_yen'] % UNIT == 0 for x in lines)
-            and sum(x['stake_yen'] for x in lines) == BUDGET)
+            and sum(x['stake_yen'] for x in lines) == budget)
 
 
 def settle(plan, tickets, outcome, cancelled_cars=()):
@@ -150,9 +205,11 @@ def settle(plan, tickets, outcome, cancelled_cars=()):
              'roi': None, 'hit': None, 'invested_yen': 0}
     if not plan or plan.get('status') != 'allocated':
         return {**empty, 'status': 'not_purchased'}
+    budget = plan.get('budget_yen')
     if not check_saved_plan(plan, tickets):
-        return {**empty, 'status': 'invalid_snapshot', 'invested_yen': BUDGET}
-    empty['invested_yen'] = BUDGET
+        return {**empty, 'status': 'invalid_snapshot',
+                'invested_yen': budget if type(budget) is int and budget > 0 else 0}
+    empty['invested_yen'] = budget
     if any(set(t.split('-')) & set(map(str, cancelled_cars)) for t in tickets):
         return {**empty, 'status': 'refund_pending'}
     if not outcome:
@@ -171,7 +228,7 @@ def settle(plan, tickets, outcome, cancelled_cars=()):
     except (ValueError, KeyError, TypeError):
         return {**empty, 'status': 'payout_pending', 'hit': hit}
     return {**empty, 'status': 'settled', 'hit': hit, 'payout_yen': paid,
-            'profit_yen': paid - BUDGET, 'roi': paid / BUDGET,
+            'profit_yen': paid - budget, 'roi': paid / budget,
             'result_source': outcome.get('result_source', ''),
             'result_source_url': outcome.get('source_url', ''),
             'result_observed_at_jst': outcome.get('source_observed_at', '')}
