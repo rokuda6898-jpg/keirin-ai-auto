@@ -476,6 +476,29 @@ def gate_saved_publication(root, baseline, clock=now_jst, lead_seconds=60):
     return late
 
 
+def update_near_close_comparison(root, baseline, generate=False):
+    """An optional comparison failure must not block canonical forecasts."""
+    path = Path(root) / "outputs/conditional_near_close.json"
+    try:
+        if generate:
+            subprocess.run([sys.executable, str(Path(root) / "src/conditional_budget_near_close.py")],
+                           cwd=root, check=True)
+        from conditional_budget_near_close import gate_publication
+        return True, gate_publication(root, baseline)
+    except Exception as exc:
+        # A failing process may have written a partial/new file already.
+        if baseline:
+            save_json(path, baseline)
+        else:
+            path.unlink(missing_ok=True)
+        status_path = Path(root) / "outputs/nexus_coverage_status.json"
+        status = read_json(status_path, {})
+        status["near_close_comparison"] = dict(status="error", reason=f"{type(exc).__name__}: {exc}")
+        save_json(status_path, status)
+        print("::warning::Near-close comparison failed; original forecasts continue: " + str(exc), flush=True)
+        return False, ["comparison_error"]
+
+
 def publish_ci(root=ROOT):
     """Recompute on latest main for each bounded push attempt, without HTTP data."""
     root = Path(root)
@@ -495,6 +518,7 @@ def publish_ci(root=ROOT):
                     git(checkout, "reset", "--hard", "origin/main")
                     git(checkout, "clean", "-fd")
                 baseline = load_saved_rows(checkout, read_json(checkout / "outputs/nexus_live.json", {}))
+                near_close_baseline = read_json(checkout / "outputs/conditional_near_close.json", {})
                 copy_newer_inputs(root, checkout)
                 result = subprocess.run([sys.executable, str(checkout / "src/nexus_publish_saved_inputs.py"),
                                          "--min-lead-seconds", "60"], cwd=checkout)
@@ -504,9 +528,14 @@ def publish_ci(root=ROOT):
                 # reach previously saved forecasts without changing their bets.
                 subprocess.run([sys.executable, str(checkout / "src/nexus_confidence_sync.py")],
                                cwd=checkout, check=True)
+                # Keep the original conditional allocation immutable. Compare
+                # the same tickets and budget using already captured later
+                # quotes, in a separate prospective record with no source HTTP.
+                near_close_healthy, _ = update_near_close_comparison(checkout, near_close_baseline, generate=True)
                 gate_saved_publication(checkout, baseline)
                 for name in (str(SNAPSHOTS), "outputs/nexus_live.json", "outputs/nexus_forecasts",
-                             "outputs/conditional_live.json", "outputs/nexus_coverage_status.json", "data/nexus/history.json.gz"):
+                             "outputs/conditional_live.json", "outputs/conditional_near_close.json",
+                             "outputs/nexus_coverage_status.json", "data/nexus/history.json.gz"):
                     if (checkout / name).exists():
                         git(checkout, "add", "-f", "--", name)
                 if git(checkout, "diff", "--cached", "--quiet", check=False).returncode == 0:
@@ -514,8 +543,13 @@ def publish_ci(root=ROOT):
                 git(checkout, "-c", "user.name=github-actions[bot]", "-c",
                     "user.email=41898282+github-actions[bot]@users.noreply.github.com", "commit", "-m",
                     "Publish NEXUS from existing pre-close source snapshots")
-                if gate_saved_publication(checkout, baseline):
+                late_forecasts = gate_saved_publication(checkout, baseline)
+                _, late_allocations = (update_near_close_comparison(checkout, near_close_baseline)
+                                       if near_close_healthy else (False, []))
+                if late_forecasts or late_allocations:
                     git(checkout, "add", "--", "outputs/nexus_live.json", "outputs/nexus_forecasts", "outputs/nexus_coverage_status.json")
+                    if near_close_healthy:
+                        git(checkout, "add", "--all", "--", "outputs/conditional_near_close.json")
                     git(checkout, "-c", "user.name=github-actions[bot]", "-c",
                         "user.email=41898282+github-actions[bot]@users.noreply.github.com", "commit", "--amend", "--no-edit")
                 if git(checkout, "push", "origin", "HEAD:main", check=False).returncode == 0:

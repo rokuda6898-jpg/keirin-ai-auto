@@ -107,7 +107,75 @@
       && ['S', 'A', 'B'].includes(c.grade) && isNumber(c.model_mass) && c.model_mass >= 0 && c.model_mass <= 1) return c;
     return {grade: 'B', status: 'insufficient', model_mass: null, reason: 'モデル支持度の保存がないため未評価'};
   }
-  const API = {tickets, allocation, baseSettlement, allocatedSettlement, aggregate, meetingBands, normalizeBand, officialResults, confidence};
+  function nearCloseIndex(feed) {
+    const index = new Map();
+    if (feed?.schema !== 1 || feed?.policy?.id !== 'conditional-near-close-v1' || !Array.isArray(feed.races)) return index;
+    for (const r of feed.races) {
+      if (!r || typeof r.id !== 'string') continue;
+      // A duplicate receipt is ambiguous, even when its contents look identical.
+      index.set(r.id, index.has(r.id) ? null : r);
+    }
+    return index;
+  }
+  function nearCloseRecord(r, saved, now = Date.now()) {
+    if (saved === undefined) return {status: 'not_registered', reason: '比較開始前・初回配分なし等で、まだ比較に登録されていないレースです。'};
+    const invalid = () => ({status: 'invalid', reason: '保存した予想・買い目・配分時刻の一致を確認できないため、比較から除外しています。'});
+    const selected = tickets(r), close = epoch(r.close_at), snapshot = epoch(r.shadow?.snapshot_at);
+    if (!saved || String(saved.id) !== String(r.id) || saved.date !== r.date || epoch(saved.close_at) !== close
+      || saved.venue !== r.venue || Number(saved.number) !== Number(r.number)
+      || !Number.isFinite(snapshot) || !Number.isFinite(close) || snapshot >= close
+      || epoch(saved.prediction_snapshot_at_jst) !== snapshot || !selected.length
+      || !Array.isArray(saved.tickets) || saved.tickets.length !== selected.length
+      || new Set(saved.tickets).size !== selected.length || saved.tickets.some(t => !selected.includes(t))
+      || !['waiting', 'allocated', 'infeasible', 'missed', 'excluded'].includes(saved.status)) return invalid();
+    const original = {...r, budget: saved.initial_budget}, oldList = allocation(r), savedList = allocation(original);
+    if ((r.budget?.status || null) !== (saved.initial_budget?.status || null)) return invalid();
+    if (oldList && (!savedList || original.budget.total_stake_yen !== r.budget.total_stake_yen
+      || oldList.some(a => savedList.find(b => b.buy === a.buy)?.stake_yen !== a.stake_yen))) return invalid();
+    if (saved.status !== 'allocated') return {status: saved.status, reason: saved.reason || '', saved};
+    const near = {...r, budget: saved.budget, budget_settlement: saved.budget_settlement};
+    const quote = epoch(near.budget?.odds_captured_at_jst), frozen = epoch(near.budget?.allocation_frozen_at_jst);
+    if (!oldList || !allocation(near) || near.budget.total_stake_yen !== r.budget.total_stake_yen
+      || !Number.isFinite(quote) || !Number.isFinite(frozen) || quote < snapshot || frozen < quote
+      || frozen > now || close - quote < 5 * 60000 || close - quote > 40 * 60000
+      || close - frozen < 5 * 60000 || close - frozen > 40 * 60000) return invalid();
+    return {status: 'allocated', saved, near};
+  }
+  function verifiedAllocatedSettlement(r, now) {
+    const s = allocatedSettlement(r, now);
+    if (!['hit', 'miss'].includes(s.status)) return s;
+    const flat = baseSettlement(r, now), list = allocation(r);
+    if (!list || !['hit', 'miss'].includes(flat.status)) return {...s, status: 'held'};
+    const winners = list.filter(a => officialResults(r).includes(a.buy));
+    const paid = winners.reduce((total, a) => total + a.stake_yen / 100 * r.payouts[a.buy], 0);
+    return s.paid === paid && s.hit === Boolean(winners.length) ? s : {...s, status: 'invalid'};
+  }
+  function nearCloseComparison(races, index, now = Date.now()) {
+    const result = {total: races.length, registered: 0, unregistered: 0, settled: 0, pending: 0, waiting: 0, infeasible: 0, unavailable: 0, excluded: 0,
+      initial: {hits: 0, invested: 0, paid: 0}, near: {hits: 0, invested: 0, paid: 0}};
+    for (const r of races) {
+      if (index.has(String(r.id))) result.registered++;
+      const checked = nearCloseRecord(r, index.get(String(r.id)), now);
+      if (checked.status !== 'allocated') {
+        const key = {waiting: 'waiting', infeasible: 'infeasible', missed: 'unavailable', not_registered: 'unregistered', excluded: 'excluded', invalid: 'excluded'}[checked.status];
+        result[key]++; continue;
+      }
+      const initial = verifiedAllocatedSettlement(r, now), near = verifiedAllocatedSettlement(checked.near, now);
+      if ([initial, near].some(s => ['held', 'invalid'].includes(s.status))) {result.excluded++; continue;}
+      if (![initial, near].every(s => ['hit', 'miss'].includes(s.status))) {result.pending++; continue;}
+      result.settled++;
+      for (const [key, s] of [['initial', initial], ['near', near]]) {
+        result[key].hits += Number(s.hit); result[key].invested += s.invested; result[key].paid += s.paid;
+      }
+    }
+    for (const key of ['initial', 'near']) {
+      const s = result[key]; s.hitRate = result.settled ? s.hits / result.settled : null;
+      s.roi = s.invested ? s.paid / s.invested : null; s.net = result.settled ? s.paid - s.invested : null;
+    }
+    return result;
+  }
+  const API = {tickets, allocation, baseSettlement, allocatedSettlement, aggregate, meetingBands, normalizeBand, officialResults, confidence,
+    nearCloseIndex, nearCloseRecord, nearCloseComparison};
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   if (typeof document === 'undefined') return;
   window.ForecastUI = API;
@@ -124,7 +192,8 @@
     b.title = text + '。' + explanation; b.setAttribute('aria-label', b.title); return b;
   }
   const moneyClass = n => n > 0 ? 'profit-positive' : n < 0 ? 'profit-negative' : '';
-  const state = {data: null, bands: new Map(), date: '', band: 'all', venue: 'all', view: ['#results', '#budget-panel'].includes(location.hash) ? 'results' : 'forecast', active: new Map(), expanded: new Set(), limit: 30, dates: [], loading: false, lastError: false};
+  const state = {data: null, bands: new Map(), date: '', band: 'all', venue: 'all', view: ['#results', '#budget-panel', '#roi-comparison'].includes(location.hash) ? 'results' : 'forecast', active: new Map(), expanded: new Set(), limit: 30, dates: [], loading: false, lastError: false,
+    nearData: null, nearIndex: new Map(), nearError: false, nearLoading: false};
   const filtered = (includeVenue = true, includeBand = true) => (state.data?.races || []).filter(r => (state.date === 'all' || r.date === state.date) && (!includeBand || state.band === 'all' || state.bands.get(bandKey(r)) === state.band) && (!includeVenue || state.venue === 'all' || r.venue === state.venue));
   function exactFormations(r, weighted) {
     const buys = tickets(r);
@@ -169,7 +238,7 @@
     const total = weighted ? (list ? r.budget.total_stake_yen : null) : selected.length ? selected.length * 100 : null;
     const section = el('section', null, 'purchase-card ' + (weighted ? 'allocated' : 'uniform'));
     const header = el('div', null, 'purchase-header'), heading = el('div');
-    heading.append(el('h6', weighted ? '予算配分' : '各点100円'), el('strong', yen(total)));
+    heading.append(el('h6', weighted ? '初回配分' : '各点100円'), el('strong', yen(total)));
     header.append(heading, el('p', weighted ? '予算5,000〜10,000円 · 同じ' + selected.length + '点' : selected.length + '点 × 100円 · 均等購入'));
     section.append(header);
     if (!selected.length) {
@@ -191,6 +260,63 @@
     }
     section.append(resultBar(weighted ? allocatedSettlement(r) : baseSettlement(r)));
     return section;
+  }
+  function nearClosePurchase(r) {
+    const checked = nearCloseRecord(r, state.nearIndex.get(String(r.id)));
+    const details = el('details', null, 'near-close-purchase'), summary = el('summary');
+    const title = el('span'); title.append(el('strong', '締切前オッズ配分'), el('small', '比較中 · 同じ買い目・同じ予算'));
+    const statusText = {allocated: '配分あり', waiting: '取得待ち', infeasible: '配分不成立', missed: '締切前に取得できず', excluded: '比較対象外', invalid: '確認中', not_registered: '比較未登録'}[checked.status];
+    summary.append(title, el('span', statusText, 'near-close-label')); details.append(summary);
+    if (checked.status === 'allocated') {
+      const near = checked.near, card = purchase(near, true); card.classList.add('near-close-card');
+      card.querySelector('h6').textContent = '締切前オッズ配分';
+      card.querySelector('.purchase-header > p').textContent = 'オッズ ' + stamp(near.budget.odds_captured_at_jst) + ' · 締切' + Math.round((epoch(r.close_at) - epoch(near.budget.odds_captured_at_jst)) / 60000) + '分前';
+      details.append(card);
+      const copy = el('button', 'この配分をコピー', 'quiet-button'); copy.type = 'button';
+      copy.addEventListener('click', async () => {
+        const lines = [r.date + ' ' + r.venue + ' ' + r.number + 'R', '締切前オッズ配分・比較中', '合計 ' + yen(near.budget.total_stake_yen), 'オッズ ' + stamp(near.budget.odds_captured_at_jst)];
+        for (const f of exactFormations(near, true)) lines.push(f.first.join('・') + ' → ' + f.second.join('・') + ' → ' + f.third.join('・') + ' / ' + f.count + '点 各' + yen(f.stake_yen));
+        lines.push('各行を購入。同じ車番の重複を除く。');
+        try {await navigator.clipboard.writeText(lines.join('\n')); copy.textContent = 'コピーしました';}
+        catch {copy.textContent = 'コピーできませんでした';}
+      });
+      details.append(copy);
+    } else {
+      const text = checked.status === 'waiting' ? '締切5〜40分前に取得できたオッズで、初回と同じ予算の配分を保存します。'
+        : checked.status === 'infeasible' ? '同じ買い目と予算では、保存オッズで購入総額以上の想定払戻となる配分が成立しませんでした。'
+        : checked.reason || '締切前に保存できた配分がありません。';
+      details.append(el('p', text, 'near-close-note'));
+    }
+    details.append(el('p', '初回配分と比べて回収率が改善するか、公式払戻で検証します。取得後のオッズ変動は反映できないため、的中時の収支は結果で確認してください。', 'near-close-note'));
+    return details;
+  }
+  function renderNearCloseComparison(races) {
+    const panel = $('#roi-comparison-content'); if (!panel) return;
+    const s = nearCloseComparison(races, state.nearIndex); panel.replaceChildren();
+    const scope = $('#roi-comparison-scope'); if (scope) scope.textContent = $('#performance-scope').textContent;
+    if (!state.nearData && state.nearLoading) {panel.append(el('p', '比較記録を読み込んでいます。予想・結果は先に確認できます。', 'near-close-note')); return;}
+    const grid = el('div', null, 'performance-cards near-close-stats');
+    for (const [key, title] of [['initial', '初回配分'], ['near', '締切前オッズ配分']]) {
+      const metric = s[key], card = el('article', null, 'performance-card ' + (key === 'near' ? 'allocated' : 'uniform'));
+      card.append(el('h3', title));
+      const rates = el('div', null, 'metric-rates');
+      for (const [label, value, note] of [['回収率', s.settled ? percent(metric.roi) : '検証待ち', '同一の確定 ' + s.settled + 'R'], ['的中率', percent(metric.hitRate), metric.hits + ' / ' + s.settled + 'R']]) {
+        const box = el('div'); box.append(el('span', label), el('strong', value, !s.settled ? 'awaiting-verification' : ''), el('small', note)); rates.append(box);
+      }
+      const amounts = el('dl', null, 'metric-money');
+      for (const [label, value] of [['投資', s.settled ? yen(metric.invested) : '—'], ['払戻', s.settled ? yen(metric.paid) : '—'], ['収支', profit(metric.net)]]) {
+        const box = el('div'); box.append(el('dt', label), el('dd', value)); amounts.append(box);
+      }
+      card.append(rates, amounts); grid.append(card);
+    }
+    panel.append(grid);
+    if (state.nearData) {
+      panel.append(el('p', '比較登録 ' + s.registered + 'R：確定 ' + s.settled + 'R / 結果未確定 ' + s.pending + 'R / 取得待ち ' + s.waiting + 'R / 配分不成立 ' + s.infeasible + 'R / 締切までに未取得 ' + s.unavailable + 'R / 対象外・精算保留 ' + s.excluded + 'R', 'near-close-counts'));
+      if (s.unregistered) panel.append(el('p', '比較未登録 ' + s.unregistered + 'R（比較開始前・初回配分なし等）。締切までに未取得だった件数とは分けています。', 'near-close-note'));
+    }
+    panel.append(el('p', '同じ予想・買い目・購入総額で、両方の配分と精算が確認できたレースだけを比較します。不成立・未取得レースは回収率の分母に含みません。', 'near-close-note'));
+    if (state.nearError) panel.append(el('p', state.nearData ? '比較データの更新に失敗しました。前回取得した記録を表示しています。' : '比較データは現在読み込めません。既存の予想・結果は引き続き確認できます。', 'near-close-note near-close-error'));
+    if (state.nearData) panel.append(el('p', '比較記録の更新 ' + stamp(state.nearData.updated_at) + ' · 開始 ' + stamp(state.nearData.policy?.activated_at), 'near-close-note'));
   }
   function riderMarks(r) {
     const result = new Map();
@@ -219,6 +345,7 @@
     if (withdrawn.size) box.append(el('p', '欠車 ' + [...withdrawn].join('・') + '番。保存時の予想です。欠車を含む買い目は精算確認まで保留しています。', 'race-warning'));
     const ph = el('div', null, 'picks-heading'); ph.append(el('h5', '3連単フォーメーション'), el('span', '2つの購入方法を同時に確認')); box.append(ph);
     const purchases = el('div', null, 'purchase-grid'); purchases.append(purchase(r, false), purchase(r, true)); box.append(purchases);
+    box.append(nearClosePurchase(r));
     if (r.actual?.length) {
       const official = el('div', null, 'official-result'); official.append(el('strong', '確定着順'));
       for (const actual of officialResults(r)) {
@@ -238,7 +365,7 @@
   }
   function performanceCard(races, weighted) {
     const s = aggregate(races, weighted ? 'allocated' : 'uniform'), card = el('article', null, 'performance-card ' + (weighted ? 'allocated' : 'uniform'));
-    const h = el('h3'); h.append(el('span', weighted ? '配' : '均', 'variant-index'), document.createTextNode(weighted ? '予算配分の成績' : '各点100円の成績')); card.append(h);
+    const h = el('h3'); h.append(el('span', weighted ? '配' : '均', 'variant-index'), document.createTextNode(weighted ? '初回配分の成績' : '各点100円の成績')); card.append(h);
     const rates = el('div', null, 'metric-rates');
     for (const [label, value, note] of [['的中率', percent(s.hitRate), s.hits + ' / ' + s.settled + 'R'], ['回収率', percent(s.roi), '精算済み ' + s.settled + 'R']]) {
       const d = el('div'); d.append(el('span', label), el('strong', value), el('small', note)); rates.append(d);
@@ -306,7 +433,7 @@
   }
   function resultAmount(r, weighted) {
     const s = weighted ? allocatedSettlement(r) : baseSettlement(r), box = el('div', null, 'result-amount');
-    box.append(el('small', weighted ? '予算配分' : '各点100円'));
+    box.append(el('small', weighted ? '初回配分' : '各点100円'));
     const row = el('div'); row.append(badge(s.status), el('strong', s.net === null ? '—' : profit(s.net), moneyClass(s.net))); box.append(row);
     box.append(el('span', s.paid === null ? ['before', 'pending', 'held'].includes(s.status) ? '払戻未確定' : '購入記録なし' : '投資 ' + yen(s.invested) + ' / 払戻 ' + yen(s.paid)));
     return box;
@@ -360,6 +487,8 @@
       content.querySelector('.race-title .status')?.replaceWith(badge(baseSettlement(r).status));
       content.querySelector('.purchase-card.uniform .purchase-result')?.replaceWith(resultBar(baseSettlement(r)));
       content.querySelector('.purchase-card.allocated .purchase-result')?.replaceWith(resultBar(allocatedSettlement(r)));
+      const near = nearCloseRecord(r, state.nearIndex.get(String(r.id)));
+      if (near.status === 'allocated') content.querySelector('.near-close-card .purchase-result')?.replaceWith(resultBar(allocatedSettlement(near.near)));
     }
   }
   function render() {
@@ -367,6 +496,7 @@
     renderControls(); const races = filtered();
     $('#performance-scope').textContent = [dayLabel(state.date), state.band === 'all' ? '全時間帯' : bandLabel(state.band), state.venue === 'all' ? '全開催場' : state.venue].join(' · ');
     $('#performance-cards').replaceChildren(performanceCard(races, false), performanceCard(races, true));
+    renderNearCloseComparison(races);
     $('#race-heading').textContent = state.view === 'results' ? 'レース別の結果・収支' : '開催レースの予想'; $('#race-count').textContent = races.length + 'R';
     if (state.view === 'results') renderResults(races); else renderForecast(races);
     updateClock();
@@ -377,8 +507,45 @@
     window.dispatchEvent(new Event('hashchange'));
     render();
   }
+  async function readNearCloseFeed() {
+    const controller = new AbortController(), timeout = setTimeout(() => controller.abort(), 8000);
+    try {
+      const response = await fetch('original/conditional_near_close.json?_=' + Date.now(), {cache: 'no-store', signal: controller.signal});
+      if (!response.ok) throw new Error('Comparison HTTP ' + response.status);
+      const data = await response.json();
+      if (data?.schema !== 1 || data?.policy?.id !== 'conditional-near-close-v1' || !Array.isArray(data.races)) throw new Error('Invalid comparison feed');
+      return data;
+    } finally {clearTimeout(timeout);}
+  }
+  function updateNearCloseDisplay() {
+    if (!state.data) return;
+    const oldScroll = window.scrollY;
+    renderNearCloseComparison(filtered());
+    // Update only the optional comparison blocks, preserving race tabs, focus
+    // and each open formation while the main prediction view remains usable.
+    for (const content of document.querySelectorAll('.race-content[data-race-id]')) {
+      const r = state.data.races.find(r => String(r.id) === content.dataset.raceId);
+      const old = content.querySelector('.near-close-purchase'); if (!r || !old) continue;
+      const copyFocused = document.activeElement?.tagName === 'BUTTON' && old.contains(document.activeElement);
+      const next = nearClosePurchase(r); next.open = old.open; old.replaceWith(next);
+      if (copyFocused) next.querySelector('button')?.focus({preventScroll: true});
+    }
+    if (window.scrollY !== oldScroll) window.scrollTo({top: oldScroll, behavior: 'instant'});
+  }
+  async function loadNearClose() {
+    if (state.nearLoading) return;
+    state.nearLoading = true;
+    try {
+      const data = await readNearCloseFeed();
+      state.nearData = data; state.nearIndex = nearCloseIndex(data); state.nearError = false;
+    } catch {state.nearError = true;}
+    finally {state.nearLoading = false;}
+    updateNearCloseDisplay();
+  }
   async function load() {
     if (state.loading) return; state.loading = true; $('#refresh').disabled = true;
+    // The optional feed never delays the first usable prediction render.
+    void loadNearClose();
     try {
       const response = await fetch('original/conditional_live.json?_=' + Date.now(), {cache: 'no-store'});
       if (!response.ok) throw new Error('HTTP ' + response.status);
@@ -434,7 +601,7 @@
   });
   window.addEventListener('hashchange', () => {
     if (location.hash === '#model-details') {$('#model-details').open = true; return;}
-    const view = ['#results', '#budget-panel'].includes(location.hash) ? 'results' : location.hash === '#forecast' ? 'forecast' : null;
+    const view = ['#results', '#budget-panel', '#roi-comparison'].includes(location.hash) ? 'results' : location.hash === '#forecast' ? 'forecast' : null;
     if (view && view !== state.view) {state.view = view; state.limit = 30; render();}
   });
   if (location.hash === '#model-details') $('#model-details').open = true;

@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['src/nexus_model/**', 'src/nexus_*.py', 'models/nexus53/**', 'tests/test_nexus*.py', '.github/workflows/nexus.yml']
+    paths: ['src/nexus_model/**', 'src/nexus_*.py', 'src/conditional_budget_near_close.py', 'models/nexus53/**', 'tests/test_nexus*.py', 'tests/test_conditional_budget_near_close.py', '.github/workflows/nexus.yml']
   workflow_run:
     workflows: ['daily-keirin-predict', 'intraday-keirin-odds', 'quick-keirin-results', 'settle-keirin-results']
     types: [completed]
@@ -26,6 +26,8 @@ jobs:
       - run: pip install numpy==2.4.2 lightgbm==4.7.0 requests
       - name: Validate formation, money and exact model assets
         run: python -m unittest discover -s tests -p 'test_nexus*.py'
+      - name: Verify prospective same-budget allocation comparison
+        run: python -m unittest discover -s tests -p 'test_conditional_budget_near_close.py'
       - name: Load the saved model without accessing the restricted data source
         env:
           PYTHONPATH: src
