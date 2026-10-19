@@ -3,20 +3,22 @@ const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)], C
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const yen=x=>x==null?'—':Math.round(x).toLocaleString('ja-JP')+'円',pct=x=>x==null?'—':(x*100).toFixed(2)+'％';
 const cats={FAVORITE:'本命',MAIN:'本線',MEDIUM:'中穴',HIGH:'大穴'},sessions={morning:'モーニング',day:'デイ',night:'ナイト',midnight:'ミッドナイト'};
-let data=null,tab='forecast',session='all',budget='auto',loading=false;
+let data=null,tab='forecast',session='all',budget='auto',resultFilter='confirmed',loading=false;
 const car=n=>`<span class="car c${Number(n)}">${Number(n)}</span>`;
 const clock=t=>t?new Date(t).toLocaleTimeString('ja-JP',{timeZone:'Asia/Tokyo',hour:'2-digit',minute:'2-digit'}):'—';
 const stamp=t=>t?new Date(t).toLocaleString('ja-JP',{timeZone:'Asia/Tokyo'}):'未保存';
+const shortStamp=t=>t?new Date(t).toLocaleString('ja-JP',{timeZone:'Asia/Tokyo',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'未取得';
 const moneyTitle=()=>budget==='auto'?'5,000〜10,000円 自動配分':yen(Number(budget))+' 配分';
 const profit=x=>`${x>=0?'+':''}${yen(x)}`;
 function effectivePrediction(r){return r.prediction&&(C.closed(r)||C.openPodium(r.prediction))?r.prediction:null;}
 function formHTML(blocks){return `<div class="formations"><div class="form-head"><span>組</span><span>1着</span><span>2着</span><span>3着</span></div>${blocks.map((b,i)=>`<div class="formation"><small>${i+1}</small>${['first','second','third'].map(k=>`<div class="car-set">${b[k].map(car).join('')}</div>`).join('')}</div>`).join('')}</div>`;}
 function outcomeHTML(r,p){
-  const flat=r.settlement?.flat, known=r.result_complete||r.cancelled||flat||r.winners?.length;
-  if(!known)return `<div class="result-bar"><span>結果待ち</span><span>公式結果の取得後に反映</span></div>`;
-  const voided=r.refund_all||r.cancelled||flat?.void;
-  const label=voided?'中止・返還':flat?flat.hit?'的中':'不的中':'公式結果';
-  return `<div class="result-bar ${flat?.hit?'hit':''}"><b>${label}</b><div class="winning-sets">${(r.winners||[]).map(t=>`<span class="winning-ticket">${t.split('-').map(car).join('<i>→</i>')}<small>${yen(r.payouts?.[t])}</small></span>`).join('')}</div></div>${!p&&!voided?'<p class="result-excluded">締切前予想なし・的中率と回収率には含めません</p>':''}`;
+  const flat=C.settlement(r,'flat'),state=C.resultState(r);
+  if(state==='pending')return '<div class="result-bar"><b>結果待ち</b><span>公式の着順・払戻を取得後に反映</span></div>';
+  if(state==='void')return '<div class="result-bar"><b>中止・返還</b><span>全返還は的中率・回収率の対象外</span></div>';
+  const label=state==='payout_pending'?'払戻確認中':flat?'100円買い：'+(flat.hit?'的中':'不的中'):'公式結果';
+  const names=new Map((r.riders||[]).map(x=>[String(x.car),x.name]));
+  return `<section class="official-result" aria-label="公式の着順と払戻"><div class="result-heading"><b>着順・払戻</b><span class="result-badge ${flat?.hit?'hit':''}">${label}</span></div>${(r.winners||[]).length>1?'<p class="form-note">同着あり · 的中組番ごとに表示</p>':''}${(r.winners||[]).map(t=>`<div class="outcome-set"><ol class="finish-order" aria-label="着順">${t.split('-').map((n,i)=>`<li><span class="finish-rank">${i+1}着</span><span class="finish-rider">${car(n)}<b>${esc(names.get(n)||'選手名未取得')}</b></span></li>`).join('')}</ol><div class="official-payout"><span>3連単 <b>${esc(t.replaceAll('-',' → '))}</b></span><span><strong>${yen(r.payouts?.[t])}</strong><small>100円あたりの払戻</small></span></div></div>`).join('')}${state==='payout_pending'?'<p class="form-note">払戻の確認が完了するまで、成績には反映しません。</p>':''}${!p?'<p class="result-excluded">締切前予想なし · 結果のみ表示、成績の対象外</p>':''}</section>`;
 }
 function renderStats(rows){
   const clean=rows.map(r=>effectivePrediction(r)?r:{...r,prediction:null});
@@ -35,7 +37,7 @@ function allocationNote(p,a){
   return '<p class="warning">締切前の配分更新待ち</p>';
 }
 function moneyHTML(r,p){
-  const a=C.allocation(p,budget), flat=r.settlement?.flat, weighted=r.settlement?.[budget];
+  const a=C.allocation(p,budget), flat=C.settlement(r,'flat'), weighted=C.settlement(r,budget);
   const line=x=>x?`<p class="${x.returned>=x.stake?'positive':'negative'}">払戻 ${yen(x.returned)}<br>収支 ${profit(x.returned-x.stake)}${x.refund?'（返還 '+yen(x.refund)+'）':''}</p>`:'';
   return `<div class="money"><div><small>1点100円 · 全${p.count}点</small><strong>${yen(p.count*100)}</strong>${line(flat)}</div><div><small>${budget==='auto'?'自動配分 · 成立する最小予算':'トリガミ回避配分'}</small><strong>${a?yen(a.budget):weighted?yen(weighted.stake):'配分なし'}</strong>${weighted?line(weighted):allocationNote(p,a)}</div></div>`;
 }
@@ -48,9 +50,9 @@ function forecastHTML(r,p){
   return `<div class="route-line"><span class="pill ${p.category==='HIGH'?'high':p.category==='MEDIUM'?'medium':''}">${esc(cats[p.category]||p.category)}</span><span class="count">3連単 ${p.count}点 · ${p.blocks.length}フォーメーション</span></div><div class="riders">${riders.map(x=>`<span class="rider"><span class="mark ${p.marks?.[x.car]?'':'unmarked'}">${esc(p.marks?.[x.car]||'・')}</span>${car(x.car)}${esc(x.name)}</span>`).join('')}</div><p class="lineup">予想隊列：${esc(lineup||'未確認')}</p>${legacy}${formHTML(p.blocks)}<p class="form-note">各組の全組み合わせ · 同一車と重複買い目を除き${p.count}点</p>${moneyHTML(r,p)}${groups.length?`<details class="amount-details"><summary>配分をフォーメーションで見る <span>${groups.length}種類の金額</span></summary><p class="form-note">同じ金額の買い目をまとめました。下の組をそれぞれ各指定金額で追加します。</p>${groups.map(g=>`<div class="amount-group"><h4>各${yen(g.amount)} <span>${g.count}点 · 計${yen(g.amount*g.count)}</span></h4>${formHTML(g.blocks)}</div>`).join('')}</details>`:''}<details><summary>取得オッズと保存時刻</summary><div class="quote-list">${p.blocks.map((b,i)=>`<div><b>組${i+1}</b>${C.expand([b]).map(t=>`<span>${esc(t)} <em>${p.odds?.[t]!=null?Number(p.odds[t]).toFixed(1)+'倍':'未取得'}</em></span>`).join('')}</div>`).join('')}</div><p class="form-note">オッズ取得 ${esc(stamp(p.odds_at))}<br>予想保存 ${esc(stamp(p.captured_at))}${p.allocation_saved_at?'<br>配分保存 '+esc(stamp(p.allocation_saved_at)):''}</p></details><div class="actions"><button class="copy" data-copy="${esc(r.race_id)}">フォーメーションをコピー</button>${a?`<button class="copy" data-copy="${esc(r.race_id)}" data-amounts="true">配分もコピー</button>`:''}${source}</div>`;
 }
 function raceHTML(r){
-  const p=effectivePrediction(r),ss=r.settlement,done=r.result_complete||r.winners?.length||ss,status=r.cancelled?'中止・返還':done?'結果確定':C.closed(r)?'締切済み':'受付中';
+  const p=effectivePrediction(r),state=C.resultState(r),done=state!=='pending',status=state==='void'?'中止・返還':state==='confirmed'?'結果確定':state==='payout_pending'?'払戻確認中':C.closed(r)?'締切済み':'受付中';
   const head=`<div class="race-head"><div><div class="venue-title">${esc(r.venue)}<span class="race-number">${Number(r.race_no)}R</span></div><div class="race-meta">${esc(r.class_name)} ${esc(r.stage)} · ${esc(sessions[r.session]||'時間帯未確認')}</div></div><div class="time"><b>${clock(r.start_at)}</b><span>${status} · 締切 ${clock(r.close_at)}</span></div></div>`;
-  if(!p){const message=r.prediction&&!C.openPodium(r.prediction)?'2着に複数候補を残す予想へ更新待ちです。':r.message||'予想の準備中です。';return `<article class="race">${head}${C.closed(r)||done?outcomeHTML(r,null):''}<div class="race-body"><p class="muted">${esc(message)}</p></div></article>`;}
+  if(!p){const message=r.prediction&&!C.openPodium(r.prediction)?'2着に複数候補を残す予想へ更新待ちです。':r.message||'予想の準備中です。';return `<article class="race" id="race-${esc(r.race_id)}">${head}${C.closed(r)||done?outcomeHTML(r,null):''}${done?'':`<div class="race-body"><p class="muted">${esc(message)}</p></div>`}</article>`;}
   const body=forecastHTML(r,p);
   return `<article class="race" id="race-${esc(r.race_id)}">${head}${tab==='results'?outcomeHTML(r,p):''}<div class="race-body">${tab==='results'?`${moneyHTML(r,p)}<details><summary>予想印・フォーメーションを確認</summary>${body}</details>`:body}</div></article>`;
 }
@@ -63,17 +65,27 @@ function render(){
   $('#race-view').classList.toggle('hidden',tab==='model');$('#model-view').classList.toggle('hidden',tab!=='model');
   const day=$('#date').value,venue=$('#venue').value;
   const dayRows=(data.races||[]).filter(r=>r.date===day);
-  $$('[data-session]').forEach(b=>{const n=dayRows.filter(r=>(!venue||r.venue===venue)&&(b.dataset.session==='all'||r.session===b.dataset.session)&&(tab==='results'?C.closed(r)||r.settlement:day!==data.date||!C.closed(r)&&!r.cancelled)).length;b.innerHTML=`${esc(b.dataset.session==='all'?'すべて':sessions[b.dataset.session])}<span class="session-count">${n}</span>`;});
+  const hasResult=r=>['confirmed','void'].includes(C.resultState(r));
+  const isResultRow=r=>C.closed(r)||C.resultState(r)!=='pending';
+  const matchesResult=r=>resultFilter==='all'||(resultFilter==='confirmed'?hasResult(r):!hasResult(r));
+  $$('[data-session]').forEach(b=>{const n=dayRows.filter(r=>(!venue||r.venue===venue)&&(b.dataset.session==='all'||r.session===b.dataset.session)&&(tab==='results'?isResultRow(r)&&matchesResult(r):day!==data.date||!C.closed(r)&&!r.cancelled)).length;b.innerHTML=`${esc(b.dataset.session==='all'?'すべて':sessions[b.dataset.session])}<span class="session-count">${n}</span>`;});
   let rows=dayRows.filter(r=>(session==='all'||r.session===session)&&(!venue||r.venue===venue));renderStats(rows);
-  if(tab==='results')rows=rows.filter(r=>C.closed(r)||r.settlement||r.cancelled);
+  const finished=rows.filter(isResultRow),confirmed=finished.filter(hasResult).length;
+  $('#result-controls').classList.toggle('hidden',tab!=='results');
+  $$('[data-result-filter]').forEach(b=>{const key=b.dataset.resultFilter,n=key==='confirmed'?confirmed:key==='pending'?finished.length-confirmed:finished.length;b.innerHTML=`${key==='confirmed'?'結果あり':key==='pending'?'結果待ち':'すべて'} <span>${n}</span>`;b.classList.toggle('active',key===resultFilter);b.setAttribute('aria-pressed',String(key===resultFilter));});
+  const resultAt=data.results_updated_at||data.races.map(r=>r.result_captured_at||'').sort().at(-1);
+  $('#results-updated').textContent='公式結果の取得 '+shortStamp(resultAt);
+  if(tab==='results')rows=finished.filter(matchesResult);
   else if(day===data.date)rows=rows.filter(r=>!C.closed(r)&&!r.cancelled);
   rows.sort((a,b)=>(tab==='results'?-1:1)*((a.start_at||'').localeCompare(b.start_at||'')||a.race_id.localeCompare(b.race_id)));
   const sessionOrder=tab==='results'?Object.keys(sessions).reverse():Object.keys(sessions);
   const groups=session==='all'?[...sessionOrder,'unknown'].map(k=>[k,rows.filter(r=>(r.session||'unknown')===k)]).filter(([,rr])=>rr.length):[[session,rows]];
-  $('#races').innerHTML=rows.length?groups.map(([k,rr])=>`${session==='all'?`<h3 class="session-heading">${esc(sessions[k]||'時間帯未確認')} <small>${rr.length}レース</small></h3>`:''}${rr.map(raceHTML).join('')}`).join(''):'<div class="empty">この条件のレースはありません。</div>';
-  $('#list-title').textContent=tab==='results'?'結果一覧':'これからのレース';$('#race-count').textContent=rows.length+'レース';
+  $('#races').innerHTML=rows.length?groups.map(([k,rr])=>`${session==='all'?`<h3 class="session-heading">${esc(sessions[k]||'時間帯未確認')} <small>${rr.length}レース</small></h3>`:''}${rr.map(raceHTML).join('')}`).join(''):`<div class="empty">${tab==='results'&&resultFilter==='confirmed'?'この条件の公式結果はまだありません。取得後にここへ表示します。':tab==='results'&&resultFilter==='pending'?'この条件で結果待ちのレースはありません。':'この条件のレースはありません。'}</div>`;
+  $('#list-title').textContent=tab==='results'?'レース結果':'これからのレース';$('#race-count').textContent=rows.length+'レース';
   const stale=Date.now()-Date.parse(data.updated_at)>30*60000;
-  const note=[data.notice,stale?'取得元の更新から30分以上経過しています。最新オッズ・欠場・結果をご確認ください。':''].filter(Boolean).join(' ');$('#status-note').classList.toggle('hidden',!note);$('#status-note').textContent=note;
+  const resultStale=finished.length>confirmed&&(!resultAt||Date.now()-Date.parse(resultAt)>30*60000);
+  const note=[data.notice,tab==='results'?resultStale?'未取得のレースは「結果待ち」で確認できます。公式結果の取得後に着順・払戻と成績を反映します。':'':stale?'予想・オッズの取得から30分以上経過しています。最新オッズ・欠場をご確認ください。':''].filter(Boolean).join(' ');$('#status-note').classList.toggle('hidden',!note);$('#status-note').textContent=note;
+  $('#updated').innerHTML=`<span>予想 ${esc(shortStamp(data.updated_at))}</span><span>結果 ${esc(shortStamp(resultAt))}</span>`;
   $('#model-view').innerHTML=modelHTML();
   $('#prev-day').disabled=$('#date').selectedIndex<=0;$('#next-day').disabled=$('#date').selectedIndex>=$('#date').options.length-1;
 }
@@ -84,7 +96,10 @@ $('#races').addEventListener('click',async e=>{
   if(button.dataset.amounts){const a=C.allocation(p,budget);if(!a)return;text+=`\n\n金額配分・計${yen(a.budget)}\n`+C.amountGroups(a.stakes).map(g=>`各${yen(g.amount)}（${g.count}点）\n`+g.blocks.map(x=>`${x.first.join('・')} → ${x.second.join('・')} → ${x.third.join('・')}`).join('\n')).join('\n')+`\nオッズ取得 ${stamp(p.odds_at)}\n最低払戻見込み ${yen(a.minimum_return)}`;}
   try{await navigator.clipboard.writeText(text);toast('フォーメーションをコピーしました');}catch{toast('コピーできませんでした。表示を選択してコピーしてください。');}
 });
-$$('[data-tab]').forEach(b=>b.addEventListener('click',()=>{tab=b.dataset.tab;$$('[data-tab]').forEach(x=>{x.classList.toggle('active',x===b);x.setAttribute('aria-pressed',String(x===b));});render();}));
+function selectTab(next,updateUrl=true){tab=['forecast','results','model'].includes(next)?next:'forecast';$$('[data-tab]').forEach(x=>{x.classList.toggle('active',x.dataset.tab===tab);x.setAttribute('aria-pressed',String(x.dataset.tab===tab));});if(updateUrl&&location.hash!=='#'+tab)location.hash=tab;render();}
+$$('[data-tab]').forEach(b=>b.addEventListener('click',()=>selectTab(b.dataset.tab)));
+window.addEventListener('hashchange',()=>selectTab(location.hash.slice(1),false));
+$$('[data-result-filter]').forEach(b=>b.addEventListener('click',()=>{resultFilter=b.dataset.resultFilter;render();}));
 $$('[data-session]').forEach(b=>b.addEventListener('click',()=>{session=b.dataset.session;$$('[data-session]').forEach(x=>{x.classList.toggle('active',x===b);x.setAttribute('aria-pressed',String(x===b));});render();}));
 $('#budget').addEventListener('change',()=>{budget=$('#budget').value;render();});$('#date').addEventListener('change',render);$('#venue').addEventListener('change',render);
 for(const [id,direction]of[['prev-day',-1],['next-day',1]])$('#'+id).addEventListener('click',()=>{const s=$('#date');s.selectedIndex=Math.max(0,Math.min(s.options.length-1,s.selectedIndex+direction));render();});
@@ -98,9 +113,9 @@ async function load(quiet=false){
   if(!fresh){if(data){render();if(!quiet)toast('通信できませんでした。保存済みの表示を維持しています。');return;}$('#races').innerHTML='<div class="empty">予想データを読み込めませんでした。更新ボタンで再読み込みしてください。</div>';$('#updated').textContent='通信を確認してください';return;}
   data=C.latestFeed([fresh,data]);const dates=[...new Set([...data.races.map(r=>r.date),data.date].filter(Boolean))].sort();$('#date').innerHTML=dates.map(d=>`<option value="${esc(d)}">${esc(d.replaceAll('-','/'))}</option>`).join('');$('#date').value=dates.includes(oldDate)?oldDate:data.date||dates.at(-1);
   const venues=[...new Set(data.races.map(r=>r.venue).filter(Boolean))].sort();$('#venue').innerHTML='<option value="">全開催場</option>'+venues.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');$('#venue').value=venues.includes(oldVenue)?oldVenue:'';
-  $('#updated').textContent='取得 '+new Date(data.updated_at).toLocaleString('ja-JP',{timeZone:'Asia/Tokyo',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});render();
+  render();
 }
 $('#refresh').addEventListener('click',()=>load());
 setInterval(()=>{if(!document.hidden){if(data)render();load(true);}},60000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){if(data)render();load(true);}});
-load();
+selectTab(location.hash.slice(1),false);load();

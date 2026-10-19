@@ -6,6 +6,9 @@ on:
     branches: [main]
     paths:
       - "src/settle_results.py"
+      - "src/nexus_results_sync.py"
+      - "src/nexus_model/budget.py"
+      - "src/official_outcomes.py"
       - "src/site_manager.py"
       - ".github/workflows/quick-results.yml"
   schedule:
@@ -88,10 +91,15 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add outputs/latest_results.json outputs/index.html outputs/manager_post_settlement_status.json
-          if [ -f outputs/company/rider_official_observations.csv ]; then
-            git add outputs/company/rider_official_observations.csv
-          fi
+          stage_result_outputs() {
+            git add outputs/latest_results.json outputs/index.html outputs/manager_post_settlement_status.json
+            for result_path in outputs/company/rider_official_observations.csv outputs/nexus_live.json outputs/nexus_forecasts outputs/nexus_results_sync_status.json; do
+              if [ -e "$result_path" ]; then
+                git add -- "$result_path"
+              fi
+            done
+          }
+          stage_result_outputs
           git diff --cached --quiet && exit 0
           git commit -m "Quick refresh official keirin results"
           # fetch_today_entries.py may leave data/raw changes that this
@@ -133,10 +141,7 @@ jobs:
               python src/fetch_today_entries.py || true
             fi
             python src/settle_results.py
-            git add outputs/latest_results.json outputs/index.html outputs/manager_post_settlement_status.json
-          if [ -f outputs/company/rider_official_observations.csv ]; then
-            git add outputs/company/rider_official_observations.csv
-          fi
+            stage_result_outputs
             git diff --cached --quiet && exit 0
             git commit -m "Quick refresh official keirin results"
             git reset --hard HEAD
@@ -144,3 +149,4 @@ jobs:
             sleep $((attempt * 2))
           done
           exit 1
+

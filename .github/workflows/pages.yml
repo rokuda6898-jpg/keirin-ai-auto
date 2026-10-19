@@ -5,7 +5,7 @@ on:
     paths: ['site/**', 'tests/test_nexus_core.js', 'outputs/nexus_live.json', 'src/build_public_site.py', 'src/site_retirement.py', '.github/workflows/pages.yml']
   workflow_dispatch:
   workflow_run:
-    workflows: ['conditional-trifecta-live', 'nexus-formation-publish']
+    workflows: ['conditional-trifecta-live', 'nexus-formation-publish', 'quick-keirin-results', 'settle-keirin-results']
     types: [completed]
   schedule:
     # Retain a periodic refresh; successful canonical forecasts publish immediately.
@@ -83,4 +83,5 @@ jobs:
           path: public-build
       - uses: actions/deploy-pages@v4
         id: deployment
+
 

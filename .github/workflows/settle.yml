@@ -233,8 +233,26 @@ jobs:
             # -X ours must not discard concurrent frozen predictions/outcomes
             # or publish an aggregate built before those records arrived.
             python src/reconcile_position_experiment.py --ref origin/main
+
+            # NEXUS forecasts can arrive from the owner's PC during settlement.
+            # This job only changes their outcomes: restore the newest frozen
+            # tickets/amounts, then reapply the already fetched official results.
+            for nexus_path in outputs/nexus_live.json outputs/nexus_forecasts; do
+              if git cat-file -e "origin/main:$nexus_path" 2>/dev/null; then
+                git restore --source=origin/main --staged --worktree -- "$nexus_path"
+              fi
+            done
+            PYTHONPATH=src python - <<'PY'
+          from settle_results import sync_nexus_results_after_settlement
+          sync_nexus_results_after_settlement()
+          PY
             git add outputs/company/annual_position_* outputs/company/annual_equation_* outputs/company/annual_fusion_*
-            git diff --staged --quiet || git commit -m "Reconcile prospective position evidence"
+            for nexus_path in outputs/nexus_live.json outputs/nexus_forecasts outputs/nexus_results_sync_status.json; do
+              if [ -e "$nexus_path" ]; then
+                git add -- "$nexus_path"
+              fi
+            done
+            git diff --staged --quiet || git commit -m "Reconcile prospective evidence and NEXUS results"
 
             if git push origin HEAD:main; then
               echo "settlement published"
@@ -247,3 +265,4 @@ jobs:
 
           echo "settlement publish failed after bounded retries"
           exit 1
+

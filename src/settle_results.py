@@ -1003,11 +1003,37 @@ def run_settlement(args):
     print(f"saved: {REPORT_MD}")
 
 
+
+def sync_nexus_results_after_settlement():
+    """Sync frozen NEXUS forecasts without making legacy settlement depend on it."""
+    status = {"attempted_at_jst": datetime.now(ZoneInfo("Asia/Tokyo")).isoformat()}
+    try:
+        from nexus_results_sync import sync_latest_results
+        status.update(status="ok", report=sync_latest_results(OUTPUT_DIR))
+    except Exception as exc:
+        status.update(status="error", error_type=type(exc).__name__, error=str(exc))
+        # The next scheduled result run retries; keep the official legacy
+        # results publishable even if a NEXUS snapshot is temporarily invalid.
+        print(f"::warning::NEXUS result sync failed; next result run will retry: "
+              f"{type(exc).__name__}: {exc}", flush=True)
+    try:
+        target = OUTPUT_DIR / "nexus_results_sync_status.json"
+        temporary = target.with_suffix(".json.tmp")
+        temporary.write_text(json.dumps(status, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        temporary.replace(target)
+    except Exception as exc:
+        print(f"::warning::Could not save NEXUS sync status: {type(exc).__name__}: {exc}", flush=True)
+    print("NEXUS_RESULT_SYNC " + json.dumps(status, ensure_ascii=False), flush=True)
+    return status
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--min-expected-profit", type=float, default=0.0)
     args = parser.parse_args()
     result = run_settlement(args)
+    if not getattr(args, "dry_run", False):
+        sync_nexus_results_after_settlement()
     from site_manager import refresh_monitor_after_results
     refresh_monitor_after_results()
     return result
@@ -1015,4 +1041,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 

@@ -3,6 +3,12 @@
   const expand = blocks => [...new Set(blocks.flatMap(b => b.first.flatMap(a => b.second.flatMap(c => b.third.filter(d => new Set([a,c,d]).size === 3).map(d => [a,c,d].join('-'))))))].sort();
   const openPodium = p => Boolean(p?.tickets?.length && new Set(p.tickets.map(t => String(t).split('-')[1])).size >= 2);
   const closed = (r,now=Date.now()) => Boolean(r.closed || r.close_at && now >= Date.parse(r.close_at));
+  const settlement = (r,mode) => r.result_complete===false && !r.refund_all && !r.cancelled && !r.settlement?.flat?.void ? null : r.settlement?.[mode]||null;
+  function resultState(r){
+    if(r.refund_all || r.cancelled || r.settlement?.flat?.void)return 'void';
+    if(r.result_complete===true || r.result_complete!==false && (r.settlement?.flat || r.winners?.length && r.winners.every(t=>Number.isInteger(r.payouts?.[t]) && r.payouts[t]>0)))return 'confirmed';
+    return r.winners?.length?'payout_pending':'pending';
+  }
   function allocation(p,mode){
     if(!p)return null;
     const key = mode === 'auto' ? p.auto_budget : Number(mode);
@@ -37,7 +43,7 @@
     for(const r of rows){
       const p=r.prediction;
       if(!p){out.unpredicted++;continue;}
-      const settled=r.settlement?.[mode];
+      const settled=settlement(r,mode);
       if(settled){
         if(settled.void){out.void++;continue;}
         out.settled++;out.hits+=Number(Boolean(settled.hit));out.stake+=Number(settled.net_stake??(settled.stake-(settled.refund||0)));out.returned+=Number(settled.winnings??(settled.returned-(settled.refund||0)));out.refund+=Number(settled.refund||0);
@@ -46,8 +52,8 @@
     }
     out.hitRate=out.settled?out.hits/out.settled:null;out.roi=out.stake?out.returned/out.stake:null;out.profit=out.returned-out.stake;return out;
   }
-  const latestFeed=feeds=>feeds.filter(f=>f?.schema===1&&Array.isArray(f.races)).sort((a,b)=>(Date.parse(b.updated_at)||0)-(Date.parse(a.updated_at)||0)||(Date.parse(b.policy_updated_at)||0)-(Date.parse(a.policy_updated_at)||0))[0]||null;
-  const api={expand,openPodium,closed,allocation,packTickets,amountGroups,totals,latestFeed};
+  const latestFeed=feeds=>feeds.filter(f=>f?.schema===1&&Array.isArray(f.races)).sort((a,b)=>(Date.parse(b.updated_at)||0)-(Date.parse(a.updated_at)||0)||(Date.parse(b.policy_updated_at)||0)-(Date.parse(a.policy_updated_at)||0)||(Date.parse(b.results_updated_at)||0)-(Date.parse(a.results_updated_at)||0))[0]||null;
+  const api={expand,openPodium,closed,resultState,settlement,allocation,packTickets,amountGroups,totals,latestFeed};
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
   root.NexusCore=api;
 })(typeof globalThis==='undefined'?this:globalThis);
