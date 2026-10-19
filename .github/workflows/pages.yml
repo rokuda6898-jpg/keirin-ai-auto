@@ -5,8 +5,7 @@ on:
     paths: ['site/**', 'src/build_public_site.py', 'src/site_retirement.py', '.github/workflows/pages.yml']
   workflow_dispatch:
   workflow_run:
-    # Publish once the selected model has joined forecasts, allocations and results.
-    workflows: ['conditional-trifecta-live']
+    workflows: ['conditional-trifecta-live', 'nexus-formation-publish']
     types: [completed]
   schedule:
     # Retain a periodic refresh; successful canonical forecasts publish immediately.
@@ -32,6 +31,7 @@ jobs:
       - name: Check public app
         run: |
           node --check site/app.js
+          node --check site/nexus.js
           node --check site/archive.js
           node --check site/forecast.js
           node --check site/forecast-math.js
@@ -51,8 +51,8 @@ jobs:
           conditional = (root/'conditional.html').read_text(encoding='utf-8')
           assert 'shadow-mode' not in home and 'independent.html' not in home
           assert '独立予想' not in company
-          assert 'forecast.js' in home and '条件付き3連単' in conditional
-          forecast_script = (root/'forecast.js').read_text(encoding='utf-8')
+          assert 'nexus.js' in home and '条件付き3連単' in conditional
+          forecast_script = (root/'nexus.js').read_text(encoding='utf-8')
           assert 'モーニング' in forecast_script and 'ミッドナイト' in forecast_script
           assert '5,000' in home and '10,000' in home
           assert 'url=conditional.html' in (root/'independent.html').read_text(encoding='utf-8')
