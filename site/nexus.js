@@ -108,7 +108,7 @@ $('#races').addEventListener('click',async e=>{
   if(button.dataset.amounts){const a=displayAllocation(p);if(!a)return;text+=`\n\n金額配分・計${yen(a.budget)}\n`+C.amountGroups(a.stakes).map(g=>`各${yen(g.amount)}（${g.count}点）\n`+g.blocks.map(x=>`${x.first.join('・')} → ${x.second.join('・')} → ${x.third.join('・')}`).join('\n')).join('\n')+`\nオッズ取得 ${stamp(p.odds_at)}\n最低払戻見込み ${yen(a.minimum_return)}`;}
   try{await navigator.clipboard.writeText(text);toast('フォーメーションをコピーしました');}catch{toast('コピーできませんでした。表示を選択してコピーしてください。');}
 });
-function selectTab(next,updateUrl=true){tab=['forecast','results','model'].includes(next)?next:'forecast';document.body.classList.toggle('results-mode',tab==='results');$$('[data-tab]').forEach(x=>{x.classList.toggle('active',x.dataset.tab===tab);x.setAttribute('aria-pressed',String(x.dataset.tab===tab));});if(updateUrl&&location.hash!=='#'+tab)location.hash=tab;render();}
+function selectTab(next,updateUrl=true){if(next==='model-details')next='model';tab=['forecast','results','model'].includes(next)?next:'forecast';document.body.classList.toggle('results-mode',tab==='results');$$('[data-tab]').forEach(x=>{x.classList.toggle('active',x.dataset.tab===tab);x.setAttribute('aria-pressed',String(x.dataset.tab===tab));});if(updateUrl&&location.hash!=='#'+tab)location.hash=tab;render();}
 $$('[data-tab]').forEach(b=>b.addEventListener('click',()=>selectTab(b.dataset.tab)));
 window.addEventListener('hashchange',()=>selectTab(location.hash.slice(1),false));
 $$('[data-result-filter]').forEach(b=>b.addEventListener('click',()=>{resultFilter=b.dataset.resultFilter;render();}));
