@@ -5,10 +5,12 @@ import numpy as np
 import lightgbm as lgb
 from . import base,team,role,v2,optimizer,pair,open_formation
 from .forecast_confidence import from_joint
+from .replay_evidence import from_inference
 
 class Engine:
     def __init__(self,root):
-        self.root=Path(root);self.manifest=json.loads((self.root/'manifest.json').read_text('utf8'));self.models={}
+        self.root=Path(root);manifest_bytes=(self.root/'manifest.json').read_bytes()
+        self.manifest=json.loads(manifest_bytes.decode('utf8'));self.manifest_sha256=hashlib.sha256(manifest_bytes).hexdigest();self.models={}
         for name,info in self.manifest['assets'].items():
             path=self.root/name
             if hashlib.sha256(path.read_bytes()).hexdigest()!=info['sha']:raise ValueError('model hash mismatch: '+name)
@@ -42,6 +44,11 @@ class Engine:
         assert np.isfinite(q).all() and abs(q.sum()-1)<1e-8
         plan=optimizer.select(cars,q,cap)
         if spec['formation_selection'][str(cap)]=='shape_only':plan=pair.select(cars,q,cap,plan)
+        # Copy the original complete distribution/formation before the live repair.
+        # Optional research evidence must not suppress a valid forecast.
+        replay={}
+        try:replay['replay_evidence']=from_inference(cars,q.tolist(),plan,spec,self.manifest_sha256)
+        except Exception as exc:replay['replay_evidence_error']=f'{type(exc).__name__}: {exc}'
         plan=open_formation.select(cars,q,cap,plan)
         tickets=sorted(set(t for b in plan['blocks'] for t in itertools.product(b['first'],b['second'],b['third']) if len(set(t))==3))
         assert len(tickets)==cap and len(plan['blocks'])<=4 and set(tickets)==set(map(tuple,plan['tickets']))
@@ -51,5 +58,5 @@ class Engine:
         return dict(model_id=spec['id'],policy_id=plan['policy_id'],plan_changed=plan['plan_changed'],search=plan['search'],category=cat,count=cap,blocks=plan['blocks'],tickets=['-'.join(map(str,t)) for t in tickets],
             marks=marks,band_probabilities=dict(zip(['MAIN','MEDIUM','HIGH'],team.three(pp).tolist())),
             first_probabilities={c:float(cube[j].sum()) for j,c in enumerate(cars)},q=q.tolist(),
-            confidence=from_joint(cars,q,tickets))
+            confidence=from_joint(cars,q,tickets),**replay)
 

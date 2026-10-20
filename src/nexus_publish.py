@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 from nexus_model import source,inputs,update_history,budget
 from nexus_model.engine import Engine
 from nexus_model.publication import is_open_prediction, allocation_snapshot, settle_prediction
+from nexus_model.replay_evidence import bind_prediction
 ROOT=Path(__file__).resolve().parents[1];OUT=ROOT/'outputs';MODEL=ROOT/'models/nexus53';STATE=ROOT/'data/nexus';CACHE=STATE/'sources'
 def read(path,default=None):return json.loads(path.read_text('utf-8-sig')) if path.exists() else default
 def save(path,v):
@@ -42,7 +43,14 @@ def run(history_only=False):
                 dd,line=inputs.build(H,d,m);p=model.predict(dd);p.pop('q',None);p.update(captured_at=source.now().isoformat(),input_captured_at=z['captured_at'],source_sha256=z['sha256'],history_through=H.data['through'],allocations={},odds={});r['lines']=line['known_unchanged_groups']
                 # Inference can take time; never publish a newly generated post-close forecast.
                 if source.now().timestamp()>=race['closeAt']:p=None;r['closed']=True
-                else:r['prediction']=p;print('Forecast',rid,p['count'],'points',flush=True)
+                else:
+                    try:bind_prediction(p,race_id=rid,race_date=today,close_at=r['close_at'])
+                    except Exception as exc:
+                        p.pop('replay_evidence',None);p['replay_evidence_error']=f'{type(exc).__name__}: {exc}'
+                    if p.get('replay_evidence_error'):errors.append(dict(race_id=rid,error='replay evidence: '+p['replay_evidence_error']))
+                    # Binding also happens before the publication deadline.
+                    if source.now().timestamp()>=race['closeAt']:p=None;r['closed']=True
+                    else:r['prediction']=p;print('Forecast',rid,p['count'],'points',flush=True)
             except Exception as e:errors.append(dict(race_id=rid,error=str(e)));r['message']='予想入力を確認中（欠測を推定で補完しません）';p=None
         if p and not r['closed'] and not d.get('finalOdds') and captured.timestamp()<race['closeAt']:
             quotes={'-'.join(map(str,q['key'])):q['odds'] for q in d.get('trifecta',[]) if q.get('unitPrice')==100 and not q.get('absent') and q.get('odds',0)>0 and len(q.get('key',[]))==3}

@@ -20,6 +20,7 @@ from nexus_input_snapshots import (ROOT, SNAPSHOTS, JST, canonical, now_jst,
 from nexus_model import inputs, source, update_history
 from nexus_model.forecast_confidence import annotate_prediction
 from nexus_model.publication import allocation_snapshot, is_open_prediction
+from nexus_model.replay_evidence import bind_prediction
 
 
 def csv_rows(path):
@@ -362,6 +363,14 @@ def run(root=ROOT, clock=now_jst, engine_factory=None, history=None,
                                  source_sha256=snap["sha256"], input_sha256=snap["input_sha256"],
                                  source_kind=snap["source_kind"], history_through=history.data["through"],
                                  allocations={}, odds={})
+                # Only new preclose inferences receive evidence; legacy rows stay as saved.
+                try:
+                    bind_prediction(candidate, race_id=rid, race_date=today, close_at=row["close_at"])
+                except Exception as exc:
+                    candidate.pop("replay_evidence", None)
+                    candidate["replay_evidence_error"] = f"{type(exc).__name__}: {exc}"
+                if candidate.get("replay_evidence_error"):
+                    errors.append(dict(race_id=rid, reason="replay evidence: " + candidate["replay_evidence_error"]))
                 annotate_prediction(candidate, annotated_at=saved_at.isoformat())
                 if old and not withdrawn_ticket:
                     row.setdefault("previous_predictions", []).append(copy.deepcopy(old))
