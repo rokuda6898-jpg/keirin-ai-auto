@@ -86,6 +86,7 @@ class RoiPublicationIsolation(unittest.TestCase):
         self.namespace['copy_newer_inputs'] = lambda source, destination: None
         self.namespace['gate_saved_publication'] = lambda *args: []
         self.namespace['update_near_close_comparison'] = lambda *args, **kwargs: (True, [])
+        self.namespace['update_forward_comparison'] = lambda *args, **kwargs: (True, [])
 
         def gate(root, baseline, lead_seconds):
             state['events'].append('roi_gate')
