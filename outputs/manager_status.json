@@ -1,26 +1,26 @@
 {
-  "checked_at_jst": "2026-10-20T14:31:57+09:00",
-  "status": "repaired",
+  "checked_at_jst": "2026-10-21T00:26:10+09:00",
+  "status": "waiting_results",
   "repaired": true,
   "attempts": [
     {
       "attempt": 0,
       "problems": [
         {
-          "type": "results_waiting",
-          "race_ids": [
-            "082320261020"
+          "type": "site_release_stale",
+          "count": 1,
+          "details": [
+            "code changed since generation: src/fusion_shadow_live.py"
           ]
         },
         {
           "type": "results_overdue",
           "race_ids": [
-            "052320261020",
-            "062320261020",
-            "063620261020",
-            "072320261020",
-            "073620261020",
-            "083620261020"
+            "086220261020",
+            "088520261020",
+            "096220261020",
+            "098520261020",
+            "103620261020"
           ]
         }
       ],
@@ -28,7 +28,29 @@
         "severity": "warning",
         "problem_types": [
           "results_overdue",
-          "results_waiting"
+          "site_release_stale"
+        ],
+        "race_count": 71,
+        "expected_riders": 511,
+        "actual_riders": 511,
+        "rider_integrity_ok": true
+      },
+      "repair_action": "prediction_regeneration+settlement_refresh"
+    },
+    {
+      "attempt": 1,
+      "problems": [
+        {
+          "type": "results_overdue",
+          "race_ids": [
+            "103620261020"
+          ]
+        }
+      ],
+      "health": {
+        "severity": "warning",
+        "problem_types": [
+          "results_overdue"
         ],
         "race_count": 71,
         "expected_riders": 511,
@@ -38,11 +60,42 @@
       "repair_action": "settlement_refresh"
     },
     {
-      "attempt": 1,
-      "problems": [],
+      "attempt": 2,
+      "problems": [
+        {
+          "type": "results_overdue",
+          "race_ids": [
+            "103620261020"
+          ]
+        }
+      ],
       "health": {
-        "severity": "ok",
-        "problem_types": [],
+        "severity": "warning",
+        "problem_types": [
+          "results_overdue"
+        ],
+        "race_count": 71,
+        "expected_riders": 511,
+        "actual_riders": 511,
+        "rider_integrity_ok": true
+      },
+      "repair_action": "settlement_refresh"
+    },
+    {
+      "attempt": 3,
+      "problems": [
+        {
+          "type": "results_overdue",
+          "race_ids": [
+            "103620261020"
+          ]
+        }
+      ],
+      "health": {
+        "severity": "warning",
+        "problem_types": [
+          "results_overdue"
+        ],
         "race_count": 71,
         "expected_riders": 511,
         "actual_riders": 511,
@@ -1132,15 +1185,19 @@
     }
   },
   "health": {
-    "severity": "ok",
-    "problem_types": [],
+    "severity": "warning",
+    "problem_types": [
+      "results_overdue"
+    ],
     "race_count": 71,
     "expected_riders": 511,
     "actual_riders": 511,
     "rider_integrity_ok": true
   },
   "recurrence": {
-    "level": 0,
-    "counts": {}
+    "level": 2,
+    "counts": {
+      "results_overdue:103620261020": 3
+    }
   }
 }
