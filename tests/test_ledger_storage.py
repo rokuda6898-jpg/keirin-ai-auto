@@ -21,6 +21,12 @@ from department_experiment_v2 import append, read_lines, seal
 
 class LedgerStorageTests(unittest.TestCase):
     def setUp(self):
+        # Temporary repositories must not depend on a developer's global Git
+        # identity; production merge commits use the repository configuration.
+        git_environment = patch.dict(os.environ, {
+            'GIT_CONFIG_NOSYSTEM': '1', 'GIT_CONFIG_GLOBAL': os.devnull})
+        git_environment.start()
+        self.addCleanup(git_environment.stop)
         self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name)
         self.path = self.root / 'outputs/company' / io.LARGE_LEDGER
@@ -210,6 +216,8 @@ class LedgerStorageTests(unittest.TestCase):
 
     def make_branches(self, remote_compressed, local_compressed):
         self.git('init', '-b', 'main')
+        self.git('config', 'user.name', 'Test')
+        self.git('config', 'user.email', 'test@example.invalid')
         self.path.write_bytes(b'{"r":1}\n')
         base = self.commit('original evidence')
         self.git('checkout', '-b', 'remote')

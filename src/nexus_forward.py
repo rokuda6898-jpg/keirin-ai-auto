@@ -6,6 +6,7 @@ is never imported and this module neither fetches source data nor places bets.
 import argparse
 import copy
 from collections import Counter
+from contextlib import ExitStack
 from datetime import date, datetime, timedelta
 from fractions import Fraction
 import hashlib
@@ -21,6 +22,7 @@ from nexus_model.forecast_confidence import from_joint
 from nexus_model.publication import allocation_snapshot, settle_prediction
 from nexus_model.replay_evidence import verify
 from nexus_roi_research import select_tickets
+from nexus_source_replay import PublishedReplay, card_digest, digest as replay_digest, forecast_core, has_market_result, verify_record
 
 FEED = Path("outputs/nexus_forward.json")
 POLICY_ID = "nexus-forward-ten-v1"
@@ -132,7 +134,10 @@ def _source_signature(prediction):
 
 
 def _frozen_signature(row):
-    return _digest({key: row.get(key) for key in FROZEN})
+    value = {key: row.get(key) for key in FROZEN}
+    if "source_replay" in row:
+        value["source_replay"] = row["source_replay"]
+    return _digest(value)
 
 
 def _source(row, manifest, manifest_hash, current):
@@ -200,13 +205,15 @@ def _quotes(root, row, prediction, cars, current):
     race = data.get("race", {})
     close = _stamp(row["close_at"])
     quote_at = _stamp(snap["captured_at"])
+    if (current - quote_at).total_seconds() > 1800:
+        raise ValueError("オッズ取得から30分を超えているため、配分は未保存です")
     if (snap.get("schema") != 1 or snap.get("source_kind") != "existing_public_page_response"
             or meta.get("race_id") != row["race_id"] or meta.get("date") != row["date"]
             or str(race.get("id")) != row["race_id"]
             or race.get("number") != row["race_no"]
             or str(data.get("schedule", {}).get("date")) != row["date"].replace("-", "")
             or race.get("cancel") or race.get("decidedAt") or data.get("finalOdds")
-            or data.get("results")
+            or data.get("results") or has_market_result(data)
             or snap.get("input_sha256") != prediction.get("input_sha256")
             or not quote_at <= current < close or not 0 <= (current - quote_at).total_seconds() <= 1800
             or quote_at < _stamp(prediction["input_captured_at"])
@@ -234,13 +241,19 @@ def _quotes(root, row, prediction, cars, current):
     return quotes, quote_at.isoformat(), _hash(snap["sha256"])
 
 
-def _new_forecast(root, source_row, manifest, manifest_hash, clock, min_lead):
+def _new_forecast(root, source_row, manifest, manifest_hash, clock, min_lead, replayer=None):
     current, row = _now(clock), _metadata(source_row)
     close = _stamp(row["close_at"])
     if (current + timedelta(seconds=min_lead) >= close or source_row.get("closed")
             or _known_outcome(source_row) or row["date"] != current.astimezone(close.tzinfo).date().isoformat()):
         raise ValueError("締切前に保存できる未確定レースが必要です")
-    original, evidence = _source(source_row, manifest, manifest_hash, current)
+    reconstructed = None
+    if replayer is not None and isinstance(source_row.get("prediction"), dict) and "replay_evidence" not in source_row["prediction"]:
+        reconstructed = replayer.replay(source_row, manifest, manifest_hash, clock, min_lead)
+        original, evidence = source_row["prediction"], reconstructed
+        _tickets(original, evidence["cars"])
+    else:
+        original, evidence = _source(source_row, manifest, manifest_hash, current)
     triples, blocks = select_tickets(evidence["cars"], evidence["q"], POINTS)
     tickets = ["-".join(map(str, triple)) for triple in triples]
     candidate = dict(model_id=manifest["id"], policy_id=POLICY_ID, count=POINTS, tickets=tickets,
@@ -288,6 +301,8 @@ def _new_forecast(root, source_row, manifest, manifest_hash, clock, min_lead):
                source_prediction_sha256=_source_signature(original),
                source_evidence_sha256=evidence["evidence_sha256"],
                allocation_status=allocation_status, allocation_reason=allocation_reason)
+    if reconstructed is not None:
+        row["source_replay"] = reconstructed
     row["forecast_sha256"] = _frozen_signature(row)
     return row
 
@@ -322,6 +337,8 @@ def _validate_saved(row, activated):
         raise ValueError("frozen forecast integrity mismatch")
     _hash(row["source_prediction_sha256"])
     _hash(row["source_evidence_sha256"])
+    if "source_replay" in row:
+        verify_record(row["source_replay"], row)
 
 
 def _validate_payload(payload, manifest_hash=None):
@@ -439,7 +456,7 @@ def _write(root, payload, current):
     save_json(root / FEED, payload)
 
 
-def run(root=ROOT, clock=now_jst, min_lead_seconds=MIN_LEAD_SECONDS, settle_only=False):
+def run(root=ROOT, clock=now_jst, min_lead_seconds=MIN_LEAD_SECONDS, settle_only=False, replay_published=False):
     root, current = Path(root), _now(clock)
     min_lead = _lead(min_lead_seconds)
     baseline = read_json(root / FEED)
@@ -460,35 +477,39 @@ def run(root=ROOT, clock=now_jst, min_lead_seconds=MIN_LEAD_SECONDS, settle_only
         allocation="smallest_common_feasible_budget_same_preclose_quotes_once",
         mode="simulation", backfill=False, annual_target_verified=False), races=[])
     rows = _index(payload["races"])
-    for rid, source_row in sources.items():
-        if settle_only:
-            if rid in rows:
-                _update_result(rows[rid], source_row, _now(clock))
-            continue
-        # Current schedules are complete even while score evidence is missing.
-        # Prior dates appear only when this policy genuinely saved a forecast.
-        if source_row.get("date") != current.date().isoformat() and rid not in rows:
-            continue
-        row = rows.get(rid)
-        if row is None or not row.get("candidate"):
-            try:
-                row = _metadata(source_row)
-            except (ValueError, KeyError, TypeError, OverflowError):
-                # Invalid metadata cannot identify a user-facing race reliably.
+    with ExitStack() as cleanup:
+        replayer = PublishedReplay(root) if replay_published and not settle_only else None
+        if replayer is not None:
+            cleanup.callback(replayer.close)
+        for rid, source_row in sources.items():
+            if settle_only:
+                if rid in rows:
+                    _update_result(rows[rid], source_row, _now(clock))
                 continue
-            now, close = _now(clock), _stamp(row["close_at"])
-            closed = now + timedelta(seconds=min_lead) >= close or bool(source_row.get("closed")) or _known_outcome(source_row)
-            row.update(status="closed_without_record" if closed else "missing_preclose_evidence",
-                       reason_code="closed_without_preclose_record" if closed else "missing_score_evidence",
-                       reason="締切前の10点保存がないため比較成績に含めません" if closed else "締切前の全着順評価を待っています",
-                       result={}, settlement={})
-            if not closed:
+            # Current schedules are complete even while score evidence is missing.
+            # Prior dates appear only when this policy genuinely saved a forecast.
+            if source_row.get("date") != current.date().isoformat() and rid not in rows:
+                continue
+            row = rows.get(rid)
+            if row is None or not row.get("candidate"):
                 try:
-                    row = _new_forecast(root, source_row, manifest, manifest_hash, clock, min_lead)
-                except (ValueError, KeyError, TypeError, OverflowError) as exc:
-                    row["reason"] = str(exc)[:240]
-            rows[rid] = row
-        _update_result(row, source_row, _now(clock))
+                    row = _metadata(source_row)
+                except (ValueError, KeyError, TypeError, OverflowError):
+                    # Invalid metadata cannot identify a user-facing race reliably.
+                    continue
+                now, close = _now(clock), _stamp(row["close_at"])
+                closed = now + timedelta(seconds=min_lead) >= close or bool(source_row.get("closed")) or _known_outcome(source_row)
+                row.update(status="closed_without_record" if closed else "missing_preclose_evidence",
+                           reason_code="closed_without_preclose_record" if closed else "missing_score_evidence",
+                           reason="締切前の10点保存がないため比較成績に含めません" if closed else "締切前の全着順評価を待っています",
+                           result={}, settlement={})
+                if not closed:
+                    try:
+                        row = _new_forecast(root, source_row, manifest, manifest_hash, clock, min_lead, replayer)
+                    except (ValueError, KeyError, TypeError, OverflowError, OSError, ImportError) as exc:
+                        row["reason"] = str(exc)[:240]
+                rows[rid] = row
+            _update_result(row, source_row, _now(clock))
     for rid, row in rows.items():
         if rid not in sources:
             _update_result(row, None, _now(clock))
@@ -524,10 +545,14 @@ def gate_publication(root, baseline, clock=now_jst, lead_seconds=MIN_LEAD_SECOND
         source = sources.get(row["race_id"], {})
         candidates = [source.get("prediction")] + list(source.get("previous_predictions", []))
         source_exists = any(isinstance(p, dict) and _source_signature(p) == row["source_prediction_sha256"] for p in candidates)
+        if "source_replay" in row:
+            source_exists = any(isinstance(p, dict) and _source_signature(p) == row["source_prediction_sha256"]
+                and replay_digest(forecast_core(p)) == row["source_replay"]["source_baseline_sha256"] for p in candidates)
+            source_exists = source_exists and card_digest(source) == row["source_replay"]["source_card_sha256"]
         try:
             meta = _metadata(source)
             source_unchanged = (all(meta[key] == row[key] for key in ("race_id", "date", "race_no", "start_at", "close_at"))
-                                and {r["car"] for r in meta["riders"]} == {r["car"] for r in row["riders"]}
+                                and meta["riders"] == row["riders"]
                                 and len(meta["riders"]) == len(row["riders"])
                                 and not source.get("closed") and not _known_outcome(source))
         except (ValueError, KeyError, TypeError, OverflowError):
@@ -556,6 +581,7 @@ if __name__ == "__main__":
     parser.add_argument("--root", type=Path, default=ROOT)
     parser.add_argument("--min-lead-seconds", type=float, default=MIN_LEAD_SECONDS)
     parser.add_argument("--settle-only", action="store_true")
+    parser.add_argument("--replay-published", action="store_true", help="Require exact original Git provenance for legacy score reconstruction")
     args = parser.parse_args()
-    report = run(args.root, min_lead_seconds=args.min_lead_seconds, settle_only=args.settle_only)
+    report = run(args.root, min_lead_seconds=args.min_lead_seconds, settle_only=args.settle_only, replay_published=args.replay_published)
     print(json.dumps(report["coverage"] if report else {"status": "not_started"}, ensure_ascii=False))

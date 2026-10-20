@@ -550,7 +550,7 @@ def update_forward_comparison(root, baseline, generate=False):
     path = Path(root) / "outputs/nexus_forward.json"
     try:
         if generate:
-            subprocess.run([sys.executable, str(Path(root) / "src/nexus_forward.py")],
+            subprocess.run([sys.executable, str(Path(root) / "src/nexus_forward.py"), "--replay-published"],
                            cwd=root, check=True)
         from nexus_forward import gate_publication
         return True, gate_publication(root, copy.deepcopy(baseline), lead_seconds=60)
