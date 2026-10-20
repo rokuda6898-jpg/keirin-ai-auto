@@ -1,0 +1,102 @@
+name: lossless-ledger-storage
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/ledger-storage.yml'
+      - 'src/ledger_io.py'
+      - 'src/department_experiment_v2.py'
+      - 'src/preserve_validation.py'
+      - 'src/publication_merge.py'
+      - 'src/reconcile_position_experiment.py'
+      - 'tests/test_ledger_storage.py'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: lossless-ledger-storage
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify lossless storage and old/new branch reconciliation
+        env:
+          PYTHONPATH: src
+        run: python -m unittest discover -s tests -p 'test_ledger_storage.py'
+      - name: Migrate only existing ledger bytes and publish with normal push
+        env:
+          PYTHONPATH: src
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          receipt_dir="$RUNNER_TEMP/ledger-storage-receipts"
+          mkdir -p "$receipt_dir"
+          for attempt in 1 2 3 4; do
+            git fetch --depth=1 origin main
+            source_sha=$(git rev-parse origin/main)
+            migration_tree="$RUNNER_TEMP/ledger-storage-$GITHUB_RUN_ID-$attempt"
+            git worktree add --detach "$migration_tree" "$source_sha"
+            receipt_path="$receipt_dir/attempt-$attempt.json"
+            python "$migration_tree/src/ledger_io.py" --root "$migration_tree" --receipt "$receipt_path"
+            python - "$receipt_path" "$source_sha" <<'PY'
+          import json, pathlib, sys
+          path = pathlib.Path(sys.argv[1])
+          proof = json.loads(path.read_text())
+          proof.update(source_commit=sys.argv[2], published=False)
+          path.write_text(json.dumps(proof, sort_keys=True, indent=2) + '\n')
+          PY
+            git -C "$migration_tree" add -A -- outputs/company/annual_position_v2_ledger.jsonl outputs/company/annual_position_v2_ledger.jsonl.gz
+            if git -C "$migration_tree" diff --cached --quiet; then
+              python - "$receipt_path" "$source_sha" <<'PY'
+          import json, pathlib, sys
+          path = pathlib.Path(sys.argv[1])
+          proof = json.loads(path.read_text())
+          proof.update(published=True, publication_commit=sys.argv[2], publication_status='already_current')
+          path.write_text(json.dumps(proof, sort_keys=True, indent=2) + '\n')
+          PY
+              git worktree remove "$migration_tree"
+              exit 0
+            fi
+            git -C "$migration_tree" commit -m 'Archive position evidence without changing forecast records'
+            publication_sha=$(git -C "$migration_tree" rev-parse HEAD)
+            if git -C "$migration_tree" push origin HEAD:main; then
+              python - "$receipt_path" "$publication_sha" <<'PY'
+          import json, pathlib, sys
+          path = pathlib.Path(sys.argv[1])
+          proof = json.loads(path.read_text())
+          proof.update(published=True, publication_commit=sys.argv[2], publication_status='pushed')
+          path.write_text(json.dumps(proof, sort_keys=True, indent=2) + '\n')
+          print(json.dumps(proof, sort_keys=True))
+          PY
+              git worktree remove "$migration_tree"
+              exit 0
+            fi
+            git fetch --depth=1 origin main
+            if [ "$(git rev-parse origin/main)" = "$source_sha" ]; then
+              echo 'Push failed without a main-branch race; no retry or force push.' >&2
+              exit 1
+            fi
+            git worktree remove "$migration_tree"
+          done
+          echo 'Main advanced during all four attempts; original ledger remains recoverable.' >&2
+          exit 1
+      - name: Preserve byte, line and SHA equality proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ledger-storage-proof-${{ github.run_id }}
+          path: ${{ runner.temp }}/ledger-storage-receipts/*.json
+          if-no-files-found: warn
+          retention-days: 30

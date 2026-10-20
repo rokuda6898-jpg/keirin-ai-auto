@@ -82,3 +82,26 @@ test('duplicate feed identity and a different policy are rejected', () => {
   assert.throws(() => ui.validateFeed({schema: 1, policy: {id: 'nexus-forward-ten-v1'}, races: [r, r]}));
   assert.throws(() => ui.validateFeed({schema: 1, policy: {id: 'different-policy'}, races: [r]}));
 });
+test('automatic selection advances after close and prioritizes a saved upcoming plan', () => {
+  const earlier = row(), waiting = row(), later = row();
+  waiting.race_id = '027120261020'; waiting.close_at = '2026-10-20T13:00:00+09:00'; delete waiting.candidate; delete waiting.baseline;
+  later.race_id = '037120261020'; later.close_at = '2026-10-20T14:00:00+09:00';
+  const rows = [earlier, waiting, later];
+  assert.equal(ui.meetingSelection(rows, undefined, Date.parse('2026-10-20T11:00:00+09:00')), earlier);
+  assert.equal(ui.meetingSelection(rows, undefined, Date.parse('2026-10-20T12:01:00+09:00')), later);
+  assert.equal(ui.meetingSelection(rows, earlier.race_id, Date.parse('2026-10-20T12:01:00+09:00')), earlier);
+});
+test('selection falls back to an open missing record or the last race without hiding races', () => {
+  const r = row(), missing = row(); missing.race_id = '027120261020'; missing.close_at = '2026-10-20T13:00:00+09:00'; delete missing.candidate;
+  assert.equal(ui.meetingSelection([r, missing], undefined, Date.parse('2026-10-20T12:01:00+09:00')), missing);
+  assert.equal(ui.meetingSelection([r, missing], undefined, Date.parse('2026-10-20T14:00:00+09:00')), missing);
+  assert.equal(ui.meetingSelection([], undefined), undefined);
+});
+test('replay provenance keeps original input, prediction, publication and current save distinct', () => {
+  const r = row(); r.baseline.input_captured_at = '2026-10-20T08:55:00+09:00';
+  const normal = ui.provenance(r);
+  assert.equal(normal.replay, null); assert.equal(normal.records.length, 3);
+  r.source_replay = {evidence_kind: 'preclose_replay_of_published_forecast', input_captured_at: '2026-10-20T08:55:00+09:00', original_prediction_at: '2026-10-20T09:00:00+09:00', original_published_at: '2026-10-20T09:02:00+09:00', replayed_at: '2026-10-20T09:58:00+09:00', original_full_q_observed: false};
+  const values = Object.fromEntries(ui.provenance(r).records.map(v => [v.key, v.at]));
+  assert.deepEqual(values, {input: r.source_replay.input_captured_at, prediction: r.source_replay.original_prediction_at, publication: r.source_replay.original_published_at, replay: r.source_replay.replayed_at, ten: r.saved_at});
+});

@@ -39,6 +39,24 @@
     return count === 10 && planTickets(row.baseline).length > 0 && Number.isFinite(saved) && Number.isFinite(close) && Number.isFinite(created) && Number.isFinite(original) && original <= saved && created <= saved && saved < close;
   }
 
+  function meetingSelection(rows, explicitId, now = Date.now()) {
+    return rows.find(r => r.race_id === explicitId)
+      || rows.find(r => hasSnapshot(r) && epoch(r.close_at) > now)
+      || rows.find(r => epoch(r.close_at) > now)
+      || rows[rows.length - 1];
+  }
+
+  function provenance(row) {
+    const replay = row?.source_replay?.evidence_kind === 'preclose_replay_of_published_forecast' ? row.source_replay : null;
+    const records = [
+      {key: 'input', label: '元の入力取得', at: replay ? replay.input_captured_at : row.baseline?.input_captured_at},
+      {key: 'prediction', label: '元の予想保存', at: replay ? replay.original_prediction_at : row.baseline?.captured_at},
+    ];
+    if (replay) records.push({key: 'publication', label: '元の予想公開', at: replay.original_published_at}, {key: 'replay', label: '今回の再現', at: replay.replayed_at});
+    records.push({key: 'ten', label: '10点予想の保存', at: row.saved_at});
+    return {replay, records};
+  }
+
   function allocation(plan, selection = 'auto') {
     const chosen = selection === 'auto' ? plan?.auto_budget : Number(selection);
     const amounts = plan?.allocations?.[String(chosen)], selected = planTickets(plan);
@@ -94,7 +112,7 @@
     return feed;
   }
 
-  const math = {planTickets, hasSnapshot, allocation, official, settlement, comparison, validateFeed};
+  const math = {planTickets, hasSnapshot, meetingSelection, provenance, allocation, official, settlement, comparison, validateFeed};
   if (typeof module !== 'undefined' && module.exports) module.exports = math;
   if (typeof document === 'undefined') return;
 
@@ -160,13 +178,19 @@
     return `<div class="purchase-grid"><article class="purchase-card"><h5>100円ずつ購入</h5><div class="purchase-total"><strong>${yen(p.count * 100)}</strong><small>${p.count}点 × 100円</small></div><p>上のフォーメーションを各点100円で購入した場合。</p>${resultCash(row, side, 'flat', 'auto')}</article>${allocatedCard(row, side)}</div>`;
   }
 
+  function sourceTimes(row) {
+    const info = provenance(row), commit = info.replay?.original_publication_commit;
+    const proof = info.replay ? `<details class="source-proof"><summary>再現の確認内容</summary><p>保存された入力・モデル・履歴で再計算し、公開済みの買い目・印・保存された確率との一致を確認した評価から10点を選びました。${info.replay.original_full_q_observed === false ? '当時の全着順確率を直接保存した記録ではありません。' : ''}</p>${/^[a-f0-9]{40}$/.test(commit || '') ? `<a href="https://github.com/rokuda6898-jpg/keirin-ai-auto/commit/${commit}">元の公開記録を確認 →</a>` : ''}</details>` : '';
+    return `<section class="prediction-origin${info.replay ? ' replay-origin' : ''}" aria-label="予想に使った記録の時刻"><h5>${info.replay ? '保存済み予想の再現' : '予想に使った記録'}</h5><dl>${info.records.map(r => `<div><dt>${r.label}</dt><dd>${stamp(r.at)}</dd></div>`).join('')}</dl><p>日本時間。掲載更新の時刻と、予想に使った入力の時刻は異なります。</p>${proof}</section>`;
+  }
+
   function raceDetail(row) {
     const s = status(row), p = row.candidate, ready = hasSnapshot(row);
     const heading = `<div class="race-heading"><div><h4>${escape(row.venue)} ${escape(row.race_no)}R</h4><p class="race-times">${time(row.start_at)} 発走 · ${time(row.close_at)} 締切</p></div><div class="race-flags"><span class="status ${s.css}">${s.label}</span>${ready ? grade(p) : ''}</div></div>`;
     if (!ready) return `${heading}<div class="missing"><strong>${epoch(row.close_at) > Date.now() ? '10点予想の保存待ちです' : '締切前の10点予想が保存されていません'}</strong><p>${escape(row.reason || '必要な予測データを確認できたレースから、締切前に保存します。')}</p><a href="index.html#forecast">NEXUSの元の予想・結果を見る →</a></div>`;
     const c = p.confidence;
     const riderList = (Array.isArray(row.riders) ? row.riders : []).filter(r => /^[1-9]$/.test(String(r.car))).map(r => `<li>${car(r.car)}<span class="mark">${escape(p.marks?.[String(r.car)] || '—')}</span><span class="rider-name">${escape(r.name)}</span></li>`).join('');
-    return `${heading}<p class="confidence-note">${c?.status === 'assessed' ? `選んだ10点へのモデル支持度 ${pct(c.model_mass)}。実際の的中率とは異なります。` : '自信度の根拠を確認中です。'}</p><ul class="rider-list" aria-label="選手の予想印">${riderList}</ul>${formation(p, '10点フォーメーション')}${purchases(row, 'candidate')}<details class="baseline-details"><summary>元の予想と比較（${row.baseline.count}点）</summary><div class="baseline-content">${formation(row.baseline, '同時に保存した元のフォーメーション')}${purchases(row, 'baseline')}<p class="saved-note">元の予想 ${stamp(row.baseline.captured_at)} 保存。配分は比較用に同じオッズで保存しています。</p></div></details><p class="saved-note">10点予想 ${stamp(row.saved_at)} 保存 · 買い目は保存時のまま表示しています。</p>`;
+    return `${heading}<p class="confidence-note">${c?.status === 'assessed' ? `選んだ10点へのモデル支持度 ${pct(c.model_mass)}。実際の的中率とは異なります。` : '自信度の根拠を確認中です。'}</p>${sourceTimes(row)}<ul class="rider-list" aria-label="選手の予想印">${riderList}</ul>${formation(p, '10点フォーメーション')}${purchases(row, 'candidate')}<details class="baseline-details"><summary>元の予想と比較（${row.baseline.count}点）</summary><div class="baseline-content">${formation(row.baseline, '同時に保存した元のフォーメーション')}${purchases(row, 'baseline')}<p class="saved-note">元の予想 ${stamp(row.baseline.captured_at)} 保存。${row.baseline.odds_at ? `比較用のオッズ ${stamp(row.baseline.odds_at)}。` : '比較用のオッズは未保存です。'}</p></div></details><p class="saved-note">10点予想 ${stamp(row.saved_at)} 保存 · 買い目は保存時のまま表示しています。</p>`;
   }
 
   function renderMeetings(rows) {
@@ -176,12 +200,11 @@
     const groups = new Map();
     for (const r of rows) {const key = `${r.date}|${r.venue}`; if (!groups.has(key)) groups.set(key, []); groups.get(key).push(r);}
     byId('meetings').innerHTML = [...groups].map(([key, group]) => {
-      const chosen = group.find(r => r.race_id === state.selected.get(key)) || group.find(r => epoch(r.close_at) > Date.now()) || group[group.length - 1];
-      state.selected.set(key, chosen.race_id);
+      const chosen = meetingSelection(group, state.selected.get(key));
       const nav = group.map(r => {const s = status(r); return `<button type="button" data-race="${r.race_id}" data-group="${escape(key)}" aria-pressed="${r.race_id === chosen.race_id}" aria-label="${escape(r.venue)} ${r.race_no}レース ${time(r.start_at)}発走 ${s.label}"><strong>${r.race_no}R${hasSnapshot(r) && ['S', 'A', 'B'].includes(r.candidate.confidence?.grade) ? `<span class="tiny-grade"> ${r.candidate.confidence.grade}</span>` : ''}</strong><small>${time(r.start_at)}</small><small>${s.label}</small></button>`;}).join('');
       return `<section class="meeting" aria-label="${escape(group[0].venue)} ${dateLabel(group[0].date)}"><div class="meeting-head"><h3>${escape(group[0].venue)}<span>${bandLabel(group[0].session)}</span></h3><small>${dateLabel(group[0].date)} · ${group.length}R</small></div><div class="race-picker" data-picker-key="${escape(key)}" role="group" aria-label="${escape(group[0].venue)}のレース番号">${nav}</div><div class="race-detail">${raceDetail(chosen)}</div></section>`;
     }).join('');
-    document.querySelectorAll('.race-picker').forEach(el => {const active = el.querySelector('[aria-pressed=true]'); el.scrollLeft = offsets.get(el.dataset.pickerKey) ?? (active ? Math.max(0, active.offsetLeft - el.offsetLeft - el.clientWidth / 2 + active.clientWidth / 2) : 0);});
+    document.querySelectorAll('.race-picker').forEach(el => {const active = el.querySelector('[aria-pressed=true]'), centered = active ? Math.max(0, active.offsetLeft - el.offsetLeft - el.clientWidth / 2 + active.clientWidth / 2) : 0; el.scrollLeft = state.selected.has(el.dataset.pickerKey) ? offsets.get(el.dataset.pickerKey) ?? centered : centered;});
   }
 
   function metricCard(name, values, sample, css) {

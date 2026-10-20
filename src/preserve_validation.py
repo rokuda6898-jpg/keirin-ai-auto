@@ -1,10 +1,12 @@
 """Carry immutable pre-close evidence and validated feature cache across git resets."""
 import argparse
-import hashlib
 import shutil
 from pathlib import Path
 
-from common import ROOT
+from ledger_io import (compact_ledger, existing_paths, is_archived_ledger,
+                       merge_ledger_paths, storage_paths)
+
+ROOT = Path(__file__).resolve().parents[1]
 
 LEDGERS = ["outputs/company/ticket_return_snapshots.jsonl",
            "outputs/company/company_decision_ledger.jsonl",
@@ -34,7 +36,24 @@ CACHES = ["data/raw/live_feature_base.csv", "data/raw/live_feature_base.meta.jso
 
 def save(directory, root=ROOT):
     directory = Path(directory)
-    for name in LEDGERS + CACHES + [OBSERVATIONS]:
+    for name in LEDGERS:
+        if is_archived_ledger(name):
+            compact_ledger(root / name)
+        current = existing_paths(root / name)
+        if not current:
+            # A reset may temporarily remove an entire ledger; retain its last
+            # complete backup exactly as the original save behavior did.
+            continue
+        for source in current:
+            target = directory / source.relative_to(root)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, target)
+        # Discard an obsolete backup representation only after all current
+        # representations were copied. The backup stays logically complete.
+        for source in storage_paths(root / name):
+            if not source.exists():
+                (directory / source.relative_to(root)).unlink(missing_ok=True)
+    for name in CACHES + [OBSERVATIONS]:
         path = root / name
         if path.exists():
             target = directory / name
@@ -46,18 +65,11 @@ def restore(directory, root=ROOT):
     directory = Path(directory)
     for name in LEDGERS:
         source = directory / name
-        if not source.exists():
+        if not existing_paths(source):
             continue
         target = root / name
         target.parent.mkdir(parents=True, exist_ok=True)
-        existing = target.read_text(encoding="utf-8").splitlines() if target.exists() else []
-        seen = {hashlib.sha256(line.encode()).hexdigest() for line in existing}
-        for line in source.read_text(encoding="utf-8").splitlines():
-            key = hashlib.sha256(line.encode()).hexdigest()
-            if line and key not in seen:
-                existing.append(line)
-                seen.add(key)
-        target.write_text("\n".join(existing) + "\n", encoding="utf-8")
+        merge_ledger_paths(target, target, source)
     observations = directory / OBSERVATIONS
     if observations.exists():
         import pandas as pd
@@ -82,3 +94,4 @@ if __name__ == "__main__":
     parser.add_argument("directory")
     args = parser.parse_args()
     (save if args.mode == "save" else restore)(args.directory)
+

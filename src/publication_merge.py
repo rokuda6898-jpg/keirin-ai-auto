@@ -7,6 +7,8 @@ release validation must pass before committing. Otherwise the caller rebuilds.
 import subprocess
 from pathlib import Path
 from preserve_validation import LEDGERS
+from ledger_io import (COMPRESS_AT_BYTES, git_ledger_lines, is_archived_ledger, stage_ledger,
+                       union_lines as union_ledger_lines, write_ledger_lines)
 
 
 def union_lines(remote, local):
@@ -33,7 +35,26 @@ def reconcile(root, validate=None):
         return result.returncode == 0
     try:
         conflicts = git(root, 'diff', '--name-only', '--diff-filter=U').decode().splitlines()
+        handled = set()
+        # An old branch may append plain JSONL while another has migrated to
+        # gzip. Reconcile the logical ledger even if Git merged the two paths
+        # without a textual conflict; neither representation may overwrite it.
+        for name in LEDGERS:
+            if not is_archived_ledger(name):
+                continue
+            local, local_compressed = git_ledger_lines(root, 'HEAD', name)
+            remote, remote_compressed = git_ledger_lines(root, 'origin/main', name)
+            if not local and not remote:
+                continue
+            write_ledger_lines(root / name, union_ledger_lines(remote, local),
+                               compressed=local_compressed or remote_compressed
+                               or sum(len(line) + 1 for line in local + remote)
+                               >= COMPRESS_AT_BYTES)
+            stage_ledger(root, name)
+            handled.update((name, name + '.gz'))
         for name in conflicts:
+            if name in handled:
+                continue
             if name in LEDGERS:
                 local = git(root, 'show', 'HEAD:'+name)
                 remote = git(root, 'show', 'origin/main:'+name)
@@ -58,10 +79,11 @@ def reconcile(root, validate=None):
             git(root, 'add', 'outputs/release_manifest.json')
         git(root, 'commit', '-m', 'Reconcile concurrent publication without recalculating frozen picks')
         return True
-    except (ValueError, subprocess.CalledProcessError):
+    except (OSError, EOFError, RuntimeError, ValueError, subprocess.CalledProcessError):
         git(root, 'merge', '--abort')
         return False
 
 
 if __name__ == '__main__':
     raise SystemExit(0 if reconcile(Path(__file__).resolve().parents[1]) else 1)
+

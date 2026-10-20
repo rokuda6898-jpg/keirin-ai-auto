@@ -15,6 +15,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from official_outcomes import normalize_outcome, ticket_return
+from ledger_io import append_ledger_line, is_archived_ledger, ledger_lines
 
 ROOT = Path(__file__).resolve().parents[1]
 VERSION = 'department_positions_v2'
@@ -55,9 +56,7 @@ def seal(row):
 
 
 def read_lines(path):
-    if not path.exists():
-        return
-    for line in path.read_text(encoding='utf-8').splitlines():
+    for line in ledger_lines(path):
         if line.strip():
             try:
                 yield json.loads(line)
@@ -67,6 +66,10 @@ def read_lines(path):
 
 def append(path, row):
     path.parent.mkdir(parents=True, exist_ok=True)
+    if is_archived_ledger(path):
+        line = json.dumps(seal(row), ensure_ascii=False, allow_nan=False) + '\n'
+        append_ledger_line(path, line.encode('utf-8'))
+        return
     with path.open('a', encoding='utf-8') as handle:
         handle.write(json.dumps(seal(row), ensure_ascii=False, allow_nan=False) + '\n')
 
@@ -540,3 +543,4 @@ def render(report, folder):
         ''.join(parts) + '<p>部署間・比較間で対象レースが違う成績を単純に順位付けしません。確率・EV・展開仮説は未校正です。</p>' +\
         '<p><a href="annual_position_v2_report.json">詳細・除外理由・実装版</a></p></main></html>'
     (folder / 'annual_position_v2_report.html').write_text(page, encoding='utf-8')
+
