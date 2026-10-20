@@ -1,0 +1,97 @@
+{
+  "schema": 1,
+  "kind": "original_nexus_annual_roi_research",
+  "as_of_jst": "2026-10-20",
+  "status": "blocked_missing_original_annual_records",
+  "research_only": true,
+  "objective": {
+    "model_id": "nexus-formation-5385-v1",
+    "period": [
+      "2025-10-09",
+      "2026-10-08"
+    ],
+    "races": 27351,
+    "unit_yen_per_ticket": 100,
+    "target_roi_strictly_above": 1.0,
+    "same_original_race_cohort_required": true
+  },
+  "baseline": {
+    "races": 27351,
+    "hits": 14729,
+    "hit_rate": 0.5385177872838287,
+    "flat_stake": 43596000,
+    "flat_return": 33783680,
+    "roi": 0.7749261400128452,
+    "tickets": 435960,
+    "profit_yen": -9812320,
+    "evidence": "Saved original-model manifest and independently checked arithmetic; original per-race reproduction remains incomplete."
+  },
+  "previous_micro_candidate": {
+    "hits": 14728,
+    "hit_rate_percent_rounded": 53.848,
+    "roi_percent_rounded": 77.497,
+    "hundredfold_hit_races": 265,
+    "evidence": "Previously reported rounded comparison; original per-race study not yet obtained."
+  },
+  "break_even_arithmetic": {
+    "same_stake_additional_return_yen": 9812320,
+    "same_stake_return_increase_ratio": 0.2904455642487733,
+    "unchanged_return_maximum_stake_yen_for_break_even": 33783680,
+    "note": "Conditional arithmetic, not a claim that tickets can be removed without losing any payout."
+  },
+  "annual_baseline_reproduced_from_races": false,
+  "annual_candidate_trials_completed": 0,
+  "new_annual_roi": null,
+  "annual_target_achieved": false,
+  "live_model_changed": false,
+  "research_implementation": {
+    "script": "src/nexus_roi_research.py",
+    "protocol": "docs/ANNUAL_ROI_PROTOCOL.md",
+    "candidates_fixed_points": [
+      6,
+      8,
+      10,
+      12
+    ],
+    "max_formations": 4,
+    "unit_yen": 100,
+    "development": [
+      "2025-10-09",
+      "2026-04-08"
+    ],
+    "chronological_validation": [
+      "2026-04-09",
+      "2026-10-08"
+    ],
+    "selection": "Select one candidate by development ROI before evaluating its chronological validation period. Keep every original race.",
+    "untouched_holdout": false
+  },
+  "required_original_inputs": [
+    "Original 27,351-race ID inventory from the original study",
+    "Each original race: 6/15/24 tickets, complete original formation blocks and official per-100-yen payouts/refunds",
+    "Complete ordered joint probabilities for every original race, or the original research bundle needed to regenerate them"
+  ],
+  "separate_conditional_research": {
+    "included_in_this_benchmark": false,
+    "note": "The 129-race conditional allocation comparison and the conditional 8-ticket feed do not establish the annual Nexus flat-100-yen objective."
+  },
+  "score_evidence_helpers": {
+    "path": "src/nexus_model/replay_evidence.py",
+    "purpose": "Canonical complete-q and preclose evidence validation helpers for research exports.",
+    "live_full_q_capture_enabled": false
+  },
+  "sources": [
+    {
+      "repository": "rokuda6898-jpg/keirin-ai-auto",
+      "path": "models/nexus53/manifest.json",
+      "sha256": "5ce4034253644252200f57532c734bbd5244e6697d4982dc6eb6452252c1c23d"
+    }
+  ],
+  "validation": {
+    "annual_research_unit_tests": 21,
+    "replay_evidence_unit_tests": 7,
+    "fixtures": "Synthetic; not evidence of annual model performance.",
+    "missing_original_input_preflight": "exit 2; blocked; no annual candidate result generated",
+    "resumption": "Only the same frozen protocol, data, implementation and selected candidate can resume; completed results are read unchanged."
+  }
+}
