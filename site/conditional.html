@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#102822">
   <meta name="description" content="競輪の予想印、3連単フォーメーション、100円均等と予算配分、結果・的中率・回収率をまとめて確認。">
-  <title>条件付き3連単｜KEIRIN NEXUS</title>
+  <title>回収重視8点・条件付き3連単｜KEIRIN NEXUS</title>
   <link rel="stylesheet" href="site-wide.css?v=20261019">
-  <link rel="stylesheet" href="forecast.css?v=20261019-near-close">
+  <link rel="stylesheet" href="forecast.css?v=20261020-roi-eight">
 </head>
 <body class="forecast-page conditional-page">
   <a class="skip-link" href="#main">本文へ</a>
@@ -17,8 +17,15 @@
   </header>
   <main id="main">
     <section class="page-heading">
-      <div><p class="eyebrow">CONDITIONAL TRIFECTA / 12 PICKS</p><h1>条件付き3連単</h1><p class="lead">全開催・全レースの上位12点。予想印とフォーメーション、100円買いと予算配分を確認。</p></div>
+      <div><p class="eyebrow">CONDITIONAL TRIFECTA / RETURN FOCUS</p><h1>条件付き3連単</h1><p class="lead">回収重視8点を追加。全開催・全レースの予想印、フォーメーション、結果をまとめて確認。</p></div>
       <div class="update-control"><span>データ更新 <strong id="updated">読み込み中</strong><small>日本時間</small></span><button type="button" id="refresh" class="quiet-button">↻ 更新</button></div>
+    </section>
+    <section class="policy-switcher" aria-label="予想の選び方">
+      <div class="policy-buttons" role="group" aria-label="予想方式を切り替える">
+        <button type="button" id="roi-eight-view" data-policy-view="roi8" aria-pressed="true"><span class="policy-label">回収重視8点 <b>新採用</b></span><small>100円ずつで800円 / 配分5,000〜10,000円</small></button>
+        <button type="button" id="original-twelve-view" data-policy-view="original12" aria-pressed="false"><span class="policy-label">従来12点</span><small>以前の予想・配分・結果はこちら</small></button>
+      </div>
+      <p id="policy-context" class="policy-context" aria-live="polite">回収重視8点の保存データを読み込んでいます。従来12点にも切り替えられます。</p>
     </section>
     <p id="notice" class="notice" role="status" aria-live="polite">予想データを読み込んでいます。</p>
     <button id="next-race" type="button" class="next-race" hidden><span class="next-label"><span class="live-dot"></span>次の発走</span><strong id="next-race-name"></strong><span id="next-race-time"></span><b aria-hidden="true">→</b></button>
@@ -31,26 +38,42 @@
       <div id="venue-tabs" class="venue-tabs" role="group" aria-label="開催場"></div>
     </section>
     <section class="performance" aria-labelledby="performance-heading">
-      <div class="section-heading"><h2 id="performance-heading">選択中の成績</h2><span id="performance-scope"></span></div>
+      <div class="section-heading"><h2 id="performance-heading">回収重視8点・導入後の成績</h2><span id="performance-scope"></span></div>
       <div id="performance-cards" class="performance-cards"></div>
-      <p class="stat-note">精算済みの仮想購入を集計。結果待ち・精算保留は別表示。回収率＝払戻÷投資。</p>
-    </section>
-    <section id="roi-comparison" class="roi-comparison" aria-labelledby="roi-comparison-heading">
-      <div class="section-heading"><h2 id="roi-comparison-heading">回収率改善の比較</h2><span id="roi-comparison-scope"></span></div>
-      <p class="near-close-intro">締切前オッズ配分・比較中。締切5〜40分前のオッズで配分を保存し、初回配分と比べます。</p>
-      <div id="roi-comparison-content"><p class="near-close-note">比較記録を読み込んでいます。</p></div>
+      <p id="performance-note" class="stat-note">導入後、締切前に保存した8点予想だけを仮想購入として集計。研究の回収率は含みません。</p>
     </section>
     <section id="race-area" tabindex="-1" aria-labelledby="race-heading">
       <div class="section-heading race-section-heading"><h2 id="race-heading">開催レース</h2><span id="race-count"></span></div>
       <div id="races"></div>
       <button type="button" id="load-more" class="load-more" hidden>さらに結果を表示</button>
     </section>
-    <details id="model-details" class="model-details"><summary>使用モデル・成績の見方</summary><div id="model-information"><h3>条件付き3連単・上位12点</h3><p>1着に応じた2着、その1・2着に応じた3着を評価して、上位12点を選ぶ既存モデルです。全開催・全レースを予想対象とし、選手の予想印と買い目を保存しています。</p><p>保存した同じ買い目を、各点100円と予算5,000〜10,000円の配分で比較します。配分は保存済みの金額を表示し、結果確定後は公式払戻で精算します。NEXUSの隊列・役割モデルとは別の予想・成績として確認できます。</p></div><p>自信度は予想時点のモデル支持度で、S（65％以上）・A（45％以上）・B（45％未満）の3段階を表示します。支持度は選んだ12点へのモデル評価の合計です。確定成績の的中率は上の集計欄で確認できます。元の指標が保存されていない予想は「B・参考／未評価」と表示します。</p><p>的中率＝的中レース数÷精算済みレース数。回収率＝払戻額÷投資額。配分版は配分が成立したレースだけが対象なので、各点100円版と母数が異なります。</p><p>フォーメーションは行ごとに購入してください。同じ車番の重複を除き、各行の点数を合計すると保存した買い目と一致します。</p><p>配分時のオッズで元本以上の想定払戻になる額を保存します。その後のオッズ下落により、的中しても購入額を下回る場合があります。旧記録の1万円配分は保存時の金額で表示します。</p><p><a href="conditional-study.html">条件付き3連単の過去検証 →</a>　<a href="index.html#model">NEXUS採用モデル →</a></p></details>
+    <details id="prospective-comparison" class="prospective-comparison" data-evidence-scope="prospective-only">
+      <summary><strong>導入後・同じレースで比較</strong><span>回収重視8点と従来12点</span></summary>
+      <p class="near-close-intro">導入後全期間（上の絞り込みとは別）。締切前に8点予想を保存したレースで、両方の的中率・回収率を比べます。</p>
+      <div id="prospective-comparison-content"><p class="near-close-note">導入後の比較記録を読み込んでいます。</p></div>
+    </details>
+    <section id="roi-research" class="roi-research" aria-labelledby="roi-research-heading" data-evidence-scope="retrospective-research">
+      <p class="eyebrow">採用判断に使った過去データの研究</p>
+      <div class="section-heading"><h2 id="roi-research-heading">8点に絞ると、回収率はどう変わったか</h2><a href="original/conditional_roi_research_2026-10-20.json">検証記録を開く ↗</a></div>
+      <p class="research-intro">保存済みの確率順位1〜4位・9〜12位を選ぶ8点案を、当時のオッズと公式払戻で再計算しました。導入前の研究であり、上の導入後成績には入りません。</p>
+      <div class="research-headline"><div><span>同じ129R・同じ購入総額の配分比較</span><strong><small>従来12点</small>94.28% <b aria-hidden="true">→</b> <small>8点案</small>104.72%</strong></div><p>投資 1,045,200円 → 払戻 1,094,530円<br>8点案の収支 <b>+49,330円</b></p></div>
+      <p class="research-tradeoff">的中率は43.41%（56/129R）から35.66%（46/129R）へ低下。買い目を絞ることで、的中回数が減る結果になりました。</p>
+      <div class="research-table-wrap"><table class="research-table"><caption>期間・購入条件を変えた確認</caption><thead><tr><th scope="col">確認条件</th><th scope="col">従来12点</th><th scope="col">8点案</th></tr></thead><tbody><tr><th scope="row">後半の時系列検証49R<br><small>同額の配分・100%未達</small></th><td>53.44%</td><td>62.11%</td></tr><tr><th scope="row">最高払戻の1Rを双方から除外<br><small>同額の配分・128R</small></th><td>85.06%</td><td>91.26%</td></tr><tr><th scope="row">各点100円・同じ646R<br><small>12点は1,200円 / 8点は800円</small></th><td>79.77%</td><td>92.90%</td></tr></tbody></table></div>
+      <p class="research-note">表はすべて回収率です。時系列に分けた過去データの再検証で、完全未見の試験ではありません。期間全体では100%を超えましたが、後半の検証と最高払戻除外では100%未達です。導入後の回収率100%超えは未確認のため、締切前に保存した予想で引き続き確かめます。公式結果の欠落1Rを補正した2026年10月20日の集計です。</p>
+    </section>
+    <details id="roi-comparison" class="roi-comparison legacy-comparison">
+      <summary><strong>従来12点の締切前オッズ配分を比較</strong><span>以前からの配分検証を開く</span></summary>
+      <div class="section-heading"><h2 id="roi-comparison-heading">従来12点・配分だけを比較</h2><span id="roi-comparison-scope"></span></div>
+      <p class="near-close-intro">同じ12点を、初回配分と締切5〜40分前のオッズ配分で比較中です。回収重視8点の成績とは別に表示します。</p>
+      <div id="roi-comparison-content"><p class="near-close-note">比較記録を読み込んでいます。</p></div>
+    </details>
+    <details id="model-details" class="model-details"><summary>使用モデル・成績の見方</summary><div id="model-information"><h3>条件付き3連単・回収重視8点 / 従来12点</h3><p>1着に応じた2着、その1・2着に応じた3着を評価する既存モデルを使います。「回収重視8点」は保存した確率順位1〜4位・9〜12位、「従来12点」は上位12点です。1・2着を一律に固定せず、レースごとの買い目をフォーメーションにまとめます。</p><p>全開催・全レースが予想対象です。8点予想は導入後に締切前の記録を新しく保存したレースだけに表示します。導入前のレースをさかのぼって新予想にすることはありません。過去の公式着順はどちらの表示でも確認でき、当時の予想印と買い目は「従来12点」に残っています。</p><p>各点100円は8点800円・12点1,200円。配分版は同じ買い目への予算5,000〜10,000円の保存配分です。結果確定後は公式払戻で精算します。NEXUSの隊列・役割モデルとは別の予想・成績として確認できます。</p></div><p>自信度は予想時点のモデル支持度で、S（65％以上）・A（45％以上）・B（45％未満）の3段階を表示します。支持度はその方式で選んだ買い目へのモデル評価の合計です。元の指標が保存されていない予想は「B・参考／未評価」と表示します。予想そのものがないレースには自信度を付けません。</p><p>的中率＝的中レース数÷精算済みレース数。回収率＝払戻額÷投資額。配分版は配分が成立したレースだけが対象なので、各点100円版と母数が異なります。研究値と導入後の成績も分けて確認してください。</p><p>フォーメーションは行ごとに購入してください。同じ車番の重複を除き、各行の点数を合計すると保存した買い目と一致します。金額別のフォーメーションとコピー機能も、保存した買い目・金額だけを使います。</p><p>保存時のオッズで、どの買い目が的中しても購入総額以上の想定払戻になる配分を探します。予算内で成立しない場合は配分を見送ります。その後のオッズ下落により、的中しても購入額を下回る場合があります。旧記録の1万円配分は保存時の金額で表示します。</p><p><a href="conditional-study.html">条件付き3連単の過去検証 →</a>　<a href="index.html#model">NEXUS採用モデル →</a></p></details>
     <noscript><p class="empty-state">予想表示にはJavaScriptを有効にしてください。</p></noscript>
     <footer><strong>KEIRIN NEXUS</strong><p>締切前の予想・配分を保存し、公式結果で検証。実投票を行う機能はありません。</p><nav aria-label="関連する予想"><a href="index.html#forecast">NEXUS予想</a> · <a href="index.html#results">NEXUS結果・成績</a> · <a href="company.html">会社・全部署</a> · <a href="archive.html">過去レース保管庫</a></nav></footer>
   </main>
   <script src="forecast-math.js?v=20261019"></script>
-  <script src="forecast.js?v=20261019-near-close"></script>
+  <script src="conditional-roi-ui.js?v=20261020-roi-eight"></script>
+  <script src="forecast.js?v=20261020-roi-eight"></script>
   <script src="site-wide.js?v=20261019" data-root="./"></script>
 </body>
 </html>

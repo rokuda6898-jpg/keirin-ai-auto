@@ -499,6 +499,34 @@ def update_near_close_comparison(root, baseline, generate=False):
         return False, ["comparison_error"]
 
 
+def record_roi_comparison_error(root, exc):
+    status_path = Path(root) / "outputs/nexus_coverage_status.json"
+    status = read_json(status_path, {})
+    status["roi_comparison"] = dict(status="error", reason=f"{type(exc).__name__}: {exc}")
+    save_json(status_path, status)
+    print("::warning::ROI comparison failed; original forecasts continue: " + str(exc), flush=True)
+
+
+def update_roi_comparison(root, baseline, generate=False):
+    """Publish the optional eight-ticket record without risking original picks."""
+    path = Path(root) / "outputs/conditional_roi.json"
+    try:
+        if generate:
+            subprocess.run([sys.executable, str(Path(root) / "src/conditional_roi.py")],
+                           cwd=root, check=True)
+        from conditional_roi import gate_publication
+        return True, gate_publication(root, copy.deepcopy(baseline), lead_seconds=60)
+    except Exception as exc:
+        # Generation and final gates may fail after a partial write. Only the
+        # original public baseline is allowed to survive a failed attempt.
+        if baseline:
+            save_json(path, baseline)
+        else:
+            path.unlink(missing_ok=True)
+        record_roi_comparison_error(root, exc)
+        return False, ["comparison_error"]
+
+
 def publish_ci(root=ROOT):
     """Recompute on latest main for each bounded push attempt, without HTTP data."""
     root = Path(root)
@@ -519,6 +547,15 @@ def publish_ci(root=ROOT):
                     git(checkout, "clean", "-fd")
                 baseline = load_saved_rows(checkout, read_json(checkout / "outputs/nexus_live.json", {}))
                 near_close_baseline = read_json(checkout / "outputs/conditional_near_close.json", {})
+                roi_baseline_error = None
+                try:
+                    roi_baseline = read_json(checkout / "outputs/conditional_roi.json", {})
+                    if not isinstance(roi_baseline, dict):
+                        raise ValueError("ROI comparison baseline must be a JSON object")
+                except Exception as exc:
+                    # An invalid optional feed must not block the main forecast
+                    # publisher or be replaced by a fresh retrospective record.
+                    roi_baseline, roi_baseline_error = None, exc
                 copy_newer_inputs(root, checkout)
                 result = subprocess.run([sys.executable, str(checkout / "src/nexus_publish_saved_inputs.py"),
                                          "--min-lead-seconds", "60"], cwd=checkout)
@@ -532,9 +569,19 @@ def publish_ci(root=ROOT):
                 # the same tickets and budget using already captured later
                 # quotes, in a separate prospective record with no source HTTP.
                 near_close_healthy, _ = update_near_close_comparison(checkout, near_close_baseline, generate=True)
+                if roi_baseline_error is None:
+                    roi_healthy, _ = update_roi_comparison(checkout, roi_baseline, generate=True)
+                else:
+                    record_roi_comparison_error(checkout, roi_baseline_error)
+                    roi_healthy = False
                 gate_saved_publication(checkout, baseline)
+                if near_close_healthy:
+                    near_close_healthy, _ = update_near_close_comparison(checkout, near_close_baseline)
+                if roi_healthy:
+                    roi_healthy, _ = update_roi_comparison(checkout, roi_baseline)
                 for name in (str(SNAPSHOTS), "outputs/nexus_live.json", "outputs/nexus_forecasts",
                              "outputs/conditional_live.json", "outputs/conditional_near_close.json",
+                             "outputs/conditional_roi.json",
                              "outputs/nexus_coverage_status.json", "data/nexus/history.json.gz"):
                     if (checkout / name).exists():
                         git(checkout, "add", "-f", "--", name)
@@ -546,10 +593,14 @@ def publish_ci(root=ROOT):
                 late_forecasts = gate_saved_publication(checkout, baseline)
                 _, late_allocations = (update_near_close_comparison(checkout, near_close_baseline)
                                        if near_close_healthy else (False, []))
-                if late_forecasts or late_allocations:
+                _, late_roi = (update_roi_comparison(checkout, roi_baseline)
+                               if roi_healthy else (False, []))
+                if late_forecasts or late_allocations or late_roi:
                     git(checkout, "add", "--", "outputs/nexus_live.json", "outputs/nexus_forecasts", "outputs/nexus_coverage_status.json")
                     if near_close_healthy:
                         git(checkout, "add", "--all", "--", "outputs/conditional_near_close.json")
+                    if roi_healthy:
+                        git(checkout, "add", "--all", "--", "outputs/conditional_roi.json")
                     git(checkout, "-c", "user.name=github-actions[bot]", "-c",
                         "user.email=41898282+github-actions[bot]@users.noreply.github.com", "commit", "--amend", "--no-edit")
                 if git(checkout, "push", "origin", "HEAD:main", check=False).returncode == 0:

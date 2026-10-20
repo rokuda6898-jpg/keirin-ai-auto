@@ -59,6 +59,12 @@ class ConditionalLiveTests(unittest.TestCase):
             self.assertEqual(race['actual'], ['1-2-4'])
             self.assertEqual(race['payouts'], {'1-2-4': 1700})
             self.assertEqual(race['returned_buys'], ['1-2-3'])
+            # Refund evidence survives once the compact daily result disappears.
+            atomic_json(root/'outputs/latest_results.json', [])
+            later, _ = execute(root, predict_new=False)
+            saved = next(r for r in later['races'] if r['id'] == 'open')
+            self.assertEqual(saved['returned_buys'], ['1-2-3'])
+            self.assertEqual(saved['actual'], ['1-2-4'])
 
     def test_all_races_remain_but_closed_and_missing_are_never_backfilled(self):
         with tempfile.TemporaryDirectory() as temp:

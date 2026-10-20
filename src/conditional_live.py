@@ -81,6 +81,14 @@ def apply_result_evidence(row, result, evidence=None, csv_cancelled=()):
     if evidence:
         cancelled.update(evidence['cancelled_cars'])
     row['cancelled_cars'] = sorted(cancelled)
+    compact = normalize_outcome(result or {})
+    # Keep refund evidence separate before removing it from finishing orders.
+    # The next day's compact feed may no longer contain these returned tickets.
+    reported = [*row.get('returned_buys', []), *row.get('actual', []),
+                *(compact or {}).get('winning_buys', []), *(evidence or {}).get('refunded', [])]
+    row['returned_buys'] = sorted({t for t in reported if isinstance(t, str)
+                                 and re.fullmatch(r'[1-9]-[1-9]-[1-9]', t)
+                                 and set(t.split('-')) & cancelled})
     previous = row.get('budget_official_outcome') or {}
     trusted_previous = previous if previous.get('evidence') == 'existing_public_page_response' else None
     explicit = [o for o in ((evidence or {}).get('outcome'), trusted_previous) if o]
@@ -89,7 +97,7 @@ def apply_result_evidence(row, result, evidence=None, csv_cancelled=()):
             return datetime.fromisoformat(value.get('source_observed_at', '')).timestamp()
         except (TypeError, ValueError):
             return float('-inf')
-    outcome = max(explicit, key=observed) if explicit else normalize_outcome(result or {})
+    outcome = max(explicit, key=observed) if explicit else compact
     if outcome:
         outcome = dict(outcome)
         winners = [t for t in outcome['winning_buys'] if not set(t.split('-')) & cancelled]
@@ -229,7 +237,8 @@ def run(root=ROOT, predict_new=True, clock=now_jst, model_loader=load_model, pre
         reported_payouts = row.get('payouts', {}) if row else outcome['payouts'] if outcome else {}
         # Some providers list refunded tickets beside the winning order. A
         # withdrawn rider cannot be part of the official finishing order.
-        returned_buys = [buy for buy in reported_buys if cancelled_set.intersection(buy.split('-'))]
+        returned_buys = sorted(set(row.get('returned_buys', []) if row else [])
+                              | {buy for buy in reported_buys if cancelled_set.intersection(buy.split('-'))})
         actual = [buy for buy in reported_buys if buy not in returned_buys]
         races.append({'id': rid, 'date': item['date'], 'venue': item.get('venue', ''),
                       'number': int(float(item['race_no'])), 'start_at': finite(item.get('start_at')),

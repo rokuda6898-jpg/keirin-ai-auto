@@ -3,9 +3,9 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['src/nexus_model/**', 'src/nexus_*.py', 'src/conditional_budget_near_close.py', 'models/nexus53/**', 'tests/test_nexus*.py', 'tests/test_conditional_budget_near_close.py', '.github/workflows/nexus.yml']
+    paths: ['src/nexus_model/**', 'src/nexus_*.py', 'src/conditional_budget_near_close.py', 'src/conditional_roi.py', 'models/nexus53/**', 'tests/test_nexus*.py', 'tests/test_conditional_budget_near_close.py', 'tests/test_conditional_roi.py', '.github/workflows/nexus.yml']
   workflow_run:
-    workflows: ['daily-keirin-predict', 'intraday-keirin-odds', 'quick-keirin-results', 'settle-keirin-results']
+    workflows: ['daily-keirin-predict', 'intraday-keirin-odds', 'quick-keirin-results', 'settle-keirin-results', 'conditional-trifecta-live']
     types: [completed]
 permissions:
   contents: read
@@ -28,6 +28,8 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_nexus*.py'
       - name: Verify prospective same-budget allocation comparison
         run: python -m unittest discover -s tests -p 'test_conditional_budget_near_close.py'
+      - name: Verify frozen eight-ticket forecasts and stake comparison
+        run: python -m unittest discover -s tests -p 'test_conditional_roi.py'
       - name: Load the saved model without accessing the restricted data source
         env:
           PYTHONPATH: src

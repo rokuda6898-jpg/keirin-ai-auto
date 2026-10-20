@@ -10,6 +10,7 @@ import copy
 from datetime import datetime
 import json
 from pathlib import Path
+import re
 import sys
 import tempfile
 import unittest
@@ -33,7 +34,7 @@ def conditional_helpers():
     tree = ast.parse((ROOT / 'src/conditional_live.py').read_text())
     nodes = [n for n in tree.body if isinstance(n, ast.FunctionDef)
              and n.name in ('saved_outcome_evidence', 'apply_result_evidence')]
-    scope = dict(datetime=datetime, normalize_outcome=normalize_outcome, settle_budget=settle)
+    scope = dict(datetime=datetime, re=re, normalize_outcome=normalize_outcome, settle_budget=settle)
     exec(compile(ast.Module(body=nodes, type_ignores=[]), 'conditional_result_helpers', 'exec'), scope)
     return scope['saved_outcome_evidence'], scope['apply_result_evidence']
 

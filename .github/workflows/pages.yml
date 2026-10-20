@@ -2,7 +2,7 @@ name: deploy-pages
 on:
   push:
     branches: [main]
-    paths: ['site/**', 'tests/test_nexus_core.js', 'tests/test_near_close_ui.js', 'outputs/nexus_live.json', 'outputs/conditional_near_close.json', 'src/build_public_site.py', 'src/site_retirement.py', '.github/workflows/pages.yml']
+    paths: ['site/**', 'tests/test_nexus_core.js', 'tests/test_near_close_ui.js', 'tests/test_conditional_roi_ui.js', 'outputs/nexus_live.json', 'outputs/conditional_near_close.json', 'outputs/conditional_roi.json', 'outputs/conditional_roi_research_2026-10-20.json', 'src/build_public_site.py', 'src/site_retirement.py', '.github/workflows/pages.yml']
   workflow_dispatch:
   workflow_run:
     workflows: ['conditional-trifecta-live', 'nexus-formation-publish', 'quick-keirin-results', 'settle-keirin-results']
@@ -36,9 +36,11 @@ jobs:
           node tests/test_nexus_core.js
           node --check site/archive.js
           node --check site/forecast.js
+          node --check site/conditional-roi-ui.js
           node --check site/forecast-math.js
           node tests/test_forecast_math.js
           node tests/test_near_close_ui.js
+          node tests/test_conditional_roi_ui.js
           test -s site/index.html
           test -s site/style.css
       - name: Include the complete original company and history pages
