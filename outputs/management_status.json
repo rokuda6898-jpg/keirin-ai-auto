@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-10-20T14:52:01+09:00",
+  "checked_at": "2026-10-20T19:05:53+09:00",
   "owners": {
     "data": "データ品質責任者",
     "coverage": "全レース予想責任者",
@@ -9,6 +9,13 @@
   },
   "status": "error",
   "findings": [
+    {
+      "owner": "data",
+      "code": "feed_stale",
+      "level": "error",
+      "message": "締切前レースがありますが公開データが45分以上古い、または時刻が不正です。",
+      "race_ids": []
+    },
     {
       "owner": "settlement",
       "code": "withdrawn_tickets",
@@ -34,6 +41,15 @@
       ]
     },
     {
+      "owner": "settlement",
+      "code": "results_overdue",
+      "level": "warning",
+      "message": "発走から2時間以上経過しても結果未確認です。中止・延期も確認してください。",
+      "race_ids": [
+        "103620261020"
+      ]
+    },
+    {
       "owner": "operations",
       "code": "workflow_intraday.yml",
       "level": "error",
@@ -51,9 +67,9 @@
   },
   "matched_comparison": {
     "company": {
-      "races": 23,
+      "races": 41,
       "hits": 6,
-      "stake_yen": 15500,
+      "stake_yen": 27000,
       "return_yen": 10010.0,
       "largest_hit_return_share": 0.32867132867132864
     }
