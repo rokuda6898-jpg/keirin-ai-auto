@@ -71,6 +71,28 @@ class ModelStorageCompatibilityTests(unittest.TestCase):
         self.assertEqual(set(name for name in self.current
             if self.current[name] != self.manifest['source_hashes'][name]), set(compat.LEGACY_SOURCES))
 
+    def test_manifest_checks_use_exact_published_git_bytes_not_reformatted_json(self):
+        # These IDs are from the immutable original Git objects, independently
+        # verified through the repository API. A downloaded text copy with one
+        # appended LF has identical JSON but is not the original Git blob.
+        git_blobs = {
+            'three_year': '1effef7154464fd98e4d42c3263b043a3abd1d48',
+            'fusion_shadow': 'fb03a67df38513cb1243c5b2511ab1e1bde573a3',
+        }
+        for name, profile in compat.PROFILES.items():
+            raw = (ROOT / profile['manifest_path']).read_bytes()
+            git_blob = compat.hashlib.sha1(b'blob ' + str(len(raw)).encode('ascii') + b'\0' + raw).hexdigest()
+            with self.subTest(profile=name):
+                self.assertEqual(git_blob, git_blobs[name])
+                self.assertEqual(compat.sha256(raw), profile['manifest_sha256'])
+                self.assertEqual(json.loads(raw), json.loads(raw + b'\n'))
+                self.assertNotEqual(compat.sha256(raw + b'\n'), profile['manifest_sha256'])
+
+    def test_appended_newline_is_not_accepted_as_original_manifest(self):
+        self.manifest_path.write_bytes(self.original_manifest_bytes + b'\n')
+        self.assertEqual(json.loads(self.manifest_path.read_bytes()), self.manifest)
+        self.assertFalse(self.accepted())
+
     def test_ordinary_exact_sources_do_not_need_a_certificate(self):
         self.manifest['source_hashes'] = dict(self.current)
         self.proof_path.unlink()

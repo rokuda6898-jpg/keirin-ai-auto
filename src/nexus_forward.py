@@ -363,13 +363,27 @@ def _whole_payout(value):
     return number.numerator
 
 
+def _result_receipt(source_row):
+    """Keep a verified page result's SHA and observation time together.
+
+    The result synchronizer preserves the first receipt and records its strict
+    same-race page verification in result_sync_* fields. Never combine one
+    receipt's hash with the other receipt's timestamp or infer a missing hash.
+    """
+    if source_row.get("result_sync_source") == "nexus_page_snapshot":
+        return dict(captured_at=source_row.get("result_sync_captured_at"),
+                    source_sha256=source_row.get("result_sync_source_sha256"))
+    return dict(captured_at=source_row.get("result_captured_at"),
+                source_sha256=source_row.get("result_source_sha256"))
+
+
 def _update_result(row, source_row, current):
     prior_result = row.get("result") or {}
     if row.get("candidate") and row.get("status") in ("settled", "excluded"):
         # A partial later feed must not erase already received official results.
         if source_row is None or not _known_outcome(source_row):
             return
-        old_at, new_at = prior_result.get("captured_at"), source_row.get("result_captured_at")
+        old_at, new_at = prior_result.get("captured_at"), _result_receipt(source_row)["captured_at"]
         if old_at and new_at:
             try:
                 if _stamp(new_at) < _stamp(old_at):
@@ -382,8 +396,7 @@ def _update_result(row, source_row, current):
         if source_row is not None:
             row["result"] = {key: copy.deepcopy(source_row.get(key)) for key in
                              ("winners", "payouts", "refunded", "refund_all", "cancelled", "result_complete")}
-            row["result"].update(captured_at=source_row.get("result_captured_at"),
-                                 source_sha256=source_row.get("result_source_sha256"))
+            row["result"].update(_result_receipt(source_row))
         return
     close = _stamp(row["close_at"])
     row.update(status="saved" if current < close else "result_pending", reason_code="", reason="")
@@ -397,9 +410,8 @@ def _update_result(row, source_row, current):
                    payouts=copy.deepcopy(source_row.get("payouts", {})),
                    refunded=copy.deepcopy(source_row.get("refunded", [])),
                    refund_all=bool(source_row.get("refund_all")), cancelled=bool(source_row.get("cancelled")),
-                   result_complete=bool(source_row.get("result_complete")),
-                   captured_at=source_row.get("result_captured_at"),
-                   source_sha256=source_row.get("result_source_sha256"))
+                    result_complete=bool(source_row.get("result_complete")),
+                    **_result_receipt(source_row))
         row["result"] = raw
         if raw["refunded"] or raw["refund_all"] or raw["cancelled"]:
             row.update(status="excluded", reason_code="refund_or_cancellation", reason="取消・返還のあるレースは両方式の比較成績から除外します")

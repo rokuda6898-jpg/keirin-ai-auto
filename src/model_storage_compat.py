@@ -12,7 +12,7 @@ import json
 from pathlib import Path
 
 PROOF_PATH = Path('models/individual_three_year/storage_compatibility.json')
-LEGACY_MANIFEST_SHA256 = '10465be1384f0a9ad8d275e4402f95febf3348743a195bba9e3cc49fbb71116c'
+LEGACY_MANIFEST_SHA256 = '21595604842c84460f5041d5c6849635aaeaab65b8ef7a1f3921c95b5e29b530'
 LEGACY_SOURCES = {
     'department_experiment_v2.py': '15fb9067140319a5875e52216afb1f805409db2041da69e2e056a78281b857d9',
     'individual_three_year.py': '73214c8a04553b7c3e67445578626952851627c3cf6838e1d1d70d9599913c09',
@@ -33,7 +33,7 @@ PROFILES = {
     'fusion_shadow': {
         'proof_path': SHADOW_PROOF_PATH,
         'manifest_path': Path('models/fusion_shadow_refit_first_anchor.json'),
-        'manifest_sha256': 'cd97b003fecd4f31644cb5e773f1de0ea5619aaadd94329c7df5f3b901597ae8',
+        'manifest_sha256': '9ef36fcfb345a3e58b44a6794417ed36242132b2ba11004208d81db8207ffd17',
         'schema': 'fusion-shadow-storage-compatibility-v1',
         'sources': SHADOW_LEGACY_SOURCES,
         'pipeline_sha256': '70fb57cb29d6a4c8624a27177eafac17ff8c5f5081f17ea9b41fae465e5f2e46',
