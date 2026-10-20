@@ -1,15 +1,32 @@
 {
-  "checked_at_jst": "2026-10-20T14:31:50+09:00",
-  "status": "healthy",
+  "checked_at_jst": "2026-10-20T17:53:39+09:00",
+  "status": "unhealthy",
   "repaired": false,
   "check_source": "post_settlement_read_only_audit",
   "attempts": [
     {
       "attempt": 0,
-      "problems": [],
+      "problems": [
+        {
+          "type": "site_release_stale",
+          "count": 1,
+          "details": [
+            "code changed since generation: src/department_experiment_v2.py"
+          ]
+        },
+        {
+          "type": "results_overdue",
+          "race_ids": [
+            "103620261020"
+          ]
+        }
+      ],
       "health": {
-        "severity": "ok",
-        "problem_types": [],
+        "severity": "warning",
+        "problem_types": [
+          "results_overdue",
+          "site_release_stale"
+        ],
         "race_count": 71,
         "expected_riders": 511,
         "actual_riders": 511,
@@ -1099,8 +1116,11 @@
     }
   },
   "health": {
-    "severity": "ok",
-    "problem_types": [],
+    "severity": "warning",
+    "problem_types": [
+      "results_overdue",
+      "site_release_stale"
+    ],
     "race_count": 71,
     "expected_riders": 511,
     "actual_riders": 511,
