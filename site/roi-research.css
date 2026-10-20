@@ -3,3 +3,13 @@
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 
 @media(max-width:760px){.lead{font-size:14px}.context,.finding p,.evidence,.detail,.annual p{font-size:13px}.finding h3{font-size:14px}table{font-size:12px}.source-link,.table-note{font-size:11px}.next p{font-size:13px}}
+:root{--value-tint:#eef5f0}
+.annual-value{border-top:4px solid var(--green)}
+.value-steps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;list-style:none;padding:0;margin:20px 0}
+.value-steps li{display:flex;align-items:flex-start;gap:12px;background:var(--value-tint);border:1px solid #d9e9df;border-radius:10px;padding:18px}
+.value-number{display:grid;place-items:center;flex:0 0 26px;width:26px;height:26px;border-radius:50%;background:var(--green);color:white;font-size:12px;font-weight:800;line-height:1}
+.value-steps h3{font-size:15px;line-height:1.5;margin:1px 0 6px}
+.value-steps p{font-size:12px;line-height:1.8;margin:0;color:var(--muted)}
+.value-status{background:#fbf3e7;border:1px solid #efdfc3;border-radius:8px;padding:13px 16px;margin:16px 0 20px;font-size:12px;color:#785626}
+.annual-value .actions{flex-wrap:wrap}
+@media(max-width:640px){.value-steps{grid-template-columns:1fr;gap:9px}.value-steps li{padding:15px}.annual-value .sample{white-space:normal}.annual-value .actions a{width:100%;font-size:12px}.value-status{padding:12px}}

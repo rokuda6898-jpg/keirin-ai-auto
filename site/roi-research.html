@@ -5,14 +5,28 @@
 <meta name="theme-color" content="#172c35">
 <meta name="description" content="競輪予想の回収率改善を同じレース・各点100円で検証。条件付き3連単とNEXUSの検証結果を分けて公開。">
 <title>回収率改善の検証｜KEIRIN NEXUS</title>
-<link rel="stylesheet" href="roi-research.css?v=20261020">
+<link rel="stylesheet" href="roi-research.css?v=20261020-value1">
 </head>
 <body>
 <a class="skip-link" href="#main">本文へ</a>
 <header><div class="wrap header-inner"><a class="brand" href="index.html">KEIRIN NEXUS<small>RESEARCH / 検証記録</small></a><a class="back" href="index.html#forecast">予想へ戻る →</a></div></header>
 <main id="main" class="wrap">
 <section class="hero"><p class="eyebrow">2026.10.20 / 回収率改善・追加検証</p><h1>追加検証では、<br>10点案が悪化。</h1><p class="lead">最初の32Rでは108.72%でしたが、次に結果を受信した7Rでは65.43%。方式を固定して追加確認し、不利な結果も掲載しています。</p><div class="tags"><span>目標：年間100%超</span><span class="pending">年間100%超は未確認</span><span>10点案は比較検証中</span></div></section>
-<nav class="section-nav" aria-label="検証の内容"><a href="#latest-check">最新の追加7R</a><a href="nexus-forward.html">締切前保存の比較</a><a href="#nexus">最初の32R</a><a href="#conditional">条件付き・77R</a><a href="#reduction">点数削減・646R</a><a href="#annual">年間検証</a></nav>
+<nav class="section-nav" aria-label="検証の内容"><a href="#annual-value">年間改善ロジック</a><a href="#latest-check">最新の追加7R</a><a href="nexus-forward.html">締切前保存の比較</a><a href="#nexus">最初の32R</a><a href="#conditional">条件付き・77R</a><a href="#reduction">点数削減・646R</a><a href="#annual">年間検証</a></nav>
+<section id="annual-value" class="section annual-value">
+<div class="section-heading"><div><p class="eyebrow">年間100%超へ / 新しい購入判定</p><h2>予想は全レース。買う条件を見直す。</h2></div><span class="sample">固定した初期案 · 年間未検証</span></div>
+<p class="context">NEXUSの予想・印・S/A/B・フォーメーションを残し、購入するかを別に判定するロジックです。買い目全体の確率と締切前オッズから、各100円と予算配分をそれぞれ評価します。</p>
+<ol class="value-steps">
+<li><span class="value-number" aria-hidden="true">1</span><div><h3>確率を実績で補正する</h3><p>モデルの学習に使っていない過去データで、予想確率と同時点の市場評価を校正。購入用の確率を別に作ります。</p></div></li>
+<li><span class="value-number" aria-hidden="true">2</span><div><h3>締切前5分以内のオッズ</h3><p>取得から判定までも5分以内。締切の60秒以上前に判定・保存し、古いオッズでは購入候補を出しません。</p></div></li>
+<li><span class="value-number" aria-hidden="true">3</span><div><h3>20%下落でも期待110%以上</h3><p>オッズが表示から20%下がる条件で計算し、フォーメーション全体の期待回収率が110%以上なら購入候補にします。</p></div></li>
+<li><span class="value-number" aria-hidden="true">4</span><div><h3>予算ごとに配分を確認</h3><p>各100円と5,000〜10,000円を別判定。配分版は、20%下落後の見積払戻がどの的中でも予算以上になることを求めます。</p></div></li>
+</ol>
+<p class="value-status"><strong>現段階は研究用の判定ロジックです。</strong>独立した校正データが足りず、年間回収率は未算出です。「20%下落」「期待110%」は先に固定した検証条件で、実際の回収率やトリガミ回避の保証値ではありません。</p>
+<div class="finding"><h3>保存オッズと実払戻には差があった</h3><p>条件付き3連単の初回オッズ137Rは、締切<strong>345分前が中央値</strong>。配分が的中した56R中45Rで実払戻が見積額を下回り、実払戻÷見積額の中央値は<strong>0.757</strong>でした。</p><p>これは条件付き3連単の短期記録です。NEXUSの年間回収率の原因や、20%の下落幅で十分だという証明にはしていません。</p></div>
+<details class="detail"><summary>購入判定と年間検証の扱い</summary><p>購入用の確率は、元モデルの全着順確率と、同じ時刻の全オッズから作る市場評価を2係数で補正します。係数は過去の独立期間で学習し、次の期間に固定して評価します。S/A/Bは元のモデル支持度として表示します。</p><p>予想は全レース残します。判定は「購入候補」「見送り」「未評価」に分け、校正や保存時刻が不足したレースを見送り成績へ混ぜません。年初の校正準備期間も記録し、評価できた後半だけを年間成績とは呼びません。</p></details>
+<div class="actions"><a href="https://github.com/rokuda6898-jpg/keirin-ai-auto/blob/main/docs/NEXUS_ANNUAL_VALUE_PROTOCOL.md">計算式・年間の検証条件 →</a><a href="https://raw.githubusercontent.com/rokuda6898-jpg/keirin-ai-auto/main/outputs/nexus_value_data_audit_2026-10-20.json">137R・39Rのデータ監査（JSON） →</a></div>
+</section>
 <section id="latest-check" class="section"><div class="section-heading"><div><p class="eyebrow">NEXUS / 2026年10月20日・追加結果</p><h2>追加7Rでは10点案が悪化</h2></div><span class="sample">同じ7R · 各点100円</span></div>
 <p class="context">最初の32Rと重ならない7レースで、10点・最大4本のフォーメーションという条件を変えずに確認しました。元の入力、買い目、確率などは7Rすべて保存値と一致しています。</p>
 <div class="table-scroll" tabindex="0" role="region" aria-label="追加7レースの同じ対象での比較。横にスクロールできます"><table><thead><tr><th scope="col">方式</th><th scope="col">的中 / 対象</th><th scope="col">的中率</th><th scope="col">回収率</th><th scope="col">投資</th><th scope="col">払戻</th><th scope="col">収支</th></tr></thead><tbody><tr><th scope="row">従来の公開済み方式<small>この7Rでは平均16.29点</small></th><td>4 / 7</td><td>57.14%</td><td class="roi">148.42%</td><td>11,400円</td><td>16,920円</td><td>+5,520円</td></tr><tr><th scope="row">固定した10点案<small>追加結果で条件変更なし</small></th><td>2 / 7</td><td>28.57%</td><td class="roi negative">65.43%</td><td>7,000円</td><td>4,580円</td><td class="negative">-2,420円</td></tr></tbody></table></div>

@@ -24,6 +24,7 @@ import pandas as pd
 import fixed_year_features as features
 import fixed_year_models as experts
 import fixed_year_study as old
+import model_storage_compat as storage_compat
 import fusion_equations as fusion
 import fusion_input_repair as repair
 from official_outcomes import normalize_outcome
@@ -145,10 +146,15 @@ def load_model(asof):
     # Older shadow bundles included a whole-file hash. Ignore only that legacy
     # key: the stable AST fingerprint below covers model fitting and ranking.
     legacy_module_hash = recorded_sources.pop('fusion_shadow_live.py', None)
-    if recorded_sources != source_hashes():
-        raise ValueError('shadow model dependencies do not match their manifest')
+    current_sources = source_hashes()
+    current_pipeline = model_pipeline_hash()
     saved_pipeline = manifest.get('model_pipeline_hash')
-    if saved_pipeline and saved_pipeline != model_pipeline_hash():
+    storage_compatible = ((recorded_sources != current_sources or saved_pipeline != current_pipeline)
+        and storage_compat.fusion_shadow_match(manifest, current_sources, current_pipeline,
+            root=ROOT, manifest_path=MANIFEST))
+    if recorded_sources != current_sources and not storage_compatible:
+        raise ValueError('shadow model dependencies do not match their manifest')
+    if saved_pipeline and saved_pipeline != current_pipeline and not storage_compatible:
         raise ValueError('shadow fitting/scoring code does not match its manifest')
     if not saved_pipeline and not legacy_module_hash:
         raise ValueError('shadow model manifest has no verifiable pipeline fingerprint')

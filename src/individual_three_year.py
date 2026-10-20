@@ -20,6 +20,7 @@ from sklearn.linear_model import LogisticRegression
 import fixed_year_features as features
 import fixed_year_models as experts
 import fixed_year_study as study
+import model_storage_compat as storage_compat
 import fusion_equations as fusion
 import fusion_input_repair as repair
 import fusion_stage_context as stage
@@ -318,7 +319,9 @@ def train(history_path, cutoff, folder=FOLDER):
 
 def load(asof, folder=FOLDER):
     manifest = json.loads((folder/'manifest.json').read_text(encoding='utf-8'))
-    if manifest['version'] != VERSION or manifest['source_hashes'] != hashes() or manifest['model_sha256'] != study.digest_file(folder/'model.joblib'):
+    if (manifest['version'] != VERSION
+            or not storage_compat.source_hashes_match(manifest, hashes(), root=ROOT, manifest_path=folder/'manifest.json')
+            or manifest['model_sha256'] != study.digest_file(folder/'model.joblib')):
         raise ValueError('three-year model provenance mismatch')
     if manifest['training_cutoff_exclusive'] > str(asof):
         raise ValueError('model trained after forecast date')

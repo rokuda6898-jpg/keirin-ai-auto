@@ -1,0 +1,71 @@
+{
+  "schema": "three-year-storage-compatibility-v1",
+  "purpose": "Lossless ledger storage and its strict loader guard only; no model, training, scoring or reported metric changes.",
+  "original_commit": "9799d5782171356a9d0a27f6532d8c6b0a724814",
+  "storage_change_commit": "18b217bf052e1ce9a0a7aa48e2b1f73cbb5dcc28",
+  "original_manifest_path": "models/individual_three_year/manifest.json",
+  "original_manifest_git_blob": "1effef7154464fd98e4d42c3263b043a3abd1d48",
+  "original_manifest_sha256": "10465be1384f0a9ad8d275e4402f95febf3348743a195bba9e3cc49fbb71116c",
+  "version": "three_calendar_years_421_v1",
+  "model_sha256": "7c3d7973e8c18cfad263e71b9bc5930c1bdb1d1f8462fe8ca4eb4cecdc354cec",
+  "training_cutoff_exclusive": "2026-10-09",
+  "verifier_sha256": "7c1198d27acc7ad5d0eb3f9804dd8b8ce991808cdc0c440f270564085c156bd5",
+  "ast_encoding": "JSON of AST node names and fields; no source positions; empty type_params omitted; all module nodes retained except the exact named hooks and exact new import.",
+  "verify_command": "python src/model_storage_compat.py",
+  "sources": {
+    "department_experiment_v2.py": {
+      "before_sha256": "15fb9067140319a5875e52216afb1f805409db2041da69e2e056a78281b857d9",
+      "after_sha256": "80c297c196202051e7e6433fcefdcebf7a5a3b032aa3da87fff1e42f94dd162c",
+      "unchanged_ast_sha256": "187205423b5303bf53693a004054a6b91ae54ae051b111b7f0211bf863b0c9e8",
+      "reviewed_functions": [
+        "append",
+        "read_lines"
+      ],
+      "reviewed_added_import": "from ledger_io import append_ledger_line, is_archived_ledger, ledger_lines",
+      "unchanged_functions": [
+        "append_record",
+        "build_report",
+        "calibration",
+        "code_provenance",
+        "comparisons",
+        "digest",
+        "evaluation",
+        "frame_records",
+        "latest_records",
+        "make_record",
+        "metrics",
+        "outcomes_for",
+        "quote_view",
+        "record_attempt",
+        "render",
+        "seal",
+        "valid_record"
+      ],
+      "all_other_module_ast_equal": true
+    },
+    "individual_three_year.py": {
+      "before_sha256": "73214c8a04553b7c3e67445578626952851627c3cf6838e1d1d70d9599913c09",
+      "after_sha256": "72d4894ffbbc55d6ac7b2178078d49ed1a506e30a8da22e473fe0f59f7837859",
+      "unchanged_ast_sha256": "21cf766d55b6213bce70b946e58df56c962499c521ac7d9ad66b9bb8a52a9b36",
+      "reviewed_functions": [
+        "load"
+      ],
+      "reviewed_added_import": "import model_storage_compat as storage_compat",
+      "unchanged_functions": [
+        "calibrate",
+        "component_rows",
+        "fit_archive",
+        "fit_base",
+        "fit_equations",
+        "fit_pool_and_stage",
+        "hashes",
+        "joint_fit",
+        "pool_weights",
+        "profiles",
+        "train",
+        "weights"
+      ],
+      "all_other_module_ast_equal": true
+    }
+  }
+}
