@@ -2,7 +2,7 @@
   "schema": 1,
   "kind": "original_nexus_annual_roi_research",
   "as_of_jst": "2026-10-20",
-  "status": "blocked_missing_original_annual_records",
+  "status": "original_source_located_annual_payload_not_recovered",
   "research_only": true,
   "objective": {
     "model_id": "nexus-formation-5385-v1",
@@ -31,7 +31,7 @@
     "hit_rate_percent_rounded": 53.848,
     "roi_percent_rounded": 77.497,
     "hundredfold_hit_races": 265,
-    "evidence": "Previously reported rounded comparison; original per-race study not yet obtained."
+    "evidence": "Exact table and original study/audit code recovered from the provided shared conversation; per-race records still not recovered, so annual values have not been reproduced here."
   },
   "break_even_arithmetic": {
     "same_stake_additional_return_yen": 9812320,
@@ -64,11 +64,15 @@
       "2026-10-08"
     ],
     "selection": "Select one candidate by development ROI before evaluating its chronological validation period. Keep every original race.",
-    "untouched_holdout": false
+    "untouched_holdout": false,
+    "protocol_id": "nexus-annual-flat100-points-v2",
+    "formation_accounting": "Union of complete blocks; each overlapping ticket is purchased once",
+    "cohort_convention": "27351 established trifecta races; source-defined refund IDs 031120260425 and 098720260529 excluded",
+    "hundredfold_hit_races_gate": 265
   },
   "required_original_inputs": [
     "Original 27,351-race ID inventory from the original study",
-    "Each original race: 6/15/24 tickets, complete original formation blocks and official per-100-yen payouts/refunds",
+    "Each original established race: 6/15/24 unique tickets, complete formation blocks (overlap allowed), official per-100-yen winning payouts including ties",
     "Complete ordered joint probabilities for every original race, or the original research bundle needed to regenerate them"
   ],
   "separate_conditional_research": {
@@ -88,10 +92,22 @@
     }
   ],
   "validation": {
-    "annual_research_unit_tests": 21,
-    "replay_evidence_unit_tests": 7,
+    "annual_research_unit_tests": 29,
+    "replay_evidence_unit_tests": 10,
     "fixtures": "Synthetic; not evidence of annual model performance.",
     "missing_original_input_preflight": "exit 2; blocked; no annual candidate result generated",
-    "resumption": "Only the same frozen protocol, data, implementation and selected candidate can resume; completed results are read unchanged."
+    "resumption": "Only the same frozen protocol, data, implementation and selected candidate can resume; completed results are read unchanged.",
+    "original_source_collector_unit_tests": 7
+  },
+  "original_source_recovery": {
+    "record": "outputs/nexus_annual_source_recovery_2026-10-20.json",
+    "original_table_found": true,
+    "source_python_files_recovered": 10,
+    "annual_payload_recovered": false,
+    "required_files": [
+      "outputs/keirin_repaired_history_ticket_v1/forecasts_2025-10-09.jsonl.gz",
+      "outputs/keirin_repaired_history_ticket_v1/annual_plans.jsonl.gz",
+      "outputs/keirin_three_year_training_v1/verified_targets.jsonl.gz"
+    ]
   }
 }

@@ -54,6 +54,41 @@ class ReplayEvidence(unittest.TestCase):
             with self.subTest(q=bad), self.assertRaises(ValueError):
                 from_inference(cars, bad, plan, spec, "a" * 64)
 
+    def test_overlapping_blocks_are_preserved_and_the_ticket_union_is_bought_once(self):
+        cars, q, plan, spec = inference()
+        plan["blocks"].append(dict(first=[7], second=[1, 4], third=[1, 4], count=2))
+        source_blocks, source_q = copy.deepcopy(plan["blocks"]), q[:]
+        evidence = from_inference(cars, q, plan, spec, "a" * 64)
+        self.assertEqual(source_blocks, evidence["original_formations"])
+        self.assertEqual(8, sum(b["count"] for b in evidence["original_formations"]))
+        self.assertEqual(6, evidence["original_count"])
+        self.assertEqual(6, len(set(evidence["original_tickets"])))
+        self.assertEqual(source_q, evidence["q"])
+        q[0] = 0.0
+        plan["blocks"][1]["first"].clear()
+        self.assertEqual(source_q, evidence["q"])
+        self.assertEqual(source_blocks, evidence["original_formations"])
+        self.assertTrue(verify(evidence))
+
+    def test_optional_source_block_count_is_not_invented(self):
+        cars, q, plan, spec = inference()
+        plan["blocks"][0].pop("count")
+        evidence = from_inference(cars, q, plan, spec, "a" * 64)
+        self.assertNotIn("count", evidence["original_formations"][0])
+        self.assertEqual(6, evidence["original_count"])
+        self.assertEqual(q, evidence["q"])
+        self.assertTrue(verify(evidence))
+
+    def test_overlap_still_requires_correct_block_counts_and_exact_purchase_list(self):
+        cars, q, plan, spec = inference()
+        plan["blocks"].append(dict(first=[7], second=[1, 4], third=[1, 4], count=0))
+        with self.assertRaisesRegex(ValueError, "count differs"):
+            from_inference(cars, q, plan, spec, "a" * 64)
+        plan["blocks"][1]["count"] = 2
+        plan["tickets"].pop()
+        with self.assertRaisesRegex(ValueError, "do not match"):
+            from_inference(cars, q, plan, spec, "a" * 64)
+
     def test_exact_formations_and_active_roster_are_required(self):
         cars, q, plan, spec = inference()
         for change in ("ticket", "duplicate", "block", "roster"):

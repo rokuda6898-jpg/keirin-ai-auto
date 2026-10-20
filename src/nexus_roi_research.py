@@ -23,11 +23,13 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 MODEL_ID = "nexus-formation-5385-v1"
-PROTOCOL_ID = "nexus-annual-flat100-points-v1"
+PROTOCOL_ID = "nexus-annual-flat100-points-v2"
 MODEL_FINGERPRINT = "d7ad899a9280e673608f1fed533423b22b79e04b8ab63be1ff2766b6c22e1ed5"
 POINTS = (6, 8, 10, 12)
 UNIT_YEN = 100
 MAX_FORMATIONS = 4
+EXCLUDED_REFUND_RACE_IDS = ("031120260425", "098720260529")
+HUNDREDFOLD_DEFINITION = "Race with at least one selected official winning ticket paying >=10,000 yen per 100 yen; a dead-heat race counts once and refunds do not count."
 JST = timezone(timedelta(hours=9))
 SHA_RE = re.compile(r"[0-9a-f]{64}\Z")
 MODEL_KEYS = ("id", "train", "historical_period", "historical", "counts",
@@ -57,6 +59,8 @@ class Benchmark:
     stake_yen: int = 43596000
     payout_yen: int = 33783680
     model_fingerprint: str | None = MODEL_FINGERPRINT
+    hundredfold_hit_races: int | None = 265
+    refund_accounting: str = "established_only"
 
 
 ANNUAL = Benchmark()
@@ -132,6 +136,8 @@ def _identity(race_id, day, spec):
         raise ReplayError("race_identity", "Race id and date do not identify the same race", race_id=race_id, date=day)
     if not spec.first <= day <= spec.last:
         raise ReplayError("outside_period", "Race is outside the frozen annual period", race_id=race_id, date=day)
+    if spec.refund_accounting == "established_only" and race_id in EXCLUDED_REFUND_RACE_IDS:
+        raise ReplayError("benchmark_refund_exclusion", "The original annual study explicitly excluded this refunded race; it must not enter the 27,351-race cohort", race_id=race_id)
 
 
 def _hash(value, name):
@@ -162,7 +168,7 @@ def ticket_text(ticket):
 def expand_formations(blocks, cars):
     if not isinstance(blocks, list) or not 1 <= len(blocks) <= MAX_FORMATIONS:
         raise ReplayError("formation_count", "Every plan must contain one to four complete formations")
-    tickets = []
+    tickets = set()
     for block in blocks:
         if not isinstance(block, dict):
             raise ReplayError("formation_shape", "Formation must be a JSON object")
@@ -174,12 +180,14 @@ def expand_formations(blocks, cars):
                     or len(set(pool)) != len(pool)):
                 raise ReplayError("formation_pool", "Formation contains invalid or duplicate car choices", pool=name)
             pools.append(pool)
-        generated = [t for t in itertools.product(*pools) if len(set(t)) == 3]
-        if not generated or _integer(block.get("count"), "formation.count", 1) != len(generated):
+        generated = {t for t in itertools.product(*pools) if len(set(t)) == 3}
+        if "count" in block and _integer(block["count"], "formation.count") != len(generated):
             raise ReplayError("formation_expansion", "Formation count differs from its complete expansion")
-        tickets.extend(generated)
-    if len(tickets) != len(set(tickets)):
-        raise ReplayError("formation_overlap", "Overlapping formations would double the stake")
+        # The recovered original audit expands every complete block, then buys
+        # each ticket in their union once. Overlap is valid, not extra stake.
+        tickets.update(generated)
+    if not tickets:
+        raise ReplayError("formation_expansion", "The complete formation union contains no valid ticket")
     return tuple(sorted(tickets))
 
 
@@ -261,6 +269,8 @@ def _parse_race(obj, model_sha, spec):
         raise ReplayError("refund_conflict", "A ticket cannot be both a winner and a refund", race_id=rid)
     if (refund_all and (payouts or outcome["status"] != "refunded")) or (not refund_all and (not payouts or outcome["status"] != "settled")):
         raise ReplayError("outcome_incomplete", "Incomplete or inconsistent official result", race_id=rid)
+    if spec.refund_accounting == "established_only" and (refund_all or refunds):
+        raise ReplayError("annual_refund_accounting", "The original annual benchmark contains established races and winning payouts only; refund credits are not part of this comparison", race_id=rid)
     return Race(rid, day, tuple(cars), q, tuple(sorted(original)), payouts,
                 frozenset(refunds), refund_all,
                 snapshot is None or input_captured is None or history_day is None)
@@ -293,6 +303,8 @@ def summarize(rows):
 
 
 def _model_info(path, spec):
+    if spec.refund_accounting not in ("established_only", "gross_with_refunds"):
+        raise ReplayError("benchmark_accounting", "Unknown frozen benchmark refund convention")
     model = read_json(path)
     try:
         frozen = {k: model[k] for k in MODEL_KEYS}
@@ -352,6 +364,8 @@ def audit(ledger_path, cohort_path, model_path, *, spec=ANNUAL):
     races.sort(key=lambda r: (r.day, r.race_id))
     baseline = summarize(settle(r, r.original) for r in races)
     wanted = dict(races=spec.races, hits=spec.hits, stake_yen=spec.stake_yen, payout_yen=spec.payout_yen)
+    if spec.hundredfold_hit_races is not None:
+        wanted["hundredfold_hit_races"] = spec.hundredfold_hit_races
     mismatch = {k: dict(expected=v, actual=baseline[k]) for k, v in wanted.items() if baseline[k] != v}
     if mismatch:
         raise ReplayError("benchmark_mismatch", "Original benchmark was not reproduced; candidate research is blocked", mismatches=mismatch)
@@ -362,8 +376,13 @@ def audit(ledger_path, cohort_path, model_path, *, spec=ANNUAL):
                   full_q_races=sum(r.q is not None for r in races),
                   historical_timing_unverified_races=sum(r.timing_unverified for r in races),
                   historical_input_availability_proven=False,
-                  refund_accounting="Gross stake: 100 yen times every selected ticket, including void races. Return includes official winning payouts plus 100 yen per refunded ticket. The original annual refund convention has not been independently reconciled.",
-                  hundredfold_definition="Race with at least one selected official winning ticket paying >=10,000 yen per 100 yen; refunds do not count. The old reported 265 has not been source-matched.",
+                  formation_accounting="Union of one to four fully expanded blocks; overlapping tickets are bought once. Per-block count, when present, counts the complete block before cross-block deduplication.",
+                  excluded_refund_race_ids=list(EXCLUDED_REFUND_RACE_IDS) if spec.refund_accounting == "established_only" else [],
+                  refund_accounting=("Original source convention: exclude the two named fully refunded races; 27,351 established races only. Stake is 100 yen per unique selected ticket and return is the sum of official winning payouts, without refund credits."
+                                     if spec.refund_accounting == "established_only" else
+                                     "Explicit alternate fixture convention: gross stake includes refunded tickets and returns include refund credits; this is not the original annual benchmark."),
+                  hundredfold_definition=HUNDREDFOLD_DEFINITION,
+                  source_definition_scope="Formation union, the two refund exclusions and the 265-race hundredfold definition are supported by the recovered original audit code. Code inspection alone does not reproduce annual row-level results.",
                   limitations=["The annual period was repeatedly studied; the later period is a chronological test, not an untouched holdout.",
                                "Matching totals and declared hashes does not prove historical feature availability or reproduce every model inference.",
                                "Uniform 100-yen-per-ticket returns are separate from any 5,000-10,000-yen allocation simulation."])
@@ -604,13 +623,15 @@ def input_contract():
                                   "model_id", "model_manifest_sha256", "training_cutoff_exclusive", "outcome"],
                 q="Optional only for baseline audit; candidate research requires every probability in itertools.permutations(cars, 3) order for every original race. Never normalize a saved top-k list as full q.",
                 original_tickets="Annual original 6/15/24 tickets before the later open_formation modification; not conditional12 or conditional8 tickets",
-                original_formations="1 to 4 {first:[car],second:[car],third:[car],count:int} blocks with exact full expansion and no overlap",
-                outcome=dict(status="settled or refunded", payouts_per_100_yen="Map of every official winning triple to its actual integer yen payoff per 100 yen; includes dead heats, excludes refunds", refund_tickets="Explicit list, including an empty list when there are none", refund_all="Explicit boolean"),
+                original_formations="1 to 4 {first:[car],second:[car],third:[car],count:int} complete blocks. Buy their deduplicated union once; overlaps are allowed. count is optional and, if supplied, must equal that block's full expansion before deduplication across blocks.",
+                outcome=dict(status="settled; fully refunded races do not belong to this established-race benchmark", payouts_per_100_yen="Map of every official winning triple to its actual integer yen payoff per 100 yen; includes dead heats, excludes refunds", refund_tickets="Explicit empty list: refund credits were not part of the original annual comparison", refund_all="Explicit false"),
                 optional_audit_columns=["snapshot_at", "input_captured_at", "close_at", "feature_history_through", "source_url", "source_sha256", "input_sha256"],
                 timing_note="snapshot_at, if supplied, means a genuinely saved pre-close forecast on the race date. input_captured_at must be <= snapshot_at < close_at. Retrospective source capture timestamps belong in separate provenance fields. Missing event-time proof remains unproven.",
-                refund_accounting="Gross stake = 100 yen times all selected tickets, including void races. Return = winning payouts + 100 yen per refunded ticket. Original annual refund convention still requires source reconciliation; this is separate from net-stake live statistics.",
+                refund_accounting="The recovered original audit excludes the two named fully refunded races. For its 27,351 established races: stake = 100 yen times unique selected tickets; return = winning payouts only, without refund credits.",
+                excluded_refund_race_ids=list(EXCLUDED_REFUND_RACE_IDS),
+                hundredfold_definition=HUNDREDFOLD_DEFINITION,
                 cohort_required=dict(schema=1, benchmark_id=ANNUAL.benchmark_id,
-                                     model_manifest_sha256="SHA-256 of the exact supplied model manifest", source_description="Original study source for its unfiltered race-id inventory", source_sha256="SHA-256 of that original source", race_ids="All 27,351 original race ids, once each"),
+                                     model_manifest_sha256="SHA-256 of the exact supplied model manifest", source_description="Original study source for its established-race inventory and the two source-defined refund exclusions", source_sha256="SHA-256 of that original source", race_ids="All 27,351 original established race ids, once each, excluding 031120260425 and 098720260529"),
                 example_kind="Schema instructions only. No annual forecasts, payouts, or profitable result are generated by this command.")
 
 

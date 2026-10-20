@@ -25,7 +25,8 @@ class NexusAnnualResearchTests(unittest.TestCase):
         self.run_dir = self.root / "run"
         self.spec = replace(roi.ANNUAL, benchmark_id="unit-test-only-four-races",
                             races=4, hits=2, stake_yen=2400, payout_yen=3100,
-                            model_fingerprint=None)
+                            model_fingerprint=None, hundredfold_hit_races=0,
+                            refund_accounting="gross_with_refunds")
         model = roi.read_json(roi.ROOT / "models" / "nexus53" / "manifest.json")
         model["historical"] = dict(races=4, hits=2, hit_rate=.5,
                                     flat_stake=2400, flat_return=3100, roi=3100/2400)
@@ -122,7 +123,80 @@ class NexusAnnualResearchTests(unittest.TestCase):
         self.rows[0]["original_formations"][0]["count"] = 6
         self.rows[0]["original_formations"] *= 2
         self.save_rows()
-        self.assert_blocked("formation_overlap", self.audit)
+        _, report = self.audit()
+        self.assertEqual((24, 2400, 3100), tuple(report["baseline"][k] for k in
+                         ("tickets", "stake_yen", "payout_yen")))
+
+    def test_overlapping_blocks_use_union_and_each_block_keeps_its_own_count(self):
+        self.rows[0]["original_formations"].append(
+            dict(first=[1], second=[2, 3], third=[2, 3], count=2))
+        self.save_rows()
+        race = self.audit()[0][0]
+        self.assertEqual(6, len(race.original))
+        self.assertEqual(600, roi.settle(race, race.original)["stake_yen"])
+        # The second block adds no new tickets, but its complete expansion is 2.
+        self.rows[0]["original_formations"][1]["count"] = 0
+        self.save_rows()
+        self.assert_blocked("formation_expansion", self.audit)
+
+    def test_original_source_blocks_can_omit_count(self):
+        self.rows[0]["original_formations"][0].pop("count")
+        self.save_rows()
+        self.assertEqual(6, len(self.audit()[0][0].original))
+
+    def test_union_does_not_hide_extra_tickets_or_duplicate_purchases(self):
+        self.rows[0]["original_formations"].append(dict(first=[1], second=[2], third=[4], count=1))
+        self.save_rows()
+        self.assert_blocked("original_formation_mismatch", self.audit)
+        self.rows[0]["original_formations"].pop()
+        self.rows[0]["original_tickets"].append(self.rows[0]["original_tickets"][0])
+        self.save_rows()
+        self.assert_blocked("original_count", self.audit)
+
+    def test_named_refund_exclusions_apply_to_both_ledger_and_cohort(self):
+        spec = replace(self.spec, refund_accounting="established_only")
+        original_cohort = roi.read_json(self.cohort)
+        for rid in roi.EXCLUDED_REFUND_RACE_IDS:
+            with self.subTest(race_id=rid):
+                raw = copy.deepcopy(self.rows[0])
+                raw.update(race_id=rid, date=f"{rid[4:8]}-{rid[8:10]}-{rid[10:12]}")
+                self.assert_blocked("benchmark_refund_exclusion",
+                                    lambda: roi._parse_race(raw, roi.file_sha(self.manifest), spec))
+                cohort = copy.deepcopy(original_cohort)
+                cohort["race_ids"][0] = rid
+                self.cohort.write_text(json.dumps(cohort), encoding="utf-8")
+                self.assert_blocked("benchmark_refund_exclusion", lambda: self.audit(spec=spec))
+
+    def test_established_annual_convention_does_not_credit_refunds(self):
+        spec = replace(self.spec, refund_accounting="established_only")
+        raw = copy.deepcopy(self.rows[0])
+        raw["outcome"]["refund_tickets"] = ["2-1-3"]
+        self.assert_blocked("annual_refund_accounting",
+                            lambda: roi._parse_race(raw, roi.file_sha(self.manifest), spec))
+        # A different refunded race cannot be substituted for an established one.
+        self.assert_blocked("annual_refund_accounting",
+                            lambda: roi._parse_race(self.rows[-1], roi.file_sha(self.manifest), spec))
+
+    def test_hundredfold_is_per_selected_winning_ticket_then_once_per_race(self):
+        cases = [({"1-2-3": 9990, "1-3-2": 9990}, 0),
+                 ({"1-2-3": 10000}, 1),
+                 ({"1-2-3": 10000, "1-3-2": 25000}, 1),
+                 ({"1-2-3": 9990, "5-4-3": 25000}, 0)]
+        for payouts, expected in cases:
+            with self.subTest(payouts=payouts):
+                raw = copy.deepcopy(self.rows[0])
+                raw["outcome"]["payouts_per_100_yen"] = payouts
+                race = roi._parse_race(raw, roi.file_sha(self.manifest), self.spec)
+                result = roi.settle(race, race.original)
+                self.assertEqual(expected, result["hundredfold_hit_races"])
+                self.assertEqual(1, result["hits"])
+
+    def test_hundredfold_baseline_gate_is_not_replaced_by_matching_totals(self):
+        with self.assertRaises(roi.ReplayError) as caught:
+            self.audit(spec=replace(self.spec, hundredfold_hit_races=1))
+        self.assertEqual("benchmark_mismatch", caught.exception.code)
+        self.assertEqual({"hundredfold_hit_races": {"expected": 1, "actual": 0}},
+                         caught.exception.details["mismatches"])
 
     def test_model_hash_and_fixed_annual_training_cutoff(self):
         self.rows[-1]["training_cutoff_exclusive"] = "2026-04-09"
@@ -179,6 +253,15 @@ class NexusAnnualResearchTests(unittest.TestCase):
         self.rows[0]["q"] = list(reversed(self.rows[0]["q"]))
         self.save_rows()
         self.assert_blocked("source_changed", lambda: roi.develop(self.run_dir, spec=self.spec))
+
+    def test_corrected_accounting_cannot_resume_a_v1_protocol(self):
+        protocol = self.prepare()
+        protocol["protocol_id"] = "nexus-annual-flat100-points-v1"
+        protocol["protocol_sha256"] = roi.fingerprint({k: v for k, v in protocol.items()
+                                                     if k != "protocol_sha256"})
+        (self.run_dir / "protocol.json").write_text(json.dumps(protocol), encoding="utf-8")
+        self.assert_blocked("protocol_changed", lambda: roi.develop(self.run_dir, spec=self.spec))
+        self.assertFalse((self.run_dir / "selection.json").exists())
 
     def test_staged_selection_only_uses_development_then_one_candidate(self):
         original_bytes = self.ledger.read_bytes()

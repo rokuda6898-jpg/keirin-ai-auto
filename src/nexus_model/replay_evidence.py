@@ -60,20 +60,19 @@ def from_inference(cars, q, original_plan, manifest, manifest_sha256):
     if (not 1 <= len(blocks) <= 4 or len(tickets) != len(set(tickets))
             or not tickets or not set(tickets).issubset(triples)):
         raise ValueError("invalid original formation tickets")
-    expanded = []
+    expanded = set()
     for block in blocks:
         sets = [block[k] for k in ("first", "second", "third")]
         if any(not group or len(set(group)) != len(group)
                or any(type(car) is not int or car not in cars for car in group)
                for group in sets):
             raise ValueError("invalid original formation car numbers")
-        part = [t for t in itertools.product(*sets) if len(set(t)) == 3]
-        if type(block.get("count")) is not int or block["count"] != len(part) or not part:
+        part = {t for t in itertools.product(*sets) if len(set(t)) == 3}
+        if "count" in block and (type(block["count"]) is not int or block["count"] != len(part)):
             raise ValueError("original formation count differs from its expansion")
-        expanded.extend(part)
-    if len(expanded) != len(set(expanded)):
-        raise ValueError("original formations overlap")
-    if set(expanded) != set(tickets):
+        # Preserve source blocks exactly; their deduplicated union is bought once.
+        expanded.update(part)
+    if expanded != set(tickets):
         raise ValueError("original formations do not match original tickets")
     cutoff = (date.fromisoformat(manifest["train"][1]) + timedelta(days=1)).isoformat()
     record = dict(schema=1, cars=cars, q=values,
