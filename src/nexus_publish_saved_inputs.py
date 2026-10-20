@@ -238,7 +238,7 @@ def checkpoint_day(out, existing, today):
 
 
 def run(root=ROOT, clock=now_jst, engine_factory=None, history=None,
-        max_input_age=1800, min_lead_seconds=0):
+        max_input_age=1800, min_lead_seconds=0, require_replay_evidence=False):
     root = Path(root)
     now = clock()
     if now.tzinfo is None:
@@ -342,6 +342,7 @@ def run(root=ROOT, clock=now_jst, engine_factory=None, history=None,
             needs_forecast = (not old or not is_open_prediction(old)
                               or old.get("input_sha256") != snap["input_sha256"]
                               or old.get("confidence", {}).get("status") != "assessed"
+                              or (require_replay_evidence and not old.get("replay_evidence"))
                               or (history is not None and old.get("history_through") != history.data["through"]))
             if needs_forecast:
                 if history is None:
@@ -536,6 +537,33 @@ def update_roi_comparison(root, baseline, generate=False):
         return False, ["comparison_error"]
 
 
+def record_forward_comparison_error(root, exc):
+    status_path = Path(root) / "outputs/nexus_coverage_status.json"
+    status = read_json(status_path, {})
+    status["forward_comparison"] = dict(status="error", reason=f"{type(exc).__name__}: {exc}")
+    save_json(status_path, status)
+    print("::warning::Prospective ten-ticket comparison failed: " + str(exc), flush=True)
+
+
+def update_forward_comparison(root, baseline, generate=False):
+    """Save the fixed ten-ticket comparison with the same final deadline gates."""
+    path = Path(root) / "outputs/nexus_forward.json"
+    try:
+        if generate:
+            subprocess.run([sys.executable, str(Path(root) / "src/nexus_forward.py")],
+                           cwd=root, check=True)
+        from nexus_forward import gate_publication
+        return True, gate_publication(root, copy.deepcopy(baseline), lead_seconds=60)
+    except Exception as exc:
+        # Restore only the known public baseline after any partial/new write.
+        if baseline:
+            save_json(path, baseline)
+        else:
+            path.unlink(missing_ok=True)
+        record_forward_comparison_error(root, exc)
+        return False, ["comparison_error"]
+
+
 def publish_ci(root=ROOT):
     """Recompute on latest main for each bounded push attempt, without HTTP data."""
     root = Path(root)
@@ -565,15 +593,28 @@ def publish_ci(root=ROOT):
                     # An invalid optional feed must not block the main forecast
                     # publisher or be replaced by a fresh retrospective record.
                     roi_baseline, roi_baseline_error = None, exc
+                forward_baseline_error = None
+                try:
+                    forward_baseline = read_json(checkout / "outputs/nexus_forward.json", {})
+                    if not isinstance(forward_baseline, dict):
+                        raise ValueError("Prospective comparison baseline must be a JSON object")
+                except Exception as exc:
+                    forward_baseline, forward_baseline_error = None, exc
                 copy_newer_inputs(root, checkout)
                 result = subprocess.run([sys.executable, str(checkout / "src/nexus_publish_saved_inputs.py"),
-                                         "--min-lead-seconds", "60"], cwd=checkout)
+                                         "--min-lead-seconds", "60", "--require-replay-evidence"], cwd=checkout)
                 if result.returncode not in (0, 1):
                     raise RuntimeError("offline publication failed before writing coverage status")
                 # Confidence annotations use only frozen scores and must also
                 # reach previously saved forecasts without changing their bets.
                 subprocess.run([sys.executable, str(checkout / "src/nexus_confidence_sync.py")],
                                cwd=checkout, check=True)
+                gate_saved_publication(checkout, baseline)
+                if forward_baseline_error is None:
+                    forward_healthy, _ = update_forward_comparison(checkout, forward_baseline, generate=True)
+                else:
+                    record_forward_comparison_error(checkout, forward_baseline_error)
+                    forward_healthy = False
                 # Keep the original conditional allocation immutable. Compare
                 # the same tickets and budget using already captured later
                 # quotes, in a separate prospective record with no source HTTP.
@@ -588,9 +629,11 @@ def publish_ci(root=ROOT):
                     near_close_healthy, _ = update_near_close_comparison(checkout, near_close_baseline)
                 if roi_healthy:
                     roi_healthy, _ = update_roi_comparison(checkout, roi_baseline)
+                if forward_healthy:
+                    forward_healthy, _ = update_forward_comparison(checkout, forward_baseline)
                 for name in (str(SNAPSHOTS), "outputs/nexus_live.json", "outputs/nexus_forecasts",
                              "outputs/conditional_live.json", "outputs/conditional_near_close.json",
-                             "outputs/conditional_roi.json",
+                             "outputs/conditional_roi.json", "outputs/nexus_forward.json",
                              "outputs/nexus_coverage_status.json", "data/nexus/history.json.gz"):
                     if (checkout / name).exists():
                         git(checkout, "add", "-f", "--", name)
@@ -604,12 +647,16 @@ def publish_ci(root=ROOT):
                                        if near_close_healthy else (False, []))
                 _, late_roi = (update_roi_comparison(checkout, roi_baseline)
                                if roi_healthy else (False, []))
-                if late_forecasts or late_allocations or late_roi:
+                _, late_forward = (update_forward_comparison(checkout, forward_baseline)
+                                   if forward_healthy else (False, []))
+                if late_forecasts or late_allocations or late_roi or late_forward:
                     git(checkout, "add", "--", "outputs/nexus_live.json", "outputs/nexus_forecasts", "outputs/nexus_coverage_status.json")
                     if near_close_healthy:
                         git(checkout, "add", "--all", "--", "outputs/conditional_near_close.json")
                     if roi_healthy:
                         git(checkout, "add", "--all", "--", "outputs/conditional_roi.json")
+                    if forward_healthy:
+                        git(checkout, "add", "--all", "--", "outputs/nexus_forward.json")
                     git(checkout, "-c", "user.name=github-actions[bot]", "-c",
                         "user.email=41898282+github-actions[bot]@users.noreply.github.com", "commit", "--amend", "--no-edit")
                 if git(checkout, "push", "origin", "HEAD:main", check=False).returncode == 0:
@@ -624,6 +671,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--publish", action="store_true")
     parser.add_argument("--min-lead-seconds", type=float, default=0)
+    parser.add_argument("--require-replay-evidence", action="store_true",
+                        help="Create a new, separately timestamped open forecast when full model evidence is absent")
     parser.add_argument("--verify", action="store_true")
     args = parser.parse_args()
     if args.publish:
@@ -631,7 +680,8 @@ def main():
     if args.verify:
         report = read_json(ROOT / "outputs/nexus_coverage_status.json", {})
     else:
-        report = run(min_lead_seconds=args.min_lead_seconds)
+        report = run(min_lead_seconds=args.min_lead_seconds,
+                     require_replay_evidence=args.require_replay_evidence)
     return 0 if report.get("schedule_complete") and not report.get("missing_open") else 1
 
 

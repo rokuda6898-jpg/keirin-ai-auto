@@ -181,6 +181,37 @@ class SavedPublisherReplayTests(PublicationFixture):
         self.assertNotIn("replay_evidence", self.prediction())
         self.assertTrue(any("invalid evidence" in error["reason"] for error in report["errors"]))
 
+    def test_comparison_activation_refreshes_only_open_legacy_forecast(self):
+        self.saved.run_model(EvidenceEngine)
+        legacy = copy.deepcopy(self.prediction())
+        legacy.pop("replay_evidence")
+        feed = self.saved.live()
+        feed["races"][0]["prediction"] = legacy
+        fixtures.capture.save_json(self.saved.root / "outputs/nexus_live.json", feed)
+        fixtures.capture.save_json(self.saved.root / "outputs/nexus_forecasts/2026-10-19.json", feed["races"])
+        self.saved.clock.value += timedelta(minutes=1)
+        report = fixtures.publisher.run(self.saved.root, self.saved.clock, EvidenceEngine,
+                                        self.saved.history, require_replay_evidence=True)
+        self.assertEqual(report["generated"], [self.snap["meta"]["race_id"]])
+        self.assert_bound(self.prediction())
+        self.assertGreater(self.prediction()["captured_at"], legacy["captured_at"])
+        self.assertIn(legacy, self.saved.live()["races"][0]["previous_predictions"])
+
+        # The same activation must never repair a missing score after close.
+        closed = copy.deepcopy(self.prediction())
+        closed.pop("replay_evidence")
+        feed = self.saved.live()
+        feed["races"][0]["prediction"] = closed
+        fixtures.capture.save_json(self.saved.root / "outputs/nexus_live.json", feed)
+        fixtures.capture.save_json(self.saved.root / "outputs/nexus_forecasts/2026-10-19.json", feed["races"])
+        self.saved.clock.value += timedelta(hours=3)
+        never_infer = Mock(side_effect=AssertionError("closed forecasts cannot be regenerated"))
+        report = fixtures.publisher.run(self.saved.root, self.saved.clock, never_infer,
+                                        self.saved.history, require_replay_evidence=True)
+        self.assertEqual(report["generated"], [])
+        self.assertEqual(self.prediction(), closed)
+        never_infer.assert_not_called()
+
     def test_deadline_crossed_during_binding_discards_new_forecast(self):
         def slow_bind(*args, **kwargs):
             result = bind_prediction(*args, **kwargs)

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#172c35">
+  <meta name="description" content="締切前に保存した競輪10点フォーメーションを、元の予想と同じレースで比較。予想印、自信度、100円均等・予算配分、公式結果と回収率を確認できます。">
+  <title>10点フォーメーション｜KEIRIN NEXUS</title>
+  <link rel="stylesheet" href="nexus-forward.css?v=20261020-forward-v1">
+</head>
+<body>
+  <a class="skip-link" href="#main">本文へ</a>
+  <header class="app-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="index.html#forecast">KEIRIN NEXUS<small>FORMATION &amp; RESULTS</small></a>
+      <nav aria-label="予想ページ"><a href="index.html#forecast">NEXUS予想</a><a href="conditional.html#forecast">条件付き3連単</a><a href="roi-research.html">改善の検証</a></nav>
+    </div>
+  </header>
+  <main id="main" class="wrap">
+    <section class="hero" aria-labelledby="page-heading">
+      <div><p class="eyebrow">NEXUS / 10 TICKET COMPARISON</p><div class="title-line"><h1 id="page-heading">10点フォーメーション</h1><span class="trial-tag">比較運用中</span></div><p class="lead">各点100円なら1レース1,000円。元の予想と同じレースで、的中と回収を確かめます。</p></div>
+      <div class="update-control"><span>データ更新 <strong id="updated">読み込み中</strong><small>日本時間</small></span><button id="refresh" type="button" class="quiet-button">↻ 更新</button></div>
+    </section>
+    <p id="notice" class="notice" role="status" aria-live="polite">締切前に保存した10点予想を読み込んでいます。</p>
+    <section class="finder" aria-label="開催レースを選ぶ">
+      <div class="finder-top">
+        <div class="view-switch" role="group" aria-label="表示内容"><button type="button" data-view="forecast" aria-pressed="true">予想を見る</button><button type="button" data-view="results" aria-pressed="false">結果・成績</button></div>
+        <div class="selectors"><label for="day">開催日<select id="day"><option value="">読み込み中</option></select></label><label for="venue">開催場<select id="venue"><option value="all">全開催場</option></select></label></div>
+      </div>
+      <div id="bands" class="band-tabs" role="group" aria-label="開催時間帯"></div>
+      <div class="filter-foot"><p id="coverage">保存状況を確認中です。</p><label class="budget-label" for="budget">配分予算<select id="budget"><option value="auto">自動・共通予算（5千〜1万円）</option><option value="5000">5,000円</option><option value="6000">6,000円</option><option value="7000">7,000円</option><option value="8000">8,000円</option><option value="9000">9,000円</option><option value="10000">10,000円</option></select></label></div>
+    </section>
+    <section id="forecasts" aria-labelledby="forecast-heading">
+      <div class="section-heading"><h2 id="forecast-heading">開催レースの予想</h2><span id="forecast-count"></span></div>
+      <p class="section-intro">開催場ごとのレース番号を選ぶと、予想印・自信度・フォーメーション・配分を確認できます。</p>
+      <div id="meetings"><p class="empty-state">予想データを読み込んでいます。</p></div>
+    </section>
+    <section id="results" aria-labelledby="results-heading" hidden>
+      <div class="section-heading"><h2 id="results-heading">同じレースで成績を比較</h2><span id="result-scope"></span></div>
+      <div class="view-switch compact" role="group" aria-label="成績の購入方法"><button type="button" data-method="flat" aria-pressed="true">各点100円</button><button type="button" data-method="allocated" aria-pressed="false">配分版</button></div>
+      <div id="metrics" class="metrics"></div>
+      <p id="metrics-note" class="stat-note"></p>
+      <div id="result-list"></div>
+    </section>
+    <details class="method-notes"><summary>10点方式と成績の見方</summary><div><h2>レース前に決めた買い目で確認します</h2><p>NEXUSの全着順評価から、最大4本のフォーメーションで10点を選びます。1・2着を一律に固定する方式ではありません。元の予想と10点予想を同時に保存し、保存後に買い目を選び直すことはありません。</p><p>全開催・全レースが対象です。締切前の記録がないレースには保存状況を表示し、後から予想したことにはしません。以前の予想・公式結果は<a href="index.html#forecast">NEXUS予想</a>でも確認できます。</p><h2>自信度は的中率ではありません</h2><p>S・A・Bは選んだ買い目へのモデル支持度です。Sは65％以上、Aは45％以上、Bは45％未満。実際の的中率を保証する値ではありません。予想の保存がないレースには印・自信度を付けません。</p><h2>2つの購入方法を同じ対象で比較</h2><p>各点100円は買い目ごとに100円、10点なら合計1,000円です。配分版は保存した5,000〜10,000円の配分を表示します。自動では両方式でトリガミ回避が成立する最小の共通予算を選びます。予算内で成立しない場合や締切前オッズがない場合は、無理な配分を表示しません。</p><p>配分時のオッズなら、いずれかの買い目が的中した際の想定払戻が購入総額以上になる金額を探します。保存後のオッズ変動により、的中しても購入額を下回る場合があります。</p><p>的中率＝的中レース数÷精算済みレース数、回収率＝公式払戻額÷購入額。同じレース・同じ購入方法が両方で確認できる場合だけを成績に含めます。返還・中止・結果待ち・記録なしは集計対象外です。配分版は両方に保存配分があるレースだけなので、各点100円とは対象件数が異なります。</p><p>このページは導入後の保存記録です。以前の32レースの108.72％は、<a href="roi-research.html#nexus">過去データの改善比較</a>に掲載しています。年間27,351レースの100％超えは未確認です。</p></div></details>
+    <noscript><p class="empty-state">予想と結果の表示にはJavaScriptを有効にしてください。</p></noscript>
+    <footer><strong>KEIRIN NEXUS</strong><p>締切前の保存予想と公式結果による仮想購入の比較です。</p><nav aria-label="関連ページ"><a href="index.html#forecast">NEXUS予想</a><a href="conditional.html#forecast">条件付き3連単</a><a href="roi-research.html">回収率の改善比較</a></nav></footer>
+  </main>
+  <script src="nexus-forward.js?v=20261020-forward-v1"></script>
+</body>
+</html>

@@ -2,7 +2,7 @@ name: deploy-pages
 on:
   push:
     branches: [main]
-    paths: ['site/**', 'tests/test_nexus_core.js', 'tests/test_near_close_ui.js', 'tests/test_conditional_roi_ui.js', 'outputs/nexus_live.json', 'outputs/conditional_near_close.json', 'outputs/conditional_roi.json', 'outputs/conditional_roi_research_2026-10-20.json', 'src/build_public_site.py', 'src/site_retirement.py', '.github/workflows/pages.yml']
+    paths: ['site/**', 'tests/test_nexus_core.js', 'tests/test_near_close_ui.js', 'tests/test_conditional_roi_ui.js', 'outputs/nexus_live.json', 'outputs/nexus_forward.json', 'outputs/conditional_near_close.json', 'outputs/conditional_roi.json', 'outputs/conditional_roi_research_2026-10-20.json', 'src/build_public_site.py', 'src/site_retirement.py', '.github/workflows/pages.yml']
   workflow_dispatch:
   workflow_run:
     workflows: ['conditional-trifecta-live', 'nexus-formation-publish', 'quick-keirin-results', 'settle-keirin-results']
@@ -33,6 +33,8 @@ jobs:
           node --check site/app.js
           node --check site/nexus.js
           node --check site/nexus-core.js
+          node --check site/nexus-forward.js
+          node tests/test_nexus_forward_ui.js
           node tests/test_nexus_core.js
           node --check site/archive.js
           node --check site/forecast.js
