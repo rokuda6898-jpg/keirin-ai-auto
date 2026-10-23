@@ -1,18 +1,27 @@
 {
-  "checked_at_jst": "2026-10-23T17:56:29+09:00",
-  "status": "healthy",
+  "checked_at_jst": "2026-10-23T19:01:28+09:00",
+  "status": "waiting_results",
   "repaired": false,
   "check_source": "post_settlement_read_only_audit",
   "attempts": [
     {
       "attempt": 0,
-      "problems": [],
+      "problems": [
+        {
+          "type": "results_waiting",
+          "race_ids": [
+            "084820261023"
+          ]
+        }
+      ],
       "health": {
-        "severity": "ok",
-        "problem_types": [],
+        "severity": "warning",
+        "problem_types": [
+          "results_waiting"
+        ],
         "race_count": 82,
-        "expected_riders": 592,
-        "actual_riders": 592,
+        "expected_riders": 593,
+        "actual_riders": 593,
         "rider_integrity_ok": true
       }
     }
@@ -686,6 +695,7 @@
     "058720261023": {
       "cars": [
         1,
+        2,
         3,
         4,
         5,
@@ -694,12 +704,10 @@
         8,
         9
       ],
-      "count": 8,
-      "expected_entries": 8,
+      "count": 9,
+      "expected_entries": 9,
       "declared_entries": 9,
-      "cancelled_cars": [
-        2
-      ]
+      "cancelled_cars": []
     },
     "061320261023": {
       "cars": [
@@ -1270,11 +1278,13 @@
     }
   },
   "health": {
-    "severity": "ok",
-    "problem_types": [],
+    "severity": "warning",
+    "problem_types": [
+      "results_waiting"
+    ],
     "race_count": 82,
-    "expected_riders": 592,
-    "actual_riders": 592,
+    "expected_riders": 593,
+    "actual_riders": 593,
     "rider_integrity_ok": true
   }
 }

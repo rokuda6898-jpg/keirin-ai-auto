@@ -1,54 +1,49 @@
 {
-  "checked_at_jst": "2026-10-23T14:14:47+09:00",
-  "status": "repaired",
+  "checked_at_jst": "2026-10-23T19:01:35+09:00",
+  "status": "waiting_results",
   "repaired": true,
   "attempts": [
     {
       "attempt": 0,
       "problems": [
         {
-          "type": "site_player_name_mismatch",
-          "race_id": "058720261023",
-          "mismatch_count": 1,
-          "samples": [
-            {
-              "player_id": "15641",
-              "player_name": "富武大",
-              "site_player_name": null
-            }
-          ]
-        },
-        {
           "type": "results_overdue",
           "race_ids": [
-            "042520261023",
-            "052520261023",
-            "058720261023",
-            "062520261023",
-            "068720261023",
-            "078720261023"
+            "064820261023",
+            "065320261023",
+            "074820261023",
+            "075320261023",
+            "085320261023"
           ]
         }
       ],
       "health": {
         "severity": "warning",
         "problem_types": [
-          "results_overdue",
-          "site_player_name_mismatch"
+          "results_overdue"
         ],
         "race_count": 82,
         "expected_riders": 593,
         "actual_riders": 593,
         "rider_integrity_ok": true
       },
-      "repair_action": "prediction_regeneration+settlement_refresh"
+      "repair_action": "settlement_refresh"
     },
     {
       "attempt": 1,
-      "problems": [],
+      "problems": [
+        {
+          "type": "results_waiting",
+          "race_ids": [
+            "084820261023"
+          ]
+        }
+      ],
       "health": {
-        "severity": "ok",
-        "problem_types": [],
+        "severity": "warning",
+        "problem_types": [
+          "results_waiting"
+        ],
         "race_count": 82,
         "expected_riders": 593,
         "actual_riders": 593,
@@ -1308,8 +1303,10 @@
     }
   },
   "health": {
-    "severity": "ok",
-    "problem_types": [],
+    "severity": "warning",
+    "problem_types": [
+      "results_waiting"
+    ],
     "race_count": 82,
     "expected_riders": 593,
     "actual_riders": 593,
@@ -1317,6 +1314,8 @@
   },
   "recurrence": {
     "level": 0,
-    "counts": {}
+    "counts": {
+      "results_waiting:084820261023": 0
+    }
   }
 }
