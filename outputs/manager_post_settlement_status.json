@@ -1,6 +1,6 @@
 {
-  "checked_at_jst": "2026-10-23T12:32:44+09:00",
-  "status": "unhealthy",
+  "checked_at_jst": "2026-10-23T12:41:02+09:00",
+  "status": "waiting_results",
   "repaired": false,
   "check_source": "post_settlement_read_only_audit",
   "attempts": [
@@ -8,26 +8,20 @@
       "attempt": 0,
       "problems": [
         {
-          "type": "site_player_name_mismatch",
-          "race_id": "058720261023",
-          "mismatch_count": 1,
-          "samples": [
-            {
-              "player_id": "15641",
-              "player_name": "富武大",
-              "site_player_name": null
-            }
+          "type": "results_waiting",
+          "race_ids": [
+            "042520261023"
           ]
         }
       ],
       "health": {
         "severity": "warning",
         "problem_types": [
-          "site_player_name_mismatch"
+          "results_waiting"
         ],
         "race_count": 82,
-        "expected_riders": 593,
-        "actual_riders": 593,
+        "expected_riders": 592,
+        "actual_riders": 592,
         "rider_integrity_ok": true
       }
     }
@@ -701,7 +695,6 @@
     "058720261023": {
       "cars": [
         1,
-        2,
         3,
         4,
         5,
@@ -710,10 +703,12 @@
         8,
         9
       ],
-      "count": 9,
-      "expected_entries": 9,
+      "count": 8,
+      "expected_entries": 8,
       "declared_entries": 9,
-      "cancelled_cars": []
+      "cancelled_cars": [
+        2
+      ]
     },
     "061320261023": {
       "cars": [
@@ -1286,11 +1281,11 @@
   "health": {
     "severity": "warning",
     "problem_types": [
-      "site_player_name_mismatch"
+      "results_waiting"
     ],
     "race_count": 82,
-    "expected_riders": 593,
-    "actual_riders": 593,
+    "expected_riders": 592,
+    "actual_riders": 592,
     "rider_integrity_ok": true
   }
 }
