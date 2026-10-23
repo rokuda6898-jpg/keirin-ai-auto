@@ -1,0 +1,51 @@
+name: conditional-58-prior-research
+on:
+  push:
+    branches: [research/conditional-58-causal-priors-20261011]
+    paths:
+      - research/conditional_58_priors.py
+      - research/test_conditional_58_priors.py
+      - .github/workflows/conditional-58-prior-research.yml
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: conditional-58-prior-research
+  cancel-in-progress: false
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PYTHONPATH: src:research
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt -r requirements-conditional.txt
+      - name: Verify date boundaries, inference equivalence, and paired metrics
+        run: python -m unittest discover -s research -p 'test_conditional_58_priors.py' -v
+      - name: Restore immutable 60092-race research input
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          repository: rokuda6898-jpg/keirin-ai-auto
+          run-id: 38046038715
+          name: trifecta-research-input-38046038715
+          path: research-input
+      - name: Compare all three predefined modes, exactly twelve tickets each
+        run: python -u research/conditional_58_priors.py --input research-input --output research-results
+      - name: Preserve evidence without publishing or replacing live predictions
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: conditional-58-priors-${{ github.run_id }}
+          path: research-results/
+          retention-days: 30
+          if-no-files-found: warn
