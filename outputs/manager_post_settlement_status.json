@@ -1,15 +1,30 @@
 {
-  "checked_at_jst": "2026-10-23T09:24:23+09:00",
-  "status": "healthy",
+  "checked_at_jst": "2026-10-23T12:32:44+09:00",
+  "status": "unhealthy",
   "repaired": false,
   "check_source": "post_settlement_read_only_audit",
   "attempts": [
     {
       "attempt": 0,
-      "problems": [],
+      "problems": [
+        {
+          "type": "site_player_name_mismatch",
+          "race_id": "058720261023",
+          "mismatch_count": 1,
+          "samples": [
+            {
+              "player_id": "15641",
+              "player_name": "富武大",
+              "site_player_name": null
+            }
+          ]
+        }
+      ],
       "health": {
-        "severity": "ok",
-        "problem_types": [],
+        "severity": "warning",
+        "problem_types": [
+          "site_player_name_mismatch"
+        ],
         "race_count": 82,
         "expected_riders": 593,
         "actual_riders": 593,
@@ -1269,8 +1284,10 @@
     }
   },
   "health": {
-    "severity": "ok",
-    "problem_types": [],
+    "severity": "warning",
+    "problem_types": [
+      "site_player_name_mismatch"
+    ],
     "race_count": 82,
     "expected_riders": 593,
     "actual_riders": 593,
