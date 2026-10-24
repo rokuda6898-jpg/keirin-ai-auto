@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-10-24T18:25:13+09:00",
+  "checked_at": "2026-10-24T20:32:15+09:00",
   "owners": {
     "data": "データ品質責任者",
     "coverage": "全レース予想責任者",
@@ -9,6 +9,13 @@
   },
   "status": "error",
   "findings": [
+    {
+      "owner": "data",
+      "code": "feed_stale",
+      "level": "error",
+      "message": "締切前レースがありますが公開データが45分以上古い、または時刻が不正です。",
+      "race_ids": []
+    },
     {
       "owner": "settlement",
       "code": "withdrawn_tickets",
@@ -31,6 +38,17 @@
         "044320261010",
         "044620261010",
         "103520261010"
+      ]
+    },
+    {
+      "owner": "settlement",
+      "code": "results_overdue",
+      "level": "warning",
+      "message": "発走から2時間以上経過しても結果未確認です。中止・延期も確認してください。",
+      "race_ids": [
+        "064220261024",
+        "074220261024",
+        "075320261024"
       ]
     },
     {
