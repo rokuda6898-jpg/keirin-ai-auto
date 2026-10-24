@@ -1,6 +1,6 @@
 {
-  "checked_at_jst": "2026-10-24T09:14:11+09:00",
-  "status": "repaired",
+  "checked_at_jst": "2026-10-24T13:37:23+09:00",
+  "status": "waiting_results",
   "repaired": true,
   "attempts": [
     {
@@ -9,15 +9,17 @@
         {
           "type": "results_waiting",
           "race_ids": [
-            "026320261024"
+            "062520261024"
           ]
         },
         {
           "type": "results_overdue",
           "race_ids": [
-            "014420261024",
-            "016320261024",
-            "024420261024"
+            "052520261024",
+            "057320261024",
+            "058720261024",
+            "067320261024",
+            "068720261024"
           ]
         }
       ],
@@ -28,21 +30,30 @@
           "results_waiting"
         ],
         "race_count": 90,
-        "expected_riders": 649,
-        "actual_riders": 649,
+        "expected_riders": 648,
+        "actual_riders": 648,
         "rider_integrity_ok": true
       },
       "repair_action": "settlement_refresh"
     },
     {
       "attempt": 1,
-      "problems": [],
+      "problems": [
+        {
+          "type": "results_waiting",
+          "race_ids": [
+            "077320261024"
+          ]
+        }
+      ],
       "health": {
-        "severity": "ok",
-        "problem_types": [],
+        "severity": "warning",
+        "problem_types": [
+          "results_waiting"
+        ],
         "race_count": 90,
-        "expected_riders": 649,
-        "actual_riders": 649,
+        "expected_riders": 648,
+        "actual_riders": 648,
         "rider_integrity_ok": true
       }
     }
@@ -142,16 +153,17 @@
       "cars": [
         1,
         2,
-        3,
         4,
         5,
         6,
         7
       ],
-      "count": 7,
-      "expected_entries": 7,
+      "count": 6,
+      "expected_entries": 6,
       "declared_entries": 7,
-      "cancelled_cars": []
+      "cancelled_cars": [
+        3
+      ]
     },
     "017320261024": {
       "cars": [
@@ -1419,15 +1431,19 @@
     }
   },
   "health": {
-    "severity": "ok",
-    "problem_types": [],
+    "severity": "warning",
+    "problem_types": [
+      "results_waiting"
+    ],
     "race_count": 90,
-    "expected_riders": 649,
-    "actual_riders": 649,
+    "expected_riders": 648,
+    "actual_riders": 648,
     "rider_integrity_ok": true
   },
   "recurrence": {
     "level": 0,
-    "counts": {}
+    "counts": {
+      "results_waiting:077320261024": 0
+    }
   }
 }
