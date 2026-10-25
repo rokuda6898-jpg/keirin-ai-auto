@@ -32,6 +32,9 @@ jobs:
       - run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+      - name: Quarantine malformed optional official observations
+        run: python src/repair_official_observations.py
+
       - name: Restore central history for manager repairs
         id: manager_central_history
         uses: actions/cache/restore@v4
