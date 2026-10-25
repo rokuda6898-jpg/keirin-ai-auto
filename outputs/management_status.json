@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-10-25T22:59:36+09:00",
+  "checked_at": "2026-10-26T02:25:39+09:00",
   "owners": {
     "data": "データ品質責任者",
     "coverage": "全レース予想責任者",
@@ -9,30 +9,6 @@
   },
   "status": "error",
   "findings": [
-    {
-      "owner": "coverage",
-      "code": "missing_company",
-      "level": "error",
-      "message": "会社予想が締切15分前または締切後にも未作成です。後付けせず未作成として記録します。",
-      "race_ids": [
-        "016320261025",
-        "017320261025",
-        "018720261025",
-        "026320261025",
-        "027320261025",
-        "028720261025",
-        "036320261025",
-        "037320261025",
-        "038720261025",
-        "046320261025",
-        "047320261025",
-        "048720261025",
-        "056320261025",
-        "057320261025",
-        "066320261025",
-        "076320261025"
-      ]
-    },
     {
       "owner": "settlement",
       "code": "withdrawn_tickets",
@@ -64,30 +40,46 @@
       "message": "daily.yml の直近完了処理が失敗しています。",
       "race_ids": [],
       "run_url": "https://github.com/rokuda6898-jpg/keirin-ai-auto/actions/runs/40143718898"
+    },
+    {
+      "owner": "operations",
+      "code": "workflow_conditional-live.yml",
+      "level": "error",
+      "message": "conditional-live.yml の直近完了処理が失敗しています。",
+      "race_ids": [],
+      "run_url": "https://github.com/rokuda6898-jpg/keirin-ai-auto/actions/runs/40215365958"
+    },
+    {
+      "owner": "operations",
+      "code": "workflow_pages.yml",
+      "level": "error",
+      "message": "pages.yml の直近完了処理が失敗しています。",
+      "race_ids": [],
+      "run_url": "https://github.com/rokuda6898-jpg/keirin-ai-auto/actions/runs/40215538802"
     }
   ],
   "coverage": {
     "company": {
-      "total": 72,
-      "saved": 56,
-      "missing": 16
+      "total": 0,
+      "saved": 0,
+      "missing": 0
     }
   },
   "matched_comparison": {
     "company": {
-      "races": 48,
-      "hits": 8,
-      "stake_yen": 20700,
-      "return_yen": 7320.0,
-      "largest_hit_return_share": 0.337431693989071
+      "races": 0,
+      "hits": 0,
+      "stake_yen": 0,
+      "return_yen": 0,
+      "largest_hit_return_share": null
     }
   },
   "active_modes": [
     "company"
   ],
   "comparison_scope": "会社方式のみ・初回締切前予想・各点100円。従来の独立予想は終了。",
-  "department_mean_ticket_overlap": 0.22193877551020408,
+  "department_mean_ticket_overlap": null,
   "email_configured": false,
   "notification_channel": "github_actions",
-  "email_status": "github_actions_duplicate"
+  "email_status": "github_actions_alert"
 }
