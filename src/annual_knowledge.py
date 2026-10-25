@@ -1,5 +1,9 @@
 """Rolling-year observed rider knowledge and independent department shadow forecasts."""
 import hashlib
+import os
+import shutil
+import tempfile
+import warnings
 import json
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -19,6 +23,35 @@ def frame_read(path):
         return pd.read_csv(path, dtype={"race_id": str, "player_id": str})
     except (FileNotFoundError, pd.errors.EmptyDataError):
         return pd.DataFrame()
+    except pd.errors.ParserError as exc:
+        # Supplemental observations can be rebuilt from official responses.
+        # Never hide corruption in the primary training history.
+        path = Path(path)
+        if path.name != "rider_official_observations.csv":
+            raise
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()[:16]
+        backup = path.with_name(path.name + ".corrupt-" + digest)
+        if not backup.exists():
+            shutil.copy2(path, backup)
+        warnings.warn(f"Malformed supplemental observations preserved at {backup}; "
+                      f"using verified primary history until official recollection: {exc}",
+                      RuntimeWarning)
+        return pd.DataFrame()
+
+
+def save_observations(frame, path):
+    """Publish a complete CSV atomically so readers never see a partial write."""
+    path = Path(path)
+    fd, temporary = tempfile.mkstemp(prefix=".observations-", dir=path.parent)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="") as stream:
+            frame.to_csv(stream, index=False)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, path)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
 
 
 def collect_observations(race_data, url, output_dir=OUTPUT_DIR):
@@ -34,7 +67,7 @@ def collect_observations(race_data, url, output_dir=OUTPUT_DIR):
     folder.mkdir(parents=True, exist_ok=True)
     path = folder / "rider_official_observations.csv"
     combined = pd.concat([frame_read(path), pd.DataFrame(rows)], ignore_index=True, sort=False)
-    combined.drop_duplicates(["race_id", "player_id"], keep="last").to_csv(path, index=False)
+    save_observations(combined.drop_duplicates(["race_id", "player_id"], keep="last"), path)
 
 
 def collect_prior_record_events(race_data, url, output_dir=OUTPUT_DIR):
@@ -63,7 +96,7 @@ def collect_prior_record_events(race_data, url, output_dir=OUTPUT_DIR):
         fresh = pd.DataFrame(rows).drop_duplicates(["race_id", "player_id"], keep="last")
         if not previous.empty:
             fresh = fresh.set_index(["race_id", "player_id"]).combine_first(previous.set_index(["race_id", "player_id"])).reset_index()
-        fresh.to_csv(path, index=False)
+        save_observations(fresh, path)
     return len(rows)
 
 

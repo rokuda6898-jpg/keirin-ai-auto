@@ -689,6 +689,18 @@ def audit_identity_and_prediction_quality():
 def audit_freshness():
     problems = []
     now = datetime.now(ZoneInfo("Asia/Tokyo")).timestamp()
+    # Allow the midnight rollover, but require today's inputs by morning.
+    clock = datetime.now(ZoneInfo("Asia/Tokyo"))
+    if clock.hour >= 7:
+        for path in (TODAY_CSV, RACE_SCHEDULE_PATH):
+            try:
+                frame = pd.read_csv(path, usecols=["date"])
+                dates = set(frame["date"].dropna().astype(str).str.slice(0, 10))
+                if dates != {clock.date().isoformat()}:
+                    problems.append({"type": "daily_inputs_stale", "path": str(path),
+                                     "dates": sorted(dates), "expected": clock.date().isoformat()})
+            except (OSError, ValueError, pd.errors.ParserError):
+                problems.append({"type": "daily_inputs_stale", "path": str(path)})
     # During active racing, stale prediction artifacts can look structurally
     # perfect while actually serving old information.
     latest = OUTPUT_DIR / "latest_predictions.csv"
@@ -829,7 +841,7 @@ def repair(problems=None):
     kinds = {str(p.get("type")) for p in problems}
 
     data_kinds = {
-        "entries_unreadable", "entries_empty", "missing_columns",
+        "daily_inputs_stale", "entries_unreadable", "entries_empty", "missing_columns",
         "missing_expected_field_size", "missing_riders", "duplicate_riders",
         "implausible_rider_count", "missing_entire_races", "unexpected_races",
         "race_schedule_missing", "race_schedule_date_missing", "race_coverage_audit_failed",
