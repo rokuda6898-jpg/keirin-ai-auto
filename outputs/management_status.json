@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-10-26T02:25:39+09:00",
+  "checked_at": "2026-10-26T04:55:04+09:00",
   "owners": {
     "data": "データ品質責任者",
     "coverage": "全レース予想責任者",
@@ -9,6 +9,13 @@
   },
   "status": "error",
   "findings": [
+    {
+      "owner": "data",
+      "code": "feed_stale",
+      "level": "error",
+      "message": "締切前レースがありますが公開データが45分以上古い、または時刻が不正です。",
+      "race_ids": []
+    },
     {
       "owner": "settlement",
       "code": "withdrawn_tickets",
@@ -40,28 +47,12 @@
       "message": "daily.yml の直近完了処理が失敗しています。",
       "race_ids": [],
       "run_url": "https://github.com/rokuda6898-jpg/keirin-ai-auto/actions/runs/40143718898"
-    },
-    {
-      "owner": "operations",
-      "code": "workflow_conditional-live.yml",
-      "level": "error",
-      "message": "conditional-live.yml の直近完了処理が失敗しています。",
-      "race_ids": [],
-      "run_url": "https://github.com/rokuda6898-jpg/keirin-ai-auto/actions/runs/40215365958"
-    },
-    {
-      "owner": "operations",
-      "code": "workflow_pages.yml",
-      "level": "error",
-      "message": "pages.yml の直近完了処理が失敗しています。",
-      "race_ids": [],
-      "run_url": "https://github.com/rokuda6898-jpg/keirin-ai-auto/actions/runs/40215538802"
     }
   ],
   "coverage": {
     "company": {
-      "total": 0,
-      "saved": 0,
+      "total": 72,
+      "saved": 72,
       "missing": 0
     }
   },
@@ -78,7 +69,7 @@
     "company"
   ],
   "comparison_scope": "会社方式のみ・初回締切前予想・各点100円。従来の独立予想は終了。",
-  "department_mean_ticket_overlap": null,
+  "department_mean_ticket_overlap": 0.2605820105820106,
   "email_configured": false,
   "notification_channel": "github_actions",
   "email_status": "github_actions_alert"
