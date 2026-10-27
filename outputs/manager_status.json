@@ -1,25 +1,40 @@
 {
-  "checked_at_jst": "2026-10-27T15:15:38+09:00",
-  "status": "repaired",
+  "checked_at_jst": "2026-10-27T21:13:11+09:00",
+  "status": "waiting_results",
   "repaired": true,
   "attempts": [
     {
       "attempt": 0,
       "problems": [
         {
+          "type": "results_waiting",
+          "race_ids": [
+            "028320261027"
+          ]
+        },
+        {
           "type": "results_overdue",
           "race_ids": [
-            "063620261027",
-            "073620261027",
-            "083620261027",
-            "093620261027"
+            "014420261027",
+            "018320261027",
+            "078420261027",
+            "082720261027",
+            "088420261027",
+            "092720261027",
+            "098420261027",
+            "102720261027",
+            "108420261027",
+            "112720261027",
+            "118420261027",
+            "122720261027"
           ]
         }
       ],
       "health": {
         "severity": "warning",
         "problem_types": [
-          "results_overdue"
+          "results_overdue",
+          "results_waiting"
         ],
         "race_count": 60,
         "expected_riders": 418,
@@ -30,10 +45,19 @@
     },
     {
       "attempt": 1,
-      "problems": [],
+      "problems": [
+        {
+          "type": "results_waiting",
+          "race_ids": [
+            "028320261027"
+          ]
+        }
+      ],
       "health": {
-        "severity": "ok",
-        "problem_types": [],
+        "severity": "warning",
+        "problem_types": [
+          "results_waiting"
+        ],
         "race_count": 60,
         "expected_riders": 418,
         "actual_riders": 418,
@@ -944,15 +968,19 @@
     }
   },
   "health": {
-    "severity": "ok",
-    "problem_types": [],
+    "severity": "warning",
+    "problem_types": [
+      "results_waiting"
+    ],
     "race_count": 60,
     "expected_riders": 418,
     "actual_riders": 418,
     "rider_integrity_ok": true
   },
   "recurrence": {
-    "level": 0,
-    "counts": {}
+    "level": 1,
+    "counts": {
+      "results_waiting:028320261027": 1
+    }
   }
 }
