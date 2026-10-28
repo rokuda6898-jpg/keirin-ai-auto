@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-10-28T21:57:03+09:00",
+  "checked_at": "2026-10-29T01:52:22+09:00",
   "owners": {
     "data": "データ品質責任者",
     "coverage": "全レース予想責任者",
@@ -9,13 +9,6 @@
   },
   "status": "error",
   "findings": [
-    {
-      "owner": "data",
-      "code": "feed_stale",
-      "level": "error",
-      "message": "締切前レースがありますが公開データが45分以上古い、または時刻が不正です。",
-      "race_ids": []
-    },
     {
       "owner": "settlement",
       "code": "withdrawn_tickets",
@@ -42,15 +35,20 @@
       ]
     },
     {
-      "owner": "settlement",
-      "code": "results_overdue",
-      "level": "warning",
-      "message": "発走から2時間以上経過しても結果未確認です。中止・延期も確認してください。",
-      "race_ids": [
-        "098420261028",
-        "102720261028",
-        "108420261028"
-      ]
+      "owner": "operations",
+      "code": "workflow_conditional-live.yml",
+      "level": "error",
+      "message": "conditional-live.yml の直近完了処理が失敗しています。",
+      "race_ids": [],
+      "run_url": "https://github.com/rokuda6898-jpg/keirin-ai-auto/actions/runs/40716170000"
+    },
+    {
+      "owner": "operations",
+      "code": "workflow_quick-results.yml",
+      "level": "error",
+      "message": "quick-results.yml の直近完了処理が失敗しています。",
+      "race_ids": [],
+      "run_url": "https://github.com/rokuda6898-jpg/keirin-ai-auto/actions/runs/40729539091"
     },
     {
       "owner": "operations",
@@ -63,26 +61,26 @@
   ],
   "coverage": {
     "company": {
-      "total": 79,
-      "saved": 79,
+      "total": 0,
+      "saved": 0,
       "missing": 0
     }
   },
   "matched_comparison": {
     "company": {
-      "races": 55,
-      "hits": 7,
-      "stake_yen": 24900,
-      "return_yen": 6430.0,
-      "largest_hit_return_share": 0.39035769828926903
+      "races": 0,
+      "hits": 0,
+      "stake_yen": 0,
+      "return_yen": 0,
+      "largest_hit_return_share": null
     }
   },
   "active_modes": [
     "company"
   ],
   "comparison_scope": "会社方式のみ・初回締切前予想・各点100円。従来の独立予想は終了。",
-  "department_mean_ticket_overlap": 0.2538514746923427,
+  "department_mean_ticket_overlap": null,
   "email_configured": false,
   "notification_channel": "github_actions",
-  "email_status": "github_actions_duplicate"
+  "email_status": "github_actions_alert"
 }
