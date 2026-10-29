@@ -1,15 +1,34 @@
 {
-  "checked_at_jst": "2026-10-29T04:54:54+09:00",
-  "status": "healthy",
+  "checked_at_jst": "2026-10-29T13:42:56+09:00",
+  "status": "unhealthy",
   "repaired": false,
   "check_source": "post_settlement_read_only_audit",
   "attempts": [
     {
       "attempt": 0,
-      "problems": [],
+      "problems": [
+        {
+          "type": "daily_inputs_stale",
+          "path": "/home/runner/work/keirin-ai-auto/keirin-ai-auto/data/raw/today_entries.csv",
+          "dates": [
+            "2026-10-28"
+          ],
+          "expected": "2026-10-29"
+        },
+        {
+          "type": "daily_inputs_stale",
+          "path": "/home/runner/work/keirin-ai-auto/keirin-ai-auto/outputs/latest_race_schedule.csv",
+          "dates": [
+            "2026-10-28"
+          ],
+          "expected": "2026-10-29"
+        }
+      ],
       "health": {
-        "severity": "ok",
-        "problem_types": [],
+        "severity": "warning",
+        "problem_types": [
+          "daily_inputs_stale"
+        ],
         "race_count": 79,
         "expected_riders": 545,
         "actual_riders": 545,
@@ -1197,8 +1216,10 @@
     }
   },
   "health": {
-    "severity": "ok",
-    "problem_types": [],
+    "severity": "warning",
+    "problem_types": [
+      "daily_inputs_stale"
+    ],
     "race_count": 79,
     "expected_riders": 545,
     "actual_riders": 545,
