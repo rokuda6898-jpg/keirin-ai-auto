@@ -2,7 +2,7 @@ name: deploy-pages
 on:
   push:
     branches: [main]
-    paths: ['site/**', 'tests/**', 'outputs/current_live.json', 'outputs/nexus_live.json', 'outputs/nexus_forward.json', 'outputs/conditional_near_close.json', 'outputs/conditional_roi.json', 'outputs/conditional_roi_research_2026-10-20.json', 'src/build_public_site.py', 'src/site_retirement.py', '.github/workflows/pages.yml']
+    paths: ['site/**', 'tests/**', 'outputs/current_live.json', 'outputs/nexus_live.json', 'outputs/nexus_forward.json', 'outputs/conditional_near_close.json', 'outputs/conditional_roi.json', 'outputs/conditional_roi_research_2026-10-20.json', 'src/build_public_site.py', 'src/site_retirement.py', 'src/site_model_navigation.py', '.github/workflows/pages.yml']
   workflow_dispatch:
   workflow_run:
     workflows: ['conditional-trifecta-live', 'nexus-formation-publish', 'quick-keirin-results', 'settle-keirin-results']
@@ -61,6 +61,11 @@ jobs:
           assert 'shadow-mode' not in home and 'independent.html' not in home
           assert '独立予想' not in company
           assert 'current.js' in home and '条件付き3連単' in conditional
+          from src.site_model_navigation import MODELS
+          for target, label, _ in MODELS:
+              assert f'href="{target}"' in home and label in home
+              assert (root/target).is_file()
+          assert 'href="previous.html#forecast"' in conditional
           forecast_script = (root/'nexus.js').read_text(encoding='utf-8')
           assert 'モーニング' in forecast_script and 'ミッドナイト' in forecast_script
           assert '1点100円' in home and 'フォーメーション' in home

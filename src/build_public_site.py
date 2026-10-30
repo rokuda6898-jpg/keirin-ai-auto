@@ -6,6 +6,7 @@ from pathlib import Path
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from site_retirement import apply_retirement
+from site_model_navigation import apply_model_navigation
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -55,6 +56,7 @@ def build(root=ROOT, destination=None):
             text += script + '</body>'
         path.write_text(text, encoding='utf-8')
     apply_retirement(destination)
+    apply_model_navigation(destination)
     (destination / 'published.json').write_text(json.dumps({'published_at': stamp, 'retired_forecasts':['legacy_independent']}), encoding='utf-8')
     print(f'Published complete company pages: {destination}')
 
