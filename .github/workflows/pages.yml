@@ -2,7 +2,7 @@ name: deploy-pages
 on:
   push:
     branches: [main]
-    paths: ['site/**', 'tests/test_nexus_core.js', 'tests/test_near_close_ui.js', 'tests/test_conditional_roi_ui.js', 'outputs/nexus_live.json', 'outputs/nexus_forward.json', 'outputs/conditional_near_close.json', 'outputs/conditional_roi.json', 'outputs/conditional_roi_research_2026-10-20.json', 'src/build_public_site.py', 'src/site_retirement.py', '.github/workflows/pages.yml']
+    paths: ['site/**', 'tests/**', 'outputs/current_live.json', 'outputs/nexus_live.json', 'outputs/nexus_forward.json', 'outputs/conditional_near_close.json', 'outputs/conditional_roi.json', 'outputs/conditional_roi_research_2026-10-20.json', 'src/build_public_site.py', 'src/site_retirement.py', '.github/workflows/pages.yml']
   workflow_dispatch:
   workflow_run:
     workflows: ['conditional-trifecta-live', 'nexus-formation-publish', 'quick-keirin-results', 'settle-keirin-results']
@@ -31,6 +31,8 @@ jobs:
       - name: Check public app
         run: |
           node --check site/app.js
+          node --check site/current.js
+          node tests/test_current_site.js
           node --check site/nexus.js
           node --check site/nexus-core.js
           node --check site/nexus-forward.js
@@ -58,10 +60,12 @@ jobs:
           conditional = (root/'conditional.html').read_text(encoding='utf-8')
           assert 'shadow-mode' not in home and 'independent.html' not in home
           assert '独立予想' not in company
-          assert 'nexus.js' in home and '条件付き3連単' in conditional
+          assert 'current.js' in home and '条件付き3連単' in conditional
           forecast_script = (root/'nexus.js').read_text(encoding='utf-8')
           assert 'モーニング' in forecast_script and 'ミッドナイト' in forecast_script
-          assert '5,000' in home and '10,000' in home
+          assert '1点100円' in home and 'フォーメーション' in home
+          current = json.loads((root/'original/current_live.json').read_text(encoding='utf-8'))
+          assert current['model_id'] == 'current459_expanded_history_MAIN4_20261030'
           assert 'url=conditional.html' in (root/'independent.html').read_text(encoding='utf-8')
           for path in ('company/all_department_predictions.json', 'company/company_decision_predictions.json', 'conditional_live.json'):
               assert (root/'original'/path).read_bytes() == (Path('outputs')/path).read_bytes(), path
