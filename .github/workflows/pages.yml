@@ -70,7 +70,7 @@ jobs:
           assert 'モーニング' in forecast_script and 'ミッドナイト' in forecast_script
           assert '1点100円' in home and 'フォーメーション' in home
           current = json.loads((root/'original/current_live.json').read_text(encoding='utf-8'))
-          assert current['model_id'] == 'current459_expanded_history_MAIN4_20261030'
+          assert current['model_id'] == 'current471_joint_consensus_MAIN4_20261031'
           assert 'url=conditional.html' in (root/'independent.html').read_text(encoding='utf-8')
           for path in ('company/all_department_predictions.json', 'company/company_decision_predictions.json', 'conditional_live.json'):
               assert (root/'original'/path).read_bytes() == (Path('outputs')/path).read_bytes(), path

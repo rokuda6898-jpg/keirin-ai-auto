@@ -1,6 +1,7 @@
 'use strict';
 (() => {
- const MODEL='current459_expanded_history_MAIN4_20261030';
+ const MODEL='current471_joint_consensus_MAIN4_20261031';
+ const MODEL_LABELS={[MODEL]:'改善版 2026.10.31', 'current459_expanded_history_MAIN4_20261030':'旧版 2026.10.30'};
  const labels={MAIN:'本線',MEDIUM:'中穴',HIGH:'大穴'};
  const sessions={morning:'モーニング',day:'デイ',night:'ナイト',midnight:'ミッドナイト'};
  const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -10,7 +11,7 @@
  function validate(r){
   const p=r.forecast;if(!p)return true;
   const cap=r.graded?18:p.category==='HIGH'?10:8;
-  if(p.model_id!==MODEL||!labels[p.category]||p.unit_yen!==100||p.count!==cap||p.total_yen!==cap*100||p.blocks.length<1||p.blocks.length>4)throw Error('予想の方式・購入条件を確認できません');
+  if(!Object.hasOwn(MODEL_LABELS,p.model_id)||!labels[p.category]||p.unit_yen!==100||p.count!==cap||p.total_yen!==cap*100||p.blocks.length<1||p.blocks.length>4)throw Error('予想の方式・購入条件を確認できません');
   const ts=expand(p.blocks);if(ts.length!==cap||JSON.stringify(ts)!==JSON.stringify([...new Set(p.tickets)].sort()))throw Error('フォーメーションと買い目が一致しません');
   if(!p.band_probabilities||p.band_probabilities.length!==3||p.band_probabilities.some(x=>!Number.isFinite(x)||x<0||x>1)||Math.abs(p.band_probabilities.reduce((a,b)=>a+b,0)-1)>1e-5)throw Error('判定の数値を確認できません');
   const saved=Date.parse(p.saved_at),captured=Date.parse(p.captured_at);if(!Number.isFinite(saved)||!Number.isFinite(captured)||saved>=r.close_at*1000||captured>saved||p.history_through>=r.date)throw Error('締切前の保存を確認できません');
@@ -24,16 +25,16 @@
   if(r.close_at*1000<=now)return '締切・結果待ち';
   return '予想公開中';
  }
- function copyText(r){const p=r.forecast;return `${r.date} ${r.venue} ${r.race_number}R｜${labels[p.category]}判定\n`+p.blocks.map((b,i)=>`${i+1}. ${b.first.join('・')} → ${b.second.join('・')} → ${b.third.join('・')}`).join('\n')+`\n同一車・重複を除く${p.count}点 × 100円 = ${num(p.total_yen)}円\n保存 ${stamp(p.saved_at)}／締切 ${time(r.close_at)}\nNEXUS 現行方式`;
+ function copyText(r){const p=r.forecast;return `${r.date} ${r.venue} ${r.race_number}R｜${labels[p.category]}判定\n`+p.blocks.map((b,i)=>`${i+1}. ${b.first.join('・')} → ${b.second.join('・')} → ${b.third.join('・')}`).join('\n')+`\n同一車・重複を除く${p.count}点 × 100円 = ${num(p.total_yen)}円\n保存 ${stamp(p.saved_at)}／締切 ${time(r.close_at)}\nNEXUS ${MODEL_LABELS[p.model_id]}`;
  }
  const time=x=>x?new Date(x*1000).toLocaleTimeString('ja-JP',{timeZone:'Asia/Tokyo',hour:'2-digit',minute:'2-digit'}):'未定';
  const stamp=x=>x?new Date(x).toLocaleString('ja-JP',{timeZone:'Asia/Tokyo',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
  const car=c=>`<span class="car c${Number(c)}">${Number(c)}</span>`;
  function stat(label,value,unit,detail){return `<div class="stat"><div class="stat-label">${label}</div><div class="stat-value">${esc(value)}<small>${unit}</small></div><div class="stat-detail">${detail}</div></div>`;}
- if(typeof module!=='undefined'&&module.exports){module.exports={expand,validate,status,copyText,MODEL};return;}
+ if(typeof module!=='undefined'&&module.exports){module.exports={expand,validate,status,copyText,MODEL,MODEL_LABELS};return;}
  let data=null,day='',session='all',venue='',selected='',copyTimer;
  const $=id=>document.getElementById(id);
- function performance(){const s=data.observed||{};$('observed').innerHTML=stat('的中率',pct(s.hit_pct),'%',`${num(s.hits||0)} / ${num(s.races||0)}レース`)+stat('回収率',pct(s.roi_pct),'%',`払戻 ${num(s.returned||0)}円 / 購入 ${num(s.stake||0)}円`)+stat('100倍以上の的中',s.HIGH_hits||0,'件','実際の払戻が100倍以上')+stat('結果待ち',s.pending||0,'レース',`全額返還 ${s.void||0}件は的中率から除外`);$('performance-note').textContent=s.races?'公開後に保存した同じ方式の予想だけを集計しています。':'公開後の結果が揃うと、自動で成績を表示します。終了済みレースを後から予想して加えることはありません。';
+ function performance(){const s=data.observed||{};$('observed').innerHTML=stat('的中率',pct(s.hit_pct),'%',`${num(s.hits||0)} / ${num(s.races||0)}レース`)+stat('回収率',pct(s.roi_pct),'%',`払戻 ${num(s.returned||0)}円 / 購入 ${num(s.stake||0)}円`)+stat('100倍以上の的中',s.HIGH_hits||0,'件','実際の払戻が100倍以上')+stat('結果待ち',s.pending||0,'レース',`全額返還 ${s.void||0}件は的中率から除外`);$('performance-note').textContent=s.races?'改善版を締切前に公開できた予想だけを集計しています。旧版の結果は含みません。':'改善版の公開後成績は、結果が揃ってから表示します。旧版や締切後の公開分は含めません。';
  const v=data.research;$('research').innerHTML=v?`<div class="stats">${stat('全国・的中率',pct(v.hit_pct),'%',`${num(v.hits)} / ${num(v.races)}レース`)}${stat('全国・回収率',pct(v.roi_pct),'%','全成立レースの集計')}${stat('全国・100倍以上の的中',v.HIGH_hits,'件','各100円・現行の点数')}${stat('大穴判定内・回収率',pct(v.HIGH_call_roi_pct),'%','大穴判定の6,385レースに限定')}</div>`:'';
  }
  function visible(){return data.races.filter(r=>r.date===day&&(session==='all'||session==='graded'?session==='all'||r.graded:!r.graded&&r.session===session));}
@@ -50,6 +51,7 @@
  function detail(r){
  if(!r){$('race-detail').innerHTML='<div class="empty detail-empty"><span class="empty-icon">◎</span><h2>該当するレースがありません</h2><p>日付や時間帯を変更してください。</p></div>';return;}
  const p=r.forecast;let body=`<div class="detail-header"><div><h2>${esc(r.venue)} <span>${r.race_number}R</span></h2><div class="detail-meta">${esc(r.race_class)} ${esc(r.race_type)} · ${r.graded?'重賞 · ':''}${esc(sessions[r.session]||'')} · ${esc(status(r))}</div></div><div class="deadline"><span>締切</span><b>${time(r.close_at)}</b>${p?`<div class="tag ${p.category}">${labels[p.category]}判定</div>`:''}</div></div>`;
+ if(p)body+=`<p class="notice ${p.model_id===MODEL?'':'warn'}">${esc(MODEL_LABELS[p.model_id])}${p.model_id===MODEL?'の予想です。':'で公開した予想です。改善版の成績には含めません。'}</p>`;
  if(r.withdrawal_warning)body+=`<p class="notice warn">${esc(r.withdrawal_warning)}</p>`;
  if(r.settlement){const s=r.settlement;body+=`<div class="result ${s.status==='hit'?'hit':''}"><div class="result-flex"><strong>${esc(status(r))}</strong><span>払戻・返還 ${num(s.returned)}円 ／ 購入 ${num(s.stake)}円</span></div><div>${s.winning_tickets.map(t=>`${esc(t)}（${num(s.payoffs[t])}円 / 100円）`).join(' ・ ')||'対象車券は全額返還'}</div>${r.performance_eligible?'':'<p class="tiny">締切前の公開を確認できないため、公開後の成績には含めません。</p>'}</div>`;}
  if(!p){body+=`<div class="empty detail-empty"><span class="empty-icon">—</span><h2>${r.status==='unavailable'?'予想を確認中です':r.status==='cancelled'?'開催中止です':'このレースの予想は未作成です'}</h2><p>${esc(r.note||'締切前の情報が揃い次第、予想を表示します。')}</p></div>`;}
@@ -65,12 +67,12 @@
  async function refresh(){
  $('reload').disabled=true;
  const paths=['original/current_live.json',...(location.hostname.endsWith('github.io')?['https://raw.githubusercontent.com/rokuda6898-jpg/keirin-ai-auto/main/outputs/current_live.json']:[])];
- try{const rs=await Promise.allSettled(paths.map(async url=>{const res=await fetch(url+'?t='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(18000)});if(!res.ok)throw Error(res.status);const d=await res.json();if(d.schema!==1||d.model_id!==MODEL||!Array.isArray(d.races)||!Number.isFinite(Date.parse(d.generated_at)))throw Error('現行データではありません');d.races.forEach(validate);return d;}));const ok=rs.filter(r=>r.status==='fulfilled').map(r=>r.value).sort((a,b)=>Date.parse(b.generated_at)-Date.parse(a.generated_at));if(!ok.length)throw Error('現在の予想データを読み込めません。');data=ok[0];
+ try{const rs=await Promise.allSettled(paths.map(async url=>{const res=await fetch(url+'?t='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(18000)});if(!res.ok)throw Error(res.status);const d=await res.json();if(d.schema!==1||d.model_id!==MODEL||!Array.isArray(d.races)||!Number.isFinite(Date.parse(d.generated_at)))throw Error('現行データではありません');d.races.forEach(validate);return d;}));const ok=rs.filter(r=>r.status==='fulfilled').map(r=>r.value).sort((a,b)=>Date.parse(b.generated_at)-Date.parse(a.generated_at));if(!ok.length)throw Error('現在の予想データを読み込めません。');data=ok[0];if(data.observed?.model_id!==MODEL)throw Error('成績の方式が一致しません');
  const days=[...new Set([data.today,...data.races.map(r=>r.date)])].sort().reverse();if(!days.includes(day))day=data.today;
  $('date').innerHTML=days.map(d=>`<option value="${esc(d)}" ${d===day?'selected':''}>${esc(d.replace(/-/g,'/'))}${d===data.today?'（今日）':''}</option>`).join('');
  const age=(Date.now()-Date.parse(data.generated_at))/60000;const stale=age>45;const forecasts=data.races.filter(r=>r.date===data.today&&r.forecast).length;
  $('notice').classList.toggle('warn',stale||data.health.stage!=='ready');$('notice').textContent=stale?`最終更新は${stamp(data.generated_at)}です。更新が遅れています。締切・欠場情報は公式でご確認ください。`:`${data.health.message} 本日${forecasts}レースの予想を保存済みです。`;
- $('updated').textContent=`最終更新 ${stamp(data.generated_at)}（日本時間）／ 現行方式 2026.10.30 ／ 約20分ごとに更新`;
+ $('updated').textContent=`最終更新 ${stamp(data.generated_at)}（日本時間）／ 改善版 2026.10.31 ／ 約20分ごとに更新`;
  render();performance();
  }catch(e){$('notice').classList.add('warn');$('notice').textContent='予想を読み込めませんでした。「更新」で再試行してください。';if(!data){$('race-list').innerHTML='<p class="empty">予想データを確認中です。</p>';$('race-detail').innerHTML='<div class="empty detail-empty"><h2>データを確認中です</h2><p>古い方式の予想への置き換えは行いません。</p></div>';}}finally{$('reload').disabled=false;}
  }
