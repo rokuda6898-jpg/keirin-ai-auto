@@ -1,10 +1,10 @@
 # 競輪AI 会社運用ダイジェスト
 
-- 更新: 2026-10-31T19:39:00+09:00
+- 更新: 2026-11-01T01:03:41+09:00
 - 中央戦史: 61,567レース
 - 履歴キャッシュ: 61,567レース
-- 正式な発走前予想検証: 2,114レース
-- Top1的中率: 0.444655
+- 正式な発走前予想検証: 2,133レース
+- Top1的中率: 0.443976
 - モデル監査: unmatched_cohort_gap
 - ライブ入力ドリフト: red
 - モデル3連単Top10的中率: 0.12058823529411765
@@ -20,15 +20,16 @@
 - 実戦専用モデル状態: collecting
 - 実戦専用モデル純増pp: 未算出
 - 昇格候補: 1
-- 全買い目回収率検証部: 保存 304R / 確定 295R（120%未検証）
-- 直近1年の部署知識: 16776R / 2643選手（全履歴保持・部署別の影予想）
-- 締切前時刻確認: 1734R ／ 従来集計 2114R（未確認分は実戦証拠に含めない）
+- 全買い目回収率検証部: 保存 308R / 確定 295R（120%未検証）
+- 直近1年の部署知識: 16812R / 2643選手（全履歴保持・部署別の影予想）
+- 締切前時刻確認: 1753R ／ 従来集計 2133R（未確認分は実戦証拠に含めない）
 - 第三者監査: amber
 
 ## 軍師提言
 - P1: treat latest selected trifecta tickets as the primary product KPI; keep model Top10 coverage as a diagnostic KPI
 - P1: freeze automatic model promotion and investigate shifted/missing live features before changing production
 - P1: send the leading shadow challenger to external validation; do not auto-promote
+- P1: freeze automatic weight promotion; require shadow validation before production changes
 - P2: optimize ticket logic against live 10-point hit rate as a separate KPI from Top1 accuracy
 - P2: continue prospective shadow testing of the best second-pick reversal rule; no live switch until promotion criteria pass
 - P2: keep multi-head coverage for near-tie races; do not collapse to a single head
