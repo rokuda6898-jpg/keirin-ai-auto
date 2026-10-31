@@ -1,33 +1,33 @@
 [
   {
-    "first_gap": 13.088744033349819,
-    "third_boundary_gap": 1.829682381409821,
-    "main_limit": 8,
+    "first_gap": 0.3451548841126737,
+    "third_boundary_gap": 3.9721694296231984,
+    "main_limit": 12,
     "first_fixed": false,
-    "top_win_probability": 0.4080929759469932,
+    "top_win_probability": 0.3445090974532389,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 51.48,
+    "chaos_index": 64.73,
     "chaos_label": "荒れ",
     "chaos_components": {
-      "first_closeness": 0.0,
+      "first_closeness": 28.96,
       "line_competition": 25,
-      "second_closeness": 16.97,
-      "third_closeness": 9.51,
-      "market_divergence": 0
+      "second_closeness": 4.69,
+      "third_closeness": 3.08,
+      "market_divergence": 3
     },
     "line_count": 3,
-    "risk_score": 51.48,
+    "risk_score": 64.73,
     "risk_level": "高",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
     "risk_policy": "risk_department_overrides_flow",
     "risk_budget_policy": "candidate_spread_without_extra_tickets",
     "scenario_policy": "3展開分散",
-    "popularity_source": "unavailable",
+    "popularity_source": "full_trifecta_market_proxy",
     "probability_method": "position_sequential",
     "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
     "formation": {
@@ -49,21 +49,24 @@
         3,
         4,
         5,
-        6,
         7
       ]
     },
     "high_payout_department": {
       "version": "high_payout_v1",
       "rating": "見送り",
-      "expectation_score": 0,
+      "expectation_score": 92,
       "recommended_count": 0,
-      "patterns": [],
+      "patterns": [
+        "2着荒れ",
+        "3着荒れ",
+        "ライン崩壊",
+        "人気過剰"
+      ],
       "tickets": [],
       "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
       "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。"
       ],
       "probability_method": "geometric_model_market_estimate_uncalibrated",
       "minimum_probability": 0.001,
@@ -130,21 +133,106 @@
         "version": "third_focus_v1",
         "automatic_promotion": false,
         "variants": {
-          "current": [],
-          "third_focus": []
-        }
+          "current": [
+            {
+              "buy": "7-4-5",
+              "odds": 746.1,
+              "probability": 0.0029681574137729585,
+              "ev": 2.2145422464160043
+            },
+            {
+              "buy": "3-7-5",
+              "odds": 149.4,
+              "probability": 0.012652566619535144,
+              "ev": 1.8902934529585507
+            },
+            {
+              "buy": "3-6-7",
+              "odds": 1775.3,
+              "probability": 0.0010518113273576722,
+              "ev": 1.8672806494580754
+            },
+            {
+              "buy": "3-7-6",
+              "odds": 642.2,
+              "probability": 0.0025843102445442926,
+              "ev": 1.659644039046345
+            },
+            {
+              "buy": "7-4-1",
+              "odds": 219.6,
+              "probability": 0.007353607078959987,
+              "ev": 1.614852114539613
+            },
+            {
+              "buy": "3-7-2",
+              "odds": 157.5,
+              "probability": 0.010015009778593379,
+              "ev": 1.5773640401284572
+            },
+            {
+              "buy": "3-2-7",
+              "odds": 261.8,
+              "probability": 0.005818763329746858,
+              "ev": 1.5233522397277275
+            },
+            {
+              "buy": "7-6-3",
+              "odds": 1407.2,
+              "probability": 0.001043238443065406,
+              "ev": 1.4680451370816392
+            },
+            {
+              "buy": "3-6-1",
+              "odds": 1210.4,
+              "probability": 0.0011946963467787148,
+              "ev": 1.4460604581409564
+            },
+            {
+              "buy": "1-4-2",
+              "odds": 721.2,
+              "probability": 0.001957387861276914,
+              "ev": 1.4116681255529104
+            }
+          ],
+          "third_focus": [
+            {
+              "buy": "3-7-5",
+              "odds": 149.4,
+              "probability": 0.012652566619535144,
+              "ev": 1.8902934529585507
+            }
+          ]
+        },
+        "decision": "本番は現在方式。3着重点方式は同じ上限点数・同じ最低EVで成立確率順に比較。"
       },
       "risk_coordination": {
-        "chaos_index": 51.48,
+        "chaos_index": 64.73,
         "risk_level": "高",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
       },
-      "analysis_rating": "見送り"
+      "specialist_analysis": {
+        "細切れ戦": {
+          "status": "分析可能",
+          "line_count": 3
+        },
+        "単騎": {
+          "status": "分析可能",
+          "cars": []
+        }
+      },
+      "strong_ev_candidate_count": 7,
+      "twelve_point_min_ev": 1.5,
+      "analysis_rating": "S"
     },
-    "hole_limit": 0,
-    "selected_scenarios": [],
+    "hole_limit": 10,
+    "selected_scenarios": [
+      "崩れ展開",
+      "縦脚逆転",
+      "高配当独立分析"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -159,34 +247,34 @@
     "close_at": 1793403900.0
   },
   {
-    "first_gap": 56.90416298549813,
-    "third_boundary_gap": 4.14516745073764,
+    "first_gap": 40.70924387856232,
+    "third_boundary_gap": 5.61910032034679,
     "main_limit": 6,
     "first_fixed": false,
-    "top_win_probability": 0.7359983315902123,
+    "top_win_probability": 0.63412356472161,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 36.73,
+    "chaos_index": 37.11,
     "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 9.17,
-      "third_closeness": 2.56,
+      "second_closeness": 12.11,
+      "third_closeness": 0.0,
       "market_divergence": 0
     },
     "line_count": 3,
-    "risk_score": 36.73,
+    "risk_score": 37.11,
     "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
     "risk_policy": "risk_department_overrides_flow",
     "risk_budget_policy": "candidate_spread_without_extra_tickets",
     "scenario_policy": "本命展開中心",
-    "popularity_source": "unavailable",
+    "popularity_source": "full_trifecta_market_proxy",
     "probability_method": "position_sequential",
     "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
     "formation": {
@@ -214,14 +302,15 @@
     "high_payout_department": {
       "version": "high_payout_v1",
       "rating": "見送り",
-      "expectation_score": 0,
+      "expectation_score": 49,
       "recommended_count": 0,
-      "patterns": [],
+      "patterns": [
+        "2着荒れ"
+      ],
       "tickets": [],
       "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
       "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。"
       ],
       "probability_method": "geometric_model_market_estimate_uncalibrated",
       "minimum_probability": 0.001,
@@ -288,21 +377,63 @@
         "version": "third_focus_v1",
         "automatic_promotion": false,
         "variants": {
-          "current": [],
+          "current": [
+            {
+              "buy": "4-5-7",
+              "odds": 158.9,
+              "probability": 0.009735515857970039,
+              "ev": 1.5469734698314392
+            },
+            {
+              "buy": "4-5-2",
+              "odds": 226.8,
+              "probability": 0.006385281679256122,
+              "ev": 1.4481818848552885
+            },
+            {
+              "buy": "3-5-7",
+              "odds": 533.8,
+              "probability": 0.0026580462526245648,
+              "ev": 1.4188650896509925
+            },
+            {
+              "buy": "3-5-2",
+              "odds": 764.1,
+              "probability": 0.0017408341076560604,
+              "ev": 1.3301713416599958
+            }
+          ],
           "third_focus": []
-        }
+        },
+        "decision": "本番は現在方式。3着重点方式は同じ上限点数・同じ最低EVで成立確率順に比較。"
       },
       "risk_coordination": {
-        "chaos_index": 36.73,
+        "chaos_index": 37.11,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
       },
-      "analysis_rating": "見送り"
+      "specialist_analysis": {
+        "細切れ戦": {
+          "status": "分析可能",
+          "line_count": 3
+        },
+        "単騎": {
+          "status": "分析可能",
+          "cars": []
+        }
+      },
+      "strong_ev_candidate_count": 1,
+      "twelve_point_min_ev": 1.5,
+      "analysis_rating": "C"
     },
-    "hole_limit": 0,
-    "selected_scenarios": [],
+    "hole_limit": 4,
+    "selected_scenarios": [
+      "崩れ展開",
+      "縦脚逆転",
+      "高配当独立分析"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -317,34 +448,34 @@
     "close_at": 1793405100.0
   },
   {
-    "first_gap": 41.380141098556436,
-    "third_boundary_gap": 0.840178031001038,
-    "main_limit": 8,
+    "first_gap": 8.119524531440923,
+    "third_boundary_gap": 1.5177139860986184,
+    "main_limit": 10,
     "first_fixed": false,
-    "top_win_probability": 0.6708941860657246,
+    "top_win_probability": 0.46365747110661515,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 35.47,
+    "chaos_index": 38.39,
     "chaos_label": "やや荒れ",
     "chaos_components": {
-      "first_closeness": 0.0,
+      "first_closeness": 5.64,
       "line_competition": 12.5,
-      "second_closeness": 10.49,
-      "third_closeness": 12.48,
+      "second_closeness": 9.8,
+      "third_closeness": 10.45,
       "market_divergence": 0
     },
     "line_count": 2,
-    "risk_score": 35.47,
+    "risk_score": 38.39,
     "risk_level": "中",
     "risk_fixed_block": true,
-    "risk_veto_fixed": true,
+    "risk_veto_fixed": false,
     "risk_policy": "risk_department_overrides_flow",
     "risk_budget_policy": "candidate_spread_without_extra_tickets",
     "scenario_policy": "本命展開中心",
-    "popularity_source": "unavailable",
+    "popularity_source": "full_trifecta_market_proxy",
     "probability_method": "position_sequential",
     "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
     "formation": {
@@ -356,8 +487,7 @@
         1,
         3,
         4,
-        5,
-        7
+        5
       ],
       "third": [
         1,
@@ -449,7 +579,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 35.47,
+        "chaos_index": 38.39,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -458,7 +588,10 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "縦脚逆転"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -473,50 +606,54 @@
     "close_at": 1793406360.0
   },
   {
-    "first_gap": 11.013126352518334,
-    "third_boundary_gap": 0.08916121967138224,
-    "main_limit": 8,
+    "first_gap": 2.765931487966874,
+    "third_boundary_gap": 7.453712336673576,
+    "main_limit": 12,
     "first_fixed": false,
-    "top_win_probability": 0.48386169539223706,
+    "top_win_probability": 0.43390781629915826,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 47.39,
-    "chaos_label": "やや荒れ",
+    "chaos_index": 51.53,
+    "chaos_label": "荒れ",
     "chaos_components": {
-      "first_closeness": 0.0,
+      "first_closeness": 21.7,
       "line_competition": 25,
-      "second_closeness": 7.66,
-      "third_closeness": 14.73,
-      "market_divergence": 0
+      "second_closeness": 1.83,
+      "third_closeness": 0.0,
+      "market_divergence": 3
     },
     "line_count": 4,
-    "risk_score": 47.39,
-    "risk_level": "中",
+    "risk_score": 51.53,
+    "risk_level": "高",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
     "risk_policy": "risk_department_overrides_flow",
     "risk_budget_policy": "candidate_spread_without_extra_tickets",
-    "scenario_policy": "本命展開中心",
-    "popularity_source": "unavailable",
+    "scenario_policy": "3展開分散",
+    "popularity_source": "full_trifecta_market_proxy",
     "probability_method": "position_sequential",
     "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
     "formation": {
       "first": [
         1,
-        4
+        4,
+        5
       ],
       "second": [
         1,
+        2,
         3,
         4,
         5,
+        6,
         7
       ],
       "third": [
         1,
+        2,
         3,
         4,
         5,
@@ -526,14 +663,17 @@
     "high_payout_department": {
       "version": "high_payout_v1",
       "rating": "見送り",
-      "expectation_score": 0,
+      "expectation_score": 66,
       "recommended_count": 0,
-      "patterns": [],
+      "patterns": [
+        "2着荒れ",
+        "3着荒れ",
+        "細切れ戦"
+      ],
       "tickets": [],
       "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
       "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。"
       ],
       "probability_method": "geometric_model_market_estimate_uncalibrated",
       "minimum_probability": 0.001,
@@ -600,21 +740,74 @@
         "version": "third_focus_v1",
         "automatic_promotion": false,
         "variants": {
-          "current": [],
-          "third_focus": []
-        }
+          "current": [
+            {
+              "buy": "4-5-7",
+              "odds": 102.1,
+              "probability": 0.016464876237107223,
+              "ev": 1.6810638638086473
+            },
+            {
+              "buy": "4-7-5",
+              "odds": 223.5,
+              "probability": 0.006119723708438789,
+              "ev": 1.3677582488360693
+            },
+            {
+              "buy": "4-7-1",
+              "odds": 187.2,
+              "probability": 0.0072504502858991545,
+              "ev": 1.3572842935203215
+            },
+            {
+              "buy": "4-7-2",
+              "odds": 635.6,
+              "probability": 0.0021152029655070737,
+              "ev": 1.344423004876296
+            }
+          ],
+          "third_focus": [
+            {
+              "buy": "4-5-7",
+              "odds": 102.1,
+              "probability": 0.016464876237107223,
+              "ev": 1.6810638638086473
+            }
+          ]
+        },
+        "decision": "本番は現在方式。3着重点方式は同じ上限点数・同じ最低EVで成立確率順に比較。"
       },
       "risk_coordination": {
-        "chaos_index": 47.39,
-        "risk_level": "中",
+        "chaos_index": 51.53,
+        "risk_level": "高",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
       },
-      "analysis_rating": "見送り"
+      "specialist_analysis": {
+        "細切れ戦": {
+          "status": "分析可能",
+          "line_count": 4
+        },
+        "単騎": {
+          "status": "分析可能",
+          "cars": [
+            2,
+            6
+          ]
+        }
+      },
+      "strong_ev_candidate_count": 1,
+      "twelve_point_min_ev": 1.5,
+      "analysis_rating": "B"
     },
-    "hole_limit": 0,
-    "selected_scenarios": [],
+    "hole_limit": 4,
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開",
+      "縦脚逆転",
+      "高配当独立分析"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -629,34 +822,34 @@
     "close_at": 1793407620.0
   },
   {
-    "first_gap": 70.93585265140915,
-    "third_boundary_gap": 0.832664384781344,
-    "main_limit": 8,
+    "first_gap": 71.6799480891123,
+    "third_boundary_gap": 3.1723043524483554,
+    "main_limit": 6,
     "first_fixed": false,
-    "top_win_probability": 0.8207494631851023,
+    "top_win_probability": 0.8286274837663299,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 37.5,
+    "chaos_index": 30.48,
     "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
       "second_closeness": 0.0,
-      "third_closeness": 12.5,
+      "third_closeness": 5.48,
       "market_divergence": 0
     },
     "line_count": 3,
-    "risk_score": 37.5,
+    "risk_score": 30.48,
     "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
     "risk_policy": "risk_department_overrides_flow",
     "risk_budget_policy": "candidate_spread_without_extra_tickets",
     "scenario_policy": "本命展開中心",
-    "popularity_source": "unavailable",
+    "popularity_source": "full_trifecta_market_proxy",
     "probability_method": "position_sequential",
     "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
     "formation": {
@@ -668,7 +861,8 @@
         2,
         3,
         4,
-        5
+        5,
+        7
       ],
       "third": [
         2,
@@ -682,14 +876,16 @@
     "high_payout_department": {
       "version": "high_payout_v1",
       "rating": "見送り",
-      "expectation_score": 0,
+      "expectation_score": 55,
       "recommended_count": 0,
-      "patterns": [],
+      "patterns": [
+        "2着荒れ",
+        "3着荒れ"
+      ],
       "tickets": [],
       "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
       "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。"
       ],
       "probability_method": "geometric_model_market_estimate_uncalibrated",
       "minimum_probability": 0.001,
@@ -756,21 +952,95 @@
         "version": "third_focus_v1",
         "automatic_promotion": false,
         "variants": {
-          "current": [],
-          "third_focus": []
-        }
+          "current": [
+            {
+              "buy": "2-3-7",
+              "odds": 230.2,
+              "probability": 0.01346581994261945,
+              "ev": 3.0998317507909974
+            },
+            {
+              "buy": "4-3-7",
+              "odds": 538.8,
+              "probability": 0.003807477207751818,
+              "ev": 2.0514687195366794
+            },
+            {
+              "buy": "4-3-6",
+              "odds": 1085.9,
+              "probability": 0.0015132891866555915,
+              "ev": 1.643280727789307
+            },
+            {
+              "buy": "4-3-5",
+              "odds": 466.1,
+              "probability": 0.0029383241452885732,
+              "ev": 1.369552884119004
+            },
+            {
+              "buy": "5-4-7",
+              "odds": 357.1,
+              "probability": 0.0038308538356843862,
+              "ev": 1.3679979047228945
+            },
+            {
+              "buy": "4-5-7",
+              "odds": 237.4,
+              "probability": 0.005684620624364099,
+              "ev": 1.3495289362240372
+            },
+            {
+              "buy": "5-3-7",
+              "odds": 810.3,
+              "probability": 0.0015496669857111565,
+              "ev": 1.25569515852175
+            }
+          ],
+          "third_focus": [
+            {
+              "buy": "4-5-7",
+              "odds": 237.4,
+              "probability": 0.005684620624364099,
+              "ev": 1.3495289362240372
+            },
+            {
+              "buy": "5-4-7",
+              "odds": 357.1,
+              "probability": 0.0038308538356843862,
+              "ev": 1.3679979047228945
+            }
+          ]
+        },
+        "decision": "本番は現在方式。3着重点方式は同じ上限点数・同じ最低EVで成立確率順に比較。"
       },
       "risk_coordination": {
-        "chaos_index": 37.5,
+        "chaos_index": 30.48,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
       },
-      "analysis_rating": "見送り"
+      "specialist_analysis": {
+        "細切れ戦": {
+          "status": "分析可能",
+          "line_count": 3
+        },
+        "単騎": {
+          "status": "分析可能",
+          "cars": [
+            1
+          ]
+        }
+      },
+      "strong_ev_candidate_count": 3,
+      "twelve_point_min_ev": 1.5,
+      "analysis_rating": "B"
     },
-    "hole_limit": 0,
-    "selected_scenarios": [],
+    "hole_limit": 7,
+    "selected_scenarios": [
+      "崩れ展開",
+      "高配当独立分析"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -785,27 +1055,27 @@
     "close_at": 1793408880.0
   },
   {
-    "first_gap": 77.0543138876751,
-    "third_boundary_gap": 0.1078764194411388,
+    "first_gap": 82.54551720732897,
+    "third_boundary_gap": 0.3630601702698666,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.8639094490039159,
+    "top_win_probability": 0.8956506105511128,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 27.18,
+    "chaos_index": 26.41,
     "chaos_label": "固め",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 12.5,
       "second_closeness": 0.0,
-      "third_closeness": 14.68,
+      "third_closeness": 13.91,
       "market_divergence": 0
     },
     "line_count": 2,
-    "risk_score": 27.18,
+    "risk_score": 26.41,
     "risk_level": "低",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
@@ -841,7 +1111,7 @@
       "recommended_count": 0,
       "patterns": [],
       "tickets": [],
-      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
+      "skip_reason": "このレースは穴予想見送り",
       "unknowns": [
         "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
         "全組み合わせの有効オッズが不足。市場確率との比較不可。"
@@ -916,25 +1186,26 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 27.18,
+        "chaos_index": 26.41,
         "risk_level": "低",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "analysis_rating": "見送り"
+      }
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
-    "main_count": 0,
+    "selected_scenarios": [
+      "崩れ展開"
+    ],
+    "main_count": 3,
     "hole_count": 0,
-    "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
+    "skip_reason": "",
     "main_ev": 1.1,
     "hole_ev": 1.25,
     "race_id": "068720261031",
     "venue": "熊本",
     "race_no": 6,
-    "timing_eligible": false,
+    "timing_eligible": true,
     "date": "2026-10-31",
     "strategy_version": "position_prob_v11_high_payout_20261007",
     "close_at": 1793410140.0
@@ -1279,51 +1550,54 @@
     "close_at": 1793412000.0
   },
   {
-    "first_gap": 25.862242936763348,
-    "third_boundary_gap": 0.7052334310280148,
+    "first_gap": 20.264931450420974,
+    "third_boundary_gap": 0.46646620679115713,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.47021494355062404,
+    "top_win_probability": 0.4641809713562954,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 47.96,
-    "chaos_label": "やや荒れ",
+    "chaos_index": 55.35,
+    "chaos_label": "荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 10.08,
-      "third_closeness": 12.88,
+      "second_closeness": 16.75,
+      "third_closeness": 13.6,
       "market_divergence": 0
     },
     "line_count": 3,
-    "risk_score": 47.96,
-    "risk_level": "中",
+    "risk_score": 55.35,
+    "risk_level": "高",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
     "risk_policy": "risk_department_overrides_flow",
     "risk_budget_policy": "candidate_spread_without_extra_tickets",
-    "scenario_policy": "本命展開中心",
+    "scenario_policy": "3展開分散",
     "popularity_source": "unavailable",
     "probability_method": "position_sequential",
     "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
     "formation": {
       "first": [
         1,
+        2,
         9
       ],
       "second": [
         1,
         2,
         3,
+        7,
         9
       ],
       "third": [
         1,
         2,
         3,
+        4,
         5,
         7,
         8,
@@ -1337,7 +1611,7 @@
       "recommended_count": 0,
       "patterns": [],
       "tickets": [],
-      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
+      "skip_reason": "このレースは穴予想見送り",
       "unknowns": [
         "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
         "全組み合わせの有効オッズが不足。市場確率との比較不可。"
@@ -1412,64 +1686,67 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 47.96,
-        "risk_level": "中",
+        "chaos_index": 55.35,
+        "risk_level": "高",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "analysis_rating": "見送り"
+      }
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
-    "main_count": 0,
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開"
+    ],
+    "main_count": 3,
     "hole_count": 0,
-    "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
+    "skip_reason": "",
     "main_ev": 1.1,
     "hole_ev": 1.25,
     "race_id": "016320261031",
     "venue": "防府",
     "race_no": 1,
-    "timing_eligible": false,
+    "timing_eligible": true,
     "date": "2026-10-31",
     "strategy_version": "position_prob_v11_high_payout_20261007",
     "close_at": 1793412720.0
   },
   {
-    "first_gap": 85.13276185750294,
-    "third_boundary_gap": 0.2564022511042907,
-    "main_limit": 8,
+    "first_gap": 87.75737738482333,
+    "third_boundary_gap": 2.934088855022626,
+    "main_limit": 6,
     "first_fixed": false,
-    "top_win_probability": 0.9027264173444866,
+    "top_win_probability": 0.914658299644936,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 43.18,
+    "chaos_index": 31.2,
     "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 3.95,
-      "third_closeness": 14.23,
+      "second_closeness": 0.0,
+      "third_closeness": 6.2,
       "market_divergence": 0
     },
     "line_count": 4,
-    "risk_score": 43.18,
+    "risk_score": 31.2,
     "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
     "risk_policy": "risk_department_overrides_flow",
     "risk_budget_policy": "candidate_spread_without_extra_tickets",
     "scenario_policy": "本命展開中心",
-    "popularity_source": "unavailable",
+    "popularity_source": "full_trifecta_market_proxy",
     "probability_method": "position_sequential",
     "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
     "formation": {
       "first": [
         2,
-        4
+        4,
+        5
       ],
       "second": [
         1,
@@ -1498,8 +1775,7 @@
       "tickets": [],
       "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
       "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。"
       ],
       "probability_method": "geometric_model_market_estimate_uncalibrated",
       "minimum_probability": 0.001,
@@ -1571,16 +1847,31 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 43.18,
+        "chaos_index": 31.2,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
       },
+      "specialist_analysis": {
+        "細切れ戦": {
+          "status": "分析可能",
+          "line_count": 4
+        },
+        "単騎": {
+          "status": "分析可能",
+          "cars": [
+            6
+          ]
+        }
+      },
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -1595,27 +1886,27 @@
     "close_at": 1793413440.0
   },
   {
-    "first_gap": 43.18754996336014,
-    "third_boundary_gap": 1.0857779042231481,
+    "first_gap": 47.61746215259512,
+    "third_boundary_gap": 0.946614499394741,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.6639860188166378,
+    "top_win_probability": 0.6793430575692441,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 51.43,
+    "chaos_index": 51.54,
     "chaos_label": "荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 14.69,
-      "third_closeness": 11.74,
+      "second_closeness": 14.38,
+      "third_closeness": 12.16,
       "market_divergence": 0
     },
     "line_count": 4,
-    "risk_score": 51.43,
+    "risk_score": 51.54,
     "risk_level": "高",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
@@ -1649,7 +1940,6 @@
         4,
         5,
         7,
-        8,
         9
       ]
     },
@@ -1735,7 +2025,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 51.43,
+        "chaos_index": 51.54,
         "risk_level": "高",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -1744,7 +2034,9 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -1759,39 +2051,38 @@
     "close_at": 1793414160.0
   },
   {
-    "first_gap": 5.673229720923274,
-    "third_boundary_gap": 1.1085891184248826,
-    "main_limit": 12,
+    "first_gap": 6.645971644563353,
+    "third_boundary_gap": 2.428556950014827,
+    "main_limit": 10,
     "first_fixed": false,
-    "top_win_probability": 0.3901928402611767,
+    "top_win_probability": 0.4211114105468871,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 62.28,
-    "chaos_label": "荒れ",
+    "chaos_index": 42.77,
+    "chaos_label": "やや荒れ",
     "chaos_components": {
-      "first_closeness": 12.98,
+      "first_closeness": 10.06,
       "line_competition": 25,
-      "second_closeness": 12.63,
-      "third_closeness": 11.67,
+      "second_closeness": 0.0,
+      "third_closeness": 7.71,
       "market_divergence": 0
     },
     "line_count": 4,
-    "risk_score": 62.28,
-    "risk_level": "高",
+    "risk_score": 42.77,
+    "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
     "risk_policy": "risk_department_overrides_flow",
     "risk_budget_policy": "candidate_spread_without_extra_tickets",
-    "scenario_policy": "3展開分散",
-    "popularity_source": "unavailable",
+    "scenario_policy": "本命展開中心",
+    "popularity_source": "full_trifecta_market_proxy",
     "probability_method": "position_sequential",
     "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
     "formation": {
       "first": [
-        1,
         2,
         7
       ],
@@ -1808,21 +2099,24 @@
         3,
         4,
         5,
-        6,
         7
       ]
     },
     "high_payout_department": {
       "version": "high_payout_v1",
       "rating": "見送り",
-      "expectation_score": 0,
+      "expectation_score": 61,
       "recommended_count": 0,
-      "patterns": [],
+      "patterns": [
+        "2着荒れ",
+        "3着荒れ",
+        "単騎",
+        "細切れ戦"
+      ],
       "tickets": [],
       "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
       "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。"
       ],
       "probability_method": "geometric_model_market_estimate_uncalibrated",
       "minimum_probability": 0.001,
@@ -1889,21 +2183,73 @@
         "version": "third_focus_v1",
         "automatic_promotion": false,
         "variants": {
-          "current": [],
-          "third_focus": []
-        }
+          "current": [
+            {
+              "buy": "7-1-5",
+              "odds": 104.7,
+              "probability": 0.017869067946261332,
+              "ev": 1.8708914139735615
+            },
+            {
+              "buy": "7-4-1",
+              "odds": 117.0,
+              "probability": 0.012689432119556632,
+              "ev": 1.484663557988126
+            },
+            {
+              "buy": "7-4-5",
+              "odds": 333.6,
+              "probability": 0.0038755192510033323,
+              "ev": 1.2928732221347117
+            },
+            {
+              "buy": "7-4-6",
+              "odds": 693.0,
+              "probability": 0.0018527546274954949,
+              "ev": 1.2839589568543779
+            }
+          ],
+          "third_focus": [
+            {
+              "buy": "7-1-5",
+              "odds": 104.7,
+              "probability": 0.017869067946261332,
+              "ev": 1.8708914139735615
+            }
+          ]
+        },
+        "decision": "本番は現在方式。3着重点方式は同じ上限点数・同じ最低EVで成立確率順に比較。"
       },
       "risk_coordination": {
-        "chaos_index": 62.28,
-        "risk_level": "高",
+        "chaos_index": 42.77,
+        "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
       },
-      "analysis_rating": "見送り"
+      "specialist_analysis": {
+        "細切れ戦": {
+          "status": "分析可能",
+          "line_count": 4
+        },
+        "単騎": {
+          "status": "分析可能",
+          "cars": [
+            4
+          ]
+        }
+      },
+      "strong_ev_candidate_count": 1,
+      "twelve_point_min_ev": 1.5,
+      "analysis_rating": "B"
     },
-    "hole_limit": 0,
-    "selected_scenarios": [],
+    "hole_limit": 4,
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開",
+      "縦脚逆転",
+      "高配当独立分析"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -1918,27 +2264,27 @@
     "close_at": 1793414940.0
   },
   {
-    "first_gap": 19.303111737484034,
-    "third_boundary_gap": 1.539623892568411,
+    "first_gap": 12.200607640072732,
+    "third_boundary_gap": 0.5687890838951173,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.43627109258038466,
+    "top_win_probability": 0.41275229474932534,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 35.96,
+    "chaos_index": 48.52,
     "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 0.58,
-      "third_closeness": 10.38,
+      "second_closeness": 10.23,
+      "third_closeness": 13.29,
       "market_divergence": 0
     },
     "line_count": 3,
-    "risk_score": 35.96,
+    "risk_score": 48.52,
     "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
@@ -2050,7 +2396,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 35.96,
+        "chaos_index": 48.52,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -2059,7 +2405,10 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "縦脚逆転"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -2074,27 +2423,27 @@
     "close_at": 1793415720.0
   },
   {
-    "first_gap": 47.01413830256381,
-    "third_boundary_gap": 1.7817353107654181,
-    "main_limit": 8,
+    "first_gap": 50.90808636411683,
+    "third_boundary_gap": 2.260426634447363,
+    "main_limit": 6,
     "first_fixed": false,
-    "top_win_probability": 0.6031212569972215,
+    "top_win_probability": 0.6416009713494276,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 46.67,
+    "chaos_index": 45.9,
     "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 12.02,
-      "third_closeness": 9.65,
+      "second_closeness": 12.68,
+      "third_closeness": 8.22,
       "market_divergence": 0
     },
     "line_count": 3,
-    "risk_score": 46.67,
+    "risk_score": 45.9,
     "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
@@ -2112,16 +2461,15 @@
       ],
       "second": [
         1,
-        2,
         3,
         4,
         7
       ],
       "third": [
         1,
-        2,
         3,
         4,
+        6,
         7
       ]
     },
@@ -2207,7 +2555,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 46.67,
+        "chaos_index": 45.9,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -2216,7 +2564,9 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -2231,27 +2581,27 @@
     "close_at": 1793416500.0
   },
   {
-    "first_gap": 15.803447358876667,
-    "third_boundary_gap": 0.3124993539573939,
+    "first_gap": 14.707744328346465,
+    "third_boundary_gap": 1.1114917008730885,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.5010535014891395,
+    "top_win_probability": 0.5132205866253533,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 47.85,
+    "chaos_index": 47.73,
     "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 8.79,
-      "third_closeness": 14.06,
+      "second_closeness": 11.06,
+      "third_closeness": 11.67,
       "market_divergence": 0
     },
     "line_count": 4,
-    "risk_score": 47.85,
+    "risk_score": 47.73,
     "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
@@ -2271,14 +2621,17 @@
         2,
         3,
         5,
-        7
+        7,
+        9
       ],
       "third": [
         1,
         2,
         3,
+        4,
         5,
-        7
+        7,
+        9
       ]
     },
     "high_payout_department": {
@@ -2363,7 +2716,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 47.85,
+        "chaos_index": 47.73,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -2372,7 +2725,10 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -2387,50 +2743,46 @@
     "close_at": 1793417280.0
   },
   {
-    "first_gap": 14.175278623748312,
-    "third_boundary_gap": 2.47616378570479,
+    "first_gap": 12.717575562490026,
+    "third_boundary_gap": 4.57022304921608,
     "main_limit": 6,
     "first_fixed": false,
-    "top_win_probability": 0.5194383643524826,
+    "top_win_probability": 0.517441061597438,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 50.98,
-    "chaos_label": "荒れ",
+    "chaos_index": 26.29,
+    "chaos_label": "固め",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 18.41,
-      "third_closeness": 7.57,
+      "second_closeness": 0.0,
+      "third_closeness": 1.29,
       "market_divergence": 0
     },
     "line_count": 3,
-    "risk_score": 50.98,
-    "risk_level": "高",
+    "risk_score": 26.29,
+    "risk_level": "低",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
     "risk_policy": "risk_department_overrides_flow",
     "risk_budget_policy": "candidate_spread_without_extra_tickets",
-    "scenario_policy": "3展開分散",
+    "scenario_policy": "本命展開中心",
     "popularity_source": "unavailable",
     "probability_method": "position_sequential",
     "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
     "formation": {
       "first": [
         1,
-        3,
         5
       ],
       "second": [
         1,
         2,
         3,
-        4,
-        5,
-        6,
-        7
+        5
       ],
       "third": [
         1,
@@ -2524,8 +2876,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 50.98,
-        "risk_level": "高",
+        "chaos_index": 26.29,
+        "risk_level": "低",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -2533,7 +2885,11 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開",
+      "縦脚逆転"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -2548,51 +2904,46 @@
     "close_at": 1793418060.0
   },
   {
-    "first_gap": 8.395044096092438,
-    "third_boundary_gap": 0.44041982169246907,
-    "main_limit": 10,
+    "first_gap": 12.158152121906976,
+    "third_boundary_gap": 1.2096040763849576,
+    "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.3869588690851622,
+    "top_win_probability": 0.39894183377932474,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 62.37,
-    "chaos_label": "荒れ",
+    "chaos_index": 48.97,
+    "chaos_label": "やや荒れ",
     "chaos_components": {
-      "first_closeness": 4.81,
+      "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 18.88,
-      "third_closeness": 13.68,
+      "second_closeness": 12.6,
+      "third_closeness": 11.37,
       "market_divergence": 0
     },
     "line_count": 3,
-    "risk_score": 62.37,
-    "risk_level": "高",
+    "risk_score": 48.97,
+    "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
     "risk_policy": "risk_department_overrides_flow",
     "risk_budget_policy": "candidate_spread_without_extra_tickets",
-    "scenario_policy": "3展開分散",
+    "scenario_policy": "本命展開中心",
     "popularity_source": "unavailable",
     "probability_method": "position_sequential",
     "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
     "formation": {
       "first": [
-        2,
         5,
         7
       ],
       "second": [
         1,
         2,
-        3,
-        4,
         5,
-        7,
-        8,
-        9
+        7
       ],
       "third": [
         1,
@@ -2601,8 +2952,7 @@
         4,
         5,
         7,
-        8,
-        9
+        8
       ]
     },
     "high_payout_department": {
@@ -2687,8 +3037,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 62.37,
-        "risk_level": "高",
+        "chaos_index": 48.97,
+        "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -2711,40 +3061,38 @@
     "close_at": 1793418840.0
   },
   {
-    "first_gap": 78.10573880882778,
-    "third_boundary_gap": 0.20439442618745396,
-    "main_limit": 8,
+    "first_gap": 78.16336424983268,
+    "third_boundary_gap": 4.506422491132097,
+    "main_limit": 6,
     "first_fixed": false,
-    "top_win_probability": 0.8503032130337155,
+    "top_win_probability": 0.8490363426108344,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 57.78,
-    "chaos_label": "荒れ",
+    "chaos_index": 46.05,
+    "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 18.39,
-      "third_closeness": 14.39,
+      "second_closeness": 19.57,
+      "third_closeness": 1.48,
       "market_divergence": 0
     },
     "line_count": 3,
-    "risk_score": 57.78,
-    "risk_level": "高",
+    "risk_score": 46.05,
+    "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
     "risk_policy": "risk_department_overrides_flow",
     "risk_budget_policy": "candidate_spread_without_extra_tickets",
-    "scenario_policy": "3展開分散",
+    "scenario_policy": "本命展開中心",
     "popularity_source": "unavailable",
     "probability_method": "position_sequential",
     "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
     "formation": {
       "first": [
-        1,
-        2,
         3,
         7
       ],
@@ -2752,9 +3100,6 @@
         1,
         2,
         3,
-        4,
-        5,
-        6,
         7
       ],
       "third": [
@@ -2849,8 +3194,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 57.78,
-        "risk_level": "高",
+        "chaos_index": 46.05,
+        "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -2858,7 +3203,10 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -2873,27 +3221,27 @@
     "close_at": 1793419620.0
   },
   {
-    "first_gap": 53.279472520649804,
-    "third_boundary_gap": 0.3651779325862883,
+    "first_gap": 67.71560609498025,
+    "third_boundary_gap": 1.1183751226049523,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.6971232657364964,
+    "top_win_probability": 0.7873090684485152,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 42.41,
+    "chaos_index": 38.32,
     "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 3.51,
-      "third_closeness": 13.9,
+      "second_closeness": 1.68,
+      "third_closeness": 11.64,
       "market_divergence": 0
     },
     "line_count": 4,
-    "risk_score": 42.41,
+    "risk_score": 38.32,
     "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
@@ -2919,7 +3267,11 @@
         1,
         2,
         3,
+        4,
+        5,
+        6,
         7,
+        8,
         9
       ]
     },
@@ -3005,7 +3357,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 42.41,
+        "chaos_index": 38.32,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -3014,7 +3366,10 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -3029,34 +3384,34 @@
     "close_at": 1793420400.0
   },
   {
-    "first_gap": 61.92894673739704,
-    "third_boundary_gap": 2.650227552444486,
+    "first_gap": 57.63278508349045,
+    "third_boundary_gap": 2.5768980198260554,
     "main_limit": 6,
     "first_fixed": false,
-    "top_win_probability": 0.7731484380986252,
+    "top_win_probability": 0.7407469871039957,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 44.61,
+    "chaos_index": 45.09,
     "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 12.56,
-      "third_closeness": 7.05,
+      "second_closeness": 12.82,
+      "third_closeness": 7.27,
       "market_divergence": 0
     },
     "line_count": 3,
-    "risk_score": 44.61,
+    "risk_score": 45.09,
     "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
     "risk_policy": "risk_department_overrides_flow",
     "risk_budget_policy": "candidate_spread_without_extra_tickets",
     "scenario_policy": "本命展開中心",
-    "popularity_source": "unavailable",
+    "popularity_source": "full_trifecta_market_proxy",
     "probability_method": "position_sequential",
     "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
     "formation": {
@@ -3068,7 +3423,8 @@
         2,
         3,
         4,
-        5
+        5,
+        7
       ],
       "third": [
         1,
@@ -3082,14 +3438,15 @@
     "high_payout_department": {
       "version": "high_payout_v1",
       "rating": "見送り",
-      "expectation_score": 0,
+      "expectation_score": 53,
       "recommended_count": 0,
-      "patterns": [],
+      "patterns": [
+        "2着荒れ"
+      ],
       "tickets": [],
       "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
       "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。"
       ],
       "probability_method": "geometric_model_market_estimate_uncalibrated",
       "minimum_probability": 0.001,
@@ -3156,21 +3513,65 @@
         "version": "third_focus_v1",
         "automatic_promotion": false,
         "variants": {
-          "current": [],
+          "current": [
+            {
+              "buy": "5-7-3",
+              "odds": 265.0,
+              "probability": 0.007961312787452404,
+              "ev": 2.109747888674887
+            },
+            {
+              "buy": "5-7-1",
+              "odds": 265.0,
+              "probability": 0.007265302251546648,
+              "ev": 1.9253050966598617
+            },
+            {
+              "buy": "5-7-4",
+              "odds": 173.3,
+              "probability": 0.010621172278974777,
+              "ev": 1.840649155946329
+            },
+            {
+              "buy": "5-7-6",
+              "odds": 265.0,
+              "probability": 0.004962727067770127,
+              "ev": 1.3151226729590837
+            }
+          ],
           "third_focus": []
-        }
+        },
+        "decision": "本番は現在方式。3着重点方式は同じ上限点数・同じ最低EVで成立確率順に比較。"
       },
       "risk_coordination": {
-        "chaos_index": 44.61,
+        "chaos_index": 45.09,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
       },
-      "analysis_rating": "見送り"
+      "specialist_analysis": {
+        "細切れ戦": {
+          "status": "分析可能",
+          "line_count": 3
+        },
+        "単騎": {
+          "status": "分析可能",
+          "cars": [
+            6
+          ]
+        }
+      },
+      "strong_ev_candidate_count": 3,
+      "twelve_point_min_ev": 1.5,
+      "analysis_rating": "C"
     },
-    "hole_limit": 0,
-    "selected_scenarios": [],
+    "hole_limit": 4,
+    "selected_scenarios": [
+      "崩れ展開",
+      "縦脚逆転",
+      "高配当独立分析"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -3185,27 +3586,27 @@
     "close_at": 1793421180.0
   },
   {
-    "first_gap": 13.52997644184806,
-    "third_boundary_gap": 0.8966550151150532,
+    "first_gap": 14.534397783549515,
+    "third_boundary_gap": 0.6621633425394968,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.42570961040273264,
+    "top_win_probability": 0.42140444590695136,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 55.8,
+    "chaos_index": 55.06,
     "chaos_label": "荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 18.49,
-      "third_closeness": 12.31,
+      "second_closeness": 17.05,
+      "third_closeness": 13.01,
       "market_divergence": 0
     },
     "line_count": 3,
-    "risk_score": 55.8,
+    "risk_score": 55.06,
     "risk_level": "高",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
@@ -3218,7 +3619,6 @@
     "formation": {
       "first": [
         2,
-        3,
         5,
         9
       ],
@@ -3321,7 +3721,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 55.8,
+        "chaos_index": 55.06,
         "risk_level": "高",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -3330,7 +3730,10 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "本命展開",
+      "縦脚逆転"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -3345,34 +3748,34 @@
     "close_at": 1793421960.0
   },
   {
-    "first_gap": 6.671968003679837,
-    "third_boundary_gap": 1.653925360710904,
+    "first_gap": 6.451026620200132,
+    "third_boundary_gap": 0.8012581034257131,
     "main_limit": 12,
     "first_fixed": false,
-    "top_win_probability": 0.46144453738279745,
+    "top_win_probability": 0.4719177810005478,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 64.04,
+    "chaos_index": 54.68,
     "chaos_label": "荒れ",
     "chaos_components": {
-      "first_closeness": 9.98,
+      "first_closeness": 10.65,
       "line_competition": 25,
-      "second_closeness": 19.02,
-      "third_closeness": 10.04,
+      "second_closeness": 6.43,
+      "third_closeness": 12.6,
       "market_divergence": 0
     },
     "line_count": 3,
-    "risk_score": 64.04,
+    "risk_score": 54.68,
     "risk_level": "高",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
     "risk_policy": "risk_department_overrides_flow",
     "risk_budget_policy": "candidate_spread_without_extra_tickets",
     "scenario_policy": "3展開分散",
-    "popularity_source": "unavailable",
+    "popularity_source": "full_trifecta_market_proxy",
     "probability_method": "position_sequential",
     "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
     "formation": {
@@ -3401,14 +3804,17 @@
     "high_payout_department": {
       "version": "high_payout_v1",
       "rating": "見送り",
-      "expectation_score": 0,
+      "expectation_score": 67,
       "recommended_count": 0,
-      "patterns": [],
+      "patterns": [
+        "2着荒れ",
+        "3着荒れ",
+        "単騎"
+      ],
       "tickets": [],
       "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
       "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。"
       ],
       "probability_method": "geometric_model_market_estimate_uncalibrated",
       "minimum_probability": 0.001,
@@ -3475,21 +3881,108 @@
         "version": "third_focus_v1",
         "automatic_promotion": false,
         "variants": {
-          "current": [],
-          "third_focus": []
-        }
+          "current": [
+            {
+              "buy": "5-7-3",
+              "odds": 426.1,
+              "probability": 0.006628666324266822,
+              "ev": 2.824474720770093
+            },
+            {
+              "buy": "1-2-3",
+              "odds": 193.7,
+              "probability": 0.010740651445681433,
+              "ev": 2.0804641850284935
+            },
+            {
+              "buy": "1-7-3",
+              "odds": 170.4,
+              "probability": 0.01145737565942643,
+              "ev": 1.9523368123662639
+            },
+            {
+              "buy": "5-2-7",
+              "odds": 177.5,
+              "probability": 0.010236949089953607,
+              "ev": 1.8170584634667653
+            },
+            {
+              "buy": "5-2-6",
+              "odds": 250.6,
+              "probability": 0.006540075017270477,
+              "ev": 1.6389427993279815
+            },
+            {
+              "buy": "1-2-7",
+              "odds": 115.1,
+              "probability": 0.013938785632890688,
+              "ev": 1.6043542263457182
+            },
+            {
+              "buy": "1-2-4",
+              "odds": 177.5,
+              "probability": 0.00879427603186274,
+              "ev": 1.5609839956556364
+            },
+            {
+              "buy": "5-2-3",
+              "odds": 118.3,
+              "probability": 0.012534591429095606,
+              "ev": 1.4828421660620101
+            }
+          ],
+          "third_focus": [
+            {
+              "buy": "1-7-3",
+              "odds": 170.4,
+              "probability": 0.01145737565942643,
+              "ev": 1.9523368123662639
+            },
+            {
+              "buy": "1-7-4",
+              "odds": 146.9,
+              "probability": 0.009671924290001249,
+              "ev": 1.4208056782011835
+            },
+            {
+              "buy": "5-7-3",
+              "odds": 426.1,
+              "probability": 0.006628666324266822,
+              "ev": 2.824474720770093
+            }
+          ]
+        },
+        "decision": "本番は現在方式。3着重点方式は同じ上限点数・同じ最低EVで成立確率順に比較。"
       },
       "risk_coordination": {
-        "chaos_index": 64.04,
+        "chaos_index": 54.68,
         "risk_level": "高",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
       },
-      "analysis_rating": "見送り"
+      "specialist_analysis": {
+        "細切れ戦": {
+          "status": "分析可能",
+          "line_count": 3
+        },
+        "単騎": {
+          "status": "分析可能",
+          "cars": [
+            4
+          ]
+        }
+      },
+      "strong_ev_candidate_count": 7,
+      "twelve_point_min_ev": 1.5,
+      "analysis_rating": "B"
     },
-    "hole_limit": 0,
-    "selected_scenarios": [],
+    "hole_limit": 8,
+    "selected_scenarios": [
+      "崩れ展開",
+      "縦脚逆転",
+      "高配当独立分析"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -3504,27 +3997,27 @@
     "close_at": 1793422800.0
   },
   {
-    "first_gap": 61.98211825349458,
-    "third_boundary_gap": 2.8609801517955162,
-    "main_limit": 6,
+    "first_gap": 53.33367098891581,
+    "third_boundary_gap": 0.2719111593108199,
+    "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.7254899330987893,
+    "top_win_probability": 0.6728988812346026,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 47.36,
+    "chaos_index": 39.18,
     "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 15.94,
-      "third_closeness": 6.42,
+      "second_closeness": 0.0,
+      "third_closeness": 14.18,
       "market_divergence": 0
     },
     "line_count": 4,
-    "risk_score": 47.36,
+    "risk_score": 39.18,
     "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
@@ -3543,7 +4036,8 @@
         1,
         2,
         5,
-        7
+        7,
+        9
       ],
       "third": [
         1,
@@ -3636,7 +4130,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 47.36,
+        "chaos_index": 39.18,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -3645,7 +4139,9 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -3660,27 +4156,27 @@
     "close_at": 1793423640.0
   },
   {
-    "first_gap": 72.48998705888674,
-    "third_boundary_gap": 0.08597750779578206,
-    "main_limit": 8,
+    "first_gap": 78.01904372403804,
+    "third_boundary_gap": 2.866437481321798,
+    "main_limit": 6,
     "first_fixed": false,
-    "top_win_probability": 0.8441878314884266,
+    "top_win_probability": 0.877059842349728,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 39.74,
+    "chaos_index": 31.4,
     "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
       "second_closeness": 0.0,
-      "third_closeness": 14.74,
+      "third_closeness": 6.4,
       "market_divergence": 0
     },
     "line_count": 4,
-    "risk_score": 39.74,
+    "risk_score": 31.4,
     "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
@@ -3794,7 +4290,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 39.74,
+        "chaos_index": 31.4,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -3803,7 +4299,10 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -3818,44 +4317,47 @@
     "close_at": 1793424480.0
   },
   {
-    "first_gap": 64.18915120242796,
-    "third_boundary_gap": 0.5741546988940982,
+    "first_gap": 66.32975578842994,
+    "third_boundary_gap": 0.152156827844534,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.735591156662966,
+    "top_win_probability": 0.7585995726294309,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 48.56,
-    "chaos_label": "やや荒れ",
+    "chaos_index": 53.49,
+    "chaos_label": "荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 10.28,
-      "third_closeness": 13.28,
+      "second_closeness": 13.95,
+      "third_closeness": 14.54,
       "market_divergence": 0
     },
     "line_count": 3,
-    "risk_score": 48.56,
-    "risk_level": "中",
+    "risk_score": 53.49,
+    "risk_level": "高",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
     "risk_policy": "risk_department_overrides_flow",
     "risk_budget_policy": "candidate_spread_without_extra_tickets",
-    "scenario_policy": "本命展開中心",
+    "scenario_policy": "3展開分散",
     "popularity_source": "unavailable",
     "probability_method": "position_sequential",
     "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
     "formation": {
       "first": [
         1,
+        2,
+        3,
         5
       ],
       "second": [
         1,
         2,
+        3,
         5,
         7,
         9
@@ -3863,8 +4365,12 @@
       "third": [
         1,
         2,
+        3,
+        4,
         5,
+        6,
         7,
+        8,
         9
       ]
     },
@@ -3950,8 +4456,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 48.56,
-        "risk_level": "中",
+        "chaos_index": 53.49,
+        "risk_level": "高",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -3959,7 +4465,10 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -3974,38 +4483,39 @@
     "close_at": 1793425320.0
   },
   {
-    "first_gap": 28.08198717783231,
-    "third_boundary_gap": 1.2045293766861978,
+    "first_gap": 33.72732411312168,
+    "third_boundary_gap": 0.7793099624120998,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.4820438865779205,
+    "top_win_probability": 0.518582769019747,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 40.35,
+    "chaos_index": 38.67,
     "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 3.96,
-      "third_closeness": 11.39,
+      "second_closeness": 1.01,
+      "third_closeness": 12.66,
       "market_divergence": 0
     },
     "line_count": 3,
-    "risk_score": 40.35,
+    "risk_score": 38.67,
     "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
     "risk_policy": "risk_department_overrides_flow",
     "risk_budget_policy": "candidate_spread_without_extra_tickets",
     "scenario_policy": "本命展開中心",
-    "popularity_source": "unavailable",
+    "popularity_source": "full_trifecta_market_proxy",
     "probability_method": "position_sequential",
     "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
     "formation": {
       "first": [
+        2,
         5,
         7
       ],
@@ -4029,14 +4539,16 @@
     "high_payout_department": {
       "version": "high_payout_v1",
       "rating": "見送り",
-      "expectation_score": 0,
+      "expectation_score": 59,
       "recommended_count": 0,
-      "patterns": [],
+      "patterns": [
+        "2着荒れ",
+        "3着荒れ"
+      ],
       "tickets": [],
       "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
       "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。"
       ],
       "probability_method": "geometric_model_market_estimate_uncalibrated",
       "minimum_probability": 0.001,
@@ -4103,21 +4615,118 @@
         "version": "third_focus_v1",
         "automatic_promotion": false,
         "variants": {
-          "current": [],
-          "third_focus": []
-        }
+          "current": [
+            {
+              "buy": "5-2-1",
+              "odds": 229.9,
+              "probability": 0.008441683631572758,
+              "ev": 1.940743066898577
+            },
+            {
+              "buy": "2-1-3",
+              "odds": 485.4,
+              "probability": 0.0036300124447350584,
+              "ev": 1.7620080406743972
+            },
+            {
+              "buy": "2-1-4",
+              "odds": 323.6,
+              "probability": 0.0051834070292770245,
+              "ev": 1.6773505146740453
+            },
+            {
+              "buy": "2-5-1",
+              "odds": 203.2,
+              "probability": 0.008200790201217735,
+              "ev": 1.6664005688874435
+            },
+            {
+              "buy": "2-1-6",
+              "odds": 349.5,
+              "probability": 0.004657265423106022,
+              "ev": 1.6277142653755547
+            },
+            {
+              "buy": "2-5-4",
+              "odds": 349.5,
+              "probability": 0.0045548454145329705,
+              "ev": 1.5919184723792732
+            },
+            {
+              "buy": "2-1-5",
+              "odds": 281.8,
+              "probability": 0.005368186646164363,
+              "ev": 1.5127549968891176
+            },
+            {
+              "buy": "5-2-4",
+              "odds": 257.0,
+              "probability": 0.005815829618651475,
+              "ev": 1.4946682119934291
+            }
+          ],
+          "third_focus": [
+            {
+              "buy": "7-5-4",
+              "odds": 143.2,
+              "probability": 0.009432567538213258,
+              "ev": 1.3507436714721384
+            },
+            {
+              "buy": "5-2-1",
+              "odds": 229.9,
+              "probability": 0.008441683631572758,
+              "ev": 1.940743066898577
+            },
+            {
+              "buy": "2-5-1",
+              "odds": 203.2,
+              "probability": 0.008200790201217735,
+              "ev": 1.6664005688874435
+            },
+            {
+              "buy": "5-2-4",
+              "odds": 257.0,
+              "probability": 0.005815829618651475,
+              "ev": 1.4946682119934291
+            },
+            {
+              "buy": "2-5-4",
+              "odds": 349.5,
+              "probability": 0.0045548454145329705,
+              "ev": 1.5919184723792732
+            }
+          ]
+        },
+        "decision": "本番は現在方式。3着重点方式は同じ上限点数・同じ最低EVで成立確率順に比較。"
       },
       "risk_coordination": {
-        "chaos_index": 40.35,
+        "chaos_index": 38.67,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
       },
-      "analysis_rating": "見送り"
+      "specialist_analysis": {
+        "細切れ戦": {
+          "status": "分析可能",
+          "line_count": 3
+        },
+        "単騎": {
+          "status": "分析可能",
+          "cars": []
+        }
+      },
+      "strong_ev_candidate_count": 7,
+      "twelve_point_min_ev": 1.5,
+      "analysis_rating": "B"
     },
-    "hole_limit": 0,
-    "selected_scenarios": [],
+    "hole_limit": 8,
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開",
+      "高配当独立分析"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -4132,38 +4741,39 @@
     "close_at": 1793426160.0
   },
   {
-    "first_gap": 32.18409472083964,
-    "third_boundary_gap": 0.6506653060865748,
+    "first_gap": 35.24130752253831,
+    "third_boundary_gap": 0.049109680661263866,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.5057459304035654,
+    "top_win_probability": 0.5125932274061281,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 47.93,
-    "chaos_label": "やや荒れ",
+    "chaos_index": 58.34,
+    "chaos_label": "荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 9.88,
-      "third_closeness": 13.05,
+      "second_closeness": 18.49,
+      "third_closeness": 14.85,
       "market_divergence": 0
     },
     "line_count": 4,
-    "risk_score": 47.93,
-    "risk_level": "中",
+    "risk_score": 58.34,
+    "risk_level": "高",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
     "risk_policy": "risk_department_overrides_flow",
     "risk_budget_policy": "candidate_spread_without_extra_tickets",
-    "scenario_policy": "本命展開中心",
+    "scenario_policy": "3展開分散",
     "popularity_source": "unavailable",
     "probability_method": "position_sequential",
     "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
     "formation": {
       "first": [
+        1,
         3,
         9
       ],
@@ -4265,8 +4875,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 47.93,
-        "risk_level": "中",
+        "chaos_index": 58.34,
+        "risk_level": "高",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -4274,7 +4884,9 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "本命展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -4289,27 +4901,27 @@
     "close_at": 1793427000.0
   },
   {
-    "first_gap": 56.3885319021504,
-    "third_boundary_gap": 5.484525868752463,
-    "main_limit": 6,
+    "first_gap": 65.42789792525534,
+    "third_boundary_gap": 1.1064535105998816,
+    "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.6863095228129242,
+    "top_win_probability": 0.7433229209527414,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 41.15,
+    "chaos_index": 36.68,
     "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 16.15,
-      "third_closeness": 0.0,
+      "second_closeness": 0.0,
+      "third_closeness": 11.68,
       "market_divergence": 0
     },
     "line_count": 3,
-    "risk_score": 41.15,
+    "risk_score": 36.68,
     "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
@@ -4322,7 +4934,9 @@
     "formation": {
       "first": [
         2,
-        5
+        3,
+        5,
+        7
       ],
       "second": [
         2,
@@ -4420,7 +5034,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 41.15,
+        "chaos_index": 36.68,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -4429,7 +5043,10 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -4444,41 +5061,40 @@
     "close_at": 1793427960.0
   },
   {
-    "first_gap": 26.55087804431652,
-    "third_boundary_gap": 0.02485076898547689,
+    "first_gap": 40.958623750786494,
+    "third_boundary_gap": 0.2808213297339961,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.48323361671113324,
+    "top_win_probability": 0.5601176078276503,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 55.34,
-    "chaos_label": "荒れ",
+    "chaos_index": 49.2,
+    "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 15.41,
-      "third_closeness": 14.93,
+      "second_closeness": 10.04,
+      "third_closeness": 14.16,
       "market_divergence": 0
     },
     "line_count": 3,
-    "risk_score": 55.34,
-    "risk_level": "高",
+    "risk_score": 49.2,
+    "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
     "risk_policy": "risk_department_overrides_flow",
     "risk_budget_policy": "candidate_spread_without_extra_tickets",
-    "scenario_policy": "3展開分散",
+    "scenario_policy": "本命展開中心",
     "popularity_source": "unavailable",
     "probability_method": "position_sequential",
     "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
     "formation": {
       "first": [
         1,
-        7,
-        9
+        7
       ],
       "second": [
         1,
@@ -4490,6 +5106,7 @@
       "third": [
         1,
         2,
+        3,
         4,
         5,
         7,
@@ -4578,8 +5195,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 55.34,
-        "risk_level": "高",
+        "chaos_index": 49.2,
+        "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -4587,7 +5204,9 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "本命展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -4602,27 +5221,27 @@
     "close_at": 1793428920.0
   },
   {
-    "first_gap": 76.24290397791363,
-    "third_boundary_gap": 0.9212144765269539,
+    "first_gap": 72.71952872459501,
+    "third_boundary_gap": 0.29186121847062196,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.8476833649493751,
+    "top_win_probability": 0.8361634845743133,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 38.86,
+    "chaos_index": 39.12,
     "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 1.62,
-      "third_closeness": 12.24,
+      "second_closeness": 0.0,
+      "third_closeness": 14.12,
       "market_divergence": 0
     },
     "line_count": 3,
-    "risk_score": 38.86,
+    "risk_score": 39.12,
     "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
@@ -4639,13 +5258,15 @@
       ],
       "second": [
         1,
+        2,
         3,
         4,
+        5,
+        6,
         7
       ],
       "third": [
         1,
-        2,
         3,
         4,
         5,
@@ -4735,7 +5356,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 38.86,
+        "chaos_index": 39.12,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -4744,7 +5365,9 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -4759,47 +5382,44 @@
     "close_at": 1793429340.0
   },
   {
-    "first_gap": 27.743277204385315,
-    "third_boundary_gap": 0.1360099889124644,
+    "first_gap": 32.39616910629012,
+    "third_boundary_gap": 1.723946435287818,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.5465650490125451,
+    "top_win_probability": 0.5776080600672863,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 51.03,
-    "chaos_label": "荒れ",
+    "chaos_index": 34.83,
+    "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 11.44,
-      "third_closeness": 14.59,
+      "second_closeness": 0.0,
+      "third_closeness": 9.83,
       "market_divergence": 0
     },
     "line_count": 4,
-    "risk_score": 51.03,
-    "risk_level": "高",
+    "risk_score": 34.83,
+    "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
     "risk_policy": "risk_department_overrides_flow",
     "risk_budget_policy": "candidate_spread_without_extra_tickets",
-    "scenario_policy": "3展開分散",
+    "scenario_policy": "本命展開中心",
     "popularity_source": "unavailable",
     "probability_method": "position_sequential",
     "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
     "formation": {
       "first": [
         1,
-        5,
         7
       ],
       "second": [
         1,
         2,
-        3,
-        4,
         5,
         7
       ],
@@ -4895,8 +5515,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 51.03,
-        "risk_level": "高",
+        "chaos_index": 34.83,
+        "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -4904,7 +5524,11 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開",
+      "縦脚逆転"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -4919,27 +5543,27 @@
     "close_at": 1793429820.0
   },
   {
-    "first_gap": 6.967787872636144,
-    "third_boundary_gap": 0.5790977659689283,
-    "main_limit": 12,
+    "first_gap": 8.150398206000027,
+    "third_boundary_gap": 0.08409258336193837,
+    "main_limit": 10,
     "first_fixed": false,
-    "top_win_probability": 0.4284652706131296,
+    "top_win_probability": 0.42847404877648476,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 67.32,
+    "chaos_index": 56.17,
     "chaos_label": "荒れ",
     "chaos_components": {
-      "first_closeness": 9.1,
+      "first_closeness": 5.55,
       "line_competition": 25,
-      "second_closeness": 19.96,
-      "third_closeness": 13.26,
+      "second_closeness": 10.87,
+      "third_closeness": 14.75,
       "market_divergence": 0
     },
     "line_count": 4,
-    "risk_score": 67.32,
+    "risk_score": 56.17,
     "risk_level": "高",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
@@ -5056,7 +5680,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 67.32,
+        "chaos_index": 56.17,
         "risk_level": "高",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -5065,7 +5689,10 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "縦脚逆転"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -5080,27 +5707,27 @@
     "close_at": 1793430240.0
   },
   {
-    "first_gap": 78.41266370186787,
-    "third_boundary_gap": 0.42464653152673115,
+    "first_gap": 81.0929128796057,
+    "third_boundary_gap": 0.4256206305479697,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.859503434689146,
+    "top_win_probability": 0.8724814199003136,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 38.73,
+    "chaos_index": 38.72,
     "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
       "second_closeness": 0.0,
-      "third_closeness": 13.73,
+      "third_closeness": 13.72,
       "market_divergence": 0
     },
     "line_count": 4,
-    "risk_score": 38.73,
+    "risk_score": 38.72,
     "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
@@ -5112,6 +5739,7 @@
     "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
     "formation": {
       "first": [
+        2,
         3,
         5
       ],
@@ -5126,8 +5754,7 @@
         2,
         3,
         5,
-        6,
-        7
+        6
       ]
     },
     "high_payout_department": {
@@ -5212,7 +5839,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 38.73,
+        "chaos_index": 38.72,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -5221,7 +5848,10 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -5236,34 +5866,34 @@
     "close_at": 1793430720.0
   },
   {
-    "first_gap": 29.86182431111447,
-    "third_boundary_gap": 0.9824208901560674,
+    "first_gap": 33.19863008587788,
+    "third_boundary_gap": 1.5764142786389606,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.5080791229855302,
+    "top_win_probability": 0.5498826002992373,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 37.05,
+    "chaos_index": 42.27,
     "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
       "second_closeness": 0.0,
-      "third_closeness": 12.05,
-      "market_divergence": 0
+      "third_closeness": 10.27,
+      "market_divergence": 7
     },
     "line_count": 5,
-    "risk_score": 37.05,
+    "risk_score": 42.27,
     "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
     "risk_policy": "risk_department_overrides_flow",
     "risk_budget_policy": "candidate_spread_without_extra_tickets",
     "scenario_policy": "本命展開中心",
-    "popularity_source": "unavailable",
+    "popularity_source": "full_trifecta_market_proxy",
     "probability_method": "position_sequential",
     "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
     "formation": {
@@ -5294,14 +5924,17 @@
     "high_payout_department": {
       "version": "high_payout_v1",
       "rating": "見送り",
-      "expectation_score": 0,
+      "expectation_score": 61,
       "recommended_count": 0,
-      "patterns": [],
+      "patterns": [
+        "2着荒れ",
+        "3着荒れ",
+        "細切れ戦"
+      ],
       "tickets": [],
       "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
       "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。"
       ],
       "probability_method": "geometric_model_market_estimate_uncalibrated",
       "minimum_probability": 0.001,
@@ -5368,21 +6001,97 @@
         "version": "third_focus_v1",
         "automatic_promotion": false,
         "variants": {
-          "current": [],
-          "third_focus": []
-        }
+          "current": [
+            {
+              "buy": "2-5-4",
+              "odds": 487.1,
+              "probability": 0.004319241928944136,
+              "ev": 2.1039027435886886
+            },
+            {
+              "buy": "2-8-4",
+              "odds": 182.0,
+              "probability": 0.011444667452048621,
+              "ev": 2.082929476272849
+            },
+            {
+              "buy": "8-5-4",
+              "odds": 695.3,
+              "probability": 0.0028347170029485533,
+              "ev": 1.970978732150129
+            },
+            {
+              "buy": "2-5-8",
+              "odds": 199.5,
+              "probability": 0.009805270383054161,
+              "ev": 1.956151441419305
+            },
+            {
+              "buy": "2-5-7",
+              "odds": 218.3,
+              "probability": 0.00842334874316928,
+              "ev": 1.838817030633854
+            },
+            {
+              "buy": "2-5-3",
+              "odds": 553.8,
+              "probability": 0.0026722076008895497,
+              "ev": 1.4798685693726326
+            },
+            {
+              "buy": "2-5-6",
+              "odds": 312.5,
+              "probability": 0.0042763336313001304,
+              "ev": 1.3363542597812907
+            },
+            {
+              "buy": "2-5-9",
+              "odds": 213.5,
+              "probability": 0.0060318405440586,
+              "ev": 1.2877979561565112
+            }
+          ],
+          "third_focus": [
+            {
+              "buy": "2-8-4",
+              "odds": 182.0,
+              "probability": 0.011444667452048621,
+              "ev": 2.082929476272849
+            }
+          ]
+        },
+        "decision": "本番は現在方式。3着重点方式は同じ上限点数・同じ最低EVで成立確率順に比較。"
       },
       "risk_coordination": {
-        "chaos_index": 37.05,
+        "chaos_index": 42.27,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
       },
-      "analysis_rating": "見送り"
+      "specialist_analysis": {
+        "細切れ戦": {
+          "status": "分析可能",
+          "line_count": 5
+        },
+        "単騎": {
+          "status": "分析可能",
+          "cars": [
+            3,
+            9
+          ]
+        }
+      },
+      "strong_ev_candidate_count": 5,
+      "twelve_point_min_ev": 1.5,
+      "analysis_rating": "B"
     },
-    "hole_limit": 0,
-    "selected_scenarios": [],
+    "hole_limit": 8,
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開",
+      "高配当独立分析"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -5397,33 +6106,33 @@
     "close_at": 1793431200.0
   },
   {
-    "first_gap": 71.28202391547899,
-    "third_boundary_gap": 0.011531550871321627,
+    "first_gap": 72.76276241696804,
+    "third_boundary_gap": 0.019322621819199526,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.7975716873363814,
+    "top_win_probability": 0.8114960451754558,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 59.33,
-    "chaos_label": "荒れ",
+    "chaos_index": 43.32,
+    "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 19.36,
-      "third_closeness": 14.97,
+      "second_closeness": 3.38,
+      "third_closeness": 14.94,
       "market_divergence": 0
     },
     "line_count": 4,
-    "risk_score": 59.33,
-    "risk_level": "高",
+    "risk_score": 43.32,
+    "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
     "risk_policy": "risk_department_overrides_flow",
     "risk_budget_policy": "candidate_spread_without_extra_tickets",
-    "scenario_policy": "3展開分散",
+    "scenario_policy": "本命展開中心",
     "popularity_source": "unavailable",
     "probability_method": "position_sequential",
     "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
@@ -5438,9 +6147,7 @@
         2,
         3,
         4,
-        5,
-        6,
-        7
+        5
       ],
       "third": [
         1,
@@ -5534,8 +6241,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 59.33,
-        "risk_level": "高",
+        "chaos_index": 43.32,
+        "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -5543,7 +6250,10 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -5558,27 +6268,27 @@
     "close_at": 1793431620.0
   },
   {
-    "first_gap": 41.15031213272614,
-    "third_boundary_gap": 0.18255837001894726,
-    "main_limit": 8,
+    "first_gap": 39.73724640971591,
+    "third_boundary_gap": 2.2578833188303467,
+    "main_limit": 6,
     "first_fixed": false,
-    "top_win_probability": 0.6257956824224367,
+    "top_win_probability": 0.6213630120366707,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 39.45,
+    "chaos_index": 33.23,
     "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
       "second_closeness": 0.0,
-      "third_closeness": 14.45,
+      "third_closeness": 8.23,
       "market_divergence": 0
     },
     "line_count": 3,
-    "risk_score": 39.45,
+    "risk_score": 33.23,
     "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
@@ -5597,8 +6307,6 @@
         1,
         2,
         3,
-        4,
-        5,
         7
       ],
       "third": [
@@ -5606,7 +6314,6 @@
         2,
         3,
         4,
-        5,
         7
       ]
     },
@@ -5692,7 +6399,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 39.45,
+        "chaos_index": 33.23,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -5701,7 +6408,9 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -5716,27 +6425,27 @@
     "close_at": 1793432220.0
   },
   {
-    "first_gap": 30.45027544473884,
-    "third_boundary_gap": 1.042176499266267,
-    "main_limit": 8,
+    "first_gap": 37.97964490388517,
+    "third_boundary_gap": 3.1999760133826634,
+    "main_limit": 6,
     "first_fixed": false,
-    "top_win_probability": 0.5349471206465086,
+    "top_win_probability": 0.582428161608554,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 48.22,
+    "chaos_index": 47.73,
     "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 11.35,
-      "third_closeness": 11.87,
+      "second_closeness": 17.33,
+      "third_closeness": 5.4,
       "market_divergence": 0
     },
     "line_count": 3,
-    "risk_score": 48.22,
+    "risk_score": 47.73,
     "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
@@ -5762,7 +6471,6 @@
         1,
         2,
         3,
-        4,
         5,
         7
       ]
@@ -5849,7 +6557,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 48.22,
+        "chaos_index": 47.73,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -5858,7 +6566,10 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -5873,27 +6584,27 @@
     "close_at": 1793433000.0
   },
   {
-    "first_gap": 36.11256550716192,
-    "third_boundary_gap": 2.5140772624655714,
+    "first_gap": 38.18215251359372,
+    "third_boundary_gap": 2.3888763065128558,
     "main_limit": 6,
     "first_fixed": false,
-    "top_win_probability": 0.5568256938912195,
+    "top_win_probability": 0.5774227644806219,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 32.49,
+    "chaos_index": 32.83,
     "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 0.03,
-      "third_closeness": 7.46,
+      "second_closeness": 0.0,
+      "third_closeness": 7.83,
       "market_divergence": 0
     },
     "line_count": 3,
-    "risk_score": 32.49,
+    "risk_score": 32.83,
     "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
@@ -5912,7 +6623,6 @@
         1,
         3,
         4,
-        5,
         7
       ],
       "third": [
@@ -5921,6 +6631,7 @@
         3,
         4,
         5,
+        6,
         7
       ]
     },
@@ -6006,7 +6717,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 32.49,
+        "chaos_index": 32.83,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -6015,7 +6726,10 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -6030,28 +6744,28 @@
     "close_at": 1793433720.0
   },
   {
-    "first_gap": 85.02021554393185,
-    "third_boundary_gap": 1.434123798710603,
+    "first_gap": 88.94512808638345,
+    "third_boundary_gap": 0.41158885592215766,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.9122756475785305,
+    "top_win_probability": 0.9372379496513054,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 42.26,
-    "chaos_label": "やや荒れ",
+    "chaos_index": 26.27,
+    "chaos_label": "固め",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 12.5,
-      "second_closeness": 19.06,
-      "third_closeness": 10.7,
+      "second_closeness": 0.0,
+      "third_closeness": 13.77,
       "market_divergence": 0
     },
     "line_count": 2,
-    "risk_score": 42.26,
-    "risk_level": "中",
+    "risk_score": 26.27,
+    "risk_level": "低",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
     "risk_policy": "risk_department_overrides_flow",
@@ -6080,6 +6794,7 @@
         3,
         4,
         5,
+        6,
         7
       ]
     },
@@ -6165,8 +6880,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 42.26,
-        "risk_level": "中",
+        "chaos_index": 26.27,
+        "risk_level": "低",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -6174,7 +6889,10 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -6189,43 +6907,45 @@
     "close_at": 1793434440.0
   },
   {
-    "first_gap": 6.9319982165056935,
-    "third_boundary_gap": 2.0509656757370234,
-    "main_limit": 10,
+    "first_gap": 1.6666362255764895,
+    "third_boundary_gap": 1.7738816848559562,
+    "main_limit": 12,
     "first_fixed": false,
-    "top_win_probability": 0.33257295721024716,
+    "top_win_probability": 0.2991804932750129,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 43.05,
-    "chaos_label": "やや荒れ",
+    "chaos_index": 81.82,
+    "chaos_label": "大荒れ警戒",
     "chaos_components": {
-      "first_closeness": 9.2,
+      "first_closeness": 25.0,
       "line_competition": 25,
-      "second_closeness": 0.0,
-      "third_closeness": 8.85,
-      "market_divergence": 0
+      "second_closeness": 17.14,
+      "third_closeness": 9.68,
+      "market_divergence": 5
     },
     "line_count": 3,
-    "risk_score": 43.05,
-    "risk_level": "中",
+    "risk_score": 81.82,
+    "risk_level": "極高",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
     "risk_policy": "risk_department_overrides_flow",
     "risk_budget_policy": "candidate_spread_without_extra_tickets",
-    "scenario_policy": "本命展開中心",
-    "popularity_source": "unavailable",
+    "scenario_policy": "3展開分散",
+    "popularity_source": "full_trifecta_market_proxy",
     "probability_method": "position_sequential",
     "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
     "formation": {
       "first": [
         4,
-        5
+        5,
+        6
       ],
       "second": [
         1,
+        3,
         4,
         5,
         6
@@ -6242,14 +6962,19 @@
     "high_payout_department": {
       "version": "high_payout_v1",
       "rating": "見送り",
-      "expectation_score": 0,
+      "expectation_score": 100,
       "recommended_count": 0,
-      "patterns": [],
+      "patterns": [
+        "1着荒れ",
+        "2着荒れ",
+        "ライン崩壊",
+        "人気過剰",
+        "単騎"
+      ],
       "tickets": [],
       "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
       "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。"
       ],
       "probability_method": "geometric_model_market_estimate_uncalibrated",
       "minimum_probability": 0.001,
@@ -6316,21 +7041,114 @@
         "version": "third_focus_v1",
         "automatic_promotion": false,
         "variants": {
-          "current": [],
+          "current": [
+            {
+              "buy": "5-3-4",
+              "odds": 619.1,
+              "probability": 0.003456484773095782,
+              "ev": 2.1399097230235986
+            },
+            {
+              "buy": "6-4-5",
+              "odds": 206.3,
+              "probability": 0.009432500066772756,
+              "ev": 1.9459247637752195
+            },
+            {
+              "buy": "4-3-5",
+              "odds": 412.7,
+              "probability": 0.00452534022750188,
+              "ev": 1.867607911890026
+            },
+            {
+              "buy": "5-4-3",
+              "odds": 176.8,
+              "probability": 0.010209305815115567,
+              "ev": 1.8050052681124324
+            },
+            {
+              "buy": "6-4-2",
+              "odds": 247.6,
+              "probability": 0.006974772405237919,
+              "ev": 1.7269536475369087
+            },
+            {
+              "buy": "6-3-4",
+              "odds": 412.7,
+              "probability": 0.003936277602499813,
+              "ev": 1.6245017665516728
+            },
+            {
+              "buy": "4-5-3",
+              "odds": 112.5,
+              "probability": 0.014215766352818307,
+              "ev": 1.5992737146920595
+            },
+            {
+              "buy": "6-4-3",
+              "odds": 154.7,
+              "probability": 0.010132865773141724,
+              "ev": 1.5675543351050245
+            },
+            {
+              "buy": "6-5-1",
+              "odds": 103.1,
+              "probability": 0.014747041002647619,
+              "ev": 1.5204199273729695
+            },
+            {
+              "buy": "4-6-1",
+              "odds": 176.8,
+              "probability": 0.00854657616791611,
+              "ev": 1.5110346664875685
+            },
+            {
+              "buy": "4-6-5",
+              "odds": 206.3,
+              "probability": 0.007303052155682194,
+              "ev": 1.5066196597172365
+            },
+            {
+              "buy": "4-5-6",
+              "odds": 112.5,
+              "probability": 0.013390328581012585,
+              "ev": 1.5064119653639159
+            }
+          ],
           "third_focus": []
-        }
+        },
+        "decision": "本番は現在方式。3着重点方式は同じ上限点数・同じ最低EVで成立確率順に比較。"
       },
       "risk_coordination": {
-        "chaos_index": 43.05,
-        "risk_level": "中",
+        "chaos_index": 81.82,
+        "risk_level": "極高",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
       },
-      "analysis_rating": "見送り"
+      "specialist_analysis": {
+        "細切れ戦": {
+          "status": "分析可能",
+          "line_count": 3
+        },
+        "単騎": {
+          "status": "分析可能",
+          "cars": [
+            3
+          ]
+        }
+      },
+      "strong_ev_candidate_count": 12,
+      "twelve_point_min_ev": 1.5,
+      "analysis_rating": "S"
     },
-    "hole_limit": 0,
-    "selected_scenarios": [],
+    "hole_limit": 12,
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開",
+      "縦脚逆転",
+      "高配当独立分析"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -6345,27 +7163,27 @@
     "close_at": 1793435160.0
   },
   {
-    "first_gap": 91.615874213472,
-    "third_boundary_gap": 1.471890602248072,
+    "first_gap": 95.04015517488989,
+    "third_boundary_gap": 0.1928318924963226,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.9391941496450308,
+    "top_win_probability": 0.965233967580561,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 35.58,
+    "chaos_index": 39.42,
     "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
       "second_closeness": 0.0,
-      "third_closeness": 10.58,
+      "third_closeness": 14.42,
       "market_divergence": 0
     },
     "line_count": 3,
-    "risk_score": 35.58,
+    "risk_score": 39.42,
     "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
@@ -6381,7 +7199,9 @@
         2,
         3,
         4,
-        5
+        5,
+        6,
+        7
       ],
       "second": [
         1,
@@ -6398,6 +7218,7 @@
         3,
         4,
         5,
+        6,
         7
       ]
     },
@@ -6483,7 +7304,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 35.58,
+        "chaos_index": 39.42,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -6492,7 +7313,9 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -6507,47 +7330,45 @@
     "close_at": 1793435880.0
   },
   {
-    "first_gap": 2.6144715196906603,
-    "third_boundary_gap": 0.40336637593289915,
-    "main_limit": 12,
+    "first_gap": 35.20865621413587,
+    "third_boundary_gap": 5.783361368883174,
+    "main_limit": 6,
     "first_fixed": false,
-    "top_win_probability": 0.3549269647241845,
+    "top_win_probability": 0.5350055173306233,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 60.95,
-    "chaos_label": "荒れ",
+    "chaos_index": 43.33,
+    "chaos_label": "やや荒れ",
     "chaos_components": {
-      "first_closeness": 22.16,
+      "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 0.0,
-      "third_closeness": 13.79,
+      "second_closeness": 18.33,
+      "third_closeness": 0.0,
       "market_divergence": 0
     },
     "line_count": 3,
-    "risk_score": 60.95,
-    "risk_level": "高",
+    "risk_score": 43.33,
+    "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
     "risk_policy": "risk_department_overrides_flow",
     "risk_budget_policy": "candidate_spread_without_extra_tickets",
-    "scenario_policy": "3展開分散",
+    "scenario_policy": "本命展開中心",
     "popularity_source": "unavailable",
     "probability_method": "position_sequential",
     "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
     "formation": {
       "first": [
         2,
-        4,
         6
       ],
       "second": [
         1,
         2,
         3,
-        4,
         5,
         6
       ],
@@ -6555,7 +7376,6 @@
         1,
         2,
         3,
-        4,
         5,
         6
       ]
@@ -6642,8 +7462,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 60.95,
-        "risk_level": "高",
+        "chaos_index": 43.33,
+        "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -6651,7 +7471,10 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -6666,55 +7489,49 @@
     "close_at": 1793436600.0
   },
   {
-    "first_gap": 63.239488948124304,
-    "third_boundary_gap": 0.3561771752059375,
+    "first_gap": 59.48492293322478,
+    "third_boundary_gap": 1.2564245929642794,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.7708809084840629,
+    "top_win_probability": 0.7426092461962787,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 56.87,
-    "chaos_label": "荒れ",
+    "chaos_index": 36.23,
+    "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 17.94,
-      "third_closeness": 13.93,
+      "second_closeness": 0.0,
+      "third_closeness": 11.23,
       "market_divergence": 0
     },
     "line_count": 4,
-    "risk_score": 56.87,
-    "risk_level": "高",
+    "risk_score": 36.23,
+    "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
     "risk_policy": "risk_department_overrides_flow",
     "risk_budget_policy": "candidate_spread_without_extra_tickets",
-    "scenario_policy": "3展開分散",
+    "scenario_policy": "本命展開中心",
     "popularity_source": "unavailable",
     "probability_method": "position_sequential",
     "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
     "formation": {
       "first": [
         1,
-        3,
-        4,
         7
       ],
       "second": [
         1,
-        2,
         3,
-        4,
         5,
-        6,
         7
       ],
       "third": [
         1,
-        2,
         3,
         4,
         5,
@@ -6804,8 +7621,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 56.87,
-        "risk_level": "高",
+        "chaos_index": 36.23,
+        "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -6813,7 +7630,10 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -6828,27 +7648,27 @@
     "close_at": 1793437320.0
   },
   {
-    "first_gap": 65.0834003583384,
-    "third_boundary_gap": 1.4453508918495928,
-    "main_limit": 8,
+    "first_gap": 60.60718813218824,
+    "third_boundary_gap": 4.194005842734747,
+    "main_limit": 6,
     "first_fixed": false,
-    "top_win_probability": 0.7933794256072314,
+    "top_win_probability": 0.7731933142580902,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 41.29,
+    "chaos_index": 43.11,
     "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 5.63,
-      "third_closeness": 10.66,
+      "second_closeness": 15.69,
+      "third_closeness": 2.42,
       "market_divergence": 0
     },
     "line_count": 3,
-    "risk_score": 41.29,
+    "risk_score": 43.11,
     "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
@@ -6962,7 +7782,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 41.29,
+        "chaos_index": 43.11,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -6971,7 +7791,10 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -6986,27 +7809,27 @@
     "close_at": 1793438040.0
   },
   {
-    "first_gap": 68.74437841676762,
-    "third_boundary_gap": 0.20542945443023441,
+    "first_gap": 69.78988048669642,
+    "third_boundary_gap": 1.1976206429420024,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.7781975687672171,
+    "top_win_probability": 0.7918117347717923,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 56.73,
+    "chaos_index": 55.91,
     "chaos_label": "荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 17.35,
-      "third_closeness": 14.38,
+      "second_closeness": 19.5,
+      "third_closeness": 11.41,
       "market_divergence": 0
     },
     "line_count": 3,
-    "risk_score": 56.73,
+    "risk_score": 55.91,
     "risk_level": "高",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
@@ -7018,6 +7841,7 @@
     "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
     "formation": {
       "first": [
+        1,
         2,
         4,
         5
@@ -7121,7 +7945,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 56.73,
+        "chaos_index": 55.91,
         "risk_level": "高",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -7130,7 +7954,10 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -7145,27 +7972,27 @@
     "close_at": 1793438760.0
   },
   {
-    "first_gap": 15.148781776989509,
-    "third_boundary_gap": 2.517265413495311,
-    "main_limit": 6,
+    "first_gap": 26.081019586681407,
+    "third_boundary_gap": 1.5015642554033288,
+    "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.5188020496701634,
+    "top_win_probability": 0.568663195243987,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 35.26,
+    "chaos_index": 43.69,
     "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 2.81,
-      "third_closeness": 7.45,
+      "second_closeness": 8.19,
+      "third_closeness": 10.5,
       "market_divergence": 0
     },
     "line_count": 3,
-    "risk_score": 35.26,
+    "risk_score": 43.69,
     "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
@@ -7278,7 +8105,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 35.26,
+        "chaos_index": 43.69,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -7287,7 +8114,11 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開",
+      "縦脚逆転"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -7302,40 +8133,45 @@
     "close_at": 1793439480.0
   },
   {
-    "first_gap": 85.26721967395336,
-    "third_boundary_gap": 0.3400919229916717,
+    "first_gap": 89.22480471019291,
+    "third_boundary_gap": 0.7088205850401241,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.908296748757462,
+    "top_win_probability": 0.930350023853008,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 38.98,
-    "chaos_label": "やや荒れ",
+    "chaos_index": 51.66,
+    "chaos_label": "荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 0.0,
-      "third_closeness": 13.98,
+      "second_closeness": 13.79,
+      "third_closeness": 12.87,
       "market_divergence": 0
     },
     "line_count": 3,
-    "risk_score": 38.98,
-    "risk_level": "中",
+    "risk_score": 51.66,
+    "risk_level": "高",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
     "risk_policy": "risk_department_overrides_flow",
     "risk_budget_policy": "candidate_spread_without_extra_tickets",
-    "scenario_policy": "本命展開中心",
+    "scenario_policy": "3展開分散",
     "popularity_source": "unavailable",
     "probability_method": "position_sequential",
     "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
     "formation": {
       "first": [
+        1,
         2,
-        4
+        3,
+        4,
+        5,
+        6,
+        7
       ],
       "second": [
         1,
@@ -7343,6 +8179,7 @@
         3,
         4,
         5,
+        6,
         7
       ],
       "third": [
@@ -7437,8 +8274,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 38.98,
-        "risk_level": "中",
+        "chaos_index": 51.66,
+        "risk_level": "高",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -7446,7 +8283,10 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -7461,28 +8301,28 @@
     "close_at": 1793440200.0
   },
   {
-    "first_gap": 12.541582933621068,
-    "third_boundary_gap": 3.971830041867678,
-    "main_limit": 6,
+    "first_gap": 21.929628036644008,
+    "third_boundary_gap": 0.03841909062461468,
+    "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.36080507405597295,
+    "top_win_probability": 0.42215062659559976,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 31.73,
-    "chaos_label": "やや荒れ",
+    "chaos_index": 27.38,
+    "chaos_label": "固め",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 12.5,
-      "second_closeness": 16.15,
-      "third_closeness": 3.08,
+      "second_closeness": 0.0,
+      "third_closeness": 14.88,
       "market_divergence": 0
     },
     "line_count": 2,
-    "risk_score": 31.73,
-    "risk_level": "中",
+    "risk_score": 27.38,
+    "risk_level": "低",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
     "risk_policy": "risk_department_overrides_flow",
@@ -7494,10 +8334,11 @@
     "formation": {
       "first": [
         1,
-        7
+        5
       ],
       "second": [
         1,
+        2,
         4,
         5,
         7
@@ -7593,8 +8434,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 31.73,
-        "risk_level": "中",
+        "chaos_index": 27.38,
+        "risk_level": "低",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -7602,7 +8443,11 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開",
+      "縦脚逆転"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -7617,27 +8462,27 @@
     "close_at": 1793440980.0
   },
   {
-    "first_gap": 17.22652476003271,
-    "third_boundary_gap": 3.9677380822502943,
-    "main_limit": 6,
+    "first_gap": 11.704190751559786,
+    "third_boundary_gap": 1.3201393520409184,
+    "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.52977360847164,
+    "top_win_probability": 0.5140082648741436,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 47.8,
+    "chaos_index": 36.04,
     "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 19.7,
-      "third_closeness": 3.1,
+      "second_closeness": 0.0,
+      "third_closeness": 11.04,
       "market_divergence": 0
     },
     "line_count": 3,
-    "risk_score": 47.8,
+    "risk_score": 36.04,
     "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
@@ -7750,7 +8595,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 47.8,
+        "chaos_index": 36.04,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -7759,7 +8604,11 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開",
+      "縦脚逆転"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -7774,27 +8623,27 @@
     "close_at": 1793441760.0
   },
   {
-    "first_gap": 53.55001633563143,
-    "third_boundary_gap": 2.2695305222198083,
-    "main_limit": 6,
+    "first_gap": 53.350670121373994,
+    "third_boundary_gap": 0.25216742325077846,
+    "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.6563604827541555,
+    "top_win_probability": 0.6757543085920514,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 44.83,
+    "chaos_index": 39.24,
     "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 11.64,
-      "third_closeness": 8.19,
+      "second_closeness": 0.0,
+      "third_closeness": 14.24,
       "market_divergence": 0
     },
     "line_count": 3,
-    "risk_score": 44.83,
+    "risk_score": 39.24,
     "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
@@ -7806,11 +8655,11 @@
     "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
     "formation": {
       "first": [
-        2,
         3,
         7
       ],
       "second": [
+        1,
         2,
         3,
         4,
@@ -7907,7 +8756,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 44.83,
+        "chaos_index": 39.24,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -7916,7 +8765,10 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "縦脚逆転"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -7931,27 +8783,27 @@
     "close_at": 1793442540.0
   },
   {
-    "first_gap": 8.211489867998601,
-    "third_boundary_gap": 1.4102756598840003,
-    "main_limit": 10,
+    "first_gap": 14.586519297462246,
+    "third_boundary_gap": 0.5692535413697968,
+    "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.43227105253490766,
+    "top_win_probability": 0.48164861690364785,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 41.14,
+    "chaos_index": 38.29,
     "chaos_label": "やや荒れ",
     "chaos_components": {
-      "first_closeness": 5.37,
+      "first_closeness": 0.0,
       "line_competition": 25,
       "second_closeness": 0.0,
-      "third_closeness": 10.77,
+      "third_closeness": 13.29,
       "market_divergence": 0
     },
     "line_count": 3,
-    "risk_score": 41.14,
+    "risk_score": 38.29,
     "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
@@ -7975,6 +8827,7 @@
       "third": [
         1,
         2,
+        3,
         4,
         5,
         7
@@ -8062,7 +8915,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 41.14,
+        "chaos_index": 38.29,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -8071,7 +8924,10 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "縦脚逆転"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -8086,34 +8942,34 @@
     "close_at": 1793443320.0
   },
   {
-    "first_gap": 53.786255106475664,
-    "third_boundary_gap": 1.2421129944710358,
-    "main_limit": 8,
+    "first_gap": 56.352522751130664,
+    "third_boundary_gap": 5.404723321568838,
+    "main_limit": 6,
     "first_fixed": false,
-    "top_win_probability": 0.6824581881175837,
+    "top_win_probability": 0.7172766798237571,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 41.71,
+    "chaos_index": 41.11,
     "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 5.44,
-      "third_closeness": 11.27,
+      "second_closeness": 16.11,
+      "third_closeness": 0.0,
       "market_divergence": 0
     },
     "line_count": 4,
-    "risk_score": 41.71,
+    "risk_score": 41.11,
     "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
     "risk_policy": "risk_department_overrides_flow",
     "risk_budget_policy": "candidate_spread_without_extra_tickets",
     "scenario_policy": "本命展開中心",
-    "popularity_source": "unavailable",
+    "popularity_source": "full_trifecta_market_proxy",
     "probability_method": "position_sequential",
     "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
     "formation": {
@@ -8131,6 +8987,7 @@
         1,
         2,
         3,
+        4,
         5,
         6,
         7
@@ -8139,14 +8996,16 @@
     "high_payout_department": {
       "version": "high_payout_v1",
       "rating": "見送り",
-      "expectation_score": 0,
+      "expectation_score": 46,
       "recommended_count": 0,
-      "patterns": [],
+      "patterns": [
+        "2着荒れ",
+        "細切れ戦"
+      ],
       "tickets": [],
       "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
       "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。"
       ],
       "probability_method": "geometric_model_market_estimate_uncalibrated",
       "minimum_probability": 0.001,
@@ -8213,21 +9072,59 @@
         "version": "third_focus_v1",
         "automatic_promotion": false,
         "variants": {
-          "current": [],
+          "current": [
+            {
+              "buy": "3-6-1",
+              "odds": 204.4,
+              "probability": 0.008362891820110544,
+              "ev": 1.7093750880305953
+            },
+            {
+              "buy": "3-6-4",
+              "odds": 162.6,
+              "probability": 0.009067553489285526,
+              "ev": 1.4743841973578264
+            },
+            {
+              "buy": "3-6-7",
+              "odds": 128.5,
+              "probability": 0.011232305585993953,
+              "ev": 1.443351267800223
+            }
+          ],
           "third_focus": []
-        }
+        },
+        "decision": "本番は現在方式。3着重点方式は同じ上限点数・同じ最低EVで成立確率順に比較。"
       },
       "risk_coordination": {
-        "chaos_index": 41.71,
+        "chaos_index": 41.11,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
       },
-      "analysis_rating": "見送り"
+      "specialist_analysis": {
+        "細切れ戦": {
+          "status": "分析可能",
+          "line_count": 4
+        },
+        "単騎": {
+          "status": "分析可能",
+          "cars": [
+            4
+          ]
+        }
+      },
+      "strong_ev_candidate_count": 1,
+      "twelve_point_min_ev": 1.5,
+      "analysis_rating": "C"
     },
-    "hole_limit": 0,
-    "selected_scenarios": [],
+    "hole_limit": 3,
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開",
+      "高配当独立分析"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -8242,27 +9139,27 @@
     "close_at": 1793444160.0
   },
   {
-    "first_gap": 16.956750282152257,
-    "third_boundary_gap": 3.8584975059698525,
+    "first_gap": 27.209671168420947,
+    "third_boundary_gap": 2.1756005286036206,
     "main_limit": 6,
     "first_fixed": false,
-    "top_win_probability": 0.504241218372767,
+    "top_win_probability": 0.5369898826276078,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 46.9,
+    "chaos_index": 46.42,
     "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 18.48,
-      "third_closeness": 3.42,
+      "second_closeness": 12.95,
+      "third_closeness": 8.47,
       "market_divergence": 0
     },
     "line_count": 3,
-    "risk_score": 46.9,
+    "risk_score": 46.42,
     "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
@@ -8376,7 +9273,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 46.9,
+        "chaos_index": 46.42,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -8385,7 +9282,10 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "縦脚逆転"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -8400,34 +9300,34 @@
     "close_at": 1793445000.0
   },
   {
-    "first_gap": 4.1129390425637915,
-    "third_boundary_gap": 0.7841603339384839,
+    "first_gap": 0.20656717013583403,
+    "third_boundary_gap": 0.08346764941552998,
     "main_limit": 12,
     "first_fixed": false,
-    "top_win_probability": 0.31470073991963676,
+    "top_win_probability": 0.32906507708631755,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 61.55,
+    "chaos_index": 69.13,
     "chaos_label": "荒れ",
     "chaos_components": {
-      "first_closeness": 17.66,
+      "first_closeness": 29.38,
       "line_competition": 25,
-      "second_closeness": 6.24,
-      "third_closeness": 12.65,
+      "second_closeness": 0.0,
+      "third_closeness": 14.75,
       "market_divergence": 0
     },
     "line_count": 3,
-    "risk_score": 61.55,
+    "risk_score": 69.13,
     "risk_level": "高",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
     "risk_policy": "risk_department_overrides_flow",
     "risk_budget_policy": "candidate_spread_without_extra_tickets",
     "scenario_policy": "3展開分散",
-    "popularity_source": "unavailable",
+    "popularity_source": "full_trifecta_market_proxy",
     "probability_method": "position_sequential",
     "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
     "formation": {
@@ -8442,6 +9342,7 @@
         3,
         4,
         5,
+        6,
         7
       ],
       "third": [
@@ -8450,20 +9351,23 @@
         3,
         4,
         5,
+        6,
         7
       ]
     },
     "high_payout_department": {
       "version": "high_payout_v1",
       "rating": "見送り",
-      "expectation_score": 0,
+      "expectation_score": 75,
       "recommended_count": 0,
-      "patterns": [],
+      "patterns": [
+        "2着荒れ",
+        "ライン崩壊"
+      ],
       "tickets": [],
       "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
       "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。"
       ],
       "probability_method": "geometric_model_market_estimate_uncalibrated",
       "minimum_probability": 0.001,
@@ -8530,21 +9434,99 @@
         "version": "third_focus_v1",
         "automatic_promotion": false,
         "variants": {
-          "current": [],
+          "current": [
+            {
+              "buy": "3-4-6",
+              "odds": 1894.3,
+              "probability": 0.001295942333355276,
+              "ev": 2.454903562074899
+            },
+            {
+              "buy": "7-6-3",
+              "odds": 520.9,
+              "probability": 0.00415256128818666,
+              "ev": 2.1630691750164313
+            },
+            {
+              "buy": "1-6-7",
+              "odds": 1096.7,
+              "probability": 0.0015758022511083167,
+              "ev": 1.728182328790491
+            },
+            {
+              "buy": "3-6-4",
+              "odds": 947.1,
+              "probability": 0.0017806087543052514,
+              "ev": 1.6864145512025037
+            },
+            {
+              "buy": "3-6-7",
+              "odds": 408.5,
+              "probability": 0.004113762336076731,
+              "ev": 1.6804719142873445
+            },
+            {
+              "buy": "1-6-3",
+              "odds": 1041.9,
+              "probability": 0.001606816647069477,
+              "ev": 1.6741422645816884
+            },
+            {
+              "buy": "1-3-6",
+              "odds": 520.9,
+              "probability": 0.0031980208203156364,
+              "ev": 1.6658490453024148
+            },
+            {
+              "buy": "3-2-7",
+              "odds": 297.6,
+              "probability": 0.005459266342279602,
+              "ev": 1.6246776634624098
+            },
+            {
+              "buy": "1-7-6",
+              "odds": 281.5,
+              "probability": 0.005663065880283545,
+              "ev": 1.5941530452998178
+            },
+            {
+              "buy": "7-6-1",
+              "odds": 771.7,
+              "probability": 0.0020311779125408752,
+              "ev": 1.5674599951077934
+            }
+          ],
           "third_focus": []
-        }
+        },
+        "decision": "本番は現在方式。3着重点方式は同じ上限点数・同じ最低EVで成立確率順に比較。"
       },
       "risk_coordination": {
-        "chaos_index": 61.55,
+        "chaos_index": 69.13,
         "risk_level": "高",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
       },
-      "analysis_rating": "見送り"
+      "specialist_analysis": {
+        "細切れ戦": {
+          "status": "分析可能",
+          "line_count": 3
+        },
+        "単騎": {
+          "status": "分析可能",
+          "cars": []
+        }
+      },
+      "strong_ev_candidate_count": 11,
+      "twelve_point_min_ev": 1.5,
+      "analysis_rating": "A"
     },
-    "hole_limit": 0,
-    "selected_scenarios": [],
+    "hole_limit": 10,
+    "selected_scenarios": [
+      "崩れ展開",
+      "縦脚逆転",
+      "高配当独立分析"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -8559,27 +9541,27 @@
     "close_at": 1793445900.0
   },
   {
-    "first_gap": 16.72538960363923,
-    "third_boundary_gap": 0.07617533734496185,
+    "first_gap": 25.28814489878308,
+    "third_boundary_gap": 0.9245987077315387,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.4841067602334996,
+    "top_win_probability": 0.5244077524122871,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 33.38,
+    "chaos_index": 30.39,
     "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 0,
-      "second_closeness": 18.61,
-      "third_closeness": 14.77,
+      "second_closeness": 18.16,
+      "third_closeness": 12.23,
       "market_divergence": 0
     },
     "line_count": 0,
-    "risk_score": 33.38,
+    "risk_score": 30.39,
     "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
@@ -8691,7 +9673,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 33.38,
+        "chaos_index": 30.39,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -8700,7 +9682,9 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "縦脚逆転"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -8715,27 +9699,27 @@
     "close_at": 1793446560.0
   },
   {
-    "first_gap": 29.888481359011262,
-    "third_boundary_gap": 0.9356078270062014,
-    "main_limit": 8,
+    "first_gap": 33.15929504989099,
+    "third_boundary_gap": 2.7091657627142425,
+    "main_limit": 6,
     "first_fixed": false,
-    "top_win_probability": 0.6126897285706532,
+    "top_win_probability": 0.6353160330672533,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 49.5,
+    "chaos_index": 47.61,
     "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 12.31,
-      "third_closeness": 12.19,
+      "second_closeness": 15.74,
+      "third_closeness": 6.87,
       "market_divergence": 0
     },
     "line_count": 4,
-    "risk_score": 49.5,
+    "risk_score": 47.61,
     "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
@@ -8755,7 +9739,8 @@
         2,
         3,
         4,
-        5
+        5,
+        6
       ],
       "third": [
         1,
@@ -8848,7 +9833,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 49.5,
+        "chaos_index": 47.61,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -8857,7 +9842,9 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "本命展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -8872,27 +9859,27 @@
     "close_at": 1793447040.0
   },
   {
-    "first_gap": 85.36612018358512,
-    "third_boundary_gap": 0.06725880855633548,
+    "first_gap": 90.2170448606576,
+    "third_boundary_gap": 0.39880997868467016,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.8958945308417489,
+    "top_win_probability": 0.9316587135514759,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 14.8,
+    "chaos_index": 13.8,
     "chaos_label": "固め",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 0,
       "second_closeness": 0.0,
-      "third_closeness": 14.8,
+      "third_closeness": 13.8,
       "market_divergence": 0
     },
     "line_count": 0,
-    "risk_score": 14.8,
+    "risk_score": 13.8,
     "risk_level": "低",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
@@ -8919,7 +9906,9 @@
         2,
         3,
         4,
-        5
+        5,
+        6,
+        7
       ]
     },
     "high_payout_department": {
@@ -9004,7 +9993,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 14.8,
+        "chaos_index": 13.8,
         "risk_level": "低",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -9013,7 +10002,9 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -9028,27 +10019,27 @@
     "close_at": 1793447520.0
   },
   {
-    "first_gap": 23.191588056023107,
-    "third_boundary_gap": 1.0361138444421485,
+    "first_gap": 20.470670341438318,
+    "third_boundary_gap": 0.774458151743854,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.43068335147655595,
+    "top_win_probability": 0.41138193813468193,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 16.11,
+    "chaos_index": 16.58,
     "chaos_label": "固め",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 0,
-      "second_closeness": 4.22,
-      "third_closeness": 11.89,
+      "second_closeness": 3.9,
+      "third_closeness": 12.68,
       "market_divergence": 0
     },
     "line_count": 0,
-    "risk_score": 16.11,
+    "risk_score": 16.58,
     "risk_level": "低",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
@@ -9162,7 +10153,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 16.11,
+        "chaos_index": 16.58,
         "risk_level": "低",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -9171,7 +10162,10 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -9186,27 +10180,27 @@
     "close_at": 1793448000.0
   },
   {
-    "first_gap": 67.85291517183694,
-    "third_boundary_gap": 0.15235101513723492,
-    "main_limit": 8,
+    "first_gap": 65.97692250197548,
+    "third_boundary_gap": 2.0173352678196768,
+    "main_limit": 6,
     "first_fixed": false,
-    "top_win_probability": 0.7986539857537691,
+    "top_win_probability": 0.7902246205940477,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 52.59,
+    "chaos_index": 53.79,
     "chaos_label": "荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 13.05,
-      "third_closeness": 14.54,
+      "second_closeness": 19.84,
+      "third_closeness": 8.95,
       "market_divergence": 0
     },
     "line_count": 5,
-    "risk_score": 52.59,
+    "risk_score": 53.79,
     "risk_level": "高",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
@@ -9220,7 +10214,8 @@
       "first": [
         1,
         2,
-        3
+        3,
+        4
       ],
       "second": [
         1,
@@ -9323,7 +10318,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 52.59,
+        "chaos_index": 53.79,
         "risk_level": "高",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -9332,7 +10327,10 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -9347,30 +10345,30 @@
     "close_at": 1793448480.0
   },
   {
-    "first_gap": 26.21277368328294,
-    "third_boundary_gap": 0.3141111889474306,
+    "first_gap": 41.682338004065784,
+    "third_boundary_gap": 0.06267594836394785,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.599273856927373,
+    "top_win_probability": 0.6906792780017724,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 31.86,
-    "chaos_label": "やや荒れ",
+    "chaos_index": 23.69,
+    "chaos_label": "固め",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 0,
-      "second_closeness": 17.8,
-      "third_closeness": 14.06,
+      "second_closeness": 8.88,
+      "third_closeness": 14.81,
       "market_divergence": 0
     },
     "line_count": 0,
-    "risk_score": 31.86,
-    "risk_level": "中",
+    "risk_score": 23.69,
+    "risk_level": "低",
     "risk_fixed_block": true,
-    "risk_veto_fixed": false,
+    "risk_veto_fixed": true,
     "risk_policy": "risk_department_overrides_flow",
     "risk_budget_policy": "candidate_spread_without_extra_tickets",
     "scenario_policy": "本命展開中心",
@@ -9386,7 +10384,10 @@
         1,
         2,
         3,
-        5
+        4,
+        5,
+        6,
+        7
       ],
       "third": [
         1,
@@ -9479,8 +10480,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 31.86,
-        "risk_level": "中",
+        "chaos_index": 23.69,
+        "risk_level": "低",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -9488,7 +10489,10 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "縦脚逆転"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -9503,28 +10507,28 @@
     "close_at": 1793448960.0
   },
   {
-    "first_gap": 64.19543346644448,
-    "third_boundary_gap": 0.7124185828794278,
+    "first_gap": 66.89791251178869,
+    "third_boundary_gap": 1.030653946241328,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.7456287919872154,
+    "top_win_probability": 0.769770193794237,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 12.86,
-    "chaos_label": "固め",
+    "chaos_index": 30.64,
+    "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 0,
-      "second_closeness": 0.0,
-      "third_closeness": 12.86,
+      "second_closeness": 18.73,
+      "third_closeness": 11.91,
       "market_divergence": 0
     },
     "line_count": 0,
-    "risk_score": 12.86,
-    "risk_level": "低",
+    "risk_score": 30.64,
+    "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
     "risk_policy": "risk_department_overrides_flow",
@@ -9637,8 +10641,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 12.86,
-        "risk_level": "低",
+        "chaos_index": 30.64,
+        "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -9646,7 +10650,9 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -9661,51 +10667,56 @@
     "close_at": 1793449440.0
   },
   {
-    "first_gap": 22.016256535975057,
-    "third_boundary_gap": 0.17776047266419148,
-    "main_limit": 8,
+    "first_gap": 3.932250568093778,
+    "third_boundary_gap": 1.827223359217614,
+    "main_limit": 12,
     "first_fixed": false,
-    "top_win_probability": 0.472948204515713,
+    "top_win_probability": 0.40267307197958196,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 39.47,
-    "chaos_label": "やや荒れ",
+    "chaos_index": 52.72,
+    "chaos_label": "荒れ",
     "chaos_components": {
-      "first_closeness": 0.0,
+      "first_closeness": 18.2,
       "line_competition": 25,
       "second_closeness": 0.0,
-      "third_closeness": 14.47,
+      "third_closeness": 9.52,
       "market_divergence": 0
     },
     "line_count": 4,
-    "risk_score": 39.47,
-    "risk_level": "中",
+    "risk_score": 52.72,
+    "risk_level": "高",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
     "risk_policy": "risk_department_overrides_flow",
     "risk_budget_policy": "candidate_spread_without_extra_tickets",
-    "scenario_policy": "本命展開中心",
+    "scenario_policy": "3展開分散",
     "popularity_source": "unavailable",
     "probability_method": "position_sequential",
     "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
     "formation": {
       "first": [
         1,
+        2,
         7
       ],
       "second": [
         1,
         2,
         3,
+        4,
+        5,
+        6,
         7
       ],
       "third": [
         1,
         2,
         3,
+        4,
         5,
         6,
         7
@@ -9793,8 +10804,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 39.47,
-        "risk_level": "中",
+        "chaos_index": 52.72,
+        "risk_level": "高",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -9802,7 +10813,11 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開",
+      "縦脚逆転"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -9817,28 +10832,28 @@
     "close_at": 1793449920.0
   },
   {
-    "first_gap": 15.000491884609971,
-    "third_boundary_gap": 0.9099498009693914,
+    "first_gap": 13.657432079909785,
+    "third_boundary_gap": 1.301001303790045,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.3465703386202619,
+    "top_win_probability": 0.3750085842653988,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 25.38,
-    "chaos_label": "固め",
+    "chaos_index": 31.04,
+    "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 0,
-      "second_closeness": 13.11,
-      "third_closeness": 12.27,
+      "second_closeness": 19.94,
+      "third_closeness": 11.1,
       "market_divergence": 0
     },
     "line_count": 0,
-    "risk_score": 25.38,
-    "risk_level": "低",
+    "risk_score": 31.04,
+    "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
     "risk_policy": "risk_department_overrides_flow",
@@ -9849,7 +10864,6 @@
     "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
     "formation": {
       "first": [
-        1,
         3,
         4
       ],
@@ -9951,8 +10965,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 25.38,
-        "risk_level": "低",
+        "chaos_index": 31.04,
+        "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -9960,7 +10974,9 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -9975,27 +10991,27 @@
     "close_at": 1793450400.0
   },
   {
-    "first_gap": 33.62942666732333,
-    "third_boundary_gap": 0.12451559292777148,
+    "first_gap": 39.74181925301448,
+    "third_boundary_gap": 0.0017600537656381476,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.5584431758396682,
+    "top_win_probability": 0.5800697678568387,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 26.0,
+    "chaos_index": 26.72,
     "chaos_label": "固め",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 0,
-      "second_closeness": 11.37,
-      "third_closeness": 14.63,
+      "second_closeness": 11.73,
+      "third_closeness": 14.99,
       "market_divergence": 0
     },
     "line_count": 0,
-    "risk_score": 26.0,
+    "risk_score": 26.72,
     "risk_level": "低",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
@@ -10109,7 +11125,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 26.0,
+        "chaos_index": 26.72,
         "risk_level": "低",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -10118,7 +11134,10 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -10133,28 +11152,28 @@
     "close_at": 1793450880.0
   },
   {
-    "first_gap": 1.3872250453476553,
-    "third_boundary_gap": 2.4078690311970696,
+    "first_gap": 3.4529077141655478,
+    "third_boundary_gap": 2.574825301270847,
     "main_limit": 12,
     "first_fixed": false,
-    "top_win_probability": 0.3611259662865242,
+    "top_win_probability": 0.3693378924226964,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 75.98,
-    "chaos_label": "大荒れ警戒",
+    "chaos_index": 66.81,
+    "chaos_label": "荒れ",
     "chaos_components": {
-      "first_closeness": 25.84,
+      "first_closeness": 19.64,
       "line_competition": 25,
-      "second_closeness": 17.36,
-      "third_closeness": 7.78,
+      "second_closeness": 14.89,
+      "third_closeness": 7.28,
       "market_divergence": 0
     },
     "line_count": 4,
-    "risk_score": 75.98,
-    "risk_level": "極高",
+    "risk_score": 66.81,
+    "risk_level": "高",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
     "risk_policy": "risk_department_overrides_flow",
@@ -10268,8 +11287,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 75.98,
-        "risk_level": "極高",
+        "chaos_index": 66.81,
+        "risk_level": "高",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -10277,7 +11296,11 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開",
+      "縦脚逆転"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -10292,27 +11315,27 @@
     "close_at": 1793451360.0
   },
   {
-    "first_gap": 0.08052139999988839,
-    "third_boundary_gap": 0.6729974903691183,
+    "first_gap": 1.4547272511330185,
+    "third_boundary_gap": 1.197363288777213,
     "main_limit": 12,
     "first_fixed": false,
-    "top_win_probability": 0.2565514441369816,
+    "top_win_probability": 0.2522306235723187,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 51.77,
+    "chaos_index": 53.38,
     "chaos_label": "荒れ",
     "chaos_components": {
-      "first_closeness": 29.76,
+      "first_closeness": 25.64,
       "line_competition": 0,
-      "second_closeness": 9.03,
-      "third_closeness": 12.98,
+      "second_closeness": 16.33,
+      "third_closeness": 11.41,
       "market_divergence": 0
     },
     "line_count": 0,
-    "risk_score": 51.77,
+    "risk_score": 53.38,
     "risk_level": "高",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
@@ -10429,7 +11452,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 51.77,
+        "chaos_index": 53.38,
         "risk_level": "高",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -10453,27 +11476,27 @@
     "close_at": 1793451840.0
   },
   {
-    "first_gap": 4.404152000297014,
-    "third_boundary_gap": 2.625336525371889,
+    "first_gap": 5.671138011675108,
+    "third_boundary_gap": 4.175425900072483,
     "main_limit": 10,
     "first_fixed": false,
-    "top_win_probability": 0.35068455538711807,
+    "top_win_probability": 0.342757137542896,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 23.91,
+    "chaos_index": 15.46,
     "chaos_label": "固め",
     "chaos_components": {
-      "first_closeness": 16.79,
+      "first_closeness": 12.99,
       "line_competition": 0,
       "second_closeness": 0.0,
-      "third_closeness": 7.12,
+      "third_closeness": 2.47,
       "market_divergence": 0
     },
     "line_count": 0,
-    "risk_score": 23.91,
+    "risk_score": 15.46,
     "risk_level": "低",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
@@ -10498,8 +11521,10 @@
         1,
         2,
         3,
+        4,
         5,
-        6
+        6,
+        7
       ]
     },
     "high_payout_department": {
@@ -10584,7 +11609,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 23.91,
+        "chaos_index": 15.46,
         "risk_level": "低",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -10593,7 +11618,10 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "縦脚逆転"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -10608,40 +11636,39 @@
     "close_at": 1793452380.0
   },
   {
-    "first_gap": 45.26719639287904,
-    "third_boundary_gap": 0.7107087030646095,
-    "main_limit": 8,
+    "first_gap": 48.82141048507509,
+    "third_boundary_gap": 2.2885429153254453,
+    "main_limit": 6,
     "first_fixed": false,
-    "top_win_probability": 0.6257223412828928,
+    "top_win_probability": 0.650782724464033,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 50.93,
-    "chaos_label": "荒れ",
+    "chaos_index": 40.12,
+    "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 13.06,
-      "third_closeness": 12.87,
+      "second_closeness": 6.99,
+      "third_closeness": 8.13,
       "market_divergence": 0
     },
     "line_count": 4,
-    "risk_score": 50.93,
-    "risk_level": "高",
+    "risk_score": 40.12,
+    "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
     "risk_policy": "risk_department_overrides_flow",
     "risk_budget_policy": "candidate_spread_without_extra_tickets",
-    "scenario_policy": "3展開分散",
+    "scenario_policy": "本命展開中心",
     "popularity_source": "unavailable",
     "probability_method": "position_sequential",
     "position_score_source": "coverage_validated_cumulative_scores_uncalibrated",
     "formation": {
       "first": [
         1,
-        2,
         4
       ],
       "second": [
@@ -10742,8 +11769,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 50.93,
-        "risk_level": "高",
+        "chaos_index": 40.12,
+        "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -10751,7 +11778,10 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -10766,28 +11796,28 @@
     "close_at": 1793452920.0
   },
   {
-    "first_gap": 12.81191393084837,
-    "third_boundary_gap": 2.01960478248224,
-    "main_limit": 6,
+    "first_gap": 1.5964478588821542,
+    "third_boundary_gap": 2.9632930426959376,
+    "main_limit": 12,
     "first_fixed": false,
-    "top_win_probability": 0.3630389427622645,
+    "top_win_probability": 0.29406715391272237,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 8.94,
-    "chaos_label": "固め",
+    "chaos_index": 31.32,
+    "chaos_label": "やや荒れ",
     "chaos_components": {
-      "first_closeness": 0.0,
+      "first_closeness": 25.21,
       "line_competition": 0,
       "second_closeness": 0.0,
-      "third_closeness": 8.94,
+      "third_closeness": 6.11,
       "market_divergence": 0
     },
     "line_count": 0,
-    "risk_score": 8.94,
-    "risk_level": "低",
+    "risk_score": 31.32,
+    "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
     "risk_policy": "risk_department_overrides_flow",
@@ -10799,8 +11829,7 @@
     "formation": {
       "first": [
         1,
-        2,
-        3
+        2
       ],
       "second": [
         1,
@@ -10814,7 +11843,8 @@
         3,
         4,
         5,
-        6
+        6,
+        7
       ]
     },
     "high_payout_department": {
@@ -10899,8 +11929,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 8.94,
-        "risk_level": "低",
+        "chaos_index": 31.32,
+        "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -10923,30 +11953,30 @@
     "close_at": 1793453460.0
   },
   {
-    "first_gap": 29.630904875594638,
-    "third_boundary_gap": 0.10885626376676427,
+    "first_gap": 37.75436679852241,
+    "third_boundary_gap": 0.5408018184795029,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.5837077575809451,
+    "top_win_probability": 0.6364694469221154,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 14.67,
+    "chaos_index": 13.92,
     "chaos_label": "固め",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 0,
-      "second_closeness": 0.0,
-      "third_closeness": 14.67,
+      "second_closeness": 0.54,
+      "third_closeness": 13.38,
       "market_divergence": 0
     },
     "line_count": 0,
-    "risk_score": 14.67,
+    "risk_score": 13.92,
     "risk_level": "低",
     "risk_fixed_block": true,
-    "risk_veto_fixed": false,
+    "risk_veto_fixed": true,
     "risk_policy": "risk_department_overrides_flow",
     "risk_budget_policy": "candidate_spread_without_extra_tickets",
     "scenario_policy": "本命展開中心",
@@ -10970,9 +12000,7 @@
         2,
         3,
         4,
-        5,
-        6,
-        7
+        5
       ]
     },
     "high_payout_department": {
@@ -11057,7 +12085,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 14.67,
+        "chaos_index": 13.92,
         "risk_level": "低",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -11066,7 +12094,11 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開",
+      "縦脚逆転"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -11081,27 +12113,27 @@
     "close_at": 1793454000.0
   },
   {
-    "first_gap": 67.32000654604174,
-    "third_boundary_gap": 0.723693886541847,
-    "main_limit": 8,
+    "first_gap": 70.45600579253173,
+    "third_boundary_gap": 2.1168875585864466,
+    "main_limit": 6,
     "first_fixed": false,
-    "top_win_probability": 0.7839917124779909,
+    "top_win_probability": 0.8018140659385878,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 46.08,
+    "chaos_index": 48.58,
     "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 8.25,
-      "third_closeness": 12.83,
+      "second_closeness": 14.93,
+      "third_closeness": 8.65,
       "market_divergence": 0
     },
     "line_count": 3,
-    "risk_score": 46.08,
+    "risk_score": 48.58,
     "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
@@ -11214,7 +12246,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 46.08,
+        "chaos_index": 48.58,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -11223,7 +12255,9 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -11238,27 +12272,27 @@
     "close_at": 1793454540.0
   },
   {
-    "first_gap": 39.01581596762952,
-    "third_boundary_gap": 0.4020995053503018,
+    "first_gap": 52.16009855823613,
+    "third_boundary_gap": 0.023783921564435317,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.6435872877957547,
+    "top_win_probability": 0.7144551444830338,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 19.76,
+    "chaos_index": 16.0,
     "chaos_label": "固め",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 0,
-      "second_closeness": 5.97,
-      "third_closeness": 13.79,
+      "second_closeness": 1.07,
+      "third_closeness": 14.93,
       "market_divergence": 0
     },
     "line_count": 0,
-    "risk_score": 19.76,
+    "risk_score": 16.0,
     "risk_level": "低",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
@@ -11278,7 +12312,8 @@
         2,
         3,
         4,
-        5
+        5,
+        7
       ],
       "third": [
         1,
@@ -11286,6 +12321,7 @@
         3,
         4,
         5,
+        6,
         7
       ]
     },
@@ -11371,7 +12407,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 19.76,
+        "chaos_index": 16.0,
         "risk_level": "低",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -11380,7 +12416,10 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -11395,28 +12434,28 @@
     "close_at": 1793455080.0
   },
   {
-    "first_gap": 18.826621596373563,
-    "third_boundary_gap": 1.104764417224759,
+    "first_gap": 11.652174876263622,
+    "third_boundary_gap": 0.5870810604525527,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.44365316969002105,
+    "top_win_probability": 0.39235908811481685,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 21.35,
-    "chaos_label": "固め",
+    "chaos_index": 33.04,
+    "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 0,
-      "second_closeness": 9.66,
-      "third_closeness": 11.69,
+      "second_closeness": 19.8,
+      "third_closeness": 13.24,
       "market_divergence": 0
     },
     "line_count": 0,
-    "risk_score": 21.35,
-    "risk_level": "低",
+    "risk_score": 33.04,
+    "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
     "risk_policy": "risk_department_overrides_flow",
@@ -11442,7 +12481,8 @@
         2,
         3,
         4,
-        5
+        5,
+        6
       ]
     },
     "high_payout_department": {
@@ -11527,8 +12567,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 21.35,
-        "risk_level": "低",
+        "chaos_index": 33.04,
+        "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -11551,27 +12591,27 @@
     "close_at": 1793455620.0
   },
   {
-    "first_gap": 74.3341165001743,
-    "third_boundary_gap": 0.09269269701667149,
+    "first_gap": 86.19099540073408,
+    "third_boundary_gap": 1.6969912617502239,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.8438677036648543,
+    "top_win_probability": 0.9139034407975479,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 45.0,
+    "chaos_index": 34.91,
     "chaos_label": "やや荒れ",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 25,
-      "second_closeness": 5.28,
-      "third_closeness": 14.72,
+      "second_closeness": 0.0,
+      "third_closeness": 9.91,
       "market_divergence": 0
     },
     "line_count": 3,
-    "risk_score": 45.0,
+    "risk_score": 34.91,
     "risk_level": "中",
     "risk_fixed_block": true,
     "risk_veto_fixed": true,
@@ -11597,6 +12637,7 @@
         2,
         3,
         4,
+        5,
         6
       ]
     },
@@ -11682,7 +12723,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 45.0,
+        "chaos_index": 34.91,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -11691,7 +12732,9 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
@@ -11706,27 +12749,27 @@
     "close_at": 1793456160.0
   },
   {
-    "first_gap": 22.024812011905702,
-    "third_boundary_gap": 0.12546141410077816,
+    "first_gap": 29.94757638612289,
+    "third_boundary_gap": 1.6504944514893864,
     "main_limit": 8,
     "first_fixed": false,
-    "top_win_probability": 0.5240787926961136,
+    "top_win_probability": 0.5588998079112758,
     "fixed_min_probability": 0.6,
     "fixed_min_gap": 10.0,
     "fixed_policy_status": "calibration_unverified",
     "fixed_axis_calibration_passed": false,
     "fixed_car": null,
-    "chaos_index": 21.41,
+    "chaos_index": 27.18,
     "chaos_label": "固め",
     "chaos_components": {
       "first_closeness": 0.0,
       "line_competition": 0,
-      "second_closeness": 6.79,
-      "third_closeness": 14.62,
+      "second_closeness": 17.13,
+      "third_closeness": 10.05,
       "market_divergence": 0
     },
     "line_count": 0,
-    "risk_score": 21.41,
+    "risk_score": 27.18,
     "risk_level": "低",
     "risk_fixed_block": true,
     "risk_veto_fixed": false,
@@ -11839,7 +12882,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 21.41,
+        "chaos_index": 27.18,
         "risk_level": "低",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -11848,7 +12891,11 @@
       "analysis_rating": "見送り"
     },
     "hole_limit": 0,
-    "selected_scenarios": [],
+    "selected_scenarios": [
+      "崩れ展開",
+      "本命展開",
+      "縦脚逆転"
+    ],
     "main_count": 0,
     "hole_count": 0,
     "skip_reason": "締切時刻未取得・締切5分以内・対象時間外",
