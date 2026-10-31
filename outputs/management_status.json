@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-10-31T13:19:27+09:00",
+  "checked_at": "2026-10-31T15:25:12+09:00",
   "owners": {
     "data": "データ品質責任者",
     "coverage": "全レース予想責任者",
@@ -9,6 +9,13 @@
   },
   "status": "error",
   "findings": [
+    {
+      "owner": "data",
+      "code": "feed_stale",
+      "level": "error",
+      "message": "締切前レースがありますが公開データが45分以上古い、または時刻が不正です。",
+      "race_ids": []
+    },
     {
       "owner": "settlement",
       "code": "withdrawn_tickets",
@@ -36,20 +43,22 @@
       ]
     },
     {
+      "owner": "settlement",
+      "code": "results_overdue",
+      "level": "warning",
+      "message": "発走から2時間以上経過しても結果未確認です。中止・延期も確認してください。",
+      "race_ids": [
+        "062120261031",
+        "066320261031"
+      ]
+    },
+    {
       "owner": "operations",
       "code": "workflow_conditional-live.yml",
       "level": "error",
       "message": "conditional-live.yml の直近完了処理が失敗しています。",
       "race_ids": [],
-      "run_url": "https://github.com/rokuda6898-jpg/keirin-ai-auto/actions/runs/41167808258"
-    },
-    {
-      "owner": "operations",
-      "code": "workflow_pages.yml",
-      "level": "error",
-      "message": "pages.yml の直近完了処理が失敗しています。",
-      "race_ids": [],
-      "run_url": "https://github.com/rokuda6898-jpg/keirin-ai-auto/actions/runs/41168048862"
+      "run_url": "https://github.com/rokuda6898-jpg/keirin-ai-auto/actions/runs/41170046914"
     }
   ],
   "coverage": {
@@ -61,9 +70,9 @@
   },
   "matched_comparison": {
     "company": {
-      "races": 16,
+      "races": 17,
       "hits": 6,
-      "stake_yen": 9700,
+      "stake_yen": 10300,
       "return_yen": 5430.0,
       "largest_hit_return_share": 0.4714548802946593
     }
