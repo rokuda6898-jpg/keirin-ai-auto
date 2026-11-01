@@ -45,3 +45,15 @@ def apply_retirement(destination):
         '<p>従来の独立予想は終了しました。</p>'
         '<a href="conditional.html">条件付き3連単へ</a>'
         '<a href="company.html">会社・全部署へ</a></body></html>', encoding='utf-8')
+
+
+_prior_retirement = apply_retirement
+def apply_retirement(destination):
+    _prior_retirement(destination)
+    destination = Path(destination)
+    for path in destination.rglob('*.html'):
+        text = path.read_text(encoding='utf-8')
+        text = re.sub(r'<a\b(?=[^>]*\bhref=["\'][^"\']*conditional(?:-study)?\.html[^"\']*["\'])[^>]*>.*?</a\s*>', '', text, flags=re.I|re.S)
+        path.write_text(text, encoding='utf-8')
+    for name in ('conditional.html','conditional-study.html','independent.html'):
+        (destination/name).write_text('<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=ex.html"><title>予想ページへ移動</title></head><body><p>こちらの予想枠は終了しました。</p><a href="ex.html">EX予想へ</a><a href="index.html">現行モデルへ</a></body></html>',encoding='utf-8')
