@@ -1,6 +1,7 @@
 """Remove the retired fusion-independent product from published navigation.
 
-Historical JSON/JSONL evidence is retained. Conditional trifecta is not retired.
+Historical JSON/JSONL evidence is retained. Conditional trifecta was retired
+by the user's November 1 instruction and now redirects to the EX page.
 """
 import re
 from pathlib import Path

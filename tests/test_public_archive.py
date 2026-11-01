@@ -6,6 +6,7 @@ from pathlib import Path
 from public_archive import build
 from archive_history import export
 from build_public_site import build as build_site
+from site_model_navigation import MODELS
 
 
 class PublicArchiveTests(unittest.TestCase):
@@ -13,6 +14,11 @@ class PublicArchiveTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             root=Path(folder);(root/'site').mkdir();(root/'outputs/company').mkdir(parents=True)
             (root/'site/index.html').write_text('home')
+            for relative, _, _ in MODELS:
+                base = root/'outputs' if relative.startswith('original/') else root/'site'
+                path = base/relative.removeprefix('original/')
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text('<html><head></head><body>model</body></html>')
             original='<body><a href="../history.html">履歴</a><p>本線 1-2-3 100円</p></body>'
             (root/'outputs/company/operations.html').write_text(original,encoding='utf-8')
             (root/'outputs/history.html').write_text('<body>history</body>')

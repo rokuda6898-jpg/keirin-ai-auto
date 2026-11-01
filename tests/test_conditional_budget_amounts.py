@@ -23,7 +23,7 @@ class AmountDisplayTests(unittest.TestCase):
         if not shutil.which('node'):self.skipTest('Node unavailable')
         subprocess.run(['node',str(ROOT/'tests/test_conditional_budget_amounts.js')],check=True)
     def test_main_forecast_assets_and_conditional_page(self):
-        html=(ROOT/'site/index.html').read_text(encoding='utf-8')
+        html=(ROOT/'site/previous.html').read_text(encoding='utf-8')
         conditional=(ROOT/'site/conditional.html').read_text(encoding='utf-8')
         assets=AssetLinks();assets.feed(html)
         self.assertIn('nexus.css',assets.styles)

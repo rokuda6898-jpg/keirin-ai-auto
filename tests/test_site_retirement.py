@@ -27,7 +27,10 @@ class SiteRetirementTests(unittest.TestCase):
             self.assertIn('20261011-retirement',(root/'index.html').read_text())
             self.assertNotIn('独立予想',(root/'conditional.html').read_text())
             self.assertIn('条件付き3連単',(root/'app.js').read_text())
-            self.assertIn('url=conditional.html',(root/'independent.html').read_text())
+            for retired in ('independent.html', 'conditional.html', 'conditional-study.html'):
+                self.assertIn('url=ex.html',(root/retired).read_text())
+            for page in root.rglob('*.html'):
+                self.assertNotIn('href="conditional.html', page.read_text())
             self.assertIn('過去の成績',(root/'original/company/report.html').read_text())
             self.assertEqual(history.read_text(),'historical evidence\n')
 

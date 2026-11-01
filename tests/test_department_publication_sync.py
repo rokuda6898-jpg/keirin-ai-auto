@@ -23,7 +23,7 @@ class DepartmentPublicationTests(unittest.TestCase):
             self.assertNotIn('独立予想', text)
             self.assertIn('会社の最終予想', text)
             self.assertIn('all_department_predictions.html', text)
-            self.assertIn('site-wide.js?v=20261019-forecast', text)
+            self.assertIn('site-wide.js?v=20261030-models', text)
             apply_retirement(root)
             self.assertEqual(text, (root/'company.html').read_text(encoding='utf-8'))
 
