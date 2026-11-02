@@ -1,0 +1,41 @@
+name: conditional-58-source-snapshot
+on:
+  push:
+    branches: [research/conditional-58-causal-priors-20261011]
+    paths: [.github/workflows/conditional-58-snapshot.yml]
+permissions:
+  contents: read
+concurrency:
+  group: conditional-58-source-snapshot
+  cancel-in-progress: false
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify and package research-only baseline
+        run: |
+          python - <<'PY'
+          import hashlib, json, shutil
+          from pathlib import Path
+          out = Path('research-source')
+          out.mkdir()
+          shutil.copytree('src', out/'src')
+          (out/'models').mkdir()
+          for name in ('conditional_trifecta_v1.json', 'conditional_trifecta_v1.joblib'):
+              shutil.copy2(Path('models')/name, out/'models'/name)
+          manifest = json.loads((out/'models/conditional_trifecta_v1.json').read_text())
+          digest = hashlib.sha256((out/'models/conditional_trifecta_v1.joblib').read_bytes()).hexdigest()
+          assert digest == manifest['model_sha256'], 'baseline model checksum mismatch'
+          (out/'provenance.json').write_text(json.dumps({'model_sha256': digest,
+              'purpose': 'isolated research; no deployment or prediction-ledger writes'}))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: conditional-58-source-${{ github.run_id }}
+          path: research-source/
+          retention-days: 7
+          if-no-files-found: error
