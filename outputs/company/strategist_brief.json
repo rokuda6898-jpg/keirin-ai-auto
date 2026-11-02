@@ -1,8 +1,8 @@
 {
-  "updated_at_jst": "2026-11-02T13:54:31+09:00",
+  "updated_at_jst": "2026-11-02T22:04:23+09:00",
   "role": "strategist",
-  "central_races_available": 61646,
-  "official_evaluated_races": 2228,
+  "central_races_available": 61685,
+  "official_evaluated_races": 2267,
   "warnings": [],
   "recommended_actions": [
     {
@@ -10,10 +10,10 @@
       "type": "final_trifecta_product_kpi",
       "action": "treat latest selected trifecta tickets as the primary product KPI; keep model Top10 coverage as a diagnostic KPI",
       "evidence": {
-        "races": 375,
-        "hit_rate": 0.10133333333333333,
+        "races": 377,
+        "hit_rate": 0.10079575596816977,
         "recent_50_hit_rate": 0.16,
-        "avg_ticket_count": 8.024
+        "avg_ticket_count": 8.037135278514588
       }
     },
     {
@@ -61,7 +61,7 @@
               "outlier_share"
             ],
             "median_iqr_shift": 0.539568345323741,
-            "outlier_share_vs_training_1_99pct": 0.95703125,
+            "outlier_share_vs_training_1_99pct": 0.974609375,
             "live_source_missing_rate": 0.0,
             "training_source_missing_rate": 0.0,
             "missing_rate_increase": 0.0,
@@ -76,9 +76,9 @@
             ],
             "median_iqr_shift": 0.1111111111111111,
             "outlier_share_vs_training_1_99pct": 0.0,
-            "live_source_missing_rate": 0.9453125,
+            "live_source_missing_rate": 0.958984375,
             "training_source_missing_rate": 0.007300456684957408,
-            "missing_rate_increase": 0.9380120433150426,
+            "missing_rate_increase": 0.9516839183150426,
             "live_median": 11.0,
             "training_median": 8.0
           },
@@ -90,9 +90,9 @@
             ],
             "median_iqr_shift": 0.03613439991642946,
             "outlier_share_vs_training_1_99pct": 0.0,
-            "live_source_missing_rate": 0.9453125,
+            "live_source_missing_rate": 0.958984375,
             "training_source_missing_rate": 0.007300456684957408,
-            "missing_rate_increase": 0.9380120433150426,
+            "missing_rate_increase": 0.9516839183150426,
             "live_median": 4.0572599531615925,
             "training_median": 4.0
           }
@@ -106,17 +106,17 @@
       "evidence": {
         "variant": "core_model",
         "department": "model_audit_office",
-        "races": 1952,
-        "production_hits": 862,
-        "challenger_hits": 895,
-        "production_hit_rate": 0.4415983606557377,
-        "challenger_hit_rate": 0.45850409836065575,
-        "delta_hit_rate": 0.016905737704918045,
-        "delta_pp": 1.6905737704918045,
-        "changed_races": 204,
-        "flip_gains": 77,
-        "flip_losses": 44,
-        "net_hits": 33,
+        "races": 1991,
+        "production_hits": 880,
+        "challenger_hits": 914,
+        "production_hit_rate": 0.4419889502762431,
+        "challenger_hit_rate": 0.4590657960823707,
+        "delta_hit_rate": 0.017076845806127616,
+        "delta_pp": 1.7076845806127616,
+        "changed_races": 210,
+        "flip_gains": 80,
+        "flip_losses": 46,
+        "net_hits": 34,
         "promotion_status": "eligible_for_external_validation"
       }
     },
@@ -125,8 +125,8 @@
       "type": "trifecta_top10_kpi",
       "action": "optimize ticket logic against live 10-point hit rate as a separate KPI from Top1 accuracy",
       "evidence": {
-        "races": 353,
-        "hit_rate": 0.12464589235127478,
+        "races": 355,
+        "hit_rate": 0.12394366197183099,
         "recent_50_hit_rate": 0.16
       }
     },
@@ -137,15 +137,15 @@
       "evidence": {
         "rule": "switch_to_second_when_margin<=0.03",
         "margin_threshold": 0.03,
-        "switched_races": 121,
-        "production_hits_in_switched_races": 30,
-        "second_pick_hits_in_switched_races": 37,
+        "switched_races": 124,
+        "production_hits_in_switched_races": 31,
+        "second_pick_hits_in_switched_races": 38,
         "net_hits": 7,
-        "baseline_total_hits": 977,
-        "hypothetical_total_hits": 984,
-        "baseline_hit_rate": 0.4385098743267504,
-        "hypothetical_hit_rate": 0.44165170556552963,
-        "global_delta_pp": 0.3141831238779174,
+        "baseline_total_hits": 995,
+        "hypothetical_total_hits": 1002,
+        "baseline_hit_rate": 0.43890604322893695,
+        "hypothetical_hit_rate": 0.4419938244375827,
+        "global_delta_pp": 0.30877812086457873,
         "status": "shadow_candidate_only",
         "promotion_requirement": "must beat production prospectively on >=300 settled races and pass external validation"
       }
@@ -156,9 +156,9 @@
       "action": "keep multi-head coverage for near-tie races; do not collapse to a single head",
       "evidence": {
         "segment": "near_tie_<=0.03",
-        "races": 121,
-        "hits": 31,
-        "hit_rate": 0.256198
+        "races": 124,
+        "hits": 32,
+        "hit_rate": 0.258065
       }
     }
   ],
@@ -167,17 +167,17 @@
     {
       "variant": "core_model",
       "department": "model_audit_office",
-      "races": 1952,
-      "production_hits": 862,
-      "challenger_hits": 895,
-      "production_hit_rate": 0.4415983606557377,
-      "challenger_hit_rate": 0.45850409836065575,
-      "delta_hit_rate": 0.016905737704918045,
-      "delta_pp": 1.6905737704918045,
-      "changed_races": 204,
-      "flip_gains": 77,
-      "flip_losses": 44,
-      "net_hits": 33,
+      "races": 1991,
+      "production_hits": 880,
+      "challenger_hits": 914,
+      "production_hit_rate": 0.4419889502762431,
+      "challenger_hit_rate": 0.4590657960823707,
+      "delta_hit_rate": 0.017076845806127616,
+      "delta_pp": 1.7076845806127616,
+      "changed_races": 210,
+      "flip_gains": 80,
+      "flip_losses": 46,
+      "net_hits": 34,
       "promotion_status": "eligible_for_external_validation"
     }
   ],
@@ -217,7 +217,7 @@
     "live_snapshot_model": {}
   },
   "prospective_comparison": {
-    "updated_at_jst": "2026-11-02T13:54:31+09:00",
+    "updated_at_jst": "2026-11-02T22:04:23+09:00",
     "version": "strategist_consensus_v1",
     "status": "collecting",
     "production_effect": "advisory_and_shadow_only",
@@ -114227,8 +114227,8 @@
       {
         "version": "strategist_consensus_v1",
         "race_id": "048320261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793606820.0,
         "venue": "久留米",
         "race_no": 4,
@@ -114236,64 +114236,39 @@
           {
             "department": "data_department",
             "winner_car": 3,
-            "tickets": [
-              "3-5-6"
-            ],
+            "tickets": [],
             "minimum_reference_races": 49.0
           },
           {
             "department": "pace_department",
             "winner_car": 3,
-            "tickets": [
-              "3-5-6"
-            ],
+            "tickets": [],
             "minimum_reference_races": 49.0
           },
           {
             "department": "line_department",
             "winner_car": 3,
-            "tickets": [
-              "3-5-6"
-            ],
+            "tickets": [],
             "minimum_reference_races": 49.0
           },
           {
             "department": "risk_department",
             "winner_car": 3,
-            "tickets": [
-              "3-1-4",
-              "3-1-7",
-              "3-4-1",
-              "3-4-5",
-              "3-5-6"
-            ],
+            "tickets": [],
             "minimum_reference_races": 49.0
           }
         ],
         "winner_votes": {
           "3": 4
         },
-        "tickets": [
-          {
-            "buy": "3-5-6",
-            "group": "本線",
-            "ev": 1.1863653677648571,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          }
-        ],
+        "tickets": [],
         "purchase_authorized": false
       },
       {
         "version": "strategist_consensus_v1",
         "race_id": "054520261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793607540.0,
         "venue": "豊橋",
         "race_no": 5,
@@ -114304,7 +114279,19 @@
             "tickets": [
               "2-6-1",
               "4-2-1",
-              "4-2-7"
+              "2-7-1",
+              "2-3-1",
+              "2-1-3",
+              "4-6-1",
+              "2-6-7",
+              "1-3-7",
+              "4-6-7",
+              "4-5-1",
+              "2-6-3",
+              "4-1-7",
+              "1-7-3",
+              "4-5-6",
+              "4-6-3"
             ],
             "minimum_reference_races": 33.0
           },
@@ -114314,7 +114301,18 @@
             "tickets": [
               "2-6-1",
               "4-2-1",
-              "4-2-7"
+              "2-6-4",
+              "2-7-1",
+              "4-6-1",
+              "3-6-7",
+              "3-6-1",
+              "3-7-6",
+              "4-6-7",
+              "2-6-7",
+              "4-6-3",
+              "4-5-6",
+              "2-6-3",
+              "6-7-3"
             ],
             "minimum_reference_races": 33.0
           },
@@ -114324,14 +114322,32 @@
             "tickets": [
               "2-6-1",
               "4-2-1",
-              "4-2-7"
+              "2-6-4",
+              "4-6-1",
+              "4-6-7",
+              "4-6-5",
+              "4-6-3",
+              "3-6-7",
+              "3-6-1",
+              "4-1-6",
+              "1-7-6"
             ],
             "minimum_reference_races": 33.0
           },
           {
             "department": "risk_department",
             "winner_car": 2,
-            "tickets": [],
+            "tickets": [
+              "1-3-7",
+              "1-5-7",
+              "2-1-7",
+              "2-3-1",
+              "2-3-7",
+              "2-5-1",
+              "2-5-7",
+              "2-7-1",
+              "4-5-1"
+            ],
             "minimum_reference_races": 33.0
           }
         ],
@@ -114341,20 +114357,64 @@
         },
         "tickets": [
           {
-            "buy": "2-6-1",
-            "group": "本線",
-            "ev": 1.878898764835082,
+            "buy": "4-6-1",
+            "group": "穴",
+            "ev": 4.015675914983475,
             "votes": 3,
             "departments": [
               "data_department",
               "line_department",
               "pace_department"
+            ]
+          },
+          {
+            "buy": "4-6-7",
+            "group": "穴",
+            "ev": 2.7438822292791754,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department"
+            ]
+          },
+          {
+            "buy": "4-6-3",
+            "group": "穴",
+            "ev": 2.337231713765584,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department"
+            ]
+          },
+          {
+            "buy": "2-6-1",
+            "group": "本線",
+            "ev": 2.1123713924181393,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department"
+            ]
+          },
+          {
+            "buy": "2-7-1",
+            "group": "本線",
+            "ev": 1.3299126662245164,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "pace_department",
+              "risk_department"
             ]
           },
           {
             "buy": "4-2-1",
             "group": "本線",
-            "ev": 1.4303536684193545,
+            "ev": 1.2921397184372596,
             "votes": 3,
             "departments": [
               "data_department",
@@ -114363,14 +114423,63 @@
             ]
           },
           {
-            "buy": "4-2-7",
-            "group": "本線",
-            "ev": 1.1320214072296397,
-            "votes": 3,
+            "buy": "3-6-7",
+            "group": "穴",
+            "ev": 3.4369979952876295,
+            "votes": 2,
             "departments": [
-              "data_department",
               "line_department",
               "pace_department"
+            ]
+          },
+          {
+            "buy": "3-6-1",
+            "group": "穴",
+            "ev": 3.2662392448137942,
+            "votes": 2,
+            "departments": [
+              "line_department",
+              "pace_department"
+            ]
+          },
+          {
+            "buy": "2-6-7",
+            "group": "穴",
+            "ev": 3.0563948810110766,
+            "votes": 2,
+            "departments": [
+              "data_department",
+              "pace_department"
+            ]
+          },
+          {
+            "buy": "2-6-3",
+            "group": "穴",
+            "ev": 2.5807408651460304,
+            "votes": 2,
+            "departments": [
+              "data_department",
+              "pace_department"
+            ]
+          },
+          {
+            "buy": "4-5-6",
+            "group": "穴",
+            "ev": 2.3712300538600264,
+            "votes": 2,
+            "departments": [
+              "data_department",
+              "pace_department"
+            ]
+          },
+          {
+            "buy": "1-3-7",
+            "group": "穴",
+            "ev": 1.5248859048418393,
+            "votes": 2,
+            "departments": [
+              "data_department",
+              "risk_department"
             ]
           }
         ],
@@ -114379,8 +114488,8 @@
       {
         "version": "strategist_consensus_v1",
         "race_id": "058320261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793608260.0,
         "venue": "久留米",
         "race_no": 5,
@@ -114388,22 +114497,55 @@
           {
             "department": "data_department",
             "winner_car": 5,
-            "tickets": [],
-            "minimum_reference_races": 46.0
+            "tickets": [
+              "5-4-7",
+              "1-6-7",
+              "4-6-5",
+              "1-4-7",
+              "1-6-5",
+              "4-6-2",
+              "7-6-1",
+              "5-6-2",
+              "1-7-6",
+              "4-6-7",
+              "5-6-7"
+            ],
+            "minimum_reference_races": 43.0
           },
           {
             "department": "pace_department",
             "winner_car": 5,
-            "tickets": [],
-            "minimum_reference_races": 46.0
+            "tickets": [
+              "5-4-7",
+              "1-4-7",
+              "1-6-7",
+              "4-6-2",
+              "7-6-1",
+              "4-6-7",
+              "7-4-2",
+              "4-6-5",
+              "1-7-6",
+              "5-6-2",
+              "1-4-2",
+              "6-5-2",
+              "4-7-2"
+            ],
+            "minimum_reference_races": 43.0
           },
           {
             "department": "line_department",
             "winner_car": 5,
             "tickets": [
-              "5-7-4"
+              "1-6-7",
+              "7-6-1",
+              "1-7-6",
+              "1-4-7",
+              "1-6-5",
+              "4-6-5",
+              "4-6-7",
+              "4-6-2"
             ],
-            "minimum_reference_races": 46.0
+            "minimum_reference_races": 43.0
           },
           {
             "department": "risk_department",
@@ -114412,11 +114554,13 @@
               "1-5-3",
               "1-5-7",
               "5-1-7",
+              "5-3-7",
               "5-7-1",
               "5-7-3",
-              "5-7-4"
+              "5-7-4",
+              "5-7-6"
             ],
-            "minimum_reference_races": 46.0
+            "minimum_reference_races": 43.0
           }
         ],
         "winner_votes": {
@@ -114425,13 +114569,110 @@
         },
         "tickets": [
           {
-            "buy": "5-7-4",
-            "group": "本線",
-            "ev": 1.3570677778079607,
+            "buy": "1-6-7",
+            "group": "穴",
+            "ev": 8.424581746694429,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department"
+            ]
+          },
+          {
+            "buy": "1-4-7",
+            "group": "穴",
+            "ev": 7.256370749878366,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department"
+            ]
+          },
+          {
+            "buy": "4-6-2",
+            "group": "穴",
+            "ev": 6.447830482379868,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department"
+            ]
+          },
+          {
+            "buy": "7-6-1",
+            "group": "穴",
+            "ev": 6.387720915314542,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department"
+            ]
+          },
+          {
+            "buy": "4-6-5",
+            "group": "穴",
+            "ev": 5.491774719968235,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department"
+            ]
+          },
+          {
+            "buy": "1-7-6",
+            "group": "穴",
+            "ev": 5.380460557356256,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department"
+            ]
+          },
+          {
+            "buy": "4-6-7",
+            "group": "穴",
+            "ev": 5.008707971822721,
+            "votes": 3,
+            "departments": [
+              "data_department",
+              "line_department",
+              "pace_department"
+            ]
+          },
+          {
+            "buy": "1-6-5",
+            "group": "穴",
+            "ev": 6.869681236508753,
             "votes": 2,
             "departments": [
-              "line_department",
-              "risk_department"
+              "data_department",
+              "line_department"
+            ]
+          },
+          {
+            "buy": "5-6-2",
+            "group": "穴",
+            "ev": 5.241310956244496,
+            "votes": 2,
+            "departments": [
+              "data_department",
+              "pace_department"
+            ]
+          },
+          {
+            "buy": "5-4-7",
+            "group": "本線",
+            "ev": 1.4423339898476653,
+            "votes": 2,
+            "departments": [
+              "data_department",
+              "pace_department"
             ]
           }
         ],
@@ -114440,8 +114681,8 @@
       {
         "version": "strategist_consensus_v1",
         "race_id": "064520261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793608980.0,
         "venue": "豊橋",
         "race_no": 6,
@@ -114449,133 +114690,39 @@
           {
             "department": "data_department",
             "winner_car": 6,
-            "tickets": [
-              "6-7-4",
-              "6-3-5",
-              "6-5-7",
-              "6-5-3"
-            ],
-            "minimum_reference_races": 30.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
             "winner_car": 6,
-            "tickets": [
-              "6-7-5",
-              "6-7-3",
-              "6-7-4",
-              "6-3-5",
-              "6-5-3",
-              "6-5-7",
-              "6-3-4"
-            ],
-            "minimum_reference_races": 30.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
             "winner_car": 6,
-            "tickets": [
-              "6-7-5",
-              "6-7-4",
-              "6-3-5",
-              "6-5-3",
-              "6-5-7",
-              "6-3-4"
-            ],
-            "minimum_reference_races": 30.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
             "winner_car": 6,
-            "tickets": [
-              "6-1-4",
-              "6-3-4",
-              "6-3-5",
-              "6-4-1",
-              "6-5-3"
-            ],
-            "minimum_reference_races": 30.0
+            "tickets": [],
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
           "6": 4
         },
-        "tickets": [
-          {
-            "buy": "6-5-3",
-            "group": "本線",
-            "ev": 1.6999554539209618,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "6-3-5",
-            "group": "本線",
-            "ev": 1.1569733123708716,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "6-7-4",
-            "group": "本線",
-            "ev": 1.3006938593799784,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "6-5-7",
-            "group": "本線",
-            "ev": 1.268797677777684,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "6-3-4",
-            "group": "本線",
-            "ev": 1.1588305797087903,
-            "votes": 3,
-            "departments": [
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "6-7-5",
-            "group": "本線",
-            "ev": 1.5143822326355971,
-            "votes": 2,
-            "departments": [
-              "line_department",
-              "pace_department"
-            ]
-          }
-        ],
+        "tickets": [],
         "purchase_authorized": false
       },
       {
         "version": "strategist_consensus_v1",
         "race_id": "068320261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793609700.0,
         "venue": "久留米",
         "race_no": 6,
@@ -114583,75 +114730,39 @@
           {
             "department": "data_department",
             "winner_car": 5,
-            "tickets": [
-              "5-2-4",
-              "1-4-2"
-            ],
-            "minimum_reference_races": 50.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
             "winner_car": 5,
-            "tickets": [
-              "3-4-2",
-              "3-5-2",
-              "5-2-4",
-              "3-2-4"
-            ],
-            "minimum_reference_races": 50.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
             "winner_car": 5,
-            "tickets": [
-              "5-2-3"
-            ],
-            "minimum_reference_races": 50.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
             "winner_car": 5,
-            "tickets": [
-              "1-4-2",
-              "5-2-4",
-              "5-3-1"
-            ],
-            "minimum_reference_races": 50.0
+            "tickets": [],
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
           "5": 4
         },
-        "tickets": [
-          {
-            "buy": "5-2-4",
-            "group": "本線",
-            "ev": 1.5035480977544995,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "1-4-2",
-            "group": "本線",
-            "ev": 1.1682715543694862,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "risk_department"
-            ]
-          }
-        ],
+        "tickets": [],
         "purchase_authorized": false
       },
       {
         "version": "strategist_consensus_v1",
         "race_id": "074520261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793610420.0,
         "venue": "豊橋",
         "race_no": 7,
@@ -114659,68 +114770,39 @@
           {
             "department": "data_department",
             "winner_car": 5,
-            "tickets": [
-              "5-4-6",
-              "5-4-3",
-              "5-7-3"
-            ],
-            "minimum_reference_races": 31.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
             "winner_car": 5,
             "tickets": [],
-            "minimum_reference_races": 31.0
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
             "winner_car": 5,
-            "tickets": [
-              "5-3-4",
-              "5-3-7",
-              "3-5-4",
-              "6-7-4",
-              "5-3-1",
-              "7-3-1"
-            ],
-            "minimum_reference_races": 31.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
             "winner_car": 5,
-            "tickets": [
-              "5-1-6",
-              "5-4-6",
-              "5-6-1",
-              "5-6-4",
-              "5-6-7",
-              "5-7-6"
-            ],
-            "minimum_reference_races": 31.0
+            "tickets": [],
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
           "5": 4
         },
-        "tickets": [
-          {
-            "buy": "5-4-6",
-            "group": "本線",
-            "ev": 1.1024416746131867,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "risk_department"
-            ]
-          }
-        ],
+        "tickets": [],
         "purchase_authorized": false
       },
       {
         "version": "strategist_consensus_v1",
         "race_id": "078320261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793611140.0,
         "venue": "久留米",
         "race_no": 7,
@@ -114728,130 +114810,39 @@
           {
             "department": "data_department",
             "winner_car": 7,
-            "tickets": [
-              "7-1-2",
-              "7-1-4",
-              "7-2-5",
-              "7-5-1",
-              "1-2-4",
-              "1-7-4"
-            ],
-            "minimum_reference_races": 36.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
             "winner_car": 7,
-            "tickets": [
-              "7-1-2",
-              "7-1-4"
-            ],
-            "minimum_reference_races": 36.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
             "winner_car": 7,
-            "tickets": [
-              "7-1-2",
-              "7-1-4",
-              "7-2-5",
-              "7-5-1",
-              "1-2-4",
-              "1-7-4"
-            ],
-            "minimum_reference_races": 36.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
             "winner_car": 7,
-            "tickets": [
-              "1-2-4",
-              "7-1-2",
-              "7-1-4",
-              "7-1-6",
-              "7-2-5",
-              "7-2-6"
-            ],
-            "minimum_reference_races": 36.0
+            "tickets": [],
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
           "7": 4
         },
-        "tickets": [
-          {
-            "buy": "7-1-4",
-            "group": "本線",
-            "ev": 2.491135102538802,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "7-1-2",
-            "group": "本線",
-            "ev": 1.7040468878944468,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "7-2-5",
-            "group": "本線",
-            "ev": 1.2501001986669704,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "1-2-4",
-            "group": "本線",
-            "ev": 1.1441179500027627,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "7-5-1",
-            "group": "本線",
-            "ev": 1.3762004835329196,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "line_department"
-            ]
-          },
-          {
-            "buy": "1-7-4",
-            "group": "本線",
-            "ev": 1.1278465528508244,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "line_department"
-            ]
-          }
-        ],
+        "tickets": [],
         "purchase_authorized": false
       },
       {
         "version": "strategist_consensus_v1",
         "race_id": "084520261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793611860.0,
         "venue": "豊橋",
         "race_no": 8,
@@ -114859,138 +114850,39 @@
           {
             "department": "data_department",
             "winner_car": 5,
-            "tickets": [
-              "5-2-3",
-              "5-7-3",
-              "5-1-2",
-              "5-2-1",
-              "5-7-2"
-            ],
-            "minimum_reference_races": 33.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
             "winner_car": 5,
-            "tickets": [
-              "5-2-3",
-              "5-1-3",
-              "5-7-3",
-              "5-2-1",
-              "5-1-2"
-            ],
-            "minimum_reference_races": 33.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
             "winner_car": 5,
-            "tickets": [
-              "5-7-3",
-              "5-7-2",
-              "7-5-3",
-              "5-1-2"
-            ],
-            "minimum_reference_races": 33.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
             "winner_car": 5,
-            "tickets": [
-              "5-1-2",
-              "5-1-3",
-              "5-2-3",
-              "5-7-3",
-              "7-5-3"
-            ],
-            "minimum_reference_races": 33.0
+            "tickets": [],
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
           "5": 4
         },
-        "tickets": [
-          {
-            "buy": "5-7-3",
-            "group": "本線",
-            "ev": 1.2252647565184587,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "5-1-2",
-            "group": "本線",
-            "ev": 1.1546735885293782,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "5-2-3",
-            "group": "本線",
-            "ev": 1.6268109741528942,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "5-1-3",
-            "group": "本線",
-            "ev": 1.7508316689805685,
-            "votes": 2,
-            "departments": [
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "5-7-2",
-            "group": "本線",
-            "ev": 1.518712035865243,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "line_department"
-            ]
-          },
-          {
-            "buy": "5-2-1",
-            "group": "本線",
-            "ev": 1.2637757874536444,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "7-5-3",
-            "group": "本線",
-            "ev": 1.1878236319253466,
-            "votes": 2,
-            "departments": [
-              "line_department",
-              "risk_department"
-            ]
-          }
-        ],
+        "tickets": [],
         "purchase_authorized": false
       },
       {
         "version": "strategist_consensus_v1",
         "race_id": "088320261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793612580.0,
         "venue": "久留米",
         "race_no": 8,
@@ -114998,123 +114890,70 @@
           {
             "department": "data_department",
             "winner_car": 7,
-            "tickets": [
-              "7-5-2",
-              "7-5-4"
-            ],
-            "minimum_reference_races": 48.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
             "winner_car": 7,
-            "tickets": [
-              "7-5-4"
-            ],
-            "minimum_reference_races": 48.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
             "winner_car": 7,
-            "tickets": [
-              "7-5-4",
-              "4-1-2",
-              "7-1-5"
-            ],
-            "minimum_reference_races": 48.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
             "winner_car": 7,
-            "tickets": [
-              "4-5-7",
-              "7-1-5",
-              "7-5-1",
-              "7-5-2",
-              "7-5-4"
-            ],
-            "minimum_reference_races": 48.0
+            "tickets": [],
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
           "7": 4
         },
-        "tickets": [
-          {
-            "buy": "7-5-4",
-            "group": "本線",
-            "ev": 1.2287931581916607,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "7-1-5",
-            "group": "本線",
-            "ev": 1.231198283160806,
-            "votes": 2,
-            "departments": [
-              "line_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "7-5-2",
-            "group": "本線",
-            "ev": 1.1448061500929574,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "risk_department"
-            ]
-          }
-        ],
+        "tickets": [],
         "purchase_authorized": false
       },
       {
         "version": "strategist_consensus_v1",
         "race_id": "094520261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793613300.0,
         "venue": "豊橋",
         "race_no": 9,
         "views": [
           {
             "department": "data_department",
-            "winner_car": 7,
+            "winner_car": 1,
             "tickets": [],
-            "minimum_reference_races": 38.0
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
-            "winner_car": 7,
-            "tickets": [
-              "7-2-5"
-            ],
-            "minimum_reference_races": 38.0
+            "winner_car": 1,
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
-            "winner_car": 7,
+            "winner_car": 1,
             "tickets": [],
-            "minimum_reference_races": 38.0
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
-            "winner_car": 7,
-            "tickets": [
-              "1-5-3",
-              "7-1-4"
-            ],
-            "minimum_reference_races": 38.0
+            "winner_car": 1,
+            "tickets": [],
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
-          "7": 4
+          "1": 4
         },
         "tickets": [],
         "purchase_authorized": false
@@ -115122,8 +114961,8 @@
       {
         "version": "strategist_consensus_v1",
         "race_id": "098320261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793614020.0,
         "venue": "久留米",
         "race_no": 9,
@@ -115131,160 +114970,110 @@
           {
             "department": "data_department",
             "winner_car": 7,
-            "tickets": [
-              "7-5-1"
-            ],
-            "minimum_reference_races": 46.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
-            "winner_car": 1,
-            "tickets": [
-              "1-5-4",
-              "1-5-3"
-            ],
-            "minimum_reference_races": 46.0
+            "winner_car": 7,
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
             "winner_car": 7,
-            "tickets": [
-              "7-5-1"
-            ],
-            "minimum_reference_races": 46.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
             "winner_car": 7,
-            "tickets": [
-              "7-1-3",
-              "7-5-3"
-            ],
-            "minimum_reference_races": 46.0
+            "tickets": [],
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
-          "7": 3,
-          "1": 1
+          "7": 4
         },
-        "tickets": [
-          {
-            "buy": "7-5-1",
-            "group": "本線",
-            "ev": 1.2304207421506115,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "line_department"
-            ]
-          }
-        ],
+        "tickets": [],
         "purchase_authorized": false
       },
       {
         "version": "strategist_consensus_v1",
         "race_id": "104520261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793614800.0,
         "venue": "豊橋",
         "race_no": 10,
         "views": [
           {
             "department": "data_department",
-            "winner_car": 7,
-            "tickets": [
-              "7-3-6"
-            ],
-            "minimum_reference_races": 33.0
+            "winner_car": 1,
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
-            "winner_car": 7,
-            "tickets": [
-              "7-3-6"
-            ],
-            "minimum_reference_races": 33.0
+            "winner_car": 1,
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
-            "winner_car": 3,
+            "winner_car": 1,
             "tickets": [],
-            "minimum_reference_races": 33.0
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
-            "winner_car": 7,
-            "tickets": [
-              "1-3-4",
-              "1-3-5",
-              "7-3-2",
-              "7-3-4",
-              "7-3-6"
-            ],
-            "minimum_reference_races": 33.0
+            "winner_car": 1,
+            "tickets": [],
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
-          "7": 3,
-          "3": 1
+          "1": 4
         },
-        "tickets": [
-          {
-            "buy": "7-3-6",
-            "group": "本線",
-            "ev": 1.1893792159041512,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "pace_department",
-              "risk_department"
-            ]
-          }
-        ],
+        "tickets": [],
         "purchase_authorized": false
       },
       {
         "version": "strategist_consensus_v1",
         "race_id": "108320261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793615580.0,
         "venue": "久留米",
         "race_no": 10,
         "views": [
           {
             "department": "data_department",
-            "winner_car": 6,
+            "winner_car": 1,
             "tickets": [],
-            "minimum_reference_races": 51.0
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
-            "winner_car": 6,
+            "winner_car": 1,
             "tickets": [],
-            "minimum_reference_races": 51.0
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
-            "winner_car": 6,
+            "winner_car": 1,
             "tickets": [],
-            "minimum_reference_races": 51.0
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
             "winner_car": 1,
-            "tickets": [
-              "1-3-4",
-              "1-7-4",
-              "1-7-5"
-            ],
-            "minimum_reference_races": 51.0
+            "tickets": [],
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
-          "6": 3,
-          "1": 1
+          "1": 4
         },
         "tickets": [],
         "purchase_authorized": false
@@ -115292,8 +115081,8 @@
       {
         "version": "strategist_consensus_v1",
         "race_id": "114520261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793616360.0,
         "venue": "豊橋",
         "race_no": 11,
@@ -115302,70 +115091,38 @@
             "department": "data_department",
             "winner_car": 7,
             "tickets": [],
-            "minimum_reference_races": 30.0
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
             "winner_car": 7,
-            "tickets": [
-              "7-5-2",
-              "7-2-5"
-            ],
-            "minimum_reference_races": 30.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
             "winner_car": 7,
-            "tickets": [
-              "7-2-5"
-            ],
-            "minimum_reference_races": 30.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
             "winner_car": 7,
-            "tickets": [
-              "7-2-1",
-              "7-2-5",
-              "7-5-1",
-              "7-5-2"
-            ],
-            "minimum_reference_races": 30.0
+            "tickets": [],
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
           "7": 4
         },
-        "tickets": [
-          {
-            "buy": "7-2-5",
-            "group": "本線",
-            "ev": 1.2075027879820597,
-            "votes": 3,
-            "departments": [
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "7-5-2",
-            "group": "本線",
-            "ev": 1.7338629538736683,
-            "votes": 2,
-            "departments": [
-              "pace_department",
-              "risk_department"
-            ]
-          }
-        ],
+        "tickets": [],
         "purchase_authorized": false
       },
       {
         "version": "strategist_consensus_v1",
         "race_id": "118320261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793617140.0,
         "venue": "久留米",
         "race_no": 11,
@@ -115373,90 +115130,39 @@
           {
             "department": "data_department",
             "winner_car": 1,
-            "tickets": [
-              "1-7-5",
-              "1-5-7",
-              "1-2-5"
-            ],
-            "minimum_reference_races": 48.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
             "winner_car": 1,
-            "tickets": [
-              "1-2-5",
-              "1-7-5"
-            ],
-            "minimum_reference_races": 48.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
             "winner_car": 1,
-            "tickets": [
-              "1-7-5",
-              "1-2-5"
-            ],
-            "minimum_reference_races": 48.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
             "winner_car": 1,
-            "tickets": [
-              "1-2-5",
-              "1-4-3",
-              "1-5-4",
-              "1-5-7",
-              "1-7-5"
-            ],
-            "minimum_reference_races": 48.0
+            "tickets": [],
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
           "1": 4
         },
-        "tickets": [
-          {
-            "buy": "1-2-5",
-            "group": "本線",
-            "ev": 1.4813121048108446,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "1-7-5",
-            "group": "本線",
-            "ev": 1.1890390077510335,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "1-5-7",
-            "group": "本線",
-            "ev": 1.7039697713866897,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "risk_department"
-            ]
-          }
-        ],
+        "tickets": [],
         "purchase_authorized": false
       },
       {
         "version": "strategist_consensus_v1",
         "race_id": "124520261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793617920.0,
         "venue": "豊橋",
         "race_no": 12,
@@ -115464,96 +115170,39 @@
           {
             "department": "data_department",
             "winner_car": 5,
-            "tickets": [
-              "5-7-2",
-              "5-3-2",
-              "5-3-7",
-              "5-7-3"
-            ],
-            "minimum_reference_races": 38.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
             "winner_car": 5,
             "tickets": [],
-            "minimum_reference_races": 38.0
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
             "winner_car": 5,
-            "tickets": [
-              "5-1-6",
-              "5-7-2"
-            ],
-            "minimum_reference_races": 38.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
             "winner_car": 5,
-            "tickets": [
-              "5-1-6",
-              "5-2-7",
-              "5-3-7",
-              "5-7-2",
-              "5-7-3",
-              "5-7-4"
-            ],
-            "minimum_reference_races": 38.0
+            "tickets": [],
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
           "5": 4
         },
-        "tickets": [
-          {
-            "buy": "5-7-2",
-            "group": "本線",
-            "ev": 1.9090553463843105,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "5-3-7",
-            "group": "本線",
-            "ev": 1.3214833167066216,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "5-1-6",
-            "group": "本線",
-            "ev": 1.2469229469132006,
-            "votes": 2,
-            "departments": [
-              "line_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "5-7-3",
-            "group": "本線",
-            "ev": 1.117167049453168,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "risk_department"
-            ]
-          }
-        ],
+        "tickets": [],
         "purchase_authorized": false
       },
       {
         "version": "strategist_consensus_v1",
         "race_id": "128320261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793618700.0,
         "venue": "久留米",
         "race_no": 12,
@@ -115562,33 +115211,29 @@
             "department": "data_department",
             "winner_car": 4,
             "tickets": [],
-            "minimum_reference_races": 48.0
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
             "winner_car": 4,
             "tickets": [],
-            "minimum_reference_races": 48.0
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
-            "winner_car": 7,
+            "winner_car": 4,
             "tickets": [],
-            "minimum_reference_races": 48.0
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
             "winner_car": 4,
-            "tickets": [
-              "4-3-1",
-              "4-5-1"
-            ],
-            "minimum_reference_races": 48.0
+            "tickets": [],
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
-          "4": 3,
-          "7": 1
+          "4": 4
         },
         "tickets": [],
         "purchase_authorized": false
@@ -115596,8 +115241,8 @@
       {
         "version": "strategist_consensus_v1",
         "race_id": "013820261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793619360.0,
         "venue": "静岡",
         "race_no": 1,
@@ -115605,142 +115250,39 @@
           {
             "department": "data_department",
             "winner_car": 2,
-            "tickets": [
-              "1-2-5",
-              "1-3-4",
-              "1-3-5",
-              "2-5-1",
-              "2-3-5",
-              "1-5-2"
-            ],
-            "minimum_reference_races": 15.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
             "winner_car": 2,
-            "tickets": [
-              "1-2-4",
-              "1-2-5",
-              "1-3-4",
-              "2-3-5",
-              "1-5-2"
-            ],
-            "minimum_reference_races": 15.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
             "winner_car": 2,
-            "tickets": [
-              "2-3-4",
-              "1-2-5",
-              "1-3-4",
-              "2-3-5",
-              "1-3-5",
-              "1-5-2",
-              "2-5-1"
-            ],
-            "minimum_reference_races": 15.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
-            "winner_car": 1,
-            "tickets": [
-              "1-2-4",
-              "1-2-5",
-              "2-3-5"
-            ],
-            "minimum_reference_races": 15.0
+            "winner_car": 2,
+            "tickets": [],
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
-          "2": 3,
-          "1": 1
+          "2": 4
         },
-        "tickets": [
-          {
-            "buy": "1-2-5",
-            "group": "本線",
-            "ev": 1.2461315496586907,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "2-3-5",
-            "group": "本線",
-            "ev": 1.144913803741066,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "1-3-4",
-            "group": "本線",
-            "ev": 1.9640967524000206,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "1-5-2",
-            "group": "本線",
-            "ev": 1.5197248553293634,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "2-5-1",
-            "group": "本線",
-            "ev": 1.3076208219811545,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "line_department"
-            ]
-          },
-          {
-            "buy": "1-3-5",
-            "group": "本線",
-            "ev": 1.269342414128564,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "line_department"
-            ]
-          },
-          {
-            "buy": "1-2-4",
-            "group": "本線",
-            "ev": 1.1096096122200956,
-            "votes": 2,
-            "departments": [
-              "pace_department",
-              "risk_department"
-            ]
-          }
-        ],
+        "tickets": [],
         "purchase_authorized": false
       },
       {
         "version": "strategist_consensus_v1",
         "race_id": "015320261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793619840.0,
         "venue": "奈良",
         "race_no": 1,
@@ -115748,75 +115290,39 @@
           {
             "department": "data_department",
             "winner_car": 2,
-            "tickets": [
-              "2-1-4",
-              "2-1-5"
-            ],
-            "minimum_reference_races": 29.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
             "winner_car": 2,
-            "tickets": [
-              "2-4-3",
-              "1-4-3",
-              "2-1-5"
-            ],
-            "minimum_reference_races": 29.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
             "winner_car": 2,
-            "tickets": [
-              "2-1-5"
-            ],
-            "minimum_reference_races": 29.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
             "winner_car": 2,
-            "tickets": [
-              "2-1-5",
-              "2-3-4",
-              "2-4-3"
-            ],
-            "minimum_reference_races": 29.0
+            "tickets": [],
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
           "2": 4
         },
-        "tickets": [
-          {
-            "buy": "2-1-5",
-            "group": "本線",
-            "ev": 1.2174442434786499,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "2-4-3",
-            "group": "本線",
-            "ev": 1.1407915402501545,
-            "votes": 2,
-            "departments": [
-              "pace_department",
-              "risk_department"
-            ]
-          }
-        ],
+        "tickets": [],
         "purchase_authorized": false
       },
       {
         "version": "strategist_consensus_v1",
         "race_id": "018420261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793620320.0,
         "venue": "武雄",
         "race_no": 1,
@@ -115824,96 +115330,39 @@
           {
             "department": "data_department",
             "winner_car": 1,
-            "tickets": [
-              "1-3-5",
-              "1-4-5",
-              "1-5-3"
-            ],
-            "minimum_reference_races": 46.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
-            "winner_car": 2,
-            "tickets": [
-              "1-5-3",
-              "1-5-2"
-            ],
-            "minimum_reference_races": 46.0
+            "winner_car": 1,
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
             "winner_car": 1,
-            "tickets": [
-              "1-3-5",
-              "1-5-3",
-              "1-5-2"
-            ],
-            "minimum_reference_races": 46.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
             "winner_car": 1,
-            "tickets": [
-              "1-2-5",
-              "1-4-5"
-            ],
-            "minimum_reference_races": 46.0
+            "tickets": [],
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
-          "1": 3,
-          "2": 1
+          "1": 4
         },
-        "tickets": [
-          {
-            "buy": "1-5-3",
-            "group": "本線",
-            "ev": 1.181823734210781,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "1-3-5",
-            "group": "本線",
-            "ev": 1.1522907824329682,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "line_department"
-            ]
-          },
-          {
-            "buy": "1-4-5",
-            "group": "本線",
-            "ev": 1.1374645383555761,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "1-5-2",
-            "group": "本線",
-            "ev": 1.1006387300785756,
-            "votes": 2,
-            "departments": [
-              "line_department",
-              "pace_department"
-            ]
-          }
-        ],
+        "tickets": [],
         "purchase_authorized": false
       },
       {
         "version": "strategist_consensus_v1",
         "race_id": "023820261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793620800.0,
         "venue": "静岡",
         "race_no": 2,
@@ -115921,83 +115370,39 @@
           {
             "department": "data_department",
             "winner_car": 1,
-            "tickets": [
-              "1-3-5",
-              "1-4-5",
-              "1-4-7",
-              "1-3-6",
-              "1-4-6"
-            ],
-            "minimum_reference_races": 31.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
             "winner_car": 1,
-            "tickets": [
-              "1-3-5",
-              "1-4-5"
-            ],
-            "minimum_reference_races": 31.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
             "winner_car": 1,
-            "tickets": [
-              "1-3-7",
-              "1-3-5",
-              "1-7-3",
-              "1-4-5",
-              "1-7-4"
-            ],
-            "minimum_reference_races": 31.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
             "winner_car": 1,
-            "tickets": [
-              "1-2-5",
-              "1-3-5",
-              "1-4-5"
-            ],
-            "minimum_reference_races": 31.0
+            "tickets": [],
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
           "1": 4
         },
-        "tickets": [
-          {
-            "buy": "1-3-5",
-            "group": "本線",
-            "ev": 1.2097976197319693,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "1-4-5",
-            "group": "本線",
-            "ev": 1.169452804723404,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          }
-        ],
+        "tickets": [],
         "purchase_authorized": false
       },
       {
         "version": "strategist_consensus_v1",
         "race_id": "025320261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793621280.0,
         "venue": "奈良",
         "race_no": 2,
@@ -116005,100 +115410,39 @@
           {
             "department": "data_department",
             "winner_car": 1,
-            "tickets": [
-              "1-4-5",
-              "1-4-6"
-            ],
-            "minimum_reference_races": 43.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
             "winner_car": 1,
-            "tickets": [
-              "1-2-6",
-              "1-2-3",
-              "1-4-6",
-              "1-4-5"
-            ],
-            "minimum_reference_races": 43.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
             "winner_car": 1,
-            "tickets": [
-              "1-4-5",
-              "1-4-6"
-            ],
-            "minimum_reference_races": 43.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
             "winner_car": 1,
-            "tickets": [
-              "1-2-3",
-              "1-2-6",
-              "1-2-7",
-              "1-4-5",
-              "1-6-2"
-            ],
-            "minimum_reference_races": 43.0
+            "tickets": [],
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
           "1": 4
         },
-        "tickets": [
-          {
-            "buy": "1-4-5",
-            "group": "本線",
-            "ev": 1.1542098455098149,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "1-4-6",
-            "group": "本線",
-            "ev": 1.190954601118112,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "1-2-6",
-            "group": "本線",
-            "ev": 1.310093060364594,
-            "votes": 2,
-            "departments": [
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "1-2-3",
-            "group": "本線",
-            "ev": 1.1982822794962233,
-            "votes": 2,
-            "departments": [
-              "pace_department",
-              "risk_department"
-            ]
-          }
-        ],
+        "tickets": [],
         "purchase_authorized": false
       },
       {
         "version": "strategist_consensus_v1",
         "race_id": "028420261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793621760.0,
         "venue": "武雄",
         "race_no": 2,
@@ -116106,126 +115450,39 @@
           {
             "department": "data_department",
             "winner_car": 1,
-            "tickets": [
-              "1-2-7",
-              "1-2-6",
-              "1-5-3",
-              "1-7-2",
-              "1-3-7",
-              "1-5-4"
-            ],
-            "minimum_reference_races": 36.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
             "winner_car": 1,
-            "tickets": [
-              "1-4-3",
-              "1-5-3",
-              "1-5-2",
-              "1-2-6",
-              "1-5-4",
-              "1-3-6"
-            ],
-            "minimum_reference_races": 36.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
             "winner_car": 1,
-            "tickets": [
-              "1-4-3",
-              "1-2-6",
-              "1-5-3",
-              "1-5-4",
-              "1-3-6",
-              "1-3-7"
-            ],
-            "minimum_reference_races": 36.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
             "winner_car": 1,
-            "tickets": [
-              "1-2-5"
-            ],
-            "minimum_reference_races": 36.0
+            "tickets": [],
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
           "1": 4
         },
-        "tickets": [
-          {
-            "buy": "1-5-3",
-            "group": "本線",
-            "ev": 1.4875827963471038,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "1-2-6",
-            "group": "本線",
-            "ev": 1.4435013095907918,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "1-5-4",
-            "group": "本線",
-            "ev": 1.2823731576846038,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "1-3-6",
-            "group": "本線",
-            "ev": 1.3066945350688886,
-            "votes": 2,
-            "departments": [
-              "line_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "1-3-7",
-            "group": "本線",
-            "ev": 1.1692979862317188,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "line_department"
-            ]
-          },
-          {
-            "buy": "1-4-3",
-            "group": "本線",
-            "ev": 1.1483794232164921,
-            "votes": 2,
-            "departments": [
-              "line_department",
-              "pace_department"
-            ]
-          }
-        ],
+        "tickets": [],
         "purchase_authorized": false
       },
       {
         "version": "strategist_consensus_v1",
         "race_id": "033820261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793622240.0,
         "venue": "静岡",
         "race_no": 3,
@@ -116233,59 +115490,39 @@
           {
             "department": "data_department",
             "winner_car": 2,
-            "tickets": [
-              "4-2-1"
-            ],
-            "minimum_reference_races": 37.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
             "winner_car": 2,
-            "tickets": [
-              "4-2-1"
-            ],
-            "minimum_reference_races": 37.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
-            "winner_car": 4,
-            "tickets": [
-              "4-2-1",
-              "4-3-1"
-            ],
-            "minimum_reference_races": 37.0
+            "winner_car": 2,
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
             "winner_car": 2,
             "tickets": [],
-            "minimum_reference_races": 37.0
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
-          "2": 3,
-          "4": 1
+          "2": 4
         },
-        "tickets": [
-          {
-            "buy": "4-2-1",
-            "group": "本線",
-            "ev": 1.1694570307290022,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department"
-            ]
-          }
-        ],
+        "tickets": [],
         "purchase_authorized": false
       },
       {
         "version": "strategist_consensus_v1",
         "race_id": "035320261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793622720.0,
         "venue": "奈良",
         "race_no": 3,
@@ -116293,120 +115530,39 @@
           {
             "department": "data_department",
             "winner_car": 1,
-            "tickets": [
-              "1-2-6",
-              "1-2-5",
-              "2-1-6",
-              "1-4-5"
-            ],
-            "minimum_reference_races": 30.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
             "winner_car": 1,
-            "tickets": [
-              "1-2-6",
-              "1-2-5",
-              "1-5-4",
-              "2-1-6"
-            ],
-            "minimum_reference_races": 30.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
             "winner_car": 1,
-            "tickets": [
-              "1-2-6",
-              "1-2-5",
-              "2-1-6",
-              "1-5-4",
-              "3-1-6",
-              "4-2-5"
-            ],
-            "minimum_reference_races": 30.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
             "winner_car": 1,
-            "tickets": [
-              "1-2-5",
-              "1-2-6",
-              "1-3-4",
-              "1-4-5",
-              "1-5-4",
-              "2-4-5"
-            ],
-            "minimum_reference_races": 30.0
+            "tickets": [],
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
           "1": 4
         },
-        "tickets": [
-          {
-            "buy": "1-2-5",
-            "group": "本線",
-            "ev": 1.6304710524319421,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "1-2-6",
-            "group": "本線",
-            "ev": 1.2075021615442345,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "2-1-6",
-            "group": "本線",
-            "ev": 1.5054963679531204,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "1-5-4",
-            "group": "本線",
-            "ev": 1.1467426844575466,
-            "votes": 3,
-            "departments": [
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "1-4-5",
-            "group": "本線",
-            "ev": 1.263136547719395,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "risk_department"
-            ]
-          }
-        ],
+        "tickets": [],
         "purchase_authorized": false
       },
       {
         "version": "strategist_consensus_v1",
         "race_id": "038420261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793623200.0,
         "venue": "武雄",
         "race_no": 3,
@@ -116415,58 +115571,38 @@
             "department": "data_department",
             "winner_car": 1,
             "tickets": [],
-            "minimum_reference_races": 24.0
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
-            "winner_car": 3,
-            "tickets": [
-              "3-2-1"
-            ],
-            "minimum_reference_races": 24.0
+            "winner_car": 1,
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
             "winner_car": 1,
-            "tickets": [
-              "3-2-1",
-              "3-6-2"
-            ],
-            "minimum_reference_races": 24.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
             "winner_car": 1,
-            "tickets": [
-              "1-3-4",
-              "1-4-3"
-            ],
-            "minimum_reference_races": 24.0
+            "tickets": [],
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
-          "1": 3,
-          "3": 1
+          "1": 4
         },
-        "tickets": [
-          {
-            "buy": "3-2-1",
-            "group": "本線",
-            "ev": 1.3070271657992325,
-            "votes": 2,
-            "departments": [
-              "line_department",
-              "pace_department"
-            ]
-          }
-        ],
+        "tickets": [],
         "purchase_authorized": false
       },
       {
         "version": "strategist_consensus_v1",
         "race_id": "043820261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793623680.0,
         "venue": "静岡",
         "race_no": 4,
@@ -116475,30 +115611,25 @@
             "department": "data_department",
             "winner_car": 2,
             "tickets": [],
-            "minimum_reference_races": 36.0
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
             "winner_car": 2,
             "tickets": [],
-            "minimum_reference_races": 36.0
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
             "winner_car": 2,
             "tickets": [],
-            "minimum_reference_races": 36.0
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
             "winner_car": 2,
-            "tickets": [
-              "1-2-5",
-              "1-2-6",
-              "1-4-6",
-              "2-4-5"
-            ],
-            "minimum_reference_races": 36.0
+            "tickets": [],
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
@@ -116510,8 +115641,8 @@
       {
         "version": "strategist_consensus_v1",
         "race_id": "045320261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793624160.0,
         "venue": "奈良",
         "race_no": 4,
@@ -116519,134 +115650,39 @@
           {
             "department": "data_department",
             "winner_car": 1,
-            "tickets": [
-              "1-2-4",
-              "1-6-2",
-              "1-2-5",
-              "1-5-2",
-              "1-4-5",
-              "1-5-3"
-            ],
-            "minimum_reference_races": 32.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
             "winner_car": 1,
-            "tickets": [
-              "1-2-4",
-              "1-5-2",
-              "1-2-5",
-              "1-4-5"
-            ],
-            "minimum_reference_races": 32.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
             "winner_car": 1,
-            "tickets": [
-              "1-2-4",
-              "1-5-2",
-              "1-4-5",
-              "1-6-2",
-              "1-2-5"
-            ],
-            "minimum_reference_races": 32.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
             "winner_car": 1,
-            "tickets": [
-              "1-2-4",
-              "1-2-5",
-              "1-4-5",
-              "1-5-2",
-              "1-5-3",
-              "1-6-2"
-            ],
-            "minimum_reference_races": 32.0
+            "tickets": [],
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
           "1": 4
         },
-        "tickets": [
-          {
-            "buy": "1-5-2",
-            "group": "本線",
-            "ev": 1.913971557060079,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "1-2-5",
-            "group": "本線",
-            "ev": 1.3826913547893687,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "1-2-4",
-            "group": "本線",
-            "ev": 1.219960099040484,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "1-4-5",
-            "group": "本線",
-            "ev": 1.172829272841167,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "1-6-2",
-            "group": "本線",
-            "ev": 1.6438365411983988,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "1-5-3",
-            "group": "本線",
-            "ev": 1.4089587526058116,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "risk_department"
-            ]
-          }
-        ],
+        "tickets": [],
         "purchase_authorized": false
       },
       {
         "version": "strategist_consensus_v1",
         "race_id": "048420261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793624640.0,
         "venue": "武雄",
         "race_no": 4,
@@ -116654,230 +115690,79 @@
           {
             "department": "data_department",
             "winner_car": 1,
-            "tickets": [
-              "1-2-4",
-              "1-4-3"
-            ],
-            "minimum_reference_races": 32.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
             "winner_car": 1,
-            "tickets": [
-              "1-4-3"
-            ],
-            "minimum_reference_races": 32.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
-            "winner_car": 2,
-            "tickets": [
-              "1-2-4",
-              "1-4-3"
-            ],
-            "minimum_reference_races": 32.0
+            "winner_car": 1,
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
             "winner_car": 1,
-            "tickets": [
-              "1-2-4",
-              "1-2-5",
-              "1-5-2"
-            ],
-            "minimum_reference_races": 32.0
+            "tickets": [],
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
-          "1": 3,
-          "2": 1
+          "1": 4
         },
-        "tickets": [
-          {
-            "buy": "1-4-3",
-            "group": "本線",
-            "ev": 1.3050315777108212,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "1-2-4",
-            "group": "本線",
-            "ev": 1.2185004071058554,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "risk_department"
-            ]
-          }
-        ],
+        "tickets": [],
         "purchase_authorized": false
       },
       {
         "version": "strategist_consensus_v1",
         "race_id": "053820261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793625180.0,
         "venue": "静岡",
         "race_no": 5,
         "views": [
           {
             "department": "data_department",
-            "winner_car": 1,
-            "tickets": [
-              "1-6-4",
-              "1-6-3",
-              "1-6-5",
-              "1-3-4",
-              "1-3-5",
-              "1-4-3"
-            ],
-            "minimum_reference_races": 38.0
+            "winner_car": 2,
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
-            "winner_car": 1,
-            "tickets": [
-              "1-3-4",
-              "1-5-4",
-              "1-6-4",
-              "1-5-3",
-              "1-3-5",
-              "1-6-3"
-            ],
-            "minimum_reference_races": 38.0
+            "winner_car": 2,
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
-            "winner_car": 1,
-            "tickets": [
-              "1-6-4",
-              "1-6-3",
-              "1-6-5",
-              "1-3-4",
-              "1-3-5",
-              "1-4-3"
-            ],
-            "minimum_reference_races": 38.0
+            "winner_car": 2,
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
-            "winner_car": 1,
-            "tickets": [
-              "1-3-5",
-              "1-4-3",
-              "1-4-5",
-              "1-5-3",
-              "1-5-4",
-              "1-5-6"
-            ],
-            "minimum_reference_races": 38.0
+            "winner_car": 2,
+            "tickets": [],
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
-          "1": 4
+          "2": 4
         },
-        "tickets": [
-          {
-            "buy": "1-3-5",
-            "group": "本線",
-            "ev": 1.4350462362185576,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "1-6-4",
-            "group": "本線",
-            "ev": 4.149754894499922,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "1-3-4",
-            "group": "本線",
-            "ev": 1.7197687308061262,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "1-6-3",
-            "group": "本線",
-            "ev": 1.5879778011570849,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "1-4-3",
-            "group": "本線",
-            "ev": 1.3168798848629055,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "1-6-5",
-            "group": "本線",
-            "ev": 1.9069857146488147,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "line_department"
-            ]
-          },
-          {
-            "buy": "1-5-3",
-            "group": "本線",
-            "ev": 1.2571458345476838,
-            "votes": 2,
-            "departments": [
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "1-5-4",
-            "group": "本線",
-            "ev": 1.2306994757621907,
-            "votes": 2,
-            "departments": [
-              "pace_department",
-              "risk_department"
-            ]
-          }
-        ],
+        "tickets": [],
         "purchase_authorized": false
       },
       {
         "version": "strategist_consensus_v1",
         "race_id": "055320261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793625720.0,
         "venue": "奈良",
         "race_no": 5,
@@ -116885,63 +115770,39 @@
           {
             "department": "data_department",
             "winner_car": 1,
-            "tickets": [
-              "1-6-2"
-            ],
-            "minimum_reference_races": 22.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
             "winner_car": 1,
-            "tickets": [
-              "1-6-2",
-              "5-1-2"
-            ],
-            "minimum_reference_races": 22.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
             "winner_car": 1,
-            "tickets": [
-              "1-6-2"
-            ],
-            "minimum_reference_races": 22.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
             "winner_car": 1,
-            "tickets": [
-              "1-2-5",
-              "1-2-7",
-              "1-4-5",
-              "1-5-4"
-            ],
-            "minimum_reference_races": 22.0
+            "tickets": [],
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
           "1": 4
         },
-        "tickets": [
-          {
-            "buy": "1-6-2",
-            "group": "本線",
-            "ev": 1.172629336793425,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department"
-            ]
-          }
-        ],
+        "tickets": [],
         "purchase_authorized": false
       },
       {
         "version": "strategist_consensus_v1",
         "race_id": "058420261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793626260.0,
         "venue": "武雄",
         "race_no": 5,
@@ -116949,89 +115810,39 @@
           {
             "department": "data_department",
             "winner_car": 1,
-            "tickets": [
-              "1-2-3",
-              "1-3-4",
-              "1-2-7"
-            ],
-            "minimum_reference_races": 36.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
             "winner_car": 1,
-            "tickets": [
-              "1-6-4",
-              "1-6-2",
-              "1-3-4",
-              "1-2-7"
-            ],
-            "minimum_reference_races": 36.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
             "winner_car": 1,
-            "tickets": [
-              "1-2-7"
-            ],
-            "minimum_reference_races": 36.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
             "winner_car": 1,
-            "tickets": [
-              "1-3-4",
-              "1-4-3",
-              "1-4-5",
-              "1-4-6",
-              "1-6-4"
-            ],
-            "minimum_reference_races": 36.0
+            "tickets": [],
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
           "1": 4
         },
-        "tickets": [
-          {
-            "buy": "1-3-4",
-            "group": "本線",
-            "ev": 1.6488687862522062,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "1-2-7",
-            "group": "本線",
-            "ev": 1.1543051390738557,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "1-6-4",
-            "group": "本線",
-            "ev": 1.9267816014691177,
-            "votes": 2,
-            "departments": [
-              "pace_department",
-              "risk_department"
-            ]
-          }
-        ],
+        "tickets": [],
         "purchase_authorized": false
       },
       {
         "version": "strategist_consensus_v1",
         "race_id": "063820261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793626800.0,
         "venue": "静岡",
         "race_no": 6,
@@ -117039,146 +115850,39 @@
           {
             "department": "data_department",
             "winner_car": 1,
-            "tickets": [
-              "1-3-6",
-              "1-3-5",
-              "1-2-6",
-              "1-5-6",
-              "1-5-3",
-              "1-4-3"
-            ],
-            "minimum_reference_races": 41.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
             "winner_car": 1,
-            "tickets": [
-              "1-5-6",
-              "1-3-6",
-              "1-5-3",
-              "1-5-4",
-              "1-3-5",
-              "2-1-4",
-              "1-5-2",
-              "1-4-5"
-            ],
-            "minimum_reference_races": 41.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
             "winner_car": 1,
-            "tickets": [
-              "1-3-5",
-              "1-5-6",
-              "1-3-6",
-              "1-5-3",
-              "1-5-4",
-              "1-4-5"
-            ],
-            "minimum_reference_races": 41.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
             "winner_car": 1,
-            "tickets": [
-              "1-3-5",
-              "1-3-6",
-              "1-3-7",
-              "1-4-3",
-              "1-6-3",
-              "1-6-4"
-            ],
-            "minimum_reference_races": 41.0
+            "tickets": [],
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
           "1": 4
         },
-        "tickets": [
-          {
-            "buy": "1-3-5",
-            "group": "本線",
-            "ev": 2.1904294685875034,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "1-3-6",
-            "group": "本線",
-            "ev": 1.7942450762127236,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "1-5-6",
-            "group": "本線",
-            "ev": 2.604987852119787,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "1-5-3",
-            "group": "本線",
-            "ev": 1.6943435547870558,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "1-5-4",
-            "group": "本線",
-            "ev": 1.8196667317729411,
-            "votes": 2,
-            "departments": [
-              "line_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "1-4-5",
-            "group": "本線",
-            "ev": 1.288887098768429,
-            "votes": 2,
-            "departments": [
-              "line_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "1-4-3",
-            "group": "本線",
-            "ev": 1.2872012439045415,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "risk_department"
-            ]
-          }
-        ],
+        "tickets": [],
         "purchase_authorized": false
       },
       {
         "version": "strategist_consensus_v1",
         "race_id": "065320261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793627340.0,
         "venue": "奈良",
         "race_no": 6,
@@ -117186,56 +115890,39 @@
           {
             "department": "data_department",
             "winner_car": 2,
-            "tickets": [
-              "2-1-6"
-            ],
-            "minimum_reference_races": 31.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
             "winner_car": 2,
-            "tickets": [
-              "2-6-1"
-            ],
-            "minimum_reference_races": 31.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
             "winner_car": 2,
-            "tickets": [
-              "2-1-6"
-            ],
-            "minimum_reference_races": 31.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
             "winner_car": 2,
             "tickets": [],
-            "minimum_reference_races": 31.0
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
           "2": 4
         },
-        "tickets": [
-          {
-            "buy": "2-1-6",
-            "group": "本線",
-            "ev": 1.1150189553335372,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "line_department"
-            ]
-          }
-        ],
+        "tickets": [],
         "purchase_authorized": false
       },
       {
         "version": "strategist_consensus_v1",
         "race_id": "068420261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793627880.0,
         "venue": "武雄",
         "race_no": 6,
@@ -117243,92 +115930,39 @@
           {
             "department": "data_department",
             "winner_car": 1,
-            "tickets": [
-              "1-2-6",
-              "1-2-7",
-              "1-7-2"
-            ],
-            "minimum_reference_races": 31.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
             "winner_car": 1,
-            "tickets": [
-              "1-2-6",
-              "1-7-2",
-              "1-5-3",
-              "1-5-2",
-              "1-5-4"
-            ],
-            "minimum_reference_races": 31.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
             "winner_car": 1,
-            "tickets": [
-              "1-2-6",
-              "1-7-2"
-            ],
-            "minimum_reference_races": 31.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
             "winner_car": 1,
-            "tickets": [
-              "1-2-6",
-              "1-3-4",
-              "1-3-5",
-              "1-3-7",
-              "1-5-3"
-            ],
-            "minimum_reference_races": 31.0
+            "tickets": [],
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
           "1": 4
         },
-        "tickets": [
-          {
-            "buy": "1-2-6",
-            "group": "本線",
-            "ev": 2.343371114367308,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "1-7-2",
-            "group": "本線",
-            "ev": 1.7287907758152106,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "1-5-3",
-            "group": "本線",
-            "ev": 1.7996512564337075,
-            "votes": 2,
-            "departments": [
-              "pace_department",
-              "risk_department"
-            ]
-          }
-        ],
+        "tickets": [],
         "purchase_authorized": false
       },
       {
         "version": "strategist_consensus_v1",
         "race_id": "073820261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793628420.0,
         "venue": "静岡",
         "race_no": 7,
@@ -117336,75 +115970,39 @@
           {
             "department": "data_department",
             "winner_car": 1,
-            "tickets": [
-              "1-5-2"
-            ],
-            "minimum_reference_races": 35.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
             "winner_car": 1,
-            "tickets": [
-              "1-3-5",
-              "1-3-6",
-              "2-3-5"
-            ],
-            "minimum_reference_races": 35.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
             "winner_car": 1,
-            "tickets": [
-              "2-1-6",
-              "1-3-6",
-              "1-6-2",
-              "2-6-5",
-              "1-3-5"
-            ],
-            "minimum_reference_races": 35.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
             "winner_car": 1,
-            "tickets": [
-              "1-3-5"
-            ],
-            "minimum_reference_races": 35.0
+            "tickets": [],
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
           "1": 4
         },
-        "tickets": [
-          {
-            "buy": "1-3-5",
-            "group": "本線",
-            "ev": 1.11633921400026,
-            "votes": 3,
-            "departments": [
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "1-3-6",
-            "group": "本線",
-            "ev": 1.1094567764196364,
-            "votes": 2,
-            "departments": [
-              "line_department",
-              "pace_department"
-            ]
-          }
-        ],
+        "tickets": [],
         "purchase_authorized": false
       },
       {
         "version": "strategist_consensus_v1",
         "race_id": "075320261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793628960.0,
         "venue": "奈良",
         "race_no": 7,
@@ -117412,104 +116010,39 @@
           {
             "department": "data_department",
             "winner_car": 1,
-            "tickets": [
-              "1-2-6",
-              "1-5-3",
-              "1-5-6",
-              "1-3-4"
-            ],
-            "minimum_reference_races": 34.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
             "winner_car": 1,
-            "tickets": [
-              "1-2-6",
-              "1-5-3",
-              "1-5-6"
-            ],
-            "minimum_reference_races": 34.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
             "winner_car": 1,
-            "tickets": [
-              "1-2-6",
-              "1-5-6",
-              "1-2-7",
-              "1-5-3"
-            ],
-            "minimum_reference_races": 34.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
             "winner_car": 1,
-            "tickets": [
-              "1-2-4",
-              "1-2-6",
-              "1-3-4",
-              "1-5-3"
-            ],
-            "minimum_reference_races": 34.0
+            "tickets": [],
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
           "1": 4
         },
-        "tickets": [
-          {
-            "buy": "1-2-6",
-            "group": "本線",
-            "ev": 1.4637215493556937,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "1-5-3",
-            "group": "本線",
-            "ev": 1.1961471178470173,
-            "votes": 4,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "1-5-6",
-            "group": "本線",
-            "ev": 1.3400342399871847,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "pace_department"
-            ]
-          },
-          {
-            "buy": "1-3-4",
-            "group": "本線",
-            "ev": 2.344657557902777,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "risk_department"
-            ]
-          }
-        ],
+        "tickets": [],
         "purchase_authorized": false
       },
       {
         "version": "strategist_consensus_v1",
         "race_id": "078420261102",
-        "snapshot_at": "2026-11-02T10:28:27+09:00",
-        "source_snapshot_at": "2026-11-02T10:28:27+09:00",
+        "snapshot_at": "2026-11-02T17:06:18+09:00",
+        "source_snapshot_at": "2026-11-02T17:06:18+09:00",
         "close_at": 1793629500.0,
         "venue": "武雄",
         "race_no": 7,
@@ -117517,130 +116050,68 @@
           {
             "department": "data_department",
             "winner_car": 1,
-            "tickets": [
-              "1-4-5",
-              "1-4-3",
-              "1-3-4",
-              "1-2-7"
-            ],
-            "minimum_reference_races": 46.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "pace_department",
             "winner_car": 1,
-            "tickets": [
-              "1-2-7",
-              "1-6-2"
-            ],
-            "minimum_reference_races": 46.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "line_department",
             "winner_car": 1,
-            "tickets": [
-              "1-4-3",
-              "1-4-5",
-              "1-3-4"
-            ],
-            "minimum_reference_races": 46.0
+            "tickets": [],
+            "minimum_reference_races": 0
           },
           {
             "department": "risk_department",
             "winner_car": 1,
-            "tickets": [
-              "1-3-2",
-              "1-3-4",
-              "1-4-3",
-              "1-4-5",
-              "1-4-6"
-            ],
-            "minimum_reference_races": 46.0
+            "tickets": [],
+            "minimum_reference_races": 0
           }
         ],
         "winner_votes": {
           "1": 4
         },
-        "tickets": [
-          {
-            "buy": "1-4-5",
-            "group": "本線",
-            "ev": 2.0093582313821425,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "1-3-4",
-            "group": "本線",
-            "ev": 1.4242362028300055,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "1-4-3",
-            "group": "本線",
-            "ev": 1.1574588265047336,
-            "votes": 3,
-            "departments": [
-              "data_department",
-              "line_department",
-              "risk_department"
-            ]
-          },
-          {
-            "buy": "1-2-7",
-            "group": "本線",
-            "ev": 1.1457794033210773,
-            "votes": 2,
-            "departments": [
-              "data_department",
-              "pace_department"
-            ]
-          }
-        ],
+        "tickets": [],
         "purchase_authorized": false
       }
     ],
     "settled": {
-      "settled_races": 1719,
-      "bet_races": 424,
+      "settled_races": 1758,
+      "bet_races": 433,
       "hits": 14,
-      "hit_rate": 0.0330188679245283,
-      "stake_yen": 232600,
+      "hit_rate": 0.03233256351039261,
+      "stake_yen": 238300,
       "return_yen": 84520,
-      "return_rate": 0.3633705932932072
+      "return_rate": 0.3546789760805707
     },
-    "paired_races": 314,
+    "paired_races": 316,
     "paired_strategist": {
-      "settled_races": 314,
-      "bet_races": 153,
+      "settled_races": 316,
+      "bet_races": 155,
       "hits": 5,
-      "hit_rate": 0.032679738562091505,
-      "stake_yen": 100800,
+      "hit_rate": 0.03225806451612903,
+      "stake_yen": 103000,
       "return_yen": 23720,
-      "return_rate": 0.23531746031746031
+      "return_rate": 0.23029126213592233
     },
     "paired_production": {
-      "settled_races": 314,
-      "bet_races": 284,
+      "settled_races": 316,
+      "bet_races": 286,
       "hits": 28,
-      "hit_rate": 0.09859154929577464,
-      "stake_yen": 200900,
+      "hit_rate": 0.0979020979020979,
+      "stake_yen": 203000,
       "return_yen": 142530,
-      "return_rate": 0.7094574415131907
+      "return_rate": 0.7021182266009852
     },
     "production_miss_reasons": {
       "ev_filter_skip": 141,
       "skip": 30,
       "odds_missing": 19,
-      "formation_omission": 88,
+      "formation_omission": 90,
       "hit": 28,
       "ev_compression_miss": 8
     }
