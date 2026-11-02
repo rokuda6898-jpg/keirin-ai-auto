@@ -5,6 +5,7 @@ from pathlib import Path
 MODELS = (
     ('index.html', '現行モデル', '8・10・18点の予想'),
     ('previous.html', '従来NEXUS', '予想印・S/A/B・配分'),
+    ('high-roi.html', '高回収率', '回収重視・EXあり'),
     ('ex.html', 'EX予想', '追加モデル・8／10／18点'),
     ('nexus-forward.html', '10点予想・比較', '保存した予想と成績'),
     ('graded.html', '重賞部', '通常・穴・最良式'),

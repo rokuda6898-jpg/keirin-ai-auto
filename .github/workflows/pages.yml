@@ -2,7 +2,7 @@ name: deploy-pages
 on:
   push:
     branches: [main]
-    paths: ['site/**', 'tests/**', 'outputs/current_live.json', 'outputs/ex_live.json', 'outputs/nexus_live.json', 'outputs/nexus_forward.json', 'outputs/conditional_near_close.json', 'outputs/conditional_roi.json', 'outputs/conditional_roi_research_2026-10-20.json', 'src/build_public_site.py', 'src/site_retirement.py', 'src/site_model_navigation.py', '.github/workflows/pages.yml']
+    paths: ['site/**', 'tests/**', 'outputs/current_live.json', 'outputs/ex_live.json', 'outputs/high_roi_live.json', 'outputs/nexus_live.json', 'outputs/nexus_forward.json', 'outputs/conditional_near_close.json', 'outputs/conditional_roi.json', 'outputs/conditional_roi_research_2026-10-20.json', 'src/build_public_site.py', 'src/site_retirement.py', 'src/site_model_navigation.py', '.github/workflows/pages.yml']
   workflow_dispatch:
   workflow_run:
     workflows: ['conditional-trifecta-live', 'nexus-formation-publish', 'quick-keirin-results', 'settle-keirin-results']
@@ -34,6 +34,8 @@ jobs:
           node --check site/current.js
           node tests/test_current_site.js
           node tests/test_ex_site.js
+          node --check site/high-roi.js
+          node tests/test_high_roi_site.js
           node --check site/nexus.js
           node --check site/nexus-core.js
           node --check site/nexus-forward.js
