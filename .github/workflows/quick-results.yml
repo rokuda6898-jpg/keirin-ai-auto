@@ -90,7 +90,7 @@ jobs:
           }
 
           refresh_today_if_needed
-          python src/settle_results.py
+          python src/settle_results.py --results-only
           python src/sync_current_results.py
           python src/secondary_results_sync.py
           python - <<'PY'
