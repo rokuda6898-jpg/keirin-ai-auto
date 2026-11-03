@@ -7,6 +7,7 @@ import re
 
 from nexus_input_snapshots import ROOT, JST, canonical, read_json, save_json
 from nexus_results_sync import _outcome, _timestamp
+from secondary_results_sync import official_outcome
 
 RESULTS = Path("outputs/latest_results.json")
 
@@ -77,6 +78,13 @@ def snapshot(cache, root=ROOT):
     day = next(iter(days), today_jst())
     from nexus_publish_saved_inputs import copy_newer_inputs
     save_json(cache / RESULTS, rows)
+    # Keep the last-night official payout archive outside checkout as well.
+    # The fast result job often finishes while other model writers push main.
+    for archive in sorted((root / "outputs/official_results_archive").glob("????-??-??.json")):
+        archived_rows = result_rows(archive)
+        if any(race_date(row) != archive.stem for row in archived_rows):
+            raise ValueError("official payout archive date mismatch")
+        save_json(cache / archive.relative_to(root), archived_rows)
     copy_newer_inputs(root, cache)
     save_json(cache / "retry_manifest.json", dict(schema=1, date=day))
     report = dict(action="snapshot", cache_date=day, races=len(rows))
@@ -126,6 +134,27 @@ def replay(cache, root=ROOT):
         merged, accepted = merge_results(current, cached, day)
         if merged != current:
             save_json(root / RESULTS, merged)
+    # Preserve original per-pool payout receipts across concurrent Git pushes.
+    # A more complete official record always wins over a newer incomplete row.
+    def archive_quality(row):
+        return (sum(int(official_outcome(row, pool) is not None)
+                    for pool in ("trifecta", "trio", "exacta")),
+                quality(row)[-1])
+    for source in sorted((cache / "outputs/official_results_archive").glob("????-??-??.json")):
+        day = source.stem
+        fresh = result_rows(source)
+        dest = root / source.relative_to(cache)
+        prior = result_rows(dest, missing=True)
+        if any(race_date(row) != day for row in [*fresh, *prior]):
+            raise ValueError("official payout archive date mismatch in retry")
+        by_id = {str(row["race_id"]): deepcopy(row) for row in prior}
+        for row in fresh:
+            key = str(row["race_id"])
+            if key not in by_id or archive_quality(row) > archive_quality(by_id[key]):
+                by_id[key] = deepcopy(row)
+        latest = [by_id[key] for key in sorted(by_id)]
+        if latest != prior:
+            save_json(dest, latest)
     # Historical raw outcomes can still be retained for the next history update.
     # This never copies a live feed, ledger, prediction, odds or allocation.
     from nexus_publish_saved_inputs import copy_newer_inputs
