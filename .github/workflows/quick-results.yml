@@ -10,6 +10,7 @@ on:
       - "src/quick_results_retry.py"
       - "src/sync_current_results.py"
       - "src/secondary_results_sync.py"
+      - "src/secondary_results_backfill.py"
       - "src/nexus_model/budget.py"
       - "src/official_outcomes.py"
       - "src/site_manager.py"
@@ -50,7 +51,9 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Verify frozen-results settlement invariants
-        run: python -m unittest discover -s tests -p 'test_secondary_results_sync.py'
+        run: |
+          python -m unittest discover -s tests -p 'test_secondary_results_sync.py'
+          python -m unittest discover -s tests -p 'test_secondary_results_backfill.py'
 
       - name: Refresh official results only
         run: |
@@ -91,6 +94,7 @@ jobs:
 
           refresh_today_if_needed
           python src/settle_results.py --results-only
+          python src/secondary_results_backfill.py --lookback-days 2 --limit 30
           python src/sync_current_results.py
           python src/secondary_results_sync.py
           python - <<'PY'
@@ -111,6 +115,9 @@ jobs:
 
           stage_result_outputs() {
             git add outputs/latest_results.json outputs/index.html outputs/manager_post_settlement_status.json outputs/current_live.json outputs/high_roi_live.json outputs/trio_live.json outputs/exacta_live.json
+            if [ -d outputs/official_results_archive ]; then
+              git add -- outputs/official_results_archive
+            fi
             if [ -d data/raw/nexus_page_snapshots ]; then
               git add -f -- data/raw/nexus_page_snapshots
             fi
