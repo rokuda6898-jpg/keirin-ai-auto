@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-11-03T12:20:51+09:00",
+  "checked_at": "2026-11-03T16:05:50+09:00",
   "owners": {
     "data": "データ品質責任者",
     "coverage": "全レース予想責任者",
@@ -24,6 +24,7 @@
       "race_ids": [
         "044620261010",
         "053520261010",
+        "054520261103",
         "058320261027",
         "061220261031",
         "095320261009"
@@ -43,17 +44,12 @@
       ]
     },
     {
-      "owner": "settlement",
-      "code": "results_overdue",
-      "level": "warning",
-      "message": "発走から2時間以上経過しても結果未確認です。中止・延期も確認してください。",
-      "race_ids": [
-        "013620261103",
-        "023620261103",
-        "033620261103",
-        "043620261103",
-        "053620261103"
-      ]
+      "owner": "operations",
+      "code": "workflow_pages.yml",
+      "level": "error",
+      "message": "pages.yml の直近完了処理が失敗しています。",
+      "race_ids": [],
+      "run_url": "https://github.com/rokuda6898-jpg/keirin-ai-auto/actions/runs/41593950939"
     }
   ],
   "coverage": {
@@ -65,11 +61,11 @@
   },
   "matched_comparison": {
     "company": {
-      "races": 0,
-      "hits": 0,
-      "stake_yen": 0,
-      "return_yen": 0,
-      "largest_hit_return_share": null
+      "races": 23,
+      "hits": 4,
+      "stake_yen": 13000,
+      "return_yen": 9130.0,
+      "largest_hit_return_share": 0.4687842278203724
     }
   },
   "active_modes": [
@@ -79,5 +75,5 @@
   "department_mean_ticket_overlap": 0.23502494963961132,
   "email_configured": false,
   "notification_channel": "github_actions",
-  "email_status": "github_actions_duplicate"
+  "email_status": "github_actions_alert"
 }
