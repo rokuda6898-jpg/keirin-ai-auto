@@ -1,6 +1,6 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
-const {policies,expand,validate,state,copyText}=require('../site/pools.js');
+const {policies,expand,validate,state,copyText,rosterInfo,rosterText}=require('../site/pools.js');
 assert.deepEqual(expand([{a:[1,2],b:[1,2],c:[3,4]},{a:[3],b:[1],c:[2]}],'trio'),['1-2-3','1-2-4']);
 assert.deepEqual(expand([{a:[1,2],b:[1,2]}],'exacta'),['1-2','2-1']);
 for(const pool of ['trio','exacta']){
@@ -14,6 +14,17 @@ for(const pool of ['trio','exacta']){
    const r=structuredClone(sample);mutation(r);assert.throws(()=>validate(r,pool));
   }
   assert.equal(state({...sample,settlement:{status:'void'}}),'返還');
+ }
+ const seven=d.races.find(r=>r.forecast&&r.riders.length===7&&new Set(r.forecast.tickets.flatMap(t=>t.split('-').map(Number))).size<7);
+ if(seven){const r=structuredClone(seven),used=new Set(r.forecast.tickets.flatMap(t=>t.split('-').map(Number))),missing=r.riders.find(v=>!used.has(v.car)).car;r.riders=r.riders.filter(v=>v.car!==missing);assert.throws(()=>validate(r,pool),/選手/);}
+ const withdrawal=structuredClone(d.races.find(r=>r.race_id==='054520261103'));
+ if(withdrawal?.forecast){
+  const before=JSON.stringify(withdrawal.forecast);
+  withdrawal.roster_context={registered_cars:[1,2,3,4,5,6,7],active_cars:[1,3,4,5,6,7],withdrawn:[{car:2,name:'中石昌芳',prefecture:'広島'}]};
+  validate(withdrawal,pool);assert.equal(rosterInfo(withdrawal).riders.length,7);assert.equal(rosterInfo(withdrawal).activeCount,6);assert.ok(rosterText(withdrawal).includes('2番車 中石昌芳：欠場'));assert.ok(rosterText(withdrawal).includes('出走6車'));
+  assert.equal(JSON.stringify(withdrawal.forecast),before);
+  const bad=structuredClone(withdrawal);bad.roster_context.active_cars.push(2);assert.throws(()=>validate(bad,pool),/欠場/);
+  const later=structuredClone(withdrawal);later.roster_context.active_cars=later.roster_context.active_cars.filter(c=>c!==1);later.roster_context.withdrawn.push({car:1,name:'後から欠場'});validate(later,pool);assert.ok(rosterText(later).includes('予想作成時は6車'));assert.equal(rosterInfo(later).riders.filter(v=>!v.absent).length,5);assert.equal(JSON.stringify(later.forecast),before);
  }
  const page=fs.readFileSync(`site/${pool}.html`,'utf8');assert.ok(page.includes(`data-pool="${pool}"`));assert.ok(page.includes('各100円')||page.includes('1点100円'));assert.ok(page.includes('EXの補助評価は加えていません'));assert.ok(!page.includes('selection-intro'));assert.ok(!page.includes('109.55'));
  console.log(`${pool}: ${d.races.length} races, ${d.races.filter(r=>r.forecast).length} forecasts; validation passed.`);
