@@ -29,7 +29,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /src/**
+            /site/**
+            /tests/**
+            /data/raw/today_entries.csv
+            /outputs/company/company_decision_predictions.json
+            /outputs/trio_live.json
+            /outputs/exacta_live.json
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
