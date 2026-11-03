@@ -1043,7 +1043,7 @@ def main():
     parser.add_argument("--results-only", action="store_true",
                         help="Refresh official results without legacy bets or model retraining")
     args = parser.parse_args()
-    if args.results_only:
+    if getattr(args, "results_only", False):
         ensure_dirs()
         results = fetch_results()
         publish_official_results(results)
