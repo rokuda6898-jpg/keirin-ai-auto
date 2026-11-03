@@ -1,57 +1,67 @@
 {
-  "checked_at_jst": "2026-11-03T12:20:01+09:00",
-  "status": "repaired",
+  "checked_at_jst": "2026-11-03T20:01:55+09:00",
+  "status": "waiting_results",
   "repaired": true,
   "attempts": [
     {
       "attempt": 0,
       "problems": [
         {
-          "type": "results_waiting",
-          "race_ids": [
-            "036320261103"
-          ]
-        },
-        {
           "type": "results_overdue",
           "race_ids": [
-            "011220261103",
-            "013620261103",
-            "016320261103",
-            "021220261103",
-            "023620261103",
-            "026320261103",
-            "031220261103",
-            "033620261103",
-            "043620261103",
-            "053620261103",
-            "063620261103",
-            "073620261103"
+            "018320261103",
+            "024520261103",
+            "028320261103",
+            "034520261103",
+            "038320261103",
+            "044520261103",
+            "048320261103",
+            "054520261103",
+            "058320261103",
+            "064520261103",
+            "068320261103",
+            "074520261103",
+            "078320261103",
+            "084520261103",
+            "088320261103",
+            "094520261103",
+            "098320261103",
+            "104520261103",
+            "108320261103",
+            "126320261103"
           ]
         }
       ],
       "health": {
         "severity": "warning",
         "problem_types": [
-          "results_overdue",
-          "results_waiting"
+          "results_overdue"
         ],
         "race_count": 76,
-        "expected_riders": 537,
-        "actual_riders": 537,
+        "expected_riders": 536,
+        "actual_riders": 536,
         "rider_integrity_ok": true
       },
       "repair_action": "settlement_refresh"
     },
     {
       "attempt": 1,
-      "problems": [],
+      "problems": [
+        {
+          "type": "results_waiting",
+          "race_ids": [
+            "114520261103"
+          ]
+        }
+      ],
       "health": {
-        "severity": "ok",
-        "problem_types": [],
+        "severity": "warning",
+        "problem_types": [
+          "results_waiting"
+        ],
         "race_count": 76,
-        "expected_riders": 537,
-        "actual_riders": 537,
+        "expected_riders": 536,
+        "actual_riders": 536,
         "rider_integrity_ok": true
       }
     }
@@ -578,17 +588,18 @@
     "054520261103": {
       "cars": [
         1,
-        2,
         3,
         4,
         5,
         6,
         7
       ],
-      "count": 7,
-      "expected_entries": 7,
+      "count": 6,
+      "expected_entries": 6,
       "declared_entries": 7,
-      "cancelled_cars": []
+      "cancelled_cars": [
+        2
+      ]
     },
     "055320261103": {
       "cars": [
@@ -1204,15 +1215,19 @@
     }
   },
   "health": {
-    "severity": "ok",
-    "problem_types": [],
+    "severity": "warning",
+    "problem_types": [
+      "results_waiting"
+    ],
     "race_count": 76,
-    "expected_riders": 537,
-    "actual_riders": 537,
+    "expected_riders": 536,
+    "actual_riders": 536,
     "rider_integrity_ok": true
   },
   "recurrence": {
     "level": 0,
-    "counts": {}
+    "counts": {
+      "results_waiting:114520261103": 0
+    }
   }
 }
