@@ -292,6 +292,30 @@ def parse_result_page(url):
     return result
 
 
+def publish_official_results(results):
+    """Publish the confirmed official payouts for all bet types, not just 3連単.
+
+    Secondary models must use the original payoutUnitPrice rather than guessing
+    3連複/2車単 returns from a 3連単 result or pre-race odds.
+    """
+    columns = [
+        "race_id", "actual_trifecta", "actual_trifecta_odds",
+        "actual_trifecta_buys", "payouts_trifecta_json",
+        "official_result_available", "result_source", "secondary_result_url",
+        "result_observed_at_jst",
+        "refund_all", "cancelled",
+    ]
+    columns += [f"actual_{pool}" for pool in PAYOUT_SPECS if pool != "trifecta"]
+    columns += [f"payouts_{pool}_json" for pool in PAYOUT_SPECS if pool != "trifecta"]
+    for column in columns:
+        if column not in results.columns:
+            results[column] = None if column in ("refund_all", "cancelled") else ""
+    public_results = results[columns].copy()
+    public_results.to_json(LATEST_RESULTS_JSON, orient="records", force_ascii=False)
+    patch_index_with_official_results(public_results)
+    return public_results
+
+
 def settled_return_yen(row, fallback_return):
     if not bool(row.get("is_decided", False)):
         return np.nan
@@ -876,6 +900,10 @@ def run_settlement(args):
     except (pd.errors.EmptyDataError, pd.errors.ParserError):
         bets = pd.DataFrame()
     bets = normalize_bets_for_settlement(bets)
+    # Outcome collection is independent from the production purchase ledger.
+    # A purchase-gated empty ledger must never stop the result-only websites.
+    results = fetch_results()
+    publish_official_results(results)
 
     if bets.empty:
         settled = bets.copy()
@@ -887,7 +915,6 @@ def run_settlement(args):
         settled["actual_profit_yen"] = pd.Series(index=settled.index, dtype=float)
         settled["display_status"] = pd.Series("結果取得待ち", index=settled.index, dtype=object)
     else:
-        results = fetch_results()
         for column, default in [
             ("actual_trifecta", ""),
             ("actual_trifecta_odds", np.nan),
@@ -895,18 +922,6 @@ def run_settlement(args):
         ]:
             if column not in results.columns:
                 results[column] = default
-        public_columns = [
-            "race_id", "actual_trifecta", "actual_trifecta_odds",
-            "actual_trifecta_buys", "payouts_trifecta_json",
-            "official_result_available", "result_source", "secondary_result_url",
-            "result_observed_at_jst",
-        ]
-        for column in public_columns:
-            if column not in results.columns:
-                results[column] = ""
-        public_results = results[public_columns].copy()
-        public_results.to_json(LATEST_RESULTS_JSON, orient="records", force_ascii=False)
-        patch_index_with_official_results(public_results)
         update_top1_accuracy(results)
         update_trifecta_top10_accuracy(results)
         update_final_trifecta_ticket_accuracy(results)
@@ -986,14 +1001,7 @@ def run_settlement(args):
             # The ordinary result job may skip fetching when the production
             # ticket ledger is empty. Still settle separately frozen forecasts.
             shadow_results = fetch_results()
-            public = ["race_id", "actual_trifecta", "actual_trifecta_odds",
-                      "actual_trifecta_buys", "payouts_trifecta_json",
-                      "official_result_available", "result_source", "secondary_result_url",
-                      "result_observed_at_jst"]
-            for column in public:
-                if column not in shadow_results:
-                    shadow_results[column] = ""
-            shadow_results[public].to_json(LATEST_RESULTS_JSON, orient="records", force_ascii=False)
+            publish_official_results(shadow_results)
             shadow_report = settle_fusion_shadow(LATEST_RESULTS_JSON)
         print(f"fusion shadow settled: {shadow_report['hit_races']}/{shadow_report['settled_races']} "
               f"top-12 hits; over 50x={shadow_report['hit_payout_over_50x']}, "
