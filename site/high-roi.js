@@ -33,6 +33,7 @@
  }
  const time=x=>x?new Date(x*1000).toLocaleTimeString('ja-JP',{timeZone:'Asia/Tokyo',hour:'2-digit',minute:'2-digit'}):'未定';
  const stamp=x=>x?new Date(x).toLocaleString('ja-JP',{timeZone:'Asia/Tokyo',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+ const jstToday=()=>new Date(Date.now()+9*3600000).toISOString().slice(0,10);
  const car=c=>`<span class="car c${Number(c)}">${Number(c)}</span>`;
  function stat(label,value,unit,detail){return `<div class="stat"><div class="stat-label">${label}</div><div class="stat-value">${esc(value)}<small>${unit}</small></div><div class="stat-detail">${detail}</div></div>`;}
  if(typeof module!=='undefined'&&module.exports){module.exports={expand,validate,status,copyText,MODEL,MODEL_LABELS,isSelected,selectionBadge,SELECTION_RULE};return;}
@@ -73,10 +74,10 @@
  const paths=['original/high_roi_live.json',...(location.hostname.endsWith('github.io')?['https://raw.githubusercontent.com/rokuda6898-jpg/keirin-ai-auto/main/outputs/high_roi_live.json']:[])];
  try{const rs=await Promise.allSettled(paths.map(async url=>{const res=await fetch(url+'?t='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(18000)});if(!res.ok)throw Error(res.status);const d=await res.json();if(d.schema!==1||d.model_id!==MODEL||!Array.isArray(d.races)||!Number.isFinite(Date.parse(d.generated_at)))throw Error('現行データではありません');d.races.forEach(validate);return d;}));const ok=rs.filter(r=>r.status==='fulfilled').map(r=>r.value).sort((a,b)=>Date.parse(b.generated_at)-Date.parse(a.generated_at));if(!ok.length)throw Error('現在の予想データを読み込めません。');data=ok[0];if(data.observed?.model_id!==MODEL)throw Error('成績の方式が一致しません');
  const days=[...new Set([data.today,...data.races.map(r=>r.date)])].sort().reverse();if(!days.includes(day))day=data.today;
- $('date').innerHTML=days.map(d=>`<option value="${esc(d)}" ${d===day?'selected':''}>${esc(d.replace(/-/g,'/'))}${d===data.today?'（今日）':''}</option>`).join('');
- const age=(Date.now()-Date.parse(data.generated_at))/60000;const stale=age>45;const forecasts=data.races.filter(r=>r.date===data.today&&r.forecast).length;
- $('notice').classList.toggle('warn',stale||data.health.stage!=='ready');$('notice').textContent=stale?`最終更新は${stamp(data.generated_at)}です。更新が遅れています。締切・欠場情報は公式でご確認ください。`:`${data.health.message} 本日${forecasts}レースの予想を保存済みです。厳選${data.races.filter(r=>r.date===data.today&&isSelected(r)).length}レース。`;
- $('updated').textContent=`最終更新 ${stamp(data.generated_at)}（日本時間）／ 高回収率 ／ 約20分ごとに更新`;
+ $('date').innerHTML=days.map(d=>`<option value="${esc(d)}" ${d===day?'selected':''}>${esc(d.replace(/-/g,'/'))}${d===jstToday()?'（今日）':''}</option>`).join('');
+ const age=(Date.now()-Date.parse(data.generated_at))/60000;const stale=age>45,previousDay=data.today!==jstToday();const forecasts=data.races.filter(r=>r.date===data.today&&r.forecast).length;
+ $('notice').classList.toggle('warn',stale||previousDay||data.health.stage!=='ready');$('notice').textContent=previousDay?'本日分の予想は未作成です。前日以前の記録を表示しています。':stale?`予想の最終更新は${stamp(data.generated_at)}です。更新が遅れています。締切・欠場情報は公式でご確認ください。`:`${data.health.message} 本日${forecasts}レースの予想を保存済みです。厳選${data.races.filter(r=>r.date===data.today&&isSelected(r)).length}レース。`;
+ $('updated').textContent=`予想更新 ${stamp(data.generated_at)} ／ 結果更新 ${stamp(data.results_updated_at)}（日本時間）／ 高回収率`;
  render();performance();
  }catch(e){$('notice').classList.add('warn');$('notice').textContent='予想を読み込めませんでした。「更新」で再試行してください。';if(!data){$('race-list').innerHTML='<p class="empty">予想データを確認中です。</p>';$('race-detail').innerHTML='<div class="empty detail-empty"><h2>データを確認中です</h2><p>古い方式の予想への置き換えは行いません。</p></div>';}}finally{$('reload').disabled=false;}
  }
