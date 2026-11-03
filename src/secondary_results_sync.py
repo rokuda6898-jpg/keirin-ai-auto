@@ -133,6 +133,30 @@ def sync(outputs=OUTPUTS):
         raise ValueError("Official results feed must be a race list")
     official = {str(x["race_id"]): x for x in fetched
                 if isinstance(x, dict) and "race_id" in x}
+    # The current-day compact feed rolls over at midnight. Preserve the
+    # separately fetched, identity-checked original past-day payouts as well.
+    archive_dir = outputs / "official_results_archive"
+    for archive_path in sorted(archive_dir.glob("????-??-??.json")):
+        recorded = json.loads(archive_path.read_text(encoding="utf-8"))
+        if not isinstance(recorded, list):
+            raise ValueError("invalid official archive: " + str(archive_path))
+        archive_day = archive_path.stem.replace("-", "")
+        for row in recorded:
+            if not isinstance(row, dict):
+                continue
+            rid = str(row.get("race_id", ""))
+            if len(rid) != 12 or rid[-8:] != archive_day:
+                raise ValueError("official archive race date mismatch: " + rid)
+            prior = official.get(rid)
+            if prior is None:
+                official[rid] = row
+            else:
+                prior_quality = sum(int(official_outcome(prior, kind) is not None)
+                                    for kind in ("trifecta", "trio", "exacta"))
+                new_quality = sum(int(official_outcome(row, kind) is not None)
+                                  for kind in ("trifecta", "trio", "exacta"))
+                if new_quality > prior_quality:
+                    official[rid] = row
     report = {}
     for name, (pool, model) in FEEDS.items():
         path = outputs / f"{name}_live.json"
