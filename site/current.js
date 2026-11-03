@@ -46,12 +46,15 @@
   if(!feed||!Array.isArray(feed.races)||!Array.isArray(resultRows))return 0;
   const byId=new Map(),dateValue=v=>{const n=Date.parse(v||'');return Number.isFinite(n)?n:0;};
   for(const row of resultRows){
-   const r=officialRecord(row),id=String(row?.race_id||'');
-   if(!r||!id)continue;
-   const prev=byId.get(id);
-   if(!prev||dateValue(r.observed_at)>dateValue(prev.observed_at))byId.set(id,r);
+   const result=officialRecord(row),id=String(row?.race_id||'');
+   if(!result||!id)continue;
+   const prior=byId.get(id);
+   if(!prior||dateValue(result.observed_at)>dateValue(prior.observed_at))byId.set(id,result);
   }
   let changed=0,maxStamp=dateValue(feed.results_updated_at);
+  const delta={races:0,hits:0,stake:0,returned:0,HIGH_hits:0};
+  const hit=s=>Number(s?.status==='hit'),count=s=>Number(s?.status==='hit'||s?.status==='miss');
+  const high=(s,p)=>Number(s?.status==='hit'&&p?.tickets?.some(t=>Number(s.payoffs?.[t])>=10000));
   for(const r of feed.races){
    const official=byId.get(String(r.race_id));
    if(!official||r.status==='cancelled'||r.settlement?.status==='void')continue;
@@ -59,49 +62,49 @@
    const nextTime=dateValue(official.observed_at);
    if(priorTime>nextTime && (r.official_result||r.settlement))continue;
    maxStamp=Math.max(maxStamp,nextTime);
-   const prior=JSON.stringify([r.official_result||null,r.settlement||null]);
+   const old=r.settlement?{...r.settlement}:null;
+   const before=JSON.stringify([r.official_result||null,r.settlement||null]);
    r.official_result=official;
-   if(r.forecast?.tickets?.length&&Number.isSafeInteger(r.forecast.total_yen)){
-    const p=r.forecast,won=new Set(official.winning_tickets);
+   const p=r.forecast;
+   if(p?.tickets?.length&&Number.isSafeInteger(p.total_yen)){
+    const won=new Set(official.winning_tickets);
     const winning=p.tickets.filter(t=>won.has(t));
     const returned=winning.reduce((sum,t)=>sum+official.payoffs[t],0);
     r.settlement={status:winning.length?'hit':'miss',stake:p.total_yen,returned,
                   winning_tickets:official.winning_tickets,payoffs:official.payoffs,
                   result_observed_at:official.observed_at};
    }
-   if(prior!==JSON.stringify([r.official_result||null,r.settlement||null])){
-    changed++;
+   if(before===JSON.stringify([r.official_result||null,r.settlement||null]))continue;
+   changed++;
+   if(p?.model_id===MODEL&&r.performance_eligible!==false){
+    const updated=r.settlement;
+    delta.races+=count(updated)-count(old);
+    delta.hits+=hit(updated)-hit(old);
+    delta.stake+=(count(updated)?Number(updated.stake):0)-(count(old)?Number(old.stake):0);
+    delta.returned+=(count(updated)?Number(updated.returned):0)-(count(old)?Number(old.returned):0);
+    delta.HIGH_hits+=high(updated,p)-high(old,p);
    }
   }
   if(!changed)return 0;
   if(maxStamp)feed.results_updated_at=new Date(maxStamp).toISOString();
-  const eligible=feed.races.filter(r=>r.forecast?.model_id===MODEL&&r.performance_eligible!==false);
-  const settled=eligible.filter(r=>r.settlement&&['hit','miss'].includes(r.settlement.status));
-  const summary={
-   races:settled.length,hits:settled.filter(r=>r.settlement.status==='hit').length,
-   stake:settled.reduce((n,r)=>n+r.settlement.stake,0),
-   returned:settled.reduce((n,r)=>n+r.settlement.returned,0),
-   HIGH_hits:settled.filter(r=>r.settlement.status==='hit'&&r.forecast.tickets.some(t=>r.official_result?.payoffs?.[t]>=10000)).length,
-   pending:eligible.filter(r=>!r.settlement).length,
-   void:eligible.filter(r=>r.settlement?.status==='void').length
-  };
-  const old=feed.observed||{},base=Number(old.races)||0;
-  // For a rolling race feed, preserve older historical totals and add only
-  // newly confirmed races; for a full feed rebuild totals from the race rows.
-  if(base>summary.races){
-   const extra=feed.races.filter(r=>r.forecast?.model_id===MODEL&&r.performance_eligible!==false&&r.settlement&&r.settlement.result_observed_at&&byId.has(String(r.race_id)));
-   const fresh=extra.filter(r=>!r._already_counted_current_results);
-   if(fresh.length){
-    summary.races=base+fresh.length;summary.hits=(Number(old.hits)||0)+fresh.filter(r=>r.settlement.status==='hit').length;
-    summary.stake=(Number(old.stake)||0)+fresh.reduce((n,r)=>n+r.settlement.stake,0);
-    summary.returned=(Number(old.returned)||0)+fresh.reduce((n,r)=>n+r.settlement.returned,0);
-    summary.HIGH_hits=(Number(old.HIGH_hits)||0)+fresh.filter(r=>r.settlement.status==='hit'&&r.forecast.tickets.some(t=>r.official_result?.payoffs?.[t]>=10000)).length;
-    summary.pending=Math.max(0,(Number(old.pending)||0)-fresh.length);
-   }else return changed;
+  const old=feed.observed||{};
+  let races=Math.max(0,(Number(old.races)||0)+delta.races),
+      hits=Math.max(0,(Number(old.hits)||0)+delta.hits),
+      stake=Math.max(0,(Number(old.stake)||0)+delta.stake),
+      returned=Math.max(0,(Number(old.returned)||0)+delta.returned),
+      HIGH_hits=Math.max(0,(Number(old.HIGH_hits)||0)+delta.HIGH_hits);
+  // A freshly initialized feed may already contain settled rows but have no
+  // aggregate yet. In that case only, rebuild from authoritative row evidence.
+  if(!Number(old.races)){
+   const rows=feed.races.filter(r=>r.forecast?.model_id===MODEL&&r.performance_eligible!==false&&count(r.settlement));
+   races=rows.length;hits=rows.reduce((n,r)=>n+hit(r.settlement),0);
+   stake=rows.reduce((n,r)=>n+Number(r.settlement.stake),0);
+   returned=rows.reduce((n,r)=>n+Number(r.settlement.returned),0);
+   HIGH_hits=rows.reduce((n,r)=>n+high(r.settlement,r.forecast),0);
   }
-  feed.observed={...old,...summary,model_id:MODEL,
-    hit_pct:summary.races?summary.hits*100/summary.races:0,
-    roi_pct:summary.stake?summary.returned*100/summary.stake:0};
+  feed.observed={...old,model_id:MODEL,races,hits,stake,returned,HIGH_hits,
+   pending:Math.max(0,(Number(old.pending)||0)-Math.max(0,delta.races)),
+   hit_pct:races?hits*100/races:0,roi_pct:stake?returned*100/stake:0};
   return changed;
  }
  function copyText(r){const p=r.forecast;return `${r.date} ${r.venue} ${r.race_number}R｜${labels[p.category]}判定\n`+p.blocks.map((b,i)=>`${i+1}. ${b.first.join('・')} → ${b.second.join('・')} → ${b.third.join('・')}`).join('\n')+`\n同一車・重複を除く${p.count}点 × 100円 = ${num(p.total_yen)}円\n保存 ${stamp(p.saved_at)}／締切 ${time(r.close_at)}\nNEXUS ${MODEL_LABELS[p.model_id]}`;
