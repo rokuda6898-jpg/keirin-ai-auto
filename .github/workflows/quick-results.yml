@@ -25,18 +25,15 @@ on:
 permissions:
   contents: write
 
-concurrency:
-  # Keep rapid result refreshes independent from the shared repository-writer
-  # queue. GitHub retains only one pending run per concurrency group, so sharing
-  # that group can evict a waiting result refresh when settle/manager starts.
-  # Push races reuse captured results against latest main without another fetch.
-  group: keirin-quick-results-writer
-  cancel-in-progress: false
-
 jobs:
   refresh:
-    # Never react recursively to downstream jobs launched by this workflow.
+    # Gate recursion before entering the writer queue. Skipped workflow_run
+    # events must never evict an actual scheduled refresh from GitHub's
+    # single-pending-run concurrency queue.
     if: github.event_name != 'workflow_run' || (github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.conclusion == 'success' && (github.event.workflow_run.name == 'intraday-keirin-odds' || github.event.workflow_run.event == 'schedule'))
+    concurrency:
+      group: keirin-quick-results-writer
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
