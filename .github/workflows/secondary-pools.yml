@@ -1,0 +1,62 @@
+name: publish-daily-secondary-pools
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'src/secondary_pool_forecasts.py'
+      - '.github/workflows/secondary-pools.yml'
+  workflow_run:
+    workflows: ['daily-keirin-predict']
+    types: [completed]
+  schedule:
+    # Source snapshots have generally been committed by 06:45 JST.
+    - cron: '20 22 * * *'  # 07:20 JST
+    - cron: '5 23 * * *'   # 08:05 JST
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-secondary-pools
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Publish only pre-close, immutable forecasts
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for attempt in 1 2 3 4 5; do
+            git fetch origin main
+            git reset --hard origin/main
+            python src/secondary_pool_forecasts.py
+            node tests/test_pool_site.js
+            PYTHONPATH=src python -m unittest discover -s tests -p 'test_secondary_results_sync.py'
+            git add outputs/trio_live.json outputs/exacta_live.json
+            if git diff --cached --quiet; then
+              echo 'Forecasts already current'
+              exit 0
+            fi
+            git commit -m 'Publish guarded daily trio and exacta forecasts'
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            echo "Concurrent update: retry $attempt/5 against latest main"
+            sleep "$((attempt*2))"
+          done
+          echo 'Failed to publish secondary pool forecasts' >&2
+          exit 1
