@@ -100,6 +100,8 @@ def apply_offline(root, rows):
     # Retry against the newest main without modifying any frozen predictions.
     from sync_current_results import sync as sync_current
     sync_current(root / "outputs")
+    from secondary_results_sync import sync as sync_secondary
+    sync_secondary(root / "outputs")
     return patched, synced
 
 
