@@ -900,10 +900,6 @@ def run_settlement(args):
     except (pd.errors.EmptyDataError, pd.errors.ParserError):
         bets = pd.DataFrame()
     bets = normalize_bets_for_settlement(bets)
-    # Outcome collection is independent from the production purchase ledger.
-    # A purchase-gated empty ledger must never stop the result-only websites.
-    results = fetch_results()
-    publish_official_results(results)
 
     if bets.empty:
         settled = bets.copy()
@@ -915,6 +911,8 @@ def run_settlement(args):
         settled["actual_profit_yen"] = pd.Series(index=settled.index, dtype=float)
         settled["display_status"] = pd.Series("結果取得待ち", index=settled.index, dtype=object)
     else:
+        results = fetch_results()
+        publish_official_results(results)
         for column, default in [
             ("actual_trifecta", ""),
             ("actual_trifecta_odds", np.nan),
@@ -1042,8 +1040,19 @@ def sync_nexus_results_after_settlement():
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--min-expected-profit", type=float, default=0.0)
+    parser.add_argument("--results-only", action="store_true",
+                        help="Refresh official results without legacy bets or model retraining")
     args = parser.parse_args()
-    result = run_settlement(args)
+    if args.results_only:
+        ensure_dirs()
+        results = fetch_results()
+        publish_official_results(results)
+        result = {"mode": "results_only", "races": len(results),
+                  "official_decided": int(results.get("official_result_available",
+                                                   pd.Series(dtype=bool)).fillna(False).astype(bool).sum())}
+        print("OFFICIAL_RESULTS_ONLY " + json.dumps(result, ensure_ascii=False), flush=True)
+    else:
+        result = run_settlement(args)
     if not getattr(args, "dry_run", False):
         sync_nexus_results_after_settlement()
     from site_manager import refresh_monitor_after_results
