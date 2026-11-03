@@ -9,17 +9,18 @@ on:
       - "src/nexus_results_sync.py"
       - "src/quick_results_retry.py"
       - "src/sync_current_results.py"
+      - "src/secondary_results_sync.py"
       - "src/nexus_model/budget.py"
       - "src/official_outcomes.py"
       - "src/site_manager.py"
       - ".github/workflows/quick-results.yml"
   workflow_run:
     # Recover missed GitHub schedule ticks after the independent intraday cycle.
-    workflows: ['intraday-keirin-odds']
+    workflows: ['intraday-keirin-odds', 'graded-department', 'conditional-trifecta-live', 'deploy-pages']
     types: [completed]
   schedule:
-    # JST 09:00-23:59. Keep the public "確定" label close to the official result.
-    - cron: "*/5 0-14 * * *"
+    # JST 09:00-01:59: include the final late-night result catch-up.
+    - cron: "*/5 0-16 * * *"
 
 permissions:
   contents: write
@@ -34,7 +35,8 @@ concurrency:
 
 jobs:
   refresh:
-    if: github.event_name != 'workflow_run' || (github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.conclusion == 'success')
+    # Never react recursively to downstream jobs launched by this workflow.
+    if: github.event_name != 'workflow_run' || (github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.conclusion == 'success' && (github.event.workflow_run.name == 'intraday-keirin-odds' || github.event.workflow_run.event == 'schedule'))
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
@@ -54,7 +56,7 @@ jobs:
         run: |
           refresh_today_if_needed() {
             if python - <<'PY'
-          from datetime import datetime
+          from datetime import datetime, timedelta
           from pathlib import Path
           from zoneinfo import ZoneInfo
           import pandas as pd
@@ -68,8 +70,13 @@ jobs:
               raise SystemExit(1)
           if df.empty or not {"date", "source_url", "race_id"}.issubset(df.columns):
               raise SystemExit(1)
-          today = datetime.now(ZoneInfo("Asia/Tokyo")).strftime("%Y-%m-%d")
-          if not df["date"].astype(str).eq(today).all():
+          now = datetime.now(ZoneInfo("Asia/Tokyo"))
+          accepted = {now.strftime("%Y-%m-%d")}
+          # Between midnight and 02:00, preserve yesterday's final source
+          # roster instead of replacing it with today's empty schedule.
+          if now.hour < 2:
+              accepted.add((now - timedelta(days=1)).strftime("%Y-%m-%d"))
+          if len(set(df["date"].astype(str))) != 1 or not df["date"].astype(str).isin(accepted).all():
               raise SystemExit(1)
           if df["source_url"].fillna("").astype(str).str.len().eq(0).any():
               raise SystemExit(1)
@@ -85,6 +92,7 @@ jobs:
           refresh_today_if_needed
           python src/settle_results.py
           python src/sync_current_results.py
+          python src/secondary_results_sync.py
           python - <<'PY'
           import json
           from pathlib import Path
@@ -102,7 +110,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           stage_result_outputs() {
-            git add outputs/latest_results.json outputs/index.html outputs/manager_post_settlement_status.json outputs/current_live.json
+            git add outputs/latest_results.json outputs/index.html outputs/manager_post_settlement_status.json outputs/current_live.json outputs/high_roi_live.json outputs/trio_live.json outputs/exacta_live.json
             if [ -d data/raw/nexus_page_snapshots ]; then
               git add -f -- data/raw/nexus_page_snapshots
             fi
