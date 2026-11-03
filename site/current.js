@@ -42,6 +42,15 @@
   const observed_at=row.result_observed_at_jst||null;
   return {winning_tickets:tickets,payoffs,observed_at,source:row.result_source||'official'};
  }
+ function archivedOfficialRows(rows){
+  if(!Array.isArray(rows))return [];
+  return rows.filter(r=>r&&r.result_complete===true&&Array.isArray(r.winners)&&r.winners.length
+   &&r.payouts&&r.winners.every(t=>Number.isSafeInteger(Number(r.payouts[t]))&&Number(r.payouts[t])>0))
+   .map(r=>({race_id:String(r.race_id||''),official_result_available:true,
+    actual_trifecta_buys:r.winners,payouts_trifecta_json:r.payouts,
+    result_observed_at_jst:r.results_updated_at||r.result_captured_at||r.result_sync_captured_at||'',
+    result_source:r.result_sync_source||r.result_source||'nexus_archive'}));
+ }
  function attachOfficialResults(feed,resultRows){
   if(!feed||!Array.isArray(feed.races)||!Array.isArray(resultRows))return 0;
   const byId=new Map(),dateValue=v=>{const n=Date.parse(v||'');return Number.isFinite(n)?n:0;};
@@ -113,7 +122,7 @@
  const stamp=x=>x?new Date(x).toLocaleString('ja-JP',{timeZone:'Asia/Tokyo',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
  const car=c=>`<span class="car c${Number(c)}">${Number(c)}</span>`;
  function stat(label,value,unit,detail){return `<div class="stat"><div class="stat-label">${label}</div><div class="stat-value">${esc(value)}<small>${unit}</small></div><div class="stat-detail">${detail}</div></div>`;}
- if(typeof module!=='undefined'&&module.exports){module.exports={expand,validate,status,copyText,officialRecord,attachOfficialResults,MODEL,MODEL_LABELS};return;}
+ if(typeof module!=='undefined'&&module.exports){module.exports={expand,validate,status,copyText,officialRecord,archivedOfficialRows,attachOfficialResults,MODEL,MODEL_LABELS};return;}
  let data=null,day='',session='all',venue='',selected='',copyTimer;
  const $=id=>document.getElementById(id);
  function performance(){const s=data.observed||{};$('observed').innerHTML=stat('的中率',pct(s.hit_pct),'%',`${num(s.hits||0)} / ${num(s.races||0)}レース`)+stat('回収率',pct(s.roi_pct),'%',`払戻 ${num(s.returned||0)}円 / 購入 ${num(s.stake||0)}円`)+stat('100倍以上の的中',s.HIGH_hits||0,'件','実際の払戻が100倍以上')+stat('結果待ち',s.pending||0,'レース',`全額返還 ${s.void||0}件は的中率から除外`);$('performance-note').textContent=s.races?'改善版を締切前に公開できた予想だけを集計しています。旧版の結果は含みません。':'改善版の公開後成績は、結果が揃ってから表示します。旧版や締切後の公開分は含めません。';
@@ -147,6 +156,21 @@
  if(/^https:\/\/www\.winticket\.jp\//.test(r.source_url||''))body+=`<a class="source-link" href="${esc(r.source_url)}" target="_blank" rel="noopener noreferrer">出走表・最新情報を確認 ↗</a>`;
  $('race-detail').innerHTML=body;const button=$('copy');if(button)button.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(copyText(r));$('toast').textContent='フォーメーションをコピーしました';$('toast').hidden=false;clearTimeout(copyTimer);copyTimer=setTimeout(()=>$('toast').hidden=true,2400);}catch{button.textContent='コピーできませんでした';}});
  }
+ async function loadDayResults(targetDay){
+  if(!data||!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(targetDay))return;
+  const activeFeed=data;
+  const path='outputs/nexus_forecasts/'+targetDay+'.json';
+  const urls=['original/nexus_forecasts/'+targetDay+'.json',
+   ...(location.hostname.endsWith('github.io')?['https://raw.githubusercontent.com/rokuda6898-jpg/keirin-ai-auto/main/'+path]:[])];
+  const fetched=await Promise.allSettled(urls.map(async url=>{
+   const response=await fetch(url+'?t='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(10000)});
+   if(!response.ok)throw Error(response.status);
+   return archivedOfficialRows(await response.json());
+  }));
+  if(data!==activeFeed)return;
+  const rows=fetched.filter(x=>x.status==='fulfilled').flatMap(x=>x.value);
+  if(attachOfficialResults(data,rows)){render();performance();}
+ }
  async function refresh(){
  $('reload').disabled=true;
  const paths=['original/current_live.json',...(location.hostname.endsWith('github.io')?['https://raw.githubusercontent.com/rokuda6898-jpg/keirin-ai-auto/main/outputs/current_live.json']:[])];
@@ -161,8 +185,8 @@
  const age=(Date.now()-Date.parse(data.generated_at))/60000;const stale=age>45;const forecasts=data.races.filter(r=>r.date===data.today&&r.forecast).length;
  $('notice').classList.toggle('warn',stale||data.health.stage!=='ready');$('notice').textContent=stale?`最終更新は${stamp(data.generated_at)}です。更新が遅れています。締切・欠場情報は公式でご確認ください。`:`${data.health.message} 本日${forecasts}レースの予想を保存済みです。`;
  $('updated').textContent=`予想更新 ${stamp(data.generated_at)} ／ 結果取得 ${stamp(data.results_updated_at)}（日本時間）`;
- render();performance();
+ render();performance();loadDayResults(day);
  }catch(e){$('notice').classList.add('warn');$('notice').textContent='予想を読み込めませんでした。「更新」で再試行してください。';if(!data){$('race-list').innerHTML='<p class="empty">予想データを確認中です。</p>';$('race-detail').innerHTML='<div class="empty detail-empty"><h2>データを確認中です</h2><p>古い方式の予想への置き換えは行いません。</p></div>';}}finally{$('reload').disabled=false;}
  }
- $('date').addEventListener('change',e=>{day=e.target.value;venue='';selected='';render();});$('sessions').addEventListener('click',e=>{const q=e.target.closest('[data-session]');if(!q)return;session=q.dataset.session;venue='';selected='';for(const b of $('sessions').querySelectorAll('button'))b.setAttribute('aria-pressed',String(b===q));render();});$('venues').addEventListener('click',e=>{const q=e.target.closest('[data-venue]');if(q){venue=q.dataset.venue;selected='';render();}});$('race-list').addEventListener('click',e=>{const q=e.target.closest('[data-race]');if(q){selected=q.dataset.race;render();}});$('reload').addEventListener('click',refresh);refresh();setInterval(()=>{if(!document.hidden)refresh();},120000);setInterval(()=>{if(!document.hidden&&data)render();},60000);
+ $('date').addEventListener('change',e=>{day=e.target.value;venue='';selected='';render();loadDayResults(day);});$('sessions').addEventListener('click',e=>{const q=e.target.closest('[data-session]');if(!q)return;session=q.dataset.session;venue='';selected='';for(const b of $('sessions').querySelectorAll('button'))b.setAttribute('aria-pressed',String(b===q));render();});$('venues').addEventListener('click',e=>{const q=e.target.closest('[data-venue]');if(q){venue=q.dataset.venue;selected='';render();}});$('race-list').addEventListener('click',e=>{const q=e.target.closest('[data-race]');if(q){selected=q.dataset.race;render();}});$('reload').addEventListener('click',refresh);refresh();setInterval(()=>{if(!document.hidden)refresh();},120000);setInterval(()=>{if(!document.hidden&&data)render();},60000);
 })();
