@@ -16,9 +16,13 @@ OUTPUTS = ROOT / "outputs"
 JST = ZoneInfo("Asia/Tokyo")
 FEEDS = {
     "high_roi": ("trifecta", "ROI9891_fixed_EX_20261102"),
-    "trio": ("trio", "trio_selected9891_454_20261103"),
-    "exacta": ("exacta", "exacta_native_highroi_345_20261103"),
+    "trio": ("trio", "trio_snapshot_fallback_v1_20261104"),
+    "exacta": ("exacta", "exacta_snapshot_fallback_v1_20261104"),
 }
+
+
+LEGACY_POOL_MODELS = {"trio": "trio_selected9891_454_20261103",
+                      "exacta": "exacta_native_highroi_345_20261103"}
 
 
 def _timestamp(value):
@@ -102,7 +106,7 @@ def summary(feed):
              hit_pct=None, roi_pct=None, void=0, pending=0, model_id=model)
     for row in feed["races"]:
         pred = row.get("forecast")
-        if not isinstance(pred, dict) or pred.get("model_id") != model or row.get("performance_eligible") is not True:
+        if not isinstance(pred, dict) or pred.get("model_id") not in {model, feed.get("reference_model_id"), *LEGACY_POOL_MODELS.values()} or row.get("performance_eligible") is not True:
             continue
         settled = row.get("settlement")
         if not isinstance(settled, dict) or settled.get("status") not in ("hit", "miss", "void"):
@@ -164,7 +168,7 @@ def sync(outputs=OUTPUTS):
             report[name] = {"error": "missing_feed"}
             continue
         feed = json.loads(path.read_text(encoding="utf-8"))
-        if (feed.get("schema") != 1 or feed.get("model_id") != model or
+        if (feed.get("schema") != 1 or feed.get("model_id") not in {model, LEGACY_POOL_MODELS.get(name)} or
                 not isinstance(feed.get("races"), list)):
             raise ValueError(f"invalid or unexpected model feed: {name}")
         if name != "high_roi" and feed.get("pool") != pool:
