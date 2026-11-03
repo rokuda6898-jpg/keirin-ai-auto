@@ -150,6 +150,25 @@ class QuickResultsRetry(unittest.TestCase):
         self.assertEqual(read_json(self.root / relative), newer)
         self.assertEqual(read_json(self.root / another)["source"], "second outcome")
 
+    def test_official_trio_and_exacta_archive_survives_conflicting_git_push(self):
+        complete = result()
+        complete["payouts_trio_json"] = '{"1-2-3": 720}'
+        complete["payouts_exacta_json"] = '{"1-2": 450}'
+        self.write_results([complete])
+        archived_path = self.outputs / "official_results_archive" / (DAY + ".json")
+        save_json(archived_path, [complete])
+        retry.snapshot(self.cache, self.root)
+        self.assertTrue((self.cache / "outputs/official_results_archive" / (DAY + ".json")).exists())
+
+        # Another publisher has a later timestamp but omitted official payouts
+        # for the two independent pools. Its newer predicted model data remains
+        # untouched; only these source results are restored.
+        incomplete = dict(complete, result_observed_at_jst=LATE,
+                          payouts_trio_json="{}", payouts_exacta_json="{}")
+        save_json(archived_path, [incomplete])
+        retry.replay(self.cache, self.root)
+        self.assertEqual(read_json(archived_path), [complete])
+
     def test_previous_day_cache_is_not_mixed_into_new_latest_feed(self):
         self.write_results([result()])
         retry.snapshot(self.cache, self.root)
