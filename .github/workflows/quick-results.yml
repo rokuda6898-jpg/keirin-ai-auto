@@ -8,6 +8,7 @@ on:
       - "src/settle_results.py"
       - "src/nexus_results_sync.py"
       - "src/quick_results_retry.py"
+      - "src/sync_current_results.py"
       - "src/nexus_model/budget.py"
       - "src/official_outcomes.py"
       - "src/site_manager.py"
@@ -83,6 +84,7 @@ jobs:
 
           refresh_today_if_needed
           python src/settle_results.py
+          python src/sync_current_results.py
           python - <<'PY'
           import json
           from pathlib import Path
@@ -100,7 +102,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           stage_result_outputs() {
-            git add outputs/latest_results.json outputs/index.html outputs/manager_post_settlement_status.json
+            git add outputs/latest_results.json outputs/index.html outputs/manager_post_settlement_status.json outputs/current_live.json
             if [ -d data/raw/nexus_page_snapshots ]; then
               git add -f -- data/raw/nexus_page_snapshots
             fi

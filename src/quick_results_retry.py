@@ -97,6 +97,9 @@ def apply_offline(root, rows):
         settle_results.OUTPUT_DIR = previous_outputs
     if synced.get("status") != "ok":
         raise RuntimeError("offline NEXUS result sync failed: " + str(synced.get("error", synced)))
+    # Retry against the newest main without modifying any frozen predictions.
+    from sync_current_results import sync as sync_current
+    sync_current(root / "outputs")
     return patched, synced
 
 

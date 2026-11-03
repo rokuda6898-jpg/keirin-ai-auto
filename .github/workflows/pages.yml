@@ -33,6 +33,7 @@ jobs:
           node --check site/app.js
           node --check site/current.js
           node tests/test_current_site.js
+          PYTHONPATH=src python -m unittest discover -s tests -p 'test_current_results_sync.py'
           node tests/test_ex_site.js
           node --check site/high-roi.js
           node tests/test_high_roi_site.js
