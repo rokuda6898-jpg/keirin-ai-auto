@@ -301,7 +301,7 @@ def run(root=ROOT, now=None):
             by_id[rid]=row
         rows=sorted(by_id.values(),key=lambda r:(r.get('date',''),r.get('close_at',0),r.get('race_id','')))
         research=previous.get('research') or {}
-        health={'stage':'ready' if forecasted else 'warning',
+        health={'stage':'ready' if any(r.get('date')==today and r.get('forecast') for r in rows) else 'warning',
                 'message':'暫定モデルによる予想（旧方式の年間研究値は適用できません）。',
                 'errors':skipped,'forecast_new':forecasted}
         feed={'schema':1,'model_id':MODELS[pool],'pool':pool,'generated_at':now.isoformat(),
