@@ -12,6 +12,10 @@ on:
       - "src/official_outcomes.py"
       - "src/site_manager.py"
       - ".github/workflows/quick-results.yml"
+  workflow_run:
+    # Recover missed GitHub schedule ticks after the independent intraday cycle.
+    workflows: ['intraday-keirin-odds']
+    types: [completed]
   schedule:
     # JST 09:00-23:59. Keep the public "確定" label close to the official result.
     - cron: "*/5 0-14 * * *"
@@ -25,10 +29,11 @@ concurrency:
   # that group can evict a waiting result refresh when settle/manager starts.
   # Push races reuse captured results against latest main without another fetch.
   group: keirin-quick-results-writer
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   refresh:
+    if: github.event_name != 'workflow_run' || (github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
