@@ -1,6 +1,6 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
-const {expand,validate,status,copyText,officialRecord,attachOfficialResults,MODEL,MODEL_LABELS}=require('../site/current.js');
+const {expand,validate,status,copyText,officialRecord,archivedOfficialRows,attachOfficialResults,MODEL,MODEL_LABELS}=require('../site/current.js');
 assert.deepEqual(expand([{first:[1],second:[1,2],third:[2,3,4]},{first:[1],second:[2],third:[3]}]),['1-2-3','1-2-4']);
 const data=JSON.parse(fs.readFileSync('outputs/current_live.json','utf8'));
 assert.equal(data.model_id,MODEL);data.races.forEach(validate);
@@ -41,3 +41,14 @@ assert.equal(liveFixture.observed.races,3);
 assert.equal(officialRecord({official_result_available:true,actual_trifecta_buys:['1-2-3','2-1-3'],payouts_trifecta_json:'{"1-2-3":980}'}),null,'tied race requires every official payout');
 assert.equal(officialRecord({official_result_available:false,actual_trifecta:'1-2-3',payouts_trifecta_json:'{"1-2-3":980}'}),null);
 console.log('Official result overlay: payouts, settlement, homepage totals, missing predictions and idempotency passed');
+
+const archive=archivedOfficialRows([
+ {race_id:'010120261102',result_complete:true,winners:['2-1-3'],payouts:{'2-1-3':20980},results_updated_at:'2026-11-02T11:01:00+09:00'},
+ {race_id:'020120261102',result_complete:false,winners:['3-2-1'],payouts:{'3-2-1':980}},
+ {race_id:'030120261102',result_complete:true,winners:['4-5-6','5-4-6'],payouts:{'4-5-6':890}}]);
+assert.equal(archive.length,1,'only identity-complete historical payouts may be shown');
+assert.deepEqual(officialRecord(archive[0]).winning_tickets,['2-1-3']);
+const previousDay={observed:{model_id:MODEL,races:0},races:[{race_id:'010120261102',forecast:null}]};
+assert.equal(attachOfficialResults(previousDay,archive),1);
+assert.equal(status(previousDay.races[0]),'結果確定');
+assert.equal(attachOfficialResults(previousDay,archive),0,'reopening yesterday does not count results twice');
