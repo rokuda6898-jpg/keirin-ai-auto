@@ -143,6 +143,7 @@ jobs:
         run: |
           python src/settle_results.py
           python src/sync_current_results.py
+          python src/secondary_results_sync.py
 
       - name: Append officially confirmed races to central history
         id: append_history
@@ -272,7 +273,15 @@ jobs:
               git restore --source=origin/main --staged --worktree -- outputs/current_live.json
             fi
             python src/sync_current_results.py
-            git add outputs/current_live.json
+            # Keep any newer frozen selections from the main branch. Reapply
+            # only verified official results on top of those forecasts.
+            for model_path in outputs/high_roi_live.json outputs/trio_live.json outputs/exacta_live.json; do
+              if git cat-file -e "origin/main:$model_path" 2>/dev/null; then
+                git restore --source=origin/main --staged --worktree -- "$model_path"
+              fi
+            done
+            python src/secondary_results_sync.py
+            git add outputs/current_live.json outputs/high_roi_live.json outputs/trio_live.json outputs/exacta_live.json
             git add outputs/company/annual_position_* outputs/company/annual_equation_* outputs/company/annual_fusion_*
             for nexus_path in outputs/nexus_live.json outputs/nexus_forecasts outputs/nexus_results_sync_status.json; do
               if [ -e "$nexus_path" ]; then
