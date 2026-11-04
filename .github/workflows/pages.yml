@@ -39,6 +39,8 @@ jobs:
           node tests/test_high_roi_site.js
           node --check site/pools.js
           node tests/test_pool_site.js
+          node --check site/daily-coverage.js
+          PYTHONPATH=src python -m unittest discover -s tests -p 'test_daily_coverage.py'
           node --check site/nexus.js
           node --check site/nexus-core.js
           node --check site/nexus-forward.js
