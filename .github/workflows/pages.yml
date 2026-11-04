@@ -2,11 +2,8 @@ name: deploy-pages
 on:
   push:
     branches: [main]
-    paths: ['site/**', 'tests/**', 'outputs/current_live.json', 'outputs/ex_live.json', 'outputs/high_roi_live.json', 'outputs/trio_live.json', 'outputs/exacta_live.json', 'outputs/nexus_live.json', 'outputs/nexus_forward.json', 'outputs/conditional_near_close.json', 'outputs/conditional_roi.json', 'outputs/conditional_roi_research_2026-10-20.json', 'src/build_public_site.py', 'src/site_retirement.py', 'src/site_model_navigation.py', '.github/workflows/pages.yml']
+    paths: ['site/**', 'tests/**', 'outputs/current_live.json', 'outputs/ex_live.json', 'outputs/high_roi_live.json', 'outputs/graded_live.json', 'outputs/conditional_live.json', 'outputs/latest_results.json', 'outputs/trio_live.json', 'outputs/exacta_live.json', 'outputs/nexus_live.json', 'outputs/nexus_forward.json', 'outputs/conditional_near_close.json', 'outputs/conditional_roi.json', 'outputs/conditional_roi_research_2026-10-20.json', 'src/build_public_site.py', 'src/site_retirement.py', 'src/site_model_navigation.py', '.github/workflows/pages.yml']
   workflow_dispatch:
-  workflow_run:
-    workflows: ['conditional-trifecta-live', 'nexus-formation-publish', 'quick-keirin-results', 'settle-keirin-results']
-    types: [completed]
   schedule:
     # Retain a periodic refresh; successful canonical forecasts publish immediately.
     - cron: '7 * * * *'
@@ -19,7 +16,6 @@ concurrency:
   cancel-in-progress: false
 jobs:
   deploy:
-    if: github.event_name != 'workflow_run' || (github.event.workflow_run.head_branch == 'main' && contains(fromJSON('["success", "failure"]'), github.event.workflow_run.conclusion))
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
