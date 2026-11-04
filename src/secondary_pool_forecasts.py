@@ -266,6 +266,9 @@ def run(root=ROOT, now=None):
     for pool in MODELS:
         path=root/f'outputs/{pool}_live.json'
         previous=json.loads(path.read_text(encoding='utf-8')) if path.exists() else {}
+        if pool == 'exacta' and previous.get('publisher') == 'owner_exacta_hit_v1':
+            print('POOL_FORECASTS exacta: owner fixed-model publisher active; no fallback replacement', flush=True)
+            continue
         by_id={r['race_id']:r for r in previous.get('races',[]) if r.get('race_id') and
                r.get('date','')>= (now.date()-timedelta(days=3)).isoformat()}
         forecasted=0
@@ -316,3 +319,4 @@ def run(root=ROOT, now=None):
 
 if __name__=='__main__':
     run()
+

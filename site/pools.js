@@ -1,6 +1,6 @@
 'use strict';
 (() => {
- const policies={trio:{model:'trio_snapshot_fallback_v1_20261104',legacyModel:'trio_selected9891_454_20261103',label:'3連複',counts:[4,5,4],triangle:true},exacta:{model:'exacta_snapshot_fallback_v1_20261104',legacyModel:'exacta_native_highroi_345_20261103',label:'2車単',counts:[3,4,5],triangle:false}};
+ const policies={trio:{model:'trio_snapshot_fallback_v1_20261104',legacyModel:'trio_selected9891_454_20261103',label:'3連複',counts:[4,5,4],triangle:true},exacta:{model:'exacta_hit_flexible_345_20261104',fallbackModel:'exacta_snapshot_fallback_v1_20261104',legacyModel:'exacta_native_highroi_345_20261103',label:'2車単',counts:[3,4,5],triangle:false}};
  const bands={MAIN:'本線',MEDIUM:'中穴',HIGH:'大穴'},sessions={morning:'モーニング',day:'デイ',night:'ナイト',midnight:'ミッドナイト'};
  const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const num=x=>Number(x).toLocaleString('ja-JP'),pct=x=>Number.isFinite(x)?x.toFixed(2):'—';
@@ -13,13 +13,13 @@
  function rosterText(r){const info=rosterInfo(r);return `${info.registeredCount===null?'':`登録${info.registeredCount}車 ／ `}出走${info.activeCount}車${info.withdrawn.length?' ／ '+info.withdrawn.map(v=>`${v.car}番車 ${v.name}：欠場`).join('、'):''}${info.forecastCount!==info.activeCount?`（予想作成時は${info.forecastCount}車）`:''}`;}
  function validate(r,pool){
   const p=r.forecast;if(!p)return true;const policy=policies[pool],band=Object.keys(bands).indexOf(p.category);if(!policy||band<0)throw Error('判定不明');const k=policy.counts[band];
-  if(p.pool!==pool||![policy.model,policy.legacyModel].includes(p.model_id)||p.unit_yen!==100||p.count!==k||p.total_yen!==k*100||p.EX_overlay!==false||p.required_triangle!==policy.triangle)throw Error('方式・購入条件が不一致');
+  if(p.pool!==pool||![policy.model,policy.legacyModel,policy.fallbackModel].filter(Boolean).includes(p.model_id)||p.unit_yen!==100||p.count!==k||p.total_yen!==k*100||p.EX_overlay!==false||p.required_triangle!==policy.triangle)throw Error('方式・購入条件が不一致');
   if(!Array.isArray(p.blocks)||p.blocks.length<1||p.blocks.length>(pool==='trio'?4:5))throw Error('フォーメーション不正');
   const ts=expand(p.blocks,pool);if(ts.length!==k||p.tickets.length!==k||JSON.stringify(ts)!==JSON.stringify([...new Set(p.tickets)].sort()))throw Error('買い目不一致');
   const riders=new Set(r.riders.map(v=>v.car));for(const t of ts)for(const c of t.split('-').map(Number))if(!riders.has(c))throw Error('出走選手不一致');
   const cars=r.riders.map(v=>v.car);if(!sameCars(cars,p.marks.map(v=>v.car))||(r.source_state&&!sameCars(cars,r.source_state.active.map(v=>v[0]))))throw Error('予想対象の選手に不足があります');
   if(r.roster_context){const c=r.roster_context,absent=c.withdrawn.map(v=>v.car);if(!sameCars(c.registered_cars,[...c.active_cars,...absent])||cars.some(v=>!c.registered_cars.includes(v))||c.withdrawn.some(v=>typeof v.name!=='string'))throw Error('欠場・出走選手情報が不一致');}
-  const used=new Set(ts.flatMap(t=>t.split('-').map(Number)));if(p.unmarked.length&&!p.unmarked.some(c=>used.has(c)))throw Error('印なし条件不一致');
+  const used=new Set(ts.flatMap(t=>t.split('-').map(Number)));if(!(pool==='exacta'&&p.model_id===policy.model)&&p.unmarked.length&&!p.unmarked.some(c=>used.has(c)))throw Error('印なし条件不一致');
   if(policy.triangle&&!p.marks.some(v=>v.mark==='▲'&&used.has(v.car)))throw Error('▲条件不一致');
   if(!Number.isFinite(r.close_at)||!Number.isFinite(Date.parse(p.saved_at))||Date.parse(p.saved_at)>=r.close_at*1000||!Number.isFinite(Date.parse(p.captured_at))||Date.parse(p.captured_at)>Date.parse(p.saved_at)||p.history_through>=r.date)throw Error('保存時点不正');
   return true;
@@ -30,7 +30,7 @@
  const pool=document.body.dataset.pool,policy=policies[pool],$=id=>document.getElementById(id);let data=null,day='',session='all',venue='',selected='',toastTimer,reloadRequired=false;
  const car=c=>`<span class="car c${Number(c)}">${Number(c)}</span>`;
  const stat=(label,value,unit,detail)=>`<div class="stat"><div class="stat-label">${esc(label)}</div><div class="stat-value">${esc(value)}<small>${unit}</small></div><div class="stat-detail">${detail}</div></div>`;
- function performance(){const s=data.observed,v=data.research;$('observed').innerHTML=stat('的中率',pct(s.hit_pct),'%',`${num(s.hits)} / ${num(s.races)}レース`)+stat('回収率',pct(s.roi_pct),'%',`払戻 ${num(s.returned)}円 / 購入 ${num(s.stake)}円`)+stat('100倍以上の的中',s.HIGH_hits,'件',`${policy.label}の正式払戻`)+stat('結果待ち',s.pending,'レース',`全額返還 ${s.void}件`);$('performance-note').textContent='締切前の公開予想だけを集計します。2026年11月3日までの旧方式と11月4日以降の暫定方式が混在しています。';$('research').innerHTML=stat('旧方式年間・的中率',pct(v.hit_pct),'%',`${num(v.hits)} / ${num(v.races)}レース`)+stat('旧方式年間・回収率',pct(v.roi_pct),'%','各100円・全成立レース')+stat('旧方式年間・100倍以上',v.hundred_plus_hits,'件',`${policy.label}の配当`) ;}
+ function performance(){const s=data.observed,v=data.research;$('observed').innerHTML=stat('的中率',pct(s.hit_pct),'%',`${num(s.hits)} / ${num(s.races)}レース`)+stat('回収率',pct(s.roi_pct),'%',`払戻 ${num(s.returned)}円 / 購入 ${num(s.stake)}円`)+stat('100倍以上の的中',s.HIGH_hits,'件',`${policy.label}の正式払戻`)+stat('結果待ち',s.pending,'レース',`全額返還 ${s.void}件`);$('performance-note').textContent=pool==='exacta'?'改善版を締切前に公開したレースだけの成績です。切り替え前の予想は含みません。':'締切前の公開予想だけを集計します。旧方式と暫定方式が混在しています。';$('research').innerHTML=stat((pool==='exacta'?'改善版年間・':'旧方式年間・')+'的中率',pct(v.hit_pct),'%',`${num(v.hits)} / ${num(v.races)}レース`)+stat((pool==='exacta'?'改善版年間・':'旧方式年間・')+'回収率',pct(v.roi_pct),'%','各100円・全成立レース')+stat((pool==='exacta'?'改善版年間・':'旧方式年間・')+'100倍以上',v.hundred_plus_hits,'件',`${policy.label}の配当`) ;}
  function visible(){return data.races.filter(r=>r.date===day&&(session==='all'||(session==='graded'?r.graded:!r.graded&&r.session===session)));}
  function render(){if(!data)return;const rs=visible(),vs=[...new Map(rs.map(r=>[r.venue_id,r])).values()].sort((a,b)=>a.venue_id.localeCompare(b.venue_id));if(!vs.some(v=>v.venue_id===venue))venue=(rs.find(r=>r.forecast&&r.close_at*1000>Date.now())||vs[0])?.venue_id||'';
   $('venues').innerHTML=vs.length?vs.map(r=>`<button data-venue="${esc(r.venue_id)}" aria-pressed="${r.venue_id===venue}">${esc(r.venue)}<small>${r.graded?'重賞':sessions[r.session]||''}</small></button>`).join(''):'<p class="muted">この条件の開催はありません。</p>';
@@ -38,8 +38,8 @@
   $('race-count').textContent=`${races.length}レース`;$('race-list').innerHTML=races.map(r=>`<button class="race-item" data-race="${esc(r.race_id)}" aria-current="${r.race_id===selected}" aria-label="${esc(r.venue)} ${r.race_number}R ${esc(state(r))}"><div><div class="race-no">${r.race_number}<small>R</small></div><div class="race-time">${time(r.close_at)}</div></div><div><div class="race-name">${esc(r.race_type)}</div><div class="race-state">${esc(state(r))}</div></div><span class="tag ${r.forecast?.category||'none'}">${r.forecast?bands[r.forecast.category]:'未掲載'}</span></button>`).join('')||'<p class="empty">開催条件を変更してください。</p>';detail(races.find(r=>r.race_id===selected));
  }
  function detail(r){if(!r){$('race-detail').innerHTML='<p class="empty">レースを選択してください。</p>';return;}const p=r.forecast;let body=`<div class="detail-header"><div><p class="eyebrow">${policy.label}</p><h2>${esc(r.venue)} <span>${r.race_number}R</span></h2><div class="detail-meta">${esc(r.race_class)} ${esc(r.race_type)} · ${r.graded?'重賞':esc(sessions[r.session]||'')} · ${esc(state(r))}</div></div><div class="deadline"><span>締切</span><b>${time(r.close_at)}</b>${p?`<div class="tag ${p.category}">${bands[p.category]}</div>`:''}</div></div>`;
-  if(p&&p.model_id===policy.model)body+=`<p class="notice warn">暫定予想：旧方式と異なる未検証の算出方法です。過去の年間回収率は適用できません。</p>`;
-  if(p)body+=`<p class="roster-status ${rosterInfo(r).withdrawn.length?'has-withdrawal':''}">${esc(rosterText(r))}</p>`;
+  if(p&&(pool==='trio'?p.model_id===policy.model:p.model_id===policy.fallbackModel))body+=`<p class="notice warn">暫定予想：旧方式と異なる未検証の算出方法です。過去の年間回収率は適用できません。</p>`;
+  if(p&&pool==='exacta'&&p.model_id!==policy.model)body+='<p class="notice">切り替え前に公開した予想です。</p>';if(p)body+=`<p class="roster-status ${rosterInfo(r).withdrawn.length?'has-withdrawal':''}">${esc(rosterText(r))}</p>`;
   if(r.withdrawal_warning)body+=`<p class="notice warn">${esc(r.withdrawal_warning)}</p>`;
   if(r.settlement){const s=r.settlement;body+=`<div class="result ${s.status==='hit'?'hit':''}"><div class="result-flex"><strong>${esc(state(r))}</strong><span>払戻・返還 ${num(s.returned)}円 ／ 購入 ${num(s.stake)}円</span></div><div>${s.winning_tickets.map(t=>`${esc(t)}（${num(s.payoffs[t])}円 / 100円）`).join(' ・ ')||'全額返還'}</div>${r.performance_eligible?'':'<p class="tiny">締切前の公開が確認できないため、公開後成績には含めません。</p>'}</div>`;}
   if(!p)body+=`<div class="empty detail-empty"><h2>${r.status==='cancelled'?'開催中止です':'このレースの予想は未掲載です'}</h2><p>${esc(r.note||'締切前に情報を確認して掲載します。')}</p></div>`;
@@ -57,4 +57,5 @@
  }
  $('date').addEventListener('change',e=>{day=e.target.value;venue='';selected='';render();});$('sessions').addEventListener('click',e=>{const button=e.target.closest('[data-session]');if(!button)return;session=button.dataset.session;venue='';selected='';for(const b of $('sessions').querySelectorAll('button'))b.setAttribute('aria-pressed',String(b===button));render();});$('venues').addEventListener('click',e=>{const button=e.target.closest('[data-venue]');if(button){venue=button.dataset.venue;selected='';render();}});$('race-list').addEventListener('click',e=>{const button=e.target.closest('[data-race]');if(button){selected=button.dataset.race;render();}});$('reload').addEventListener('click',()=>{if(reloadRequired){const u=new URL(location.href);u.searchParams.set('refresh',Date.now());location.replace(u.href);}else refresh();});refresh();setInterval(()=>{if(!document.hidden)refresh();},120000);
 })();
+
 
