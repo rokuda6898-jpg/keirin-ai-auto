@@ -53,7 +53,7 @@
   }
   function getSession(r) {
     if(sessions[r.session])return r.session;
-    const hour=new Date(r.start_at).getHours();
+    const hour=Number(new Date(r.start_at).toLocaleString('en-GB',{timeZone:'Asia/Tokyo',hour:'2-digit',hourCycle:'h23'}));
     return hour<11?'morning':hour<16?'day':hour<20?'night':'midnight';
   }
   function renderItem(r) {
@@ -96,10 +96,10 @@
     const missing=saved.filter(r=>!dedicated.has(String(r.race_id)));
     if(!saved.length){
       // Keep a truthful error instead of silently reusing yesterday's record.
-      if(widget)widget.remove();
+      if(widget){widget.remove();widget=null;}
       if(dedicated.size===0){
         const notice=document.getElementById('notice');
-        if(notice)notice.textContent='11月4日分の専用予想を確認できません。NEXUSの保存予想も取得できませんでした。';
+        if(notice)notice.textContent=day.replaceAll('-','/')+'の専用予想を確認できません。NEXUSの保存予想も取得できませんでした。';
       }
       return;
     }
@@ -122,7 +122,7 @@
       '<label>時間帯 <select id="daily-session"><option value="all">すべて</option>'+
       Object.entries(sessions).map(([k,v])=>'<option value="'+k+'">'+v+'</option>').join('')+'</select></label>'+
       '<span id="daily-counter"></span></div><div id="daily-items"></div>'+
-      '<p class="daily-source">当日の専用予想が公開されると、対応するレースの参考表示は自動で非表示になります。<a href="nexus-forward.html">NEXUS比較ページ</a></p>';
+      '<p class="daily-source">当日の専用予想が公開されると、対応するレースの参考表示は自動で非表示になります。<a href="previous.html">NEXUS予想ページ</a></p>';
     filterVenue=venues.includes(filterVenue)?filterVenue:'all';
     widget.querySelector('#daily-venue').value=filterVenue;
     widget.querySelector('#daily-session').value=filterSession;
