@@ -13,6 +13,10 @@ on:
     # Source snapshots have generally been committed by 06:45 JST.
     - cron: '20 22 * * *'  # 07:20 JST
     - cron: '5 23 * * *'   # 08:05 JST
+    # Independent recovery: daily-keirin-predict may take hours to finish,
+    # and a workflow_run event is not emitted until it ends. Do not leave
+    # the entire day's trio predictions waiting for that job.
+    - cron: '5 0,1,2,3,6,9,12 * * *'  # 09:05,10:05,11:05,12:05,15:05,18:05,21:05 JST
 
 permissions:
   contents: write
