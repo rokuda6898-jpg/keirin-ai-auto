@@ -1,5 +1,5 @@
 {
-  "updated_at_jst": "2026-11-06T22:21:01+09:00",
+  "updated_at_jst": "2026-11-07T05:07:25+09:00",
   "implementation": "自動集計・ルールによる担当機能。独立した人間や会話AIを雇ったものではない。",
   "strategy_review": {
     "strategy_version": "position_prob_v11_high_payout_20261007",
@@ -155,7 +155,7 @@
         "invalid_snapshot_rows": 0,
         "selected_tickets_without_quote_time": 0,
         "quote_after_snapshot_or_close": 0,
-        "annual_cutoff": "2026-11-06",
+        "annual_cutoff": "2026-11-07",
         "annual_cutoff_confirmed": true,
         "model_training_and_full_feature_cutoffs": "未確認・この検査だけでは未来情報の混入なしと断定できない"
       },
@@ -166,13 +166,13 @@
       "status": "記録を蓄積中",
       "task": "開催予定に対する保存・公式結果・成績照合の抜けを確認。",
       "evidence": {
-        "scheduled_races": 79,
-        "saved_preclose": 11,
-        "saved_with_tickets": 11,
+        "scheduled_races": 72,
+        "saved_preclose": 0,
+        "saved_with_tickets": 0,
         "saved_skip": 0,
-        "verified_odds_record": 79,
-        "official_result": 70,
-        "settled_current_strategy": 11
+        "verified_odds_record": 68,
+        "official_result": 0,
+        "settled_current_strategy": 0
       },
       "report": "validation_coverage.html"
     },
@@ -215,14 +215,14 @@
     "decision_rule": "発言権は平等。採用は検証根拠で決め、多数決で変更しない。",
     "race_meetings": [
       {
-        "race_id": "015120261106",
+        "race_id": "015120261107",
         "venue": "福井",
         "race_no": 1,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数25.0。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数30.2。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -248,7 +248,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数25.0。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数30.2。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -267,66 +267,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "012320261106",
-        "venue": "取手",
-        "race_no": 1,
-        "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
-        "topics": {
-          "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数77.2。勝率の校正未確認のため1着固定は停止。",
-          "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
-          "information_gaps": [
-            "並び・欠場の取得元との一致は、この会議では未検証。",
-            "正式な条件成立買い目なし。"
-          ]
-        },
-        "opinions": [
-          {
-            "role": "データ担当",
-            "speaking_weight": 1,
-            "statement": "並び・欠場の取得元との一致は、この会議では未検証。／正式な条件成立買い目なし。"
-          },
-          {
-            "role": "予想担当",
-            "speaking_weight": 1,
-            "statement": "本線なし：締切時刻未取得・締切5分以内・対象時間外"
-          },
-          {
-            "role": "軍師",
-            "speaking_weight": 1,
-            "statement": "穴なし：条件成立なし。穴を強制追加しない。"
-          },
-          {
-            "role": "リスク担当",
-            "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数77.2。勝率の校正未確認のため1着固定は停止。"
-          },
-          {
-            "role": "検証担当",
-            "speaking_weight": 1,
-            "statement": "締切前保存と公式結果で照合し、同じ予算・異なる開催日で比較。少数的中では配分を変えない。"
-          },
-          {
-            "role": "高配当戦略部",
-            "speaking_weight": 1,
-            "statement": "独立判定 見送り／期待度99／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
-          }
-        ],
-        "main_count": 0,
-        "hole_count": 0,
-        "decision": "保存候補の説明。新しい買い目を生成・承認する会議ではない。",
-        "automatic_promotion": false
-      },
-      {
-        "race_id": "025120261106",
+        "race_id": "025120261107",
         "venue": "福井",
         "race_no": 2,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数35.53。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数32.07。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -352,7 +300,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数35.53。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数32.07。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -371,66 +319,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "022320261106",
-        "venue": "取手",
-        "race_no": 2,
-        "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
-        "topics": {
-          "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数33.26。勝率の校正未確認のため1着固定は停止。",
-          "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
-          "information_gaps": [
-            "並び・欠場の取得元との一致は、この会議では未検証。",
-            "正式な条件成立買い目なし。"
-          ]
-        },
-        "opinions": [
-          {
-            "role": "データ担当",
-            "speaking_weight": 1,
-            "statement": "並び・欠場の取得元との一致は、この会議では未検証。／正式な条件成立買い目なし。"
-          },
-          {
-            "role": "予想担当",
-            "speaking_weight": 1,
-            "statement": "本線なし：締切時刻未取得・締切5分以内・対象時間外"
-          },
-          {
-            "role": "軍師",
-            "speaking_weight": 1,
-            "statement": "穴なし：条件成立なし。穴を強制追加しない。"
-          },
-          {
-            "role": "リスク担当",
-            "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数33.26。勝率の校正未確認のため1着固定は停止。"
-          },
-          {
-            "role": "検証担当",
-            "speaking_weight": 1,
-            "statement": "締切前保存と公式結果で照合し、同じ予算・異なる開催日で比較。少数的中では配分を変えない。"
-          },
-          {
-            "role": "高配当戦略部",
-            "speaking_weight": 1,
-            "statement": "独立判定 見送り／期待度0／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
-          }
-        ],
-        "main_count": 0,
-        "hole_count": 0,
-        "decision": "保存候補の説明。新しい買い目を生成・承認する会議ではない。",
-        "automatic_promotion": false
-      },
-      {
-        "race_id": "035120261106",
+        "race_id": "035120261107",
         "venue": "福井",
         "race_no": 3,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数23.71。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数52.23。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -456,7 +352,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数23.71。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数52.23。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -475,66 +371,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "032320261106",
-        "venue": "取手",
-        "race_no": 3,
-        "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
-        "topics": {
-          "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数18.04。勝率の校正未確認のため1着固定は停止。",
-          "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
-          "information_gaps": [
-            "並び・欠場の取得元との一致は、この会議では未検証。",
-            "正式な条件成立買い目なし。"
-          ]
-        },
-        "opinions": [
-          {
-            "role": "データ担当",
-            "speaking_weight": 1,
-            "statement": "並び・欠場の取得元との一致は、この会議では未検証。／正式な条件成立買い目なし。"
-          },
-          {
-            "role": "予想担当",
-            "speaking_weight": 1,
-            "statement": "本線なし：締切時刻未取得・締切5分以内・対象時間外"
-          },
-          {
-            "role": "軍師",
-            "speaking_weight": 1,
-            "statement": "穴なし：条件成立なし。穴を強制追加しない。"
-          },
-          {
-            "role": "リスク担当",
-            "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数18.04。勝率の校正未確認のため1着固定は停止。"
-          },
-          {
-            "role": "検証担当",
-            "speaking_weight": 1,
-            "statement": "締切前保存と公式結果で照合し、同じ予算・異なる開催日で比較。少数的中では配分を変えない。"
-          },
-          {
-            "role": "高配当戦略部",
-            "speaking_weight": 1,
-            "statement": "独立判定 見送り／期待度0／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
-          }
-        ],
-        "main_count": 0,
-        "hole_count": 0,
-        "decision": "保存候補の説明。新しい買い目を生成・承認する会議ではない。",
-        "automatic_promotion": false
-      },
-      {
-        "race_id": "045120261106",
+        "race_id": "045120261107",
         "venue": "福井",
         "race_no": 4,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数37.54。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数47.74。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -560,7 +404,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数37.54。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数47.74。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -579,14 +423,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "042320261106",
-        "venue": "取手",
-        "race_no": 4,
+        "race_id": "055120261107",
+        "venue": "福井",
+        "race_no": 5,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数40.95。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数39.06。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -612,7 +456,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数40.95。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数39.06。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -631,118 +475,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "055120261106",
-        "venue": "福井",
-        "race_no": 5,
-        "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
-        "topics": {
-          "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数54.2。勝率の校正未確認のため1着固定は停止。",
-          "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
-          "information_gaps": [
-            "並び・欠場の取得元との一致は、この会議では未検証。",
-            "正式な条件成立買い目なし。"
-          ]
-        },
-        "opinions": [
-          {
-            "role": "データ担当",
-            "speaking_weight": 1,
-            "statement": "並び・欠場の取得元との一致は、この会議では未検証。／正式な条件成立買い目なし。"
-          },
-          {
-            "role": "予想担当",
-            "speaking_weight": 1,
-            "statement": "本線なし：締切時刻未取得・締切5分以内・対象時間外"
-          },
-          {
-            "role": "軍師",
-            "speaking_weight": 1,
-            "statement": "穴なし：条件成立なし。穴を強制追加しない。"
-          },
-          {
-            "role": "リスク担当",
-            "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数54.2。勝率の校正未確認のため1着固定は停止。"
-          },
-          {
-            "role": "検証担当",
-            "speaking_weight": 1,
-            "statement": "締切前保存と公式結果で照合し、同じ予算・異なる開催日で比較。少数的中では配分を変えない。"
-          },
-          {
-            "role": "高配当戦略部",
-            "speaking_weight": 1,
-            "statement": "独立判定 見送り／期待度52／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
-          }
-        ],
-        "main_count": 0,
-        "hole_count": 0,
-        "decision": "保存候補の説明。新しい買い目を生成・承認する会議ではない。",
-        "automatic_promotion": false
-      },
-      {
-        "race_id": "052320261106",
-        "venue": "取手",
-        "race_no": 5,
-        "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
-        "topics": {
-          "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数44.71。勝率の校正未確認のため1着固定は停止。",
-          "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
-          "information_gaps": [
-            "並び・欠場の取得元との一致は、この会議では未検証。",
-            "正式な条件成立買い目なし。"
-          ]
-        },
-        "opinions": [
-          {
-            "role": "データ担当",
-            "speaking_weight": 1,
-            "statement": "並び・欠場の取得元との一致は、この会議では未検証。／正式な条件成立買い目なし。"
-          },
-          {
-            "role": "予想担当",
-            "speaking_weight": 1,
-            "statement": "本線なし：締切時刻未取得・締切5分以内・対象時間外"
-          },
-          {
-            "role": "軍師",
-            "speaking_weight": 1,
-            "statement": "穴なし：条件成立なし。穴を強制追加しない。"
-          },
-          {
-            "role": "リスク担当",
-            "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数44.71。勝率の校正未確認のため1着固定は停止。"
-          },
-          {
-            "role": "検証担当",
-            "speaking_weight": 1,
-            "statement": "締切前保存と公式結果で照合し、同じ予算・異なる開催日で比較。少数的中では配分を変えない。"
-          },
-          {
-            "role": "高配当戦略部",
-            "speaking_weight": 1,
-            "statement": "独立判定 見送り／期待度62／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
-          }
-        ],
-        "main_count": 0,
-        "hole_count": 0,
-        "decision": "保存候補の説明。新しい買い目を生成・承認する会議ではない。",
-        "automatic_promotion": false
-      },
-      {
-        "race_id": "065120261106",
+        "race_id": "065120261107",
         "venue": "福井",
         "race_no": 6,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数76.15。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数45.18。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -768,7 +508,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数76.15。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数45.18。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -778,7 +518,7 @@
           {
             "role": "高配当戦略部",
             "speaking_weight": 1,
-            "statement": "独立判定 見送り／期待度88／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
+            "statement": "独立判定 見送り／期待度0／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
           }
         ],
         "main_count": 0,
@@ -787,66 +527,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "062320261106",
-        "venue": "取手",
-        "race_no": 6,
-        "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
-        "topics": {
-          "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数30.51。勝率の校正未確認のため1着固定は停止。",
-          "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
-          "information_gaps": [
-            "並び・欠場の取得元との一致は、この会議では未検証。",
-            "正式な条件成立買い目なし。"
-          ]
-        },
-        "opinions": [
-          {
-            "role": "データ担当",
-            "speaking_weight": 1,
-            "statement": "並び・欠場の取得元との一致は、この会議では未検証。／正式な条件成立買い目なし。"
-          },
-          {
-            "role": "予想担当",
-            "speaking_weight": 1,
-            "statement": "本線なし：締切時刻未取得・締切5分以内・対象時間外"
-          },
-          {
-            "role": "軍師",
-            "speaking_weight": 1,
-            "statement": "穴なし：条件成立なし。穴を強制追加しない。"
-          },
-          {
-            "role": "リスク担当",
-            "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数30.51。勝率の校正未確認のため1着固定は停止。"
-          },
-          {
-            "role": "検証担当",
-            "speaking_weight": 1,
-            "statement": "締切前保存と公式結果で照合し、同じ予算・異なる開催日で比較。少数的中では配分を変えない。"
-          },
-          {
-            "role": "高配当戦略部",
-            "speaking_weight": 1,
-            "statement": "独立判定 見送り／期待度50／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
-          }
-        ],
-        "main_count": 0,
-        "hole_count": 0,
-        "decision": "保存候補の説明。新しい買い目を生成・承認する会議ではない。",
-        "automatic_promotion": false
-      },
-      {
-        "race_id": "075120261106",
+        "race_id": "075120261107",
         "venue": "福井",
         "race_no": 7,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数31.9。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数33.35。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -872,7 +560,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数31.9。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数33.35。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -882,7 +570,7 @@
           {
             "role": "高配当戦略部",
             "speaking_weight": 1,
-            "statement": "独立判定 見送り／期待度41／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
+            "statement": "独立判定 見送り／期待度0／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
           }
         ],
         "main_count": 0,
@@ -891,66 +579,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "072320261106",
-        "venue": "取手",
-        "race_no": 7,
-        "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
-        "topics": {
-          "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数49.4。勝率の校正未確認のため1着固定は停止。",
-          "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
-          "information_gaps": [
-            "並び・欠場の取得元との一致は、この会議では未検証。",
-            "正式な条件成立買い目なし。"
-          ]
-        },
-        "opinions": [
-          {
-            "role": "データ担当",
-            "speaking_weight": 1,
-            "statement": "並び・欠場の取得元との一致は、この会議では未検証。／正式な条件成立買い目なし。"
-          },
-          {
-            "role": "予想担当",
-            "speaking_weight": 1,
-            "statement": "本線なし：締切時刻未取得・締切5分以内・対象時間外"
-          },
-          {
-            "role": "軍師",
-            "speaking_weight": 1,
-            "statement": "穴なし：条件成立なし。穴を強制追加しない。"
-          },
-          {
-            "role": "リスク担当",
-            "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数49.4。勝率の校正未確認のため1着固定は停止。"
-          },
-          {
-            "role": "検証担当",
-            "speaking_weight": 1,
-            "statement": "締切前保存と公式結果で照合し、同じ予算・異なる開催日で比較。少数的中では配分を変えない。"
-          },
-          {
-            "role": "高配当戦略部",
-            "speaking_weight": 1,
-            "statement": "独立判定 見送り／期待度50／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
-          }
-        ],
-        "main_count": 0,
-        "hole_count": 0,
-        "decision": "保存候補の説明。新しい買い目を生成・承認する会議ではない。",
-        "automatic_promotion": false
-      },
-      {
-        "race_id": "012520261106",
-        "venue": "大宮",
+        "race_id": "017420261107",
+        "venue": "高知",
         "race_no": 1,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数60.95。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数63.6。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -976,7 +612,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数60.95。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数63.6。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -986,7 +622,7 @@
           {
             "role": "高配当戦略部",
             "speaking_weight": 1,
-            "statement": "独立判定 見送り／期待度70／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
+            "statement": "独立判定 見送り／期待度0／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
           }
         ],
         "main_count": 0,
@@ -995,14 +631,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "018720261106",
+        "race_id": "018720261107",
         "venue": "熊本",
         "race_no": 1,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数36.37。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数19.25。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -1028,7 +664,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数36.37。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数19.25。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -1038,7 +674,7 @@
           {
             "role": "高配当戦略部",
             "speaking_weight": 1,
-            "statement": "独立判定 見送り／期待度53／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
+            "statement": "独立判定 見送り／期待度0／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
           }
         ],
         "main_count": 0,
@@ -1047,14 +683,66 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "022520261106",
-        "venue": "大宮",
+        "race_id": "012120261107",
+        "venue": "弥彦",
+        "race_no": 1,
+        "strategy_version": "position_prob_v11_high_payout_20261007",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
+        "topics": {
+          "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数39.47。勝率の校正未確認のため1着固定は停止。",
+          "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
+          "information_gaps": [
+            "並び・欠場の取得元との一致は、この会議では未検証。",
+            "正式な条件成立買い目なし。"
+          ]
+        },
+        "opinions": [
+          {
+            "role": "データ担当",
+            "speaking_weight": 1,
+            "statement": "並び・欠場の取得元との一致は、この会議では未検証。／正式な条件成立買い目なし。"
+          },
+          {
+            "role": "予想担当",
+            "speaking_weight": 1,
+            "statement": "本線なし：締切時刻未取得・締切5分以内・対象時間外"
+          },
+          {
+            "role": "軍師",
+            "speaking_weight": 1,
+            "statement": "穴なし：条件成立なし。穴を強制追加しない。"
+          },
+          {
+            "role": "リスク担当",
+            "speaking_weight": 1,
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数39.47。勝率の校正未確認のため1着固定は停止。"
+          },
+          {
+            "role": "検証担当",
+            "speaking_weight": 1,
+            "statement": "締切前保存と公式結果で照合し、同じ予算・異なる開催日で比較。少数的中では配分を変えない。"
+          },
+          {
+            "role": "高配当戦略部",
+            "speaking_weight": 1,
+            "statement": "独立判定 見送り／期待度0／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
+          }
+        ],
+        "main_count": 0,
+        "hole_count": 0,
+        "decision": "保存候補の説明。新しい買い目を生成・承認する会議ではない。",
+        "automatic_promotion": false
+      },
+      {
+        "race_id": "027420261107",
+        "venue": "高知",
         "race_no": 2,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数50.35。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数46.95。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -1080,7 +768,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数50.35。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数46.95。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -1090,7 +778,7 @@
           {
             "role": "高配当戦略部",
             "speaking_weight": 1,
-            "statement": "独立判定 見送り／期待度50／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
+            "statement": "独立判定 見送り／期待度0／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
           }
         ],
         "main_count": 0,
@@ -1099,14 +787,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "028720261106",
+        "race_id": "028720261107",
         "venue": "熊本",
         "race_no": 2,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数56.63。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数39.64。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -1132,7 +820,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数56.63。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数39.64。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -1142,7 +830,7 @@
           {
             "role": "高配当戦略部",
             "speaking_weight": 1,
-            "statement": "独立判定 見送り／期待度58／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
+            "statement": "独立判定 見送り／期待度0／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
           }
         ],
         "main_count": 0,
@@ -1151,14 +839,66 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "032520261106",
-        "venue": "大宮",
+        "race_id": "022120261107",
+        "venue": "弥彦",
+        "race_no": 2,
+        "strategy_version": "position_prob_v11_high_payout_20261007",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
+        "topics": {
+          "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数16.21。勝率の校正未確認のため1着固定は停止。",
+          "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
+          "information_gaps": [
+            "並び・欠場の取得元との一致は、この会議では未検証。",
+            "正式な条件成立買い目なし。"
+          ]
+        },
+        "opinions": [
+          {
+            "role": "データ担当",
+            "speaking_weight": 1,
+            "statement": "並び・欠場の取得元との一致は、この会議では未検証。／正式な条件成立買い目なし。"
+          },
+          {
+            "role": "予想担当",
+            "speaking_weight": 1,
+            "statement": "本線なし：締切時刻未取得・締切5分以内・対象時間外"
+          },
+          {
+            "role": "軍師",
+            "speaking_weight": 1,
+            "statement": "穴なし：条件成立なし。穴を強制追加しない。"
+          },
+          {
+            "role": "リスク担当",
+            "speaking_weight": 1,
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数16.21。勝率の校正未確認のため1着固定は停止。"
+          },
+          {
+            "role": "検証担当",
+            "speaking_weight": 1,
+            "statement": "締切前保存と公式結果で照合し、同じ予算・異なる開催日で比較。少数的中では配分を変えない。"
+          },
+          {
+            "role": "高配当戦略部",
+            "speaking_weight": 1,
+            "statement": "独立判定 見送り／期待度0／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
+          }
+        ],
+        "main_count": 0,
+        "hole_count": 0,
+        "decision": "保存候補の説明。新しい買い目を生成・承認する会議ではない。",
+        "automatic_promotion": false
+      },
+      {
+        "race_id": "037420261107",
+        "venue": "高知",
         "race_no": 3,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数31.44。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数50.48。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -1184,7 +924,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数31.44。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数50.48。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -1203,14 +943,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "038720261106",
+        "race_id": "038720261107",
         "venue": "熊本",
         "race_no": 3,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数38.28。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数39.95。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -1236,7 +976,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数38.28。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数39.95。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -1255,14 +995,66 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "042520261106",
-        "venue": "大宮",
+        "race_id": "032120261107",
+        "venue": "弥彦",
+        "race_no": 3,
+        "strategy_version": "position_prob_v11_high_payout_20261007",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
+        "topics": {
+          "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数36.97。勝率の校正未確認のため1着固定は停止。",
+          "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
+          "information_gaps": [
+            "並び・欠場の取得元との一致は、この会議では未検証。",
+            "正式な条件成立買い目なし。"
+          ]
+        },
+        "opinions": [
+          {
+            "role": "データ担当",
+            "speaking_weight": 1,
+            "statement": "並び・欠場の取得元との一致は、この会議では未検証。／正式な条件成立買い目なし。"
+          },
+          {
+            "role": "予想担当",
+            "speaking_weight": 1,
+            "statement": "本線なし：締切時刻未取得・締切5分以内・対象時間外"
+          },
+          {
+            "role": "軍師",
+            "speaking_weight": 1,
+            "statement": "穴なし：条件成立なし。穴を強制追加しない。"
+          },
+          {
+            "role": "リスク担当",
+            "speaking_weight": 1,
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数36.97。勝率の校正未確認のため1着固定は停止。"
+          },
+          {
+            "role": "検証担当",
+            "speaking_weight": 1,
+            "statement": "締切前保存と公式結果で照合し、同じ予算・異なる開催日で比較。少数的中では配分を変えない。"
+          },
+          {
+            "role": "高配当戦略部",
+            "speaking_weight": 1,
+            "statement": "独立判定 見送り／期待度0／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
+          }
+        ],
+        "main_count": 0,
+        "hole_count": 0,
+        "decision": "保存候補の説明。新しい買い目を生成・承認する会議ではない。",
+        "automatic_promotion": false
+      },
+      {
+        "race_id": "047420261107",
+        "venue": "高知",
         "race_no": 4,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数52.41。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数41.44。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -1288,7 +1080,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数52.41。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数41.44。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -1307,14 +1099,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "048720261106",
+        "race_id": "048720261107",
         "venue": "熊本",
         "race_no": 4,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数43.95。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数55.61。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -1340,7 +1132,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数43.95。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数55.61。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -1359,14 +1151,66 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "052520261106",
-        "venue": "大宮",
+        "race_id": "042120261107",
+        "venue": "弥彦",
+        "race_no": 4,
+        "strategy_version": "position_prob_v11_high_payout_20261007",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
+        "topics": {
+          "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数35.71。勝率の校正未確認のため1着固定は停止。",
+          "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
+          "information_gaps": [
+            "並び・欠場の取得元との一致は、この会議では未検証。",
+            "正式な条件成立買い目なし。"
+          ]
+        },
+        "opinions": [
+          {
+            "role": "データ担当",
+            "speaking_weight": 1,
+            "statement": "並び・欠場の取得元との一致は、この会議では未検証。／正式な条件成立買い目なし。"
+          },
+          {
+            "role": "予想担当",
+            "speaking_weight": 1,
+            "statement": "本線なし：締切時刻未取得・締切5分以内・対象時間外"
+          },
+          {
+            "role": "軍師",
+            "speaking_weight": 1,
+            "statement": "穴なし：条件成立なし。穴を強制追加しない。"
+          },
+          {
+            "role": "リスク担当",
+            "speaking_weight": 1,
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数35.71。勝率の校正未確認のため1着固定は停止。"
+          },
+          {
+            "role": "検証担当",
+            "speaking_weight": 1,
+            "statement": "締切前保存と公式結果で照合し、同じ予算・異なる開催日で比較。少数的中では配分を変えない。"
+          },
+          {
+            "role": "高配当戦略部",
+            "speaking_weight": 1,
+            "statement": "独立判定 見送り／期待度0／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
+          }
+        ],
+        "main_count": 0,
+        "hole_count": 0,
+        "decision": "保存候補の説明。新しい買い目を生成・承認する会議ではない。",
+        "automatic_promotion": false
+      },
+      {
+        "race_id": "057420261107",
+        "venue": "高知",
         "race_no": 5,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数48.51。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数70.2。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -1392,7 +1236,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数48.51。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数70.2。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -1411,14 +1255,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "058720261106",
+        "race_id": "058720261107",
         "venue": "熊本",
         "race_no": 5,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数43.13。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数50.92。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -1444,7 +1288,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数43.13。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数50.92。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -1463,14 +1307,66 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "062520261106",
-        "venue": "大宮",
+        "race_id": "052120261107",
+        "venue": "弥彦",
+        "race_no": 5,
+        "strategy_version": "position_prob_v11_high_payout_20261007",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
+        "topics": {
+          "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数34.35。勝率の校正未確認のため1着固定は停止。",
+          "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
+          "information_gaps": [
+            "並び・欠場の取得元との一致は、この会議では未検証。",
+            "正式な条件成立買い目なし。"
+          ]
+        },
+        "opinions": [
+          {
+            "role": "データ担当",
+            "speaking_weight": 1,
+            "statement": "並び・欠場の取得元との一致は、この会議では未検証。／正式な条件成立買い目なし。"
+          },
+          {
+            "role": "予想担当",
+            "speaking_weight": 1,
+            "statement": "本線なし：締切時刻未取得・締切5分以内・対象時間外"
+          },
+          {
+            "role": "軍師",
+            "speaking_weight": 1,
+            "statement": "穴なし：条件成立なし。穴を強制追加しない。"
+          },
+          {
+            "role": "リスク担当",
+            "speaking_weight": 1,
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数34.35。勝率の校正未確認のため1着固定は停止。"
+          },
+          {
+            "role": "検証担当",
+            "speaking_weight": 1,
+            "statement": "締切前保存と公式結果で照合し、同じ予算・異なる開催日で比較。少数的中では配分を変えない。"
+          },
+          {
+            "role": "高配当戦略部",
+            "speaking_weight": 1,
+            "statement": "独立判定 見送り／期待度0／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
+          }
+        ],
+        "main_count": 0,
+        "hole_count": 0,
+        "decision": "保存候補の説明。新しい買い目を生成・承認する会議ではない。",
+        "automatic_promotion": false
+      },
+      {
+        "race_id": "067420261107",
+        "venue": "高知",
         "race_no": 6,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数56.93。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数31.31。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -1496,7 +1392,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数56.93。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数31.31。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -1515,14 +1411,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "068720261106",
+        "race_id": "068720261107",
         "venue": "熊本",
         "race_no": 6,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数35.7。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数21.28。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -1548,7 +1444,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数35.7。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数21.28。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -1567,14 +1463,66 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "072520261106",
-        "venue": "大宮",
+        "race_id": "062120261107",
+        "venue": "弥彦",
+        "race_no": 6,
+        "strategy_version": "position_prob_v11_high_payout_20261007",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
+        "topics": {
+          "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数32.8。勝率の校正未確認のため1着固定は停止。",
+          "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
+          "information_gaps": [
+            "並び・欠場の取得元との一致は、この会議では未検証。",
+            "正式な条件成立買い目なし。"
+          ]
+        },
+        "opinions": [
+          {
+            "role": "データ担当",
+            "speaking_weight": 1,
+            "statement": "並び・欠場の取得元との一致は、この会議では未検証。／正式な条件成立買い目なし。"
+          },
+          {
+            "role": "予想担当",
+            "speaking_weight": 1,
+            "statement": "本線なし：締切時刻未取得・締切5分以内・対象時間外"
+          },
+          {
+            "role": "軍師",
+            "speaking_weight": 1,
+            "statement": "穴なし：条件成立なし。穴を強制追加しない。"
+          },
+          {
+            "role": "リスク担当",
+            "speaking_weight": 1,
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数32.8。勝率の校正未確認のため1着固定は停止。"
+          },
+          {
+            "role": "検証担当",
+            "speaking_weight": 1,
+            "statement": "締切前保存と公式結果で照合し、同じ予算・異なる開催日で比較。少数的中では配分を変えない。"
+          },
+          {
+            "role": "高配当戦略部",
+            "speaking_weight": 1,
+            "statement": "独立判定 見送り／期待度0／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
+          }
+        ],
+        "main_count": 0,
+        "hole_count": 0,
+        "decision": "保存候補の説明。新しい買い目を生成・承認する会議ではない。",
+        "automatic_promotion": false
+      },
+      {
+        "race_id": "077420261107",
+        "venue": "高知",
         "race_no": 7,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数42.21。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数30.27。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -1600,7 +1548,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数42.21。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数30.27。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -1619,14 +1567,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "078720261106",
+        "race_id": "078720261107",
         "venue": "熊本",
         "race_no": 7,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数31.93。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数47.94。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -1652,7 +1600,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数31.93。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数47.94。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -1671,14 +1619,66 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "082520261106",
-        "venue": "大宮",
+        "race_id": "072120261107",
+        "venue": "弥彦",
+        "race_no": 7,
+        "strategy_version": "position_prob_v11_high_payout_20261007",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
+        "topics": {
+          "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数72.09。勝率の校正未確認のため1着固定は停止。",
+          "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
+          "information_gaps": [
+            "並び・欠場の取得元との一致は、この会議では未検証。",
+            "正式な条件成立買い目なし。"
+          ]
+        },
+        "opinions": [
+          {
+            "role": "データ担当",
+            "speaking_weight": 1,
+            "statement": "並び・欠場の取得元との一致は、この会議では未検証。／正式な条件成立買い目なし。"
+          },
+          {
+            "role": "予想担当",
+            "speaking_weight": 1,
+            "statement": "本線なし：締切時刻未取得・締切5分以内・対象時間外"
+          },
+          {
+            "role": "軍師",
+            "speaking_weight": 1,
+            "statement": "穴なし：条件成立なし。穴を強制追加しない。"
+          },
+          {
+            "role": "リスク担当",
+            "speaking_weight": 1,
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数72.09。勝率の校正未確認のため1着固定は停止。"
+          },
+          {
+            "role": "検証担当",
+            "speaking_weight": 1,
+            "statement": "締切前保存と公式結果で照合し、同じ予算・異なる開催日で比較。少数的中では配分を変えない。"
+          },
+          {
+            "role": "高配当戦略部",
+            "speaking_weight": 1,
+            "statement": "独立判定 見送り／期待度0／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
+          }
+        ],
+        "main_count": 0,
+        "hole_count": 0,
+        "decision": "保存候補の説明。新しい買い目を生成・承認する会議ではない。",
+        "automatic_promotion": false
+      },
+      {
+        "race_id": "087420261107",
+        "venue": "高知",
         "race_no": 8,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数52.98。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数36.71。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -1704,7 +1704,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数52.98。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数36.71。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -1723,14 +1723,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "088720261106",
+        "race_id": "088720261107",
         "venue": "熊本",
         "race_no": 8,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数49.61。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数48.1。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -1756,7 +1756,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数49.61。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数48.1。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -1775,14 +1775,66 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "092520261106",
-        "venue": "大宮",
+        "race_id": "082120261107",
+        "venue": "弥彦",
+        "race_no": 8,
+        "strategy_version": "position_prob_v11_high_payout_20261007",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
+        "topics": {
+          "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数42.96。勝率の校正未確認のため1着固定は停止。",
+          "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
+          "information_gaps": [
+            "並び・欠場の取得元との一致は、この会議では未検証。",
+            "正式な条件成立買い目なし。"
+          ]
+        },
+        "opinions": [
+          {
+            "role": "データ担当",
+            "speaking_weight": 1,
+            "statement": "並び・欠場の取得元との一致は、この会議では未検証。／正式な条件成立買い目なし。"
+          },
+          {
+            "role": "予想担当",
+            "speaking_weight": 1,
+            "statement": "本線なし：締切時刻未取得・締切5分以内・対象時間外"
+          },
+          {
+            "role": "軍師",
+            "speaking_weight": 1,
+            "statement": "穴なし：条件成立なし。穴を強制追加しない。"
+          },
+          {
+            "role": "リスク担当",
+            "speaking_weight": 1,
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数42.96。勝率の校正未確認のため1着固定は停止。"
+          },
+          {
+            "role": "検証担当",
+            "speaking_weight": 1,
+            "statement": "締切前保存と公式結果で照合し、同じ予算・異なる開催日で比較。少数的中では配分を変えない。"
+          },
+          {
+            "role": "高配当戦略部",
+            "speaking_weight": 1,
+            "statement": "独立判定 見送り／期待度0／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
+          }
+        ],
+        "main_count": 0,
+        "hole_count": 0,
+        "decision": "保存候補の説明。新しい買い目を生成・承認する会議ではない。",
+        "automatic_promotion": false
+      },
+      {
+        "race_id": "097420261107",
+        "venue": "高知",
         "race_no": 9,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数58.78。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数65.02。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -1808,7 +1860,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数58.78。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数65.02。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -1827,14 +1879,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "098720261106",
+        "race_id": "098720261107",
         "venue": "熊本",
         "race_no": 9,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数50.82。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数46.22。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -1860,7 +1912,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数50.82。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数46.22。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -1879,14 +1931,66 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "102520261106",
-        "venue": "大宮",
+        "race_id": "092120261107",
+        "venue": "弥彦",
+        "race_no": 9,
+        "strategy_version": "position_prob_v11_high_payout_20261007",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
+        "topics": {
+          "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数50.94。勝率の校正未確認のため1着固定は停止。",
+          "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
+          "information_gaps": [
+            "並び・欠場の取得元との一致は、この会議では未検証。",
+            "正式な条件成立買い目なし。"
+          ]
+        },
+        "opinions": [
+          {
+            "role": "データ担当",
+            "speaking_weight": 1,
+            "statement": "並び・欠場の取得元との一致は、この会議では未検証。／正式な条件成立買い目なし。"
+          },
+          {
+            "role": "予想担当",
+            "speaking_weight": 1,
+            "statement": "本線なし：締切時刻未取得・締切5分以内・対象時間外"
+          },
+          {
+            "role": "軍師",
+            "speaking_weight": 1,
+            "statement": "穴なし：条件成立なし。穴を強制追加しない。"
+          },
+          {
+            "role": "リスク担当",
+            "speaking_weight": 1,
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数50.94。勝率の校正未確認のため1着固定は停止。"
+          },
+          {
+            "role": "検証担当",
+            "speaking_weight": 1,
+            "statement": "締切前保存と公式結果で照合し、同じ予算・異なる開催日で比較。少数的中では配分を変えない。"
+          },
+          {
+            "role": "高配当戦略部",
+            "speaking_weight": 1,
+            "statement": "独立判定 見送り／期待度0／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
+          }
+        ],
+        "main_count": 0,
+        "hole_count": 0,
+        "decision": "保存候補の説明。新しい買い目を生成・承認する会議ではない。",
+        "automatic_promotion": false
+      },
+      {
+        "race_id": "107420261107",
+        "venue": "高知",
         "race_no": 10,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数54.49。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数46.37。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -1912,7 +2016,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数54.49。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数46.37。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -1931,14 +2035,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "108720261106",
+        "race_id": "108720261107",
         "venue": "熊本",
         "race_no": 10,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数59.44。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数37.33。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -1964,7 +2068,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数59.44。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数37.33。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -1983,14 +2087,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "112520261106",
-        "venue": "大宮",
-        "race_no": 11,
+        "race_id": "102120261107",
+        "venue": "弥彦",
+        "race_no": 10,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数58.4。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数41.27。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -2016,7 +2120,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数58.4。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数41.27。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -2035,14 +2139,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "014820261106",
+        "race_id": "014820261107",
         "venue": "四日市",
         "race_no": 1,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数54.62。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数57.32。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -2068,7 +2172,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数54.62。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数57.32。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -2087,14 +2191,66 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "118720261106",
+        "race_id": "117420261107",
+        "venue": "高知",
+        "race_no": 11,
+        "strategy_version": "position_prob_v11_high_payout_20261007",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
+        "topics": {
+          "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数31.61。勝率の校正未確認のため1着固定は停止。",
+          "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
+          "information_gaps": [
+            "並び・欠場の取得元との一致は、この会議では未検証。",
+            "正式な条件成立買い目なし。"
+          ]
+        },
+        "opinions": [
+          {
+            "role": "データ担当",
+            "speaking_weight": 1,
+            "statement": "並び・欠場の取得元との一致は、この会議では未検証。／正式な条件成立買い目なし。"
+          },
+          {
+            "role": "予想担当",
+            "speaking_weight": 1,
+            "statement": "本線なし：締切時刻未取得・締切5分以内・対象時間外"
+          },
+          {
+            "role": "軍師",
+            "speaking_weight": 1,
+            "statement": "穴なし：条件成立なし。穴を強制追加しない。"
+          },
+          {
+            "role": "リスク担当",
+            "speaking_weight": 1,
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数31.61。勝率の校正未確認のため1着固定は停止。"
+          },
+          {
+            "role": "検証担当",
+            "speaking_weight": 1,
+            "statement": "締切前保存と公式結果で照合し、同じ予算・異なる開催日で比較。少数的中では配分を変えない。"
+          },
+          {
+            "role": "高配当戦略部",
+            "speaking_weight": 1,
+            "statement": "独立判定 見送り／期待度0／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
+          }
+        ],
+        "main_count": 0,
+        "hole_count": 0,
+        "decision": "保存候補の説明。新しい買い目を生成・承認する会議ではない。",
+        "automatic_promotion": false
+      },
+      {
+        "race_id": "118720261107",
         "venue": "熊本",
         "race_no": 11,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数33.73。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数47.18。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -2120,7 +2276,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数33.73。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数47.18。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -2139,66 +2295,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "018620261106",
-        "venue": "別府",
-        "race_no": 1,
-        "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
-        "topics": {
-          "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数41.66。勝率の校正未確認のため1着固定は停止。",
-          "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
-          "information_gaps": [
-            "並び・欠場の取得元との一致は、この会議では未検証。",
-            "正式な条件成立買い目なし。"
-          ]
-        },
-        "opinions": [
-          {
-            "role": "データ担当",
-            "speaking_weight": 1,
-            "statement": "並び・欠場の取得元との一致は、この会議では未検証。／正式な条件成立買い目なし。"
-          },
-          {
-            "role": "予想担当",
-            "speaking_weight": 1,
-            "statement": "本線なし：締切時刻未取得・締切5分以内・対象時間外"
-          },
-          {
-            "role": "軍師",
-            "speaking_weight": 1,
-            "statement": "穴なし：条件成立なし。穴を強制追加しない。"
-          },
-          {
-            "role": "リスク担当",
-            "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数41.66。勝率の校正未確認のため1着固定は停止。"
-          },
-          {
-            "role": "検証担当",
-            "speaking_weight": 1,
-            "statement": "締切前保存と公式結果で照合し、同じ予算・異なる開催日で比較。少数的中では配分を変えない。"
-          },
-          {
-            "role": "高配当戦略部",
-            "speaking_weight": 1,
-            "statement": "独立判定 見送り／期待度0／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
-          }
-        ],
-        "main_count": 0,
-        "hole_count": 0,
-        "decision": "保存候補の説明。新しい買い目を生成・承認する会議ではない。",
-        "automatic_promotion": false
-      },
-      {
-        "race_id": "024820261106",
+        "race_id": "024820261107",
         "venue": "四日市",
         "race_no": 2,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数38.54。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数83.96。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -2224,7 +2328,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数38.54。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数83.96。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -2243,14 +2347,66 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "122520261106",
-        "venue": "大宮",
+        "race_id": "112120261107",
+        "venue": "弥彦",
+        "race_no": 11,
+        "strategy_version": "position_prob_v11_high_payout_20261007",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
+        "topics": {
+          "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数38.81。勝率の校正未確認のため1着固定は停止。",
+          "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
+          "information_gaps": [
+            "並び・欠場の取得元との一致は、この会議では未検証。",
+            "正式な条件成立買い目なし。"
+          ]
+        },
+        "opinions": [
+          {
+            "role": "データ担当",
+            "speaking_weight": 1,
+            "statement": "並び・欠場の取得元との一致は、この会議では未検証。／正式な条件成立買い目なし。"
+          },
+          {
+            "role": "予想担当",
+            "speaking_weight": 1,
+            "statement": "本線なし：締切時刻未取得・締切5分以内・対象時間外"
+          },
+          {
+            "role": "軍師",
+            "speaking_weight": 1,
+            "statement": "穴なし：条件成立なし。穴を強制追加しない。"
+          },
+          {
+            "role": "リスク担当",
+            "speaking_weight": 1,
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数38.81。勝率の校正未確認のため1着固定は停止。"
+          },
+          {
+            "role": "検証担当",
+            "speaking_weight": 1,
+            "statement": "締切前保存と公式結果で照合し、同じ予算・異なる開催日で比較。少数的中では配分を変えない。"
+          },
+          {
+            "role": "高配当戦略部",
+            "speaking_weight": 1,
+            "statement": "独立判定 見送り／期待度0／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
+          }
+        ],
+        "main_count": 0,
+        "hole_count": 0,
+        "decision": "保存候補の説明。新しい買い目を生成・承認する会議ではない。",
+        "automatic_promotion": false
+      },
+      {
+        "race_id": "127420261107",
+        "venue": "高知",
         "race_no": 12,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数64.19。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数39.23。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -2276,7 +2432,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数64.19。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数39.23。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -2295,14 +2451,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "028620261106",
-        "venue": "別府",
-        "race_no": 2,
+        "race_id": "034820261107",
+        "venue": "四日市",
+        "race_no": 3,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数55.39。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数59.76。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -2328,7 +2484,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数55.39。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数59.76。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -2347,14 +2503,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "128720261106",
+        "race_id": "128720261107",
         "venue": "熊本",
         "race_no": 12,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数82.68。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数37.92。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -2380,7 +2536,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数82.68。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数37.92。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -2399,118 +2555,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "034820261106",
-        "venue": "四日市",
-        "race_no": 3,
-        "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
-        "topics": {
-          "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数38.54。勝率の校正未確認のため1着固定は停止。",
-          "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
-          "information_gaps": [
-            "並び・欠場の取得元との一致は、この会議では未検証。",
-            "正式な条件成立買い目なし。"
-          ]
-        },
-        "opinions": [
-          {
-            "role": "データ担当",
-            "speaking_weight": 1,
-            "statement": "並び・欠場の取得元との一致は、この会議では未検証。／正式な条件成立買い目なし。"
-          },
-          {
-            "role": "予想担当",
-            "speaking_weight": 1,
-            "statement": "本線なし：締切時刻未取得・締切5分以内・対象時間外"
-          },
-          {
-            "role": "軍師",
-            "speaking_weight": 1,
-            "statement": "穴なし：条件成立なし。穴を強制追加しない。"
-          },
-          {
-            "role": "リスク担当",
-            "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数38.54。勝率の校正未確認のため1着固定は停止。"
-          },
-          {
-            "role": "検証担当",
-            "speaking_weight": 1,
-            "statement": "締切前保存と公式結果で照合し、同じ予算・異なる開催日で比較。少数的中では配分を変えない。"
-          },
-          {
-            "role": "高配当戦略部",
-            "speaking_weight": 1,
-            "statement": "独立判定 見送り／期待度0／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
-          }
-        ],
-        "main_count": 0,
-        "hole_count": 0,
-        "decision": "保存候補の説明。新しい買い目を生成・承認する会議ではない。",
-        "automatic_promotion": false
-      },
-      {
-        "race_id": "038620261106",
-        "venue": "別府",
-        "race_no": 3,
-        "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
-        "topics": {
-          "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数49.3。勝率の校正未確認のため1着固定は停止。",
-          "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
-          "information_gaps": [
-            "並び・欠場の取得元との一致は、この会議では未検証。",
-            "正式な条件成立買い目なし。"
-          ]
-        },
-        "opinions": [
-          {
-            "role": "データ担当",
-            "speaking_weight": 1,
-            "statement": "並び・欠場の取得元との一致は、この会議では未検証。／正式な条件成立買い目なし。"
-          },
-          {
-            "role": "予想担当",
-            "speaking_weight": 1,
-            "statement": "本線なし：締切時刻未取得・締切5分以内・対象時間外"
-          },
-          {
-            "role": "軍師",
-            "speaking_weight": 1,
-            "statement": "穴なし：条件成立なし。穴を強制追加しない。"
-          },
-          {
-            "role": "リスク担当",
-            "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数49.3。勝率の校正未確認のため1着固定は停止。"
-          },
-          {
-            "role": "検証担当",
-            "speaking_weight": 1,
-            "statement": "締切前保存と公式結果で照合し、同じ予算・異なる開催日で比較。少数的中では配分を変えない。"
-          },
-          {
-            "role": "高配当戦略部",
-            "speaking_weight": 1,
-            "statement": "独立判定 見送り／期待度0／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
-          }
-        ],
-        "main_count": 0,
-        "hole_count": 0,
-        "decision": "保存候補の説明。新しい買い目を生成・承認する会議ではない。",
-        "automatic_promotion": false
-      },
-      {
-        "race_id": "044820261106",
+        "race_id": "044820261107",
         "venue": "四日市",
         "race_no": 4,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数38.95。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数38.1。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -2536,7 +2588,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数38.95。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数38.1。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -2555,66 +2607,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "048620261106",
-        "venue": "別府",
-        "race_no": 4,
-        "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
-        "topics": {
-          "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数36.04。勝率の校正未確認のため1着固定は停止。",
-          "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
-          "information_gaps": [
-            "並び・欠場の取得元との一致は、この会議では未検証。",
-            "正式な条件成立買い目なし。"
-          ]
-        },
-        "opinions": [
-          {
-            "role": "データ担当",
-            "speaking_weight": 1,
-            "statement": "並び・欠場の取得元との一致は、この会議では未検証。／正式な条件成立買い目なし。"
-          },
-          {
-            "role": "予想担当",
-            "speaking_weight": 1,
-            "statement": "本線なし：締切時刻未取得・締切5分以内・対象時間外"
-          },
-          {
-            "role": "軍師",
-            "speaking_weight": 1,
-            "statement": "穴なし：条件成立なし。穴を強制追加しない。"
-          },
-          {
-            "role": "リスク担当",
-            "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数36.04。勝率の校正未確認のため1着固定は停止。"
-          },
-          {
-            "role": "検証担当",
-            "speaking_weight": 1,
-            "statement": "締切前保存と公式結果で照合し、同じ予算・異なる開催日で比較。少数的中では配分を変えない。"
-          },
-          {
-            "role": "高配当戦略部",
-            "speaking_weight": 1,
-            "statement": "独立判定 見送り／期待度0／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
-          }
-        ],
-        "main_count": 0,
-        "hole_count": 0,
-        "decision": "保存候補の説明。新しい買い目を生成・承認する会議ではない。",
-        "automatic_promotion": false
-      },
-      {
-        "race_id": "054820261106",
+        "race_id": "054820261107",
         "venue": "四日市",
         "race_no": 5,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数54.26。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数54.17。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -2640,7 +2640,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数54.26。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数54.17。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -2659,66 +2659,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "058620261106",
-        "venue": "別府",
-        "race_no": 5,
-        "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
-        "topics": {
-          "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数52.21。勝率の校正未確認のため1着固定は停止。",
-          "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
-          "information_gaps": [
-            "並び・欠場の取得元との一致は、この会議では未検証。",
-            "正式な条件成立買い目なし。"
-          ]
-        },
-        "opinions": [
-          {
-            "role": "データ担当",
-            "speaking_weight": 1,
-            "statement": "並び・欠場の取得元との一致は、この会議では未検証。／正式な条件成立買い目なし。"
-          },
-          {
-            "role": "予想担当",
-            "speaking_weight": 1,
-            "statement": "本線なし：締切時刻未取得・締切5分以内・対象時間外"
-          },
-          {
-            "role": "軍師",
-            "speaking_weight": 1,
-            "statement": "穴なし：条件成立なし。穴を強制追加しない。"
-          },
-          {
-            "role": "リスク担当",
-            "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数52.21。勝率の校正未確認のため1着固定は停止。"
-          },
-          {
-            "role": "検証担当",
-            "speaking_weight": 1,
-            "statement": "締切前保存と公式結果で照合し、同じ予算・異なる開催日で比較。少数的中では配分を変えない。"
-          },
-          {
-            "role": "高配当戦略部",
-            "speaking_weight": 1,
-            "statement": "独立判定 見送り／期待度0／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
-          }
-        ],
-        "main_count": 0,
-        "hole_count": 0,
-        "decision": "保存候補の説明。新しい買い目を生成・承認する会議ではない。",
-        "automatic_promotion": false
-      },
-      {
-        "race_id": "064820261106",
+        "race_id": "064820261107",
         "venue": "四日市",
         "race_no": 6,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数48.19。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数44.91。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -2744,7 +2692,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数48.19。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数44.91。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -2763,66 +2711,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "068620261106",
-        "venue": "別府",
-        "race_no": 6,
-        "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
-        "topics": {
-          "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数59.96。勝率の校正未確認のため1着固定は停止。",
-          "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
-          "information_gaps": [
-            "並び・欠場の取得元との一致は、この会議では未検証。",
-            "正式な条件成立買い目なし。"
-          ]
-        },
-        "opinions": [
-          {
-            "role": "データ担当",
-            "speaking_weight": 1,
-            "statement": "並び・欠場の取得元との一致は、この会議では未検証。／正式な条件成立買い目なし。"
-          },
-          {
-            "role": "予想担当",
-            "speaking_weight": 1,
-            "statement": "本線なし：締切時刻未取得・締切5分以内・対象時間外"
-          },
-          {
-            "role": "軍師",
-            "speaking_weight": 1,
-            "statement": "穴なし：条件成立なし。穴を強制追加しない。"
-          },
-          {
-            "role": "リスク担当",
-            "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数59.96。勝率の校正未確認のため1着固定は停止。"
-          },
-          {
-            "role": "検証担当",
-            "speaking_weight": 1,
-            "statement": "締切前保存と公式結果で照合し、同じ予算・異なる開催日で比較。少数的中では配分を変えない。"
-          },
-          {
-            "role": "高配当戦略部",
-            "speaking_weight": 1,
-            "statement": "独立判定 見送り／期待度0／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
-          }
-        ],
-        "main_count": 0,
-        "hole_count": 0,
-        "decision": "保存候補の説明。新しい買い目を生成・承認する会議ではない。",
-        "automatic_promotion": false
-      },
-      {
-        "race_id": "074820261106",
+        "race_id": "074820261107",
         "venue": "四日市",
         "race_no": 7,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数72.67。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数65.66。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -2848,7 +2744,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数72.67。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数65.66。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -2867,82 +2763,30 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "078620261106",
-        "venue": "別府",
-        "race_no": 7,
-        "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
-        "topics": {
-          "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数56.15。勝率の校正未確認のため1着固定は停止。",
-          "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
-          "information_gaps": [
-            "並び・欠場の取得元との一致は、この会議では未検証。",
-            "正式な条件成立買い目なし。"
-          ]
-        },
-        "opinions": [
-          {
-            "role": "データ担当",
-            "speaking_weight": 1,
-            "statement": "並び・欠場の取得元との一致は、この会議では未検証。／正式な条件成立買い目なし。"
-          },
-          {
-            "role": "予想担当",
-            "speaking_weight": 1,
-            "statement": "本線なし：締切時刻未取得・締切5分以内・対象時間外"
-          },
-          {
-            "role": "軍師",
-            "speaking_weight": 1,
-            "statement": "穴なし：条件成立なし。穴を強制追加しない。"
-          },
-          {
-            "role": "リスク担当",
-            "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数56.15。勝率の校正未確認のため1着固定は停止。"
-          },
-          {
-            "role": "検証担当",
-            "speaking_weight": 1,
-            "statement": "締切前保存と公式結果で照合し、同じ予算・異なる開催日で比較。少数的中では配分を変えない。"
-          },
-          {
-            "role": "高配当戦略部",
-            "speaking_weight": 1,
-            "statement": "独立判定 見送り／期待度0／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
-          }
-        ],
-        "main_count": 0,
-        "hole_count": 0,
-        "decision": "保存候補の説明。新しい買い目を生成・承認する会議ではない。",
-        "automatic_promotion": false
-      },
-      {
-        "race_id": "084820261106",
+        "race_id": "084820261107",
         "venue": "四日市",
         "race_no": 8,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
-          "main_basis": "1着候補 [1, 7]。本線5点／上限8点。推定確率を優先し、EV≥1.1を満たした保存候補。",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数37.76。勝率の校正未確認のため1着固定は停止。",
+          "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数57.23。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
-            "保存買い目のうち5点は現在のオッズ鮮度・確認状態が不足。"
+            "正式な条件成立買い目なし。"
           ]
         },
         "opinions": [
           {
             "role": "データ担当",
             "speaking_weight": 1,
-            "statement": "並び・欠場の取得元との一致は、この会議では未検証。／保存買い目のうち5点は現在のオッズ鮮度・確認状態が不足。"
+            "statement": "並び・欠場の取得元との一致は、この会議では未検証。／正式な条件成立買い目なし。"
           },
           {
             "role": "予想担当",
             "speaking_weight": 1,
-            "statement": "1着候補 [1, 7]。本線5点／上限8点。推定確率を優先し、EV≥1.1を満たした保存候補。"
+            "statement": "本線なし：締切時刻未取得・締切5分以内・対象時間外"
           },
           {
             "role": "軍師",
@@ -2952,7 +2796,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数37.76。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数57.23。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -2962,127 +2806,23 @@
           {
             "role": "高配当戦略部",
             "speaking_weight": 1,
-            "statement": "独立判定 見送り／期待度0／0点。このレースは穴予想見送り"
+            "statement": "独立判定 見送り／期待度0／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
           }
         ],
-        "main_count": 5,
+        "main_count": 0,
         "hole_count": 0,
         "decision": "保存候補の説明。新しい買い目を生成・承認する会議ではない。",
         "automatic_promotion": false
       },
       {
-        "race_id": "088620261106",
-        "venue": "別府",
-        "race_no": 8,
-        "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
-        "topics": {
-          "main_basis": "1着候補 [1, 3, 7]。本線6点／上限6点。推定確率を優先し、EV≥1.1を満たした保存候補。",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数55.93。勝率の校正未確認のため1着固定は停止。",
-          "hole_reason": "100倍以上・EV≥1.25の保存候補8点。高配当だけで価値を保証しない。",
-          "information_gaps": [
-            "並び・欠場の取得元との一致は、この会議では未検証。",
-            "保存買い目のうち14点は現在のオッズ鮮度・確認状態が不足。"
-          ]
-        },
-        "opinions": [
-          {
-            "role": "データ担当",
-            "speaking_weight": 1,
-            "statement": "並び・欠場の取得元との一致は、この会議では未検証。／保存買い目のうち14点は現在のオッズ鮮度・確認状態が不足。"
-          },
-          {
-            "role": "予想担当",
-            "speaking_weight": 1,
-            "statement": "1着候補 [1, 3, 7]。本線6点／上限6点。推定確率を優先し、EV≥1.1を満たした保存候補。"
-          },
-          {
-            "role": "軍師",
-            "speaking_weight": 1,
-            "statement": "100倍以上・EV≥1.25の保存候補8点。高配当だけで価値を保証しない。"
-          },
-          {
-            "role": "リスク担当",
-            "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数55.93。勝率の校正未確認のため1着固定は停止。"
-          },
-          {
-            "role": "検証担当",
-            "speaking_weight": 1,
-            "statement": "締切前保存と公式結果で照合し、同じ予算・異なる開催日で比較。少数的中では配分を変えない。"
-          },
-          {
-            "role": "高配当戦略部",
-            "speaking_weight": 1,
-            "statement": "独立判定 B／期待度68／8点。100倍以上の根拠付き候補のみ。"
-          }
-        ],
-        "main_count": 6,
-        "hole_count": 8,
-        "decision": "保存候補の説明。新しい買い目を生成・承認する会議ではない。",
-        "automatic_promotion": false
-      },
-      {
-        "race_id": "094820261106",
+        "race_id": "094820261107",
         "venue": "四日市",
         "race_no": 9,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
-        "topics": {
-          "main_basis": "1着候補 [2, 9]。本線6点／上限6点。推定確率を優先し、EV≥1.1を満たした保存候補。",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数40.79。勝率の校正未確認のため1着固定は停止。",
-          "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
-          "information_gaps": [
-            "並び・欠場の取得元との一致は、この会議では未検証。",
-            "保存買い目のうち6点は現在のオッズ鮮度・確認状態が不足。"
-          ]
-        },
-        "opinions": [
-          {
-            "role": "データ担当",
-            "speaking_weight": 1,
-            "statement": "並び・欠場の取得元との一致は、この会議では未検証。／保存買い目のうち6点は現在のオッズ鮮度・確認状態が不足。"
-          },
-          {
-            "role": "予想担当",
-            "speaking_weight": 1,
-            "statement": "1着候補 [2, 9]。本線6点／上限6点。推定確率を優先し、EV≥1.1を満たした保存候補。"
-          },
-          {
-            "role": "軍師",
-            "speaking_weight": 1,
-            "statement": "穴なし：条件成立なし。穴を強制追加しない。"
-          },
-          {
-            "role": "リスク担当",
-            "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数40.79。勝率の校正未確認のため1着固定は停止。"
-          },
-          {
-            "role": "検証担当",
-            "speaking_weight": 1,
-            "statement": "締切前保存と公式結果で照合し、同じ予算・異なる開催日で比較。少数的中では配分を変えない。"
-          },
-          {
-            "role": "高配当戦略部",
-            "speaking_weight": 1,
-            "statement": "独立判定 見送り／期待度0／0点。このレースは穴予想見送り"
-          }
-        ],
-        "main_count": 6,
-        "hole_count": 0,
-        "decision": "保存候補の説明。新しい買い目を生成・承認する会議ではない。",
-        "automatic_promotion": false
-      },
-      {
-        "race_id": "098620261106",
-        "venue": "別府",
-        "race_no": 9,
-        "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数41.26。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数55.58。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -3108,7 +2848,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数41.26。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数55.58。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -3127,14 +2867,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "104820261106",
+        "race_id": "104820261107",
         "venue": "四日市",
         "race_no": 10,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数43.09。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数51.59。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -3160,7 +2900,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数43.09。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数51.59。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -3179,66 +2919,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "108620261106",
-        "venue": "別府",
-        "race_no": 10,
-        "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
-        "topics": {
-          "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数58.74。勝率の校正未確認のため1着固定は停止。",
-          "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
-          "information_gaps": [
-            "並び・欠場の取得元との一致は、この会議では未検証。",
-            "正式な条件成立買い目なし。"
-          ]
-        },
-        "opinions": [
-          {
-            "role": "データ担当",
-            "speaking_weight": 1,
-            "statement": "並び・欠場の取得元との一致は、この会議では未検証。／正式な条件成立買い目なし。"
-          },
-          {
-            "role": "予想担当",
-            "speaking_weight": 1,
-            "statement": "本線なし：締切時刻未取得・締切5分以内・対象時間外"
-          },
-          {
-            "role": "軍師",
-            "speaking_weight": 1,
-            "statement": "穴なし：条件成立なし。穴を強制追加しない。"
-          },
-          {
-            "role": "リスク担当",
-            "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数58.74。勝率の校正未確認のため1着固定は停止。"
-          },
-          {
-            "role": "検証担当",
-            "speaking_weight": 1,
-            "statement": "締切前保存と公式結果で照合し、同じ予算・異なる開催日で比較。少数的中では配分を変えない。"
-          },
-          {
-            "role": "高配当戦略部",
-            "speaking_weight": 1,
-            "statement": "独立判定 見送り／期待度0／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
-          }
-        ],
-        "main_count": 0,
-        "hole_count": 0,
-        "decision": "保存候補の説明。新しい買い目を生成・承認する会議ではない。",
-        "automatic_promotion": false
-      },
-      {
-        "race_id": "114820261106",
+        "race_id": "114820261107",
         "venue": "四日市",
         "race_no": 11,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数48.5。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数49.14。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -3264,7 +2952,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数48.5。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数49.14。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -3283,66 +2971,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "118620261106",
-        "venue": "別府",
-        "race_no": 11,
-        "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
-        "topics": {
-          "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数36.56。勝率の校正未確認のため1着固定は停止。",
-          "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
-          "information_gaps": [
-            "並び・欠場の取得元との一致は、この会議では未検証。",
-            "正式な条件成立買い目なし。"
-          ]
-        },
-        "opinions": [
-          {
-            "role": "データ担当",
-            "speaking_weight": 1,
-            "statement": "並び・欠場の取得元との一致は、この会議では未検証。／正式な条件成立買い目なし。"
-          },
-          {
-            "role": "予想担当",
-            "speaking_weight": 1,
-            "statement": "本線なし：締切時刻未取得・締切5分以内・対象時間外"
-          },
-          {
-            "role": "軍師",
-            "speaking_weight": 1,
-            "statement": "穴なし：条件成立なし。穴を強制追加しない。"
-          },
-          {
-            "role": "リスク担当",
-            "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数36.56。勝率の校正未確認のため1着固定は停止。"
-          },
-          {
-            "role": "検証担当",
-            "speaking_weight": 1,
-            "statement": "締切前保存と公式結果で照合し、同じ予算・異なる開催日で比較。少数的中では配分を変えない。"
-          },
-          {
-            "role": "高配当戦略部",
-            "speaking_weight": 1,
-            "statement": "独立判定 見送り／期待度0／0点。このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）"
-          }
-        ],
-        "main_count": 0,
-        "hole_count": 0,
-        "decision": "保存候補の説明。新しい買い目を生成・承認する会議ではない。",
-        "automatic_promotion": false
-      },
-      {
-        "race_id": "124820261106",
+        "race_id": "124820261107",
         "venue": "四日市",
         "race_no": 12,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数43.99。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数43.94。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -3368,7 +3004,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数43.99。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数43.94。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -3387,14 +3023,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "012720261106",
+        "race_id": "012720261107",
         "venue": "京王閣",
         "race_no": 1,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数32.92。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数33.92。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -3420,7 +3056,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数32.92。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数33.92。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -3439,14 +3075,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "018120261106",
+        "race_id": "018120261107",
         "venue": "小倉",
         "race_no": 1,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数46.78。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数1.75。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -3472,7 +3108,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数46.78。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数1.75。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -3491,14 +3127,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "022720261106",
+        "race_id": "022720261107",
         "venue": "京王閣",
         "race_no": 2,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数37.76。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数56.46。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -3524,7 +3160,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数37.76。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数56.46。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -3543,14 +3179,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "028120261106",
+        "race_id": "028120261107",
         "venue": "小倉",
         "race_no": 2,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数55.93。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数23.92。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -3576,7 +3212,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数55.93。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数23.92。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -3595,14 +3231,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "032720261106",
+        "race_id": "032720261107",
         "venue": "京王閣",
         "race_no": 3,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数52.16。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数36.45。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -3628,7 +3264,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数52.16。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数36.45。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -3647,14 +3283,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "038120261106",
+        "race_id": "038120261107",
         "venue": "小倉",
         "race_no": 3,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数59.27。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数42.55。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -3680,7 +3316,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数59.27。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数42.55。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -3699,14 +3335,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "042720261106",
+        "race_id": "042720261107",
         "venue": "京王閣",
         "race_no": 4,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数40.61。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数50.4。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -3732,7 +3368,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数40.61。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数50.4。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -3751,14 +3387,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "048120261106",
+        "race_id": "048120261107",
         "venue": "小倉",
         "race_no": 4,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数43.4。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数22.69。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -3784,7 +3420,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数43.4。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数22.69。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -3803,14 +3439,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "052720261106",
+        "race_id": "052720261107",
         "venue": "京王閣",
         "race_no": 5,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数41.37。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数39.73。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -3836,7 +3472,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数41.37。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数39.73。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -3855,14 +3491,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "058120261106",
+        "race_id": "058120261107",
         "venue": "小倉",
         "race_no": 5,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数44.22。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数13.43。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -3888,7 +3524,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数44.22。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数13.43。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -3907,14 +3543,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "062720261106",
+        "race_id": "062720261107",
         "venue": "京王閣",
         "race_no": 6,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数40.5。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数44.66。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -3940,7 +3576,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数40.5。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数44.66。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -3959,14 +3595,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "068120261106",
+        "race_id": "068120261107",
         "venue": "小倉",
         "race_no": 6,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数43.51。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数16.44。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -3992,7 +3628,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数43.51。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数16.44。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -4011,14 +3647,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "072720261106",
+        "race_id": "072720261107",
         "venue": "京王閣",
         "race_no": 7,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数42.22。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数37.37。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -4044,7 +3680,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数42.22。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数37.37。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -4063,14 +3699,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "078120261106",
+        "race_id": "078120261107",
         "venue": "小倉",
         "race_no": 7,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数67.96。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数18.47。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -4096,7 +3732,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数67.96。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数18.47。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -4115,14 +3751,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "082720261106",
+        "race_id": "082720261107",
         "venue": "京王閣",
         "race_no": 8,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数50.0。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数38.05。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -4148,7 +3784,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数50.0。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数38.05。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -4167,14 +3803,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "088120261106",
+        "race_id": "088120261107",
         "venue": "小倉",
         "race_no": 8,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数69.19。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数15.69。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -4200,7 +3836,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数69.19。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数15.69。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -4219,14 +3855,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "092720261106",
+        "race_id": "092720261107",
         "venue": "京王閣",
         "race_no": 9,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数30.02。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数39.59。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -4252,7 +3888,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数30.02。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数39.59。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
@@ -4271,14 +3907,14 @@
         "automatic_promotion": false
       },
       {
-        "race_id": "098120261106",
+        "race_id": "098120261107",
         "venue": "小倉",
         "race_no": 9,
         "strategy_version": "position_prob_v11_high_payout_20261007",
-        "reviewed_at_jst": "2026-11-06T22:21:01+09:00",
+        "reviewed_at_jst": "2026-11-07T05:07:25+09:00",
         "topics": {
           "main_basis": "本線なし：締切時刻未取得・締切5分以内・対象時間外",
-          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数39.68。勝率の校正未確認のため1着固定は停止。",
+          "failure_scenario": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数28.33。勝率の校正未確認のため1着固定は停止。",
           "hole_reason": "穴なし：条件成立なし。穴を強制追加しない。",
           "information_gaps": [
             "並び・欠場の取得元との一致は、この会議では未検証。",
@@ -4304,7 +3940,7 @@
           {
             "role": "リスク担当",
             "speaking_weight": 1,
-            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数39.68。勝率の校正未確認のため1着固定は停止。"
+            "statement": "1着候補以外の勝利、2着・3着の組み合わせ違いに注意。荒れ指数28.33。勝率の校正未確認のため1着固定は停止。"
           },
           {
             "role": "検証担当",
