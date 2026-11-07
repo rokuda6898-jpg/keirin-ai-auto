@@ -1,0 +1,62 @@
+name: logic-compatibility-research
+
+on:
+  push:
+    branches: [research/logic-compatibility-study]
+    paths:
+      - src/logic_compatibility_study.py
+      - tests/test_logic_compatibility_study.py
+      - .github/workflows/logic-compatibility-research.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: keirin-logic-compatibility
+  cancel-in-progress: false
+
+jobs:
+  compatibility:
+    runs-on: ubuntu-latest
+    timeout-minutes: 110
+    env:
+      PYTHONPATH: src
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install numpy==2.5.3
+      - name: Validate scenario interaction and invariants
+        run: python -m unittest discover -s tests -p 'test_logic_compatibility_study.py' -v
+      - name: Restore previously frozen input-repair research
+        uses: actions/download-artifact@v4
+        with:
+          name: fusion-input-repair-37875807209
+          run-id: 37875807209
+          github-token: ${{ github.token }}
+          path: research/logic_compatibility/repair
+      - name: Restore independently frozen decisive-method scenarios
+        uses: actions/download-artifact@v4
+        with:
+          name: method-scenario-38351692094
+          run-id: 38351692094
+          github-token: ${{ github.token }}
+          path: research/logic_compatibility/scenario
+      - name: Recombine frozen predictions without loading actual results
+        run: python src/logic_compatibility_study.py --stage predict
+      - name: Score only after freezing and reproducing published baselines
+        run: python src/logic_compatibility_study.py --stage assess
+      - name: Publish independently inspectable research evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logic-compatibility-${{ github.run_id }}
+          path: research/logic_compatibility/output/
+          if-no-files-found: warn
+          retention-days: 30
