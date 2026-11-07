@@ -2,8 +2,11 @@ name: deploy-pages
 on:
   push:
     branches: [main]
-    paths: ['site/**', 'tests/**', 'outputs/current_live.json', 'outputs/ex_live.json', 'outputs/high_roi_live.json', 'outputs/graded_live.json', 'outputs/conditional_live.json', 'outputs/latest_results.json', 'outputs/trio_live.json', 'outputs/exacta_live.json', 'outputs/nexus_live.json', 'outputs/nexus_forward.json', 'outputs/conditional_near_close.json', 'outputs/conditional_roi.json', 'outputs/conditional_roi_research_2026-10-20.json', 'src/build_public_site.py', 'src/site_retirement.py', 'src/site_model_navigation.py', '.github/workflows/pages.yml']
+    paths: ['site/**', 'tests/**', 'outputs/current_live.json', 'outputs/ex_live.json', 'outputs/high_roi_live.json', 'outputs/high_roi_cloud_live.json', 'outputs/graded_live.json', 'outputs/conditional_live.json', 'outputs/latest_results.json', 'outputs/trio_live.json', 'outputs/exacta_live.json', 'outputs/nexus_live.json', 'outputs/nexus_forward.json', 'outputs/conditional_near_close.json', 'outputs/conditional_roi.json', 'outputs/conditional_roi_research_2026-10-20.json', 'src/build_public_site.py', 'src/site_retirement.py', 'src/site_model_navigation.py', '.github/workflows/pages.yml']
   workflow_dispatch:
+  workflow_run:
+    workflows: ['high-roi-cloud']
+    types: [completed]
   schedule:
     # Retain a periodic refresh; successful canonical forecasts publish immediately.
     - cron: '7 * * * *'
@@ -16,6 +19,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   deploy:
+    if: github.event_name != 'workflow_run' || (github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.conclusion == 'success')
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -33,6 +37,7 @@ jobs:
           node tests/test_ex_site.js
           node --check site/high-roi.js
           node tests/test_high_roi_site.js
+          node tests/test_high_roi_feed_ui.js
           node --check site/pools.js
           node tests/test_pool_site.js
           node --check site/daily-coverage.js

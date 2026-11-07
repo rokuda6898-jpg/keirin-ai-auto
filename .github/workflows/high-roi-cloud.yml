@@ -1,0 +1,86 @@
+name: high-roi-cloud
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'src/high_roi_cloud.py'
+      - 'tests/test_high_roi_cloud.py'
+      - '.github/workflows/high-roi-cloud.yml'
+  workflow_run:
+    workflows: ['nexus-formation-publish']
+    types: [completed]
+  schedule:
+    # Recovery does not depend on the owner's PC or completion of the legacy job.
+    # JST 06:00–23:59, with official result catch-up through 01:59.
+    - cron: '*/20 0-16,21-23 * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    if: github.event_name != 'workflow_run' || (github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.conclusion == 'success')
+    concurrency:
+      group: high-roi-cloud-publisher
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /src/**
+            /tests/test_high_roi_cloud.py
+            /site/high-roi.js
+            /outputs/high_roi_cloud_live.json
+            /outputs/nexus_live.json
+            /outputs/latest_results.json
+            /outputs/official_results_archive/**
+            /models/nexus53/manifest.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install the saved-score selector dependency
+        run: python -m pip install numpy==2.4.2
+      - name: Validate publication and forecast invariants
+        run: PYTHONPATH=src python -m unittest discover -s tests -p 'test_high_roi_cloud.py' -v
+      - name: Publish new forecasts, then record observed public receipts
+        run: |
+          set -eu
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          # The second pass reads the successfully pushed first pass from origin.
+          # Only records observed there before close gain performance eligibility.
+          for publication_phase in forecast receipt; do
+            published=false
+            for publication_attempt in 1 2 3 4 5; do
+              git fetch --no-tags --depth=1 origin main
+              git reset --hard origin/main
+              forecast_day="$(TZ=Asia/Tokyo date +%F)"
+              git sparse-checkout add "/data/raw/nexus_page_snapshots/$forecast_day/" "/outputs/nexus_forecasts/$forecast_day.json"
+              PYTHONPATH=src python -m unittest discover -s tests -p 'test_high_roi_cloud.py'
+              python src/high_roi_cloud.py --confirm-existing-publication
+              git add outputs/high_roi_cloud_live.json
+              if git diff --cached --quiet; then
+                published=true
+                break
+              fi
+              git commit -m "Publish immutable cloud high-payout forecasts ($publication_phase)"
+              if git push origin HEAD:main; then
+                published=true
+                break
+              fi
+              echo "Concurrent source update; rebuilding from latest main ($publication_attempt/5)"
+            done
+            if [ "$published" != true ]; then
+              echo 'High-payout publication did not reach main' >&2
+              exit 1
+            fi
+          done
