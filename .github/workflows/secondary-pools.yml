@@ -6,11 +6,14 @@ on:
     paths:
       - 'src/secondary_pool_forecasts.py'
       - '.github/workflows/secondary-pools.yml'
+      - 'data/raw/today_entries.csv'
+      - 'outputs/company/company_decision_predictions.json'
   workflow_run:
     workflows: ['daily-keirin-predict']
     types: [completed]
   schedule:
-    # Source snapshots have generally been committed by 06:45 JST.
+    # Start well before the first morning deadline; scheduled runners may be delayed.
+    - cron: '20 19,20,21 * * *'  # 04:20, 05:20, 06:20 JST
     - cron: '20 22 * * *'  # 07:20 JST
     - cron: '5 23 * * *'   # 08:05 JST
     # Independent recovery: daily-keirin-predict may take hours to finish,
