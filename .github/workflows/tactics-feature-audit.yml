@@ -1,0 +1,49 @@
+name: tactics-feature-audit
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/method-scenario-fusion]
+    paths:
+      - src/tactics_feature_audit.py
+      - tests/test_tactics_feature_audit.py
+      - .github/workflows/tactics-feature-audit.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tactics-feature-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PYTHONPATH: src
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Test strict missing-event and forecast-geometry semantics
+        run: python -m unittest discover -s tests -p 'test_tactics_feature_audit.py' -v
+      - name: Restore exactly the original frozen study's historical source
+        uses: actions/cache/restore@v4
+        with:
+          path: data/raw/history.csv
+          key: keirin-central-history-v1-37796966787
+          fail-on-cache-miss: true
+      - name: Audit historical rider-event evidence and forecast lines
+        run: python src/tactics_feature_audit.py
+      - name: Upload research-only diagnostic report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tactics-history-audit-${{ github.run_id }}
+          path: research/tactics_history_audit/
+          if-no-files-found: warn
+          retention-days: 30
