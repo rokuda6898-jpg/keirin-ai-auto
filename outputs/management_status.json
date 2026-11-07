@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-11-07T09:18:15+09:00",
+  "checked_at": "2026-11-07T12:00:04+09:00",
   "owners": {
     "data": "データ品質責任者",
     "coverage": "全レース予想責任者",
@@ -10,20 +10,15 @@
   "status": "error",
   "findings": [
     {
-      "owner": "data",
-      "code": "feed_stale",
-      "level": "error",
-      "message": "締切前レースがありますが公開データが45分以上古い、または時刻が不正です。",
-      "race_ids": []
-    },
-    {
       "owner": "settlement",
       "code": "withdrawn_tickets",
       "level": "warning",
       "message": "公式データの欠車が保存済み買い目に含まれます。元の予想を保持し、返還を含む精算確認まで比較集計から除外します。",
       "race_ids": [
+        "014820261107",
         "018620261105",
         "028620261105",
+        "028720261107",
         "044620261010",
         "053520261010",
         "054520261103",
@@ -45,6 +40,14 @@
         "044620261010",
         "103520261010"
       ]
+    },
+    {
+      "owner": "operations",
+      "code": "workflow_pages.yml",
+      "level": "error",
+      "message": "pages.yml の直近完了処理が失敗しています。",
+      "race_ids": [],
+      "run_url": "https://github.com/rokuda6898-jpg/keirin-ai-auto/actions/runs/42331826391"
     }
   ],
   "coverage": {
@@ -56,11 +59,11 @@
   },
   "matched_comparison": {
     "company": {
-      "races": 0,
-      "hits": 0,
-      "stake_yen": 0,
-      "return_yen": 0,
-      "largest_hit_return_share": null
+      "races": 11,
+      "hits": 1,
+      "stake_yen": 4100,
+      "return_yen": 550.0,
+      "largest_hit_return_share": 1.0
     }
   },
   "active_modes": [
