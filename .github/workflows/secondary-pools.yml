@@ -5,15 +5,16 @@ on:
     branches: [main]
     paths:
       - 'src/secondary_pool_forecasts.py'
+      - 'tests/test_secondary_pool_forecasts.py'
       - '.github/workflows/secondary-pools.yml'
       - 'data/raw/today_entries.csv'
       - 'outputs/company/company_decision_predictions.json'
   workflow_run:
-    workflows: ['daily-keirin-predict']
+    workflows: ['daily-keirin-predict', 'nexus-formation-publish']
     types: [completed]
   schedule:
     # Start well before the first morning deadline; scheduled runners may be delayed.
-    - cron: '20 19,20,21 * * *'  # 04:20, 05:20, 06:20 JST
+    - cron: '20 16,18,19,20,21 * * *'  # 01:20, 03:20, 04:20, 05:20, 06:20 JST
     - cron: '20 22 * * *'  # 07:20 JST
     - cron: '5 23 * * *'   # 08:05 JST
     # Independent recovery: daily-keirin-predict may take hours to finish,
@@ -30,12 +31,13 @@ concurrency:
 
 jobs:
   publish:
-    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    if: github.event_name != 'workflow_run' || (github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 1
           filter: blob:none
           sparse-checkout-cone-mode: false
@@ -44,6 +46,8 @@ jobs:
             /site/**
             /tests/**
             /data/raw/today_entries.csv
+            /data/raw/secondary_pool_inputs.json
+            /outputs/latest_race_schedule.csv
             /outputs/company/company_decision_predictions.json
             /outputs/trio_live.json
             /outputs/exacta_live.json
@@ -53,27 +57,44 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install racecard reader dependencies
+        run: python -m pip install numpy pandas requests
+      - name: Verify independent inputs and morning coverage
+        run: PYTHONPATH=src python -m unittest discover -s tests -p 'test_secondary_pool_forecasts.py' -v
       - name: Publish only pre-close, immutable forecasts
         run: |
+          set -eu
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          published=false
           for attempt in 1 2 3 4 5; do
-            git fetch origin main
+            git fetch --no-tags --depth=1 origin main
             git reset --hard origin/main
-            python src/secondary_pool_forecasts.py
+            forecast_day="$(TZ=Asia/Tokyo date +%F)"
+            git sparse-checkout add "/data/raw/nexus_page_snapshots/$forecast_day/"
+            python src/secondary_pool_forecasts.py --refresh-inputs
             node tests/test_pool_site.js
             PYTHONPATH=src python -m unittest discover -s tests -p 'test_secondary_results_sync.py'
             git add outputs/trio_live.json outputs/exacta_live.json
+            if [ -f data/raw/secondary_pool_inputs.json ]; then
+              git add -f data/raw/secondary_pool_inputs.json
+            fi
             if git diff --cached --quiet; then
               echo 'Forecasts already current'
-              exit 0
+              published=true
+              break
             fi
             git commit -m 'Publish guarded daily trio and exacta forecasts'
             if git push origin HEAD:main; then
-              exit 0
+              published=true
+              break
             fi
             echo "Concurrent update: retry $attempt/5 against latest main"
             sleep "$((attempt*2))"
           done
-          echo 'Failed to publish secondary pool forecasts' >&2
-          exit 1
+          if [ "$published" != true ]; then
+            echo 'Failed to publish secondary pool forecasts' >&2
+            exit 1
+          fi
+      - name: Fail visibly if a scheduled forecast is missing
+        run: python src/secondary_pool_forecasts.py --check-coverage

@@ -1,8 +1,42 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
-const {policies,expand,validate,state,copyText,rosterInfo,rosterText}=require('../site/pools.js');
+const {policies,expand,validate,state,copyText,rosterInfo,rosterText,withMeetingSessions,visibleRaces,selectDisplayDay}=require('../site/pools.js');
 assert.deepEqual(expand([{a:[1,2],b:[1,2],c:[3,4]},{a:[3],b:[1],c:[2]}],'trio'),['1-2-3','1-2-4']);
 assert.deepEqual(expand([{a:[1,2],b:[1,2]}],'exacta'),['1-2','2-1']);
+{
+ const race=(id,venue,cup,date,time,session,graded=false)=>({race_id:id,venue_id:venue,cup_id:cup,date,start_at:Date.parse(`${date}T${time}:00+09:00`)/1000,session,graded,forecast:{tickets:['1-2-3'],saved_at:`${date}T06:00:00+09:00`}});
+ const rows=[
+  race('morning-7','12','a','2026-11-08','11:45','day'),
+  race('morning-1','12','a','2026-11-08','08:45','morning'),
+  race('day-1','21','b','2026-11-08','10:30','morning'),
+  race('day-12','21','b','2026-11-08','16:30','night'),
+  race('night-1','48','c','2026-11-08','14:00','day'),
+  race('night-12','48','c','2026-11-08','20:30','midnight'),
+  race('midnight-1','53','d','2026-11-08','20:00','midnight'),
+  race('graded-1','87','e','2026-11-08','08:30','morning',true),
+  race('tomorrow-1','12','a','2026-11-09','14:30','day'),
+  race('different-cup','12','f','2026-11-08','20:30','midnight'),
+  {race_id:'unknown',venue_id:'99',date:'2026-11-08',session:'day'}
+ ];
+ const original=JSON.stringify(rows),display=withMeetingSessions(rows);
+ assert.deepEqual(visibleRaces(display,'2026-11-08','morning').map(r=>r.race_id),['morning-7','morning-1']);
+ assert.deepEqual(visibleRaces(display,'2026-11-08','day').map(r=>r.race_id),['day-1','day-12','unknown']);
+ assert.deepEqual(visibleRaces(display,'2026-11-08','night').map(r=>r.race_id),['night-1','night-12']);
+ assert.deepEqual(visibleRaces(display,'2026-11-08','graded').map(r=>r.race_id),['graded-1']);
+ assert.deepEqual(visibleRaces(display,'2026-11-09','night').map(r=>r.race_id),['tomorrow-1']);
+ assert.deepEqual(visibleRaces(display,'2026-11-08','midnight').map(r=>r.race_id),['midnight-1','different-cup']);
+ assert.equal(visibleRaces(display,'2026-11-08','all').length,10);
+ assert.equal(JSON.stringify(rows),original,'Display grouping must not rewrite source forecasts.');
+ display.forEach((r,i)=>assert.equal(r.forecast,rows[i].forecast));
+}
+{
+ const days=['2026-11-08','2026-11-07','2026-11-06'];
+ assert.equal(selectDisplayDay('',undefined,'2026-11-08',days),'2026-11-08');
+ assert.equal(selectDisplayDay('2026-11-07','2026-11-07','2026-11-08',days),'2026-11-08','An open current-day view follows newly published morning forecasts.');
+ assert.equal(selectDisplayDay('2026-11-06','2026-11-07','2026-11-08',days),'2026-11-06','An explicitly selected historical day stays selected.');
+ assert.equal(selectDisplayDay('2026-11-07','2026-11-08','2026-11-08',days),'2026-11-07');
+ assert.equal(selectDisplayDay('2026-11-04','2026-11-07','2026-11-08',days),'2026-11-08');
+}
 for(const pool of ['trio','exacta']){
  const d=JSON.parse(fs.readFileSync(`outputs/${pool}_live.json`,'utf8'));
  assert.equal(d.model_id,policies[pool].model);assert.equal(d.pool,pool);assert.equal(d.observed.model_id,d.model_id);

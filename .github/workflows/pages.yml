@@ -19,7 +19,8 @@ concurrency:
   cancel-in-progress: false
 jobs:
   deploy:
-    if: github.event_name != 'workflow_run' || (github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.conclusion == 'success')
+    # Publish coverage warnings too when the secondary completeness check fails.
+    if: github.event_name != 'workflow_run' || (github.event.workflow_run.head_branch == 'main' && (github.event.workflow_run.conclusion == 'success' || (github.event.workflow_run.name == 'publish-daily-secondary-pools' && github.event.workflow_run.conclusion == 'failure')))
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
