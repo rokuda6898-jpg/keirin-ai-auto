@@ -8,9 +8,9 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class DailyCoverageReferenceTest(unittest.TestCase):
-    def test_all_three_model_pages_show_attributed_reference(self):
+    def test_legacy_pages_show_attributed_reference(self):
         for page,mode in [('index.html','current'),('current.html','current'),
-                          ('high-roi.html','high_roi'),('ex.html','ex')]:
+                          ('ex.html','ex')]:
             html=(ROOT/'site'/page).read_text(encoding='utf8')
             self.assertIn(f'data-coverage-model="{mode}"', html)
             self.assertIn('daily-coverage.js', html)
@@ -23,6 +23,15 @@ class DailyCoverageReferenceTest(unittest.TestCase):
                       'ROI9891_fixed_EX_20261102',
                       'ROI9234_MAIN6_fixed_EX_20261101']:
             self.assertIn(model,script)
+
+    def test_high_payout_page_uses_its_own_separate_feed(self):
+        html=(ROOT/'site/high-roi.html').read_text(encoding='utf8')
+        script=(ROOT/'site/high-roi.js').read_text(encoding='utf8')
+        self.assertNotIn('daily-coverage.js', html)
+        self.assertNotIn('data-coverage-model=', html)
+        self.assertIn('id="forecast-model"', html)
+        self.assertIn('high_roi_cloud_live.json', script)
+        self.assertIn('high_roi_cloud_20261107_v1', script)
 
     def test_2026_11_04_snapshot_is_preclose_and_is_not_rebranded(self):
         path=ROOT/'outputs/nexus_forecasts/2026-11-04.json'
