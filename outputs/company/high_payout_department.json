@@ -1,6 +1,6 @@
 {
   "version": "high_payout_v1",
-  "updated_at_jst": "2026-11-09T22:48:51+09:00",
+  "updated_at_jst": "2026-11-10T04:30:32+09:00",
   "total": {
     "target_races": 365,
     "predicted_races": 109,
@@ -56,14 +56,14 @@
     }
   },
   "today": {
-    "target_races": 5,
-    "predicted_races": 1,
-    "skipped_races": 4,
+    "target_races": 0,
+    "predicted_races": 0,
+    "skipped_races": 0,
     "hits": 0,
-    "hit_rate": 0.0,
-    "stake_yen": 700,
+    "hit_rate": null,
+    "stake_yen": 0,
     "return_yen": 0,
-    "return_rate": 0.0,
+    "return_rate": null,
     "average_payout_per_100yen": null,
     "payout_hit_counts": {
       "100": 0,
@@ -78,14 +78,14 @@
         "hit_rate": null
       },
       "2着荒れ": {
-        "races": 1,
+        "races": 0,
         "hits": 0,
-        "hit_rate": 0.0
+        "hit_rate": null
       },
       "3着荒れ": {
-        "races": 1,
+        "races": 0,
         "hits": 0,
-        "hit_rate": 0.0
+        "hit_rate": null
       },
       "ライン崩壊": {
         "races": 0,
@@ -112,7 +112,7 @@
   "scope": "新部署の締切前保存・公式払戻済みのみ。各点100円の試算。本線と旧穴予想は含めない。",
   "live_decisions": [
     {
-      "race_id": "011220261109",
+      "race_id": "011220261110",
       "venue": "青森",
       "race_no": 1,
       "version": "high_payout_v1",
@@ -196,8 +196,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 58.2,
-        "risk_level": "高",
+        "chaos_index": 40.82,
+        "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -205,7 +205,100 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "021220261109",
+      "race_id": "012520261110",
+      "venue": "大宮",
+      "race_no": 1,
+      "version": "high_payout_v1",
+      "rating": "見送り",
+      "expectation_score": 0,
+      "recommended_count": 0,
+      "patterns": [],
+      "tickets": [],
+      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
+      "unknowns": [
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
+        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+      ],
+      "probability_method": "geometric_model_market_estimate_uncalibrated",
+      "minimum_probability": 0.001,
+      "minimum_ev": 1.25,
+      "automatic_purchase": false,
+      "analysts": [
+        {
+          "role": "高配当専用軍師",
+          "status": "検証中",
+          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
+        },
+        {
+          "role": "1着波乱担当",
+          "status": "検証中",
+          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
+        },
+        {
+          "role": "2着突っ込み担当",
+          "status": "検証中",
+          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
+        },
+        {
+          "role": "3着紛れ担当",
+          "status": "検証中",
+          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
+        },
+        {
+          "role": "ライン崩壊担当",
+          "status": "検証中",
+          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
+        },
+        {
+          "role": "細切れ戦担当",
+          "status": "検証中",
+          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
+        },
+        {
+          "role": "単騎担当",
+          "status": "検証中",
+          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
+        },
+        {
+          "role": "人気過剰担当",
+          "status": "検証中",
+          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
+        },
+        {
+          "role": "高配当期待値担当",
+          "status": "検証中",
+          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
+        },
+        {
+          "role": "データ確認担当",
+          "status": "検証中",
+          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
+        },
+        {
+          "role": "比較検証担当",
+          "status": "検証中",
+          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
+        }
+      ],
+      "comparison": {
+        "version": "third_focus_v1",
+        "automatic_promotion": false,
+        "variants": {
+          "current": [],
+          "third_focus": []
+        }
+      },
+      "risk_coordination": {
+        "chaos_index": 39.69,
+        "risk_level": "中",
+        "line_collapse_probability": null,
+        "scenario_probability": null,
+        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
+      },
+      "analysis_rating": "見送り"
+    },
+    {
+      "race_id": "021220261110",
       "venue": "青森",
       "race_no": 2,
       "version": "high_payout_v1",
@@ -289,7 +382,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 35.37,
+        "chaos_index": 34.02,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -298,7 +391,100 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "031220261109",
+      "race_id": "022520261110",
+      "venue": "大宮",
+      "race_no": 2,
+      "version": "high_payout_v1",
+      "rating": "見送り",
+      "expectation_score": 0,
+      "recommended_count": 0,
+      "patterns": [],
+      "tickets": [],
+      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
+      "unknowns": [
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
+        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+      ],
+      "probability_method": "geometric_model_market_estimate_uncalibrated",
+      "minimum_probability": 0.001,
+      "minimum_ev": 1.25,
+      "automatic_purchase": false,
+      "analysts": [
+        {
+          "role": "高配当専用軍師",
+          "status": "検証中",
+          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
+        },
+        {
+          "role": "1着波乱担当",
+          "status": "検証中",
+          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
+        },
+        {
+          "role": "2着突っ込み担当",
+          "status": "検証中",
+          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
+        },
+        {
+          "role": "3着紛れ担当",
+          "status": "検証中",
+          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
+        },
+        {
+          "role": "ライン崩壊担当",
+          "status": "検証中",
+          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
+        },
+        {
+          "role": "細切れ戦担当",
+          "status": "検証中",
+          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
+        },
+        {
+          "role": "単騎担当",
+          "status": "検証中",
+          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
+        },
+        {
+          "role": "人気過剰担当",
+          "status": "検証中",
+          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
+        },
+        {
+          "role": "高配当期待値担当",
+          "status": "検証中",
+          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
+        },
+        {
+          "role": "データ確認担当",
+          "status": "検証中",
+          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
+        },
+        {
+          "role": "比較検証担当",
+          "status": "検証中",
+          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
+        }
+      ],
+      "comparison": {
+        "version": "third_focus_v1",
+        "automatic_promotion": false,
+        "variants": {
+          "current": [],
+          "third_focus": []
+        }
+      },
+      "risk_coordination": {
+        "chaos_index": 57.25,
+        "risk_level": "高",
+        "line_collapse_probability": null,
+        "scenario_probability": null,
+        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
+      },
+      "analysis_rating": "見送り"
+    },
+    {
+      "race_id": "031220261110",
       "venue": "青森",
       "race_no": 3,
       "version": "high_payout_v1",
@@ -382,100 +568,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 49.95,
-        "risk_level": "中",
-        "line_collapse_probability": null,
-        "scenario_probability": null,
-        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "analysis_rating": "見送り"
-    },
-    {
-      "race_id": "041220261109",
-      "venue": "青森",
-      "race_no": 4,
-      "version": "high_payout_v1",
-      "rating": "見送り",
-      "expectation_score": 0,
-      "recommended_count": 0,
-      "patterns": [],
-      "tickets": [],
-      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
-      "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
-      ],
-      "probability_method": "geometric_model_market_estimate_uncalibrated",
-      "minimum_probability": 0.001,
-      "minimum_ev": 1.25,
-      "automatic_purchase": false,
-      "analysts": [
-        {
-          "role": "高配当専用軍師",
-          "status": "検証中",
-          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
-        },
-        {
-          "role": "1着波乱担当",
-          "status": "検証中",
-          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
-        },
-        {
-          "role": "2着突っ込み担当",
-          "status": "検証中",
-          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
-        },
-        {
-          "role": "3着紛れ担当",
-          "status": "検証中",
-          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
-        },
-        {
-          "role": "ライン崩壊担当",
-          "status": "検証中",
-          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
-        },
-        {
-          "role": "細切れ戦担当",
-          "status": "検証中",
-          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
-        },
-        {
-          "role": "単騎担当",
-          "status": "検証中",
-          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
-        },
-        {
-          "role": "人気過剰担当",
-          "status": "検証中",
-          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
-        },
-        {
-          "role": "高配当期待値担当",
-          "status": "検証中",
-          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
-        },
-        {
-          "role": "データ確認担当",
-          "status": "検証中",
-          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
-        },
-        {
-          "role": "比較検証担当",
-          "status": "検証中",
-          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
-        }
-      ],
-      "comparison": {
-        "version": "third_focus_v1",
-        "automatic_promotion": false,
-        "variants": {
-          "current": [],
-          "third_focus": []
-        }
-      },
-      "risk_coordination": {
-        "chaos_index": 28.31,
+        "chaos_index": 21.59,
         "risk_level": "低",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -484,7 +577,286 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "051220261109",
+      "race_id": "032520261110",
+      "venue": "大宮",
+      "race_no": 3,
+      "version": "high_payout_v1",
+      "rating": "見送り",
+      "expectation_score": 0,
+      "recommended_count": 0,
+      "patterns": [],
+      "tickets": [],
+      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
+      "unknowns": [
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
+        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+      ],
+      "probability_method": "geometric_model_market_estimate_uncalibrated",
+      "minimum_probability": 0.001,
+      "minimum_ev": 1.25,
+      "automatic_purchase": false,
+      "analysts": [
+        {
+          "role": "高配当専用軍師",
+          "status": "検証中",
+          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
+        },
+        {
+          "role": "1着波乱担当",
+          "status": "検証中",
+          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
+        },
+        {
+          "role": "2着突っ込み担当",
+          "status": "検証中",
+          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
+        },
+        {
+          "role": "3着紛れ担当",
+          "status": "検証中",
+          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
+        },
+        {
+          "role": "ライン崩壊担当",
+          "status": "検証中",
+          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
+        },
+        {
+          "role": "細切れ戦担当",
+          "status": "検証中",
+          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
+        },
+        {
+          "role": "単騎担当",
+          "status": "検証中",
+          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
+        },
+        {
+          "role": "人気過剰担当",
+          "status": "検証中",
+          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
+        },
+        {
+          "role": "高配当期待値担当",
+          "status": "検証中",
+          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
+        },
+        {
+          "role": "データ確認担当",
+          "status": "検証中",
+          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
+        },
+        {
+          "role": "比較検証担当",
+          "status": "検証中",
+          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
+        }
+      ],
+      "comparison": {
+        "version": "third_focus_v1",
+        "automatic_promotion": false,
+        "variants": {
+          "current": [],
+          "third_focus": []
+        }
+      },
+      "risk_coordination": {
+        "chaos_index": 37.88,
+        "risk_level": "中",
+        "line_collapse_probability": null,
+        "scenario_probability": null,
+        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
+      },
+      "analysis_rating": "見送り"
+    },
+    {
+      "race_id": "041220261110",
+      "venue": "青森",
+      "race_no": 4,
+      "version": "high_payout_v1",
+      "rating": "見送り",
+      "expectation_score": 0,
+      "recommended_count": 0,
+      "patterns": [],
+      "tickets": [],
+      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
+      "unknowns": [
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
+        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+      ],
+      "probability_method": "geometric_model_market_estimate_uncalibrated",
+      "minimum_probability": 0.001,
+      "minimum_ev": 1.25,
+      "automatic_purchase": false,
+      "analysts": [
+        {
+          "role": "高配当専用軍師",
+          "status": "検証中",
+          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
+        },
+        {
+          "role": "1着波乱担当",
+          "status": "検証中",
+          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
+        },
+        {
+          "role": "2着突っ込み担当",
+          "status": "検証中",
+          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
+        },
+        {
+          "role": "3着紛れ担当",
+          "status": "検証中",
+          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
+        },
+        {
+          "role": "ライン崩壊担当",
+          "status": "検証中",
+          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
+        },
+        {
+          "role": "細切れ戦担当",
+          "status": "検証中",
+          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
+        },
+        {
+          "role": "単騎担当",
+          "status": "検証中",
+          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
+        },
+        {
+          "role": "人気過剰担当",
+          "status": "検証中",
+          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
+        },
+        {
+          "role": "高配当期待値担当",
+          "status": "検証中",
+          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
+        },
+        {
+          "role": "データ確認担当",
+          "status": "検証中",
+          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
+        },
+        {
+          "role": "比較検証担当",
+          "status": "検証中",
+          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
+        }
+      ],
+      "comparison": {
+        "version": "third_focus_v1",
+        "automatic_promotion": false,
+        "variants": {
+          "current": [],
+          "third_focus": []
+        }
+      },
+      "risk_coordination": {
+        "chaos_index": 49.15,
+        "risk_level": "中",
+        "line_collapse_probability": null,
+        "scenario_probability": null,
+        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
+      },
+      "analysis_rating": "見送り"
+    },
+    {
+      "race_id": "042520261110",
+      "venue": "大宮",
+      "race_no": 4,
+      "version": "high_payout_v1",
+      "rating": "見送り",
+      "expectation_score": 0,
+      "recommended_count": 0,
+      "patterns": [],
+      "tickets": [],
+      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
+      "unknowns": [
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
+        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+      ],
+      "probability_method": "geometric_model_market_estimate_uncalibrated",
+      "minimum_probability": 0.001,
+      "minimum_ev": 1.25,
+      "automatic_purchase": false,
+      "analysts": [
+        {
+          "role": "高配当専用軍師",
+          "status": "検証中",
+          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
+        },
+        {
+          "role": "1着波乱担当",
+          "status": "検証中",
+          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
+        },
+        {
+          "role": "2着突っ込み担当",
+          "status": "検証中",
+          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
+        },
+        {
+          "role": "3着紛れ担当",
+          "status": "検証中",
+          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
+        },
+        {
+          "role": "ライン崩壊担当",
+          "status": "検証中",
+          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
+        },
+        {
+          "role": "細切れ戦担当",
+          "status": "検証中",
+          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
+        },
+        {
+          "role": "単騎担当",
+          "status": "検証中",
+          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
+        },
+        {
+          "role": "人気過剰担当",
+          "status": "検証中",
+          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
+        },
+        {
+          "role": "高配当期待値担当",
+          "status": "検証中",
+          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
+        },
+        {
+          "role": "データ確認担当",
+          "status": "検証中",
+          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
+        },
+        {
+          "role": "比較検証担当",
+          "status": "検証中",
+          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
+        }
+      ],
+      "comparison": {
+        "version": "third_focus_v1",
+        "automatic_promotion": false,
+        "variants": {
+          "current": [],
+          "third_focus": []
+        }
+      },
+      "risk_coordination": {
+        "chaos_index": 43.81,
+        "risk_level": "中",
+        "line_collapse_probability": null,
+        "scenario_probability": null,
+        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
+      },
+      "analysis_rating": "見送り"
+    },
+    {
+      "race_id": "051220261110",
       "venue": "青森",
       "race_no": 5,
       "version": "high_payout_v1",
@@ -568,7 +940,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 50.44,
+        "chaos_index": 58.36,
         "risk_level": "高",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -577,7 +949,100 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "061220261109",
+      "race_id": "052520261110",
+      "venue": "大宮",
+      "race_no": 5,
+      "version": "high_payout_v1",
+      "rating": "見送り",
+      "expectation_score": 0,
+      "recommended_count": 0,
+      "patterns": [],
+      "tickets": [],
+      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
+      "unknowns": [
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
+        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+      ],
+      "probability_method": "geometric_model_market_estimate_uncalibrated",
+      "minimum_probability": 0.001,
+      "minimum_ev": 1.25,
+      "automatic_purchase": false,
+      "analysts": [
+        {
+          "role": "高配当専用軍師",
+          "status": "検証中",
+          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
+        },
+        {
+          "role": "1着波乱担当",
+          "status": "検証中",
+          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
+        },
+        {
+          "role": "2着突っ込み担当",
+          "status": "検証中",
+          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
+        },
+        {
+          "role": "3着紛れ担当",
+          "status": "検証中",
+          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
+        },
+        {
+          "role": "ライン崩壊担当",
+          "status": "検証中",
+          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
+        },
+        {
+          "role": "細切れ戦担当",
+          "status": "検証中",
+          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
+        },
+        {
+          "role": "単騎担当",
+          "status": "検証中",
+          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
+        },
+        {
+          "role": "人気過剰担当",
+          "status": "検証中",
+          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
+        },
+        {
+          "role": "高配当期待値担当",
+          "status": "検証中",
+          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
+        },
+        {
+          "role": "データ確認担当",
+          "status": "検証中",
+          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
+        },
+        {
+          "role": "比較検証担当",
+          "status": "検証中",
+          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
+        }
+      ],
+      "comparison": {
+        "version": "third_focus_v1",
+        "automatic_promotion": false,
+        "variants": {
+          "current": [],
+          "third_focus": []
+        }
+      },
+      "risk_coordination": {
+        "chaos_index": 41.21,
+        "risk_level": "中",
+        "line_collapse_probability": null,
+        "scenario_probability": null,
+        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
+      },
+      "analysis_rating": "見送り"
+    },
+    {
+      "race_id": "061220261110",
       "venue": "青森",
       "race_no": 6,
       "version": "high_payout_v1",
@@ -661,8 +1126,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 69.71,
-        "risk_level": "高",
+        "chaos_index": 36.21,
+        "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -670,7 +1135,100 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "071220261109",
+      "race_id": "062520261110",
+      "venue": "大宮",
+      "race_no": 6,
+      "version": "high_payout_v1",
+      "rating": "見送り",
+      "expectation_score": 0,
+      "recommended_count": 0,
+      "patterns": [],
+      "tickets": [],
+      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
+      "unknowns": [
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
+        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+      ],
+      "probability_method": "geometric_model_market_estimate_uncalibrated",
+      "minimum_probability": 0.001,
+      "minimum_ev": 1.25,
+      "automatic_purchase": false,
+      "analysts": [
+        {
+          "role": "高配当専用軍師",
+          "status": "検証中",
+          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
+        },
+        {
+          "role": "1着波乱担当",
+          "status": "検証中",
+          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
+        },
+        {
+          "role": "2着突っ込み担当",
+          "status": "検証中",
+          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
+        },
+        {
+          "role": "3着紛れ担当",
+          "status": "検証中",
+          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
+        },
+        {
+          "role": "ライン崩壊担当",
+          "status": "検証中",
+          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
+        },
+        {
+          "role": "細切れ戦担当",
+          "status": "検証中",
+          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
+        },
+        {
+          "role": "単騎担当",
+          "status": "検証中",
+          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
+        },
+        {
+          "role": "人気過剰担当",
+          "status": "検証中",
+          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
+        },
+        {
+          "role": "高配当期待値担当",
+          "status": "検証中",
+          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
+        },
+        {
+          "role": "データ確認担当",
+          "status": "検証中",
+          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
+        },
+        {
+          "role": "比較検証担当",
+          "status": "検証中",
+          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
+        }
+      ],
+      "comparison": {
+        "version": "third_focus_v1",
+        "automatic_promotion": false,
+        "variants": {
+          "current": [],
+          "third_focus": []
+        }
+      },
+      "risk_coordination": {
+        "chaos_index": 34.38,
+        "risk_level": "中",
+        "line_collapse_probability": null,
+        "scenario_probability": null,
+        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
+      },
+      "analysis_rating": "見送り"
+    },
+    {
+      "race_id": "071220261110",
       "venue": "青森",
       "race_no": 7,
       "version": "high_payout_v1",
@@ -754,7 +1312,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 44.33,
+        "chaos_index": 37.95,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -763,7 +1321,100 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "018420261109",
+      "race_id": "072520261110",
+      "venue": "大宮",
+      "race_no": 7,
+      "version": "high_payout_v1",
+      "rating": "見送り",
+      "expectation_score": 0,
+      "recommended_count": 0,
+      "patterns": [],
+      "tickets": [],
+      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
+      "unknowns": [
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
+        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+      ],
+      "probability_method": "geometric_model_market_estimate_uncalibrated",
+      "minimum_probability": 0.001,
+      "minimum_ev": 1.25,
+      "automatic_purchase": false,
+      "analysts": [
+        {
+          "role": "高配当専用軍師",
+          "status": "検証中",
+          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
+        },
+        {
+          "role": "1着波乱担当",
+          "status": "検証中",
+          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
+        },
+        {
+          "role": "2着突っ込み担当",
+          "status": "検証中",
+          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
+        },
+        {
+          "role": "3着紛れ担当",
+          "status": "検証中",
+          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
+        },
+        {
+          "role": "ライン崩壊担当",
+          "status": "検証中",
+          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
+        },
+        {
+          "role": "細切れ戦担当",
+          "status": "検証中",
+          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
+        },
+        {
+          "role": "単騎担当",
+          "status": "検証中",
+          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
+        },
+        {
+          "role": "人気過剰担当",
+          "status": "検証中",
+          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
+        },
+        {
+          "role": "高配当期待値担当",
+          "status": "検証中",
+          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
+        },
+        {
+          "role": "データ確認担当",
+          "status": "検証中",
+          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
+        },
+        {
+          "role": "比較検証担当",
+          "status": "検証中",
+          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
+        }
+      ],
+      "comparison": {
+        "version": "third_focus_v1",
+        "automatic_promotion": false,
+        "variants": {
+          "current": [],
+          "third_focus": []
+        }
+      },
+      "risk_coordination": {
+        "chaos_index": 34.07,
+        "risk_level": "中",
+        "line_collapse_probability": null,
+        "scenario_probability": null,
+        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
+      },
+      "analysis_rating": "見送り"
+    },
+    {
+      "race_id": "018420261110",
       "venue": "武雄",
       "race_no": 1,
       "version": "high_payout_v1",
@@ -847,7 +1498,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 54.8,
+        "chaos_index": 69.49,
         "risk_level": "高",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -856,8 +1507,8 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "017420261109",
-      "venue": "高知",
+      "race_id": "014620261110",
+      "venue": "富山",
       "race_no": 1,
       "version": "high_payout_v1",
       "rating": "見送り",
@@ -940,7 +1591,286 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 15.28,
+        "chaos_index": 37.98,
+        "risk_level": "中",
+        "line_collapse_probability": null,
+        "scenario_probability": null,
+        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
+      },
+      "analysis_rating": "見送り"
+    },
+    {
+      "race_id": "028420261110",
+      "venue": "武雄",
+      "race_no": 2,
+      "version": "high_payout_v1",
+      "rating": "見送り",
+      "expectation_score": 0,
+      "recommended_count": 0,
+      "patterns": [],
+      "tickets": [],
+      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
+      "unknowns": [
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
+        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+      ],
+      "probability_method": "geometric_model_market_estimate_uncalibrated",
+      "minimum_probability": 0.001,
+      "minimum_ev": 1.25,
+      "automatic_purchase": false,
+      "analysts": [
+        {
+          "role": "高配当専用軍師",
+          "status": "検証中",
+          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
+        },
+        {
+          "role": "1着波乱担当",
+          "status": "検証中",
+          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
+        },
+        {
+          "role": "2着突っ込み担当",
+          "status": "検証中",
+          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
+        },
+        {
+          "role": "3着紛れ担当",
+          "status": "検証中",
+          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
+        },
+        {
+          "role": "ライン崩壊担当",
+          "status": "検証中",
+          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
+        },
+        {
+          "role": "細切れ戦担当",
+          "status": "検証中",
+          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
+        },
+        {
+          "role": "単騎担当",
+          "status": "検証中",
+          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
+        },
+        {
+          "role": "人気過剰担当",
+          "status": "検証中",
+          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
+        },
+        {
+          "role": "高配当期待値担当",
+          "status": "検証中",
+          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
+        },
+        {
+          "role": "データ確認担当",
+          "status": "検証中",
+          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
+        },
+        {
+          "role": "比較検証担当",
+          "status": "検証中",
+          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
+        }
+      ],
+      "comparison": {
+        "version": "third_focus_v1",
+        "automatic_promotion": false,
+        "variants": {
+          "current": [],
+          "third_focus": []
+        }
+      },
+      "risk_coordination": {
+        "chaos_index": 54.69,
+        "risk_level": "高",
+        "line_collapse_probability": null,
+        "scenario_probability": null,
+        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
+      },
+      "analysis_rating": "見送り"
+    },
+    {
+      "race_id": "024620261110",
+      "venue": "富山",
+      "race_no": 2,
+      "version": "high_payout_v1",
+      "rating": "見送り",
+      "expectation_score": 0,
+      "recommended_count": 0,
+      "patterns": [],
+      "tickets": [],
+      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
+      "unknowns": [
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
+        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+      ],
+      "probability_method": "geometric_model_market_estimate_uncalibrated",
+      "minimum_probability": 0.001,
+      "minimum_ev": 1.25,
+      "automatic_purchase": false,
+      "analysts": [
+        {
+          "role": "高配当専用軍師",
+          "status": "検証中",
+          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
+        },
+        {
+          "role": "1着波乱担当",
+          "status": "検証中",
+          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
+        },
+        {
+          "role": "2着突っ込み担当",
+          "status": "検証中",
+          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
+        },
+        {
+          "role": "3着紛れ担当",
+          "status": "検証中",
+          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
+        },
+        {
+          "role": "ライン崩壊担当",
+          "status": "検証中",
+          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
+        },
+        {
+          "role": "細切れ戦担当",
+          "status": "検証中",
+          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
+        },
+        {
+          "role": "単騎担当",
+          "status": "検証中",
+          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
+        },
+        {
+          "role": "人気過剰担当",
+          "status": "検証中",
+          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
+        },
+        {
+          "role": "高配当期待値担当",
+          "status": "検証中",
+          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
+        },
+        {
+          "role": "データ確認担当",
+          "status": "検証中",
+          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
+        },
+        {
+          "role": "比較検証担当",
+          "status": "検証中",
+          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
+        }
+      ],
+      "comparison": {
+        "version": "third_focus_v1",
+        "automatic_promotion": false,
+        "variants": {
+          "current": [],
+          "third_focus": []
+        }
+      },
+      "risk_coordination": {
+        "chaos_index": 35.25,
+        "risk_level": "中",
+        "line_collapse_probability": null,
+        "scenario_probability": null,
+        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
+      },
+      "analysis_rating": "見送り"
+    },
+    {
+      "race_id": "038420261110",
+      "venue": "武雄",
+      "race_no": 3,
+      "version": "high_payout_v1",
+      "rating": "見送り",
+      "expectation_score": 0,
+      "recommended_count": 0,
+      "patterns": [],
+      "tickets": [],
+      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
+      "unknowns": [
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
+        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+      ],
+      "probability_method": "geometric_model_market_estimate_uncalibrated",
+      "minimum_probability": 0.001,
+      "minimum_ev": 1.25,
+      "automatic_purchase": false,
+      "analysts": [
+        {
+          "role": "高配当専用軍師",
+          "status": "検証中",
+          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
+        },
+        {
+          "role": "1着波乱担当",
+          "status": "検証中",
+          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
+        },
+        {
+          "role": "2着突っ込み担当",
+          "status": "検証中",
+          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
+        },
+        {
+          "role": "3着紛れ担当",
+          "status": "検証中",
+          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
+        },
+        {
+          "role": "ライン崩壊担当",
+          "status": "検証中",
+          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
+        },
+        {
+          "role": "細切れ戦担当",
+          "status": "検証中",
+          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
+        },
+        {
+          "role": "単騎担当",
+          "status": "検証中",
+          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
+        },
+        {
+          "role": "人気過剰担当",
+          "status": "検証中",
+          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
+        },
+        {
+          "role": "高配当期待値担当",
+          "status": "検証中",
+          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
+        },
+        {
+          "role": "データ確認担当",
+          "status": "検証中",
+          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
+        },
+        {
+          "role": "比較検証担当",
+          "status": "検証中",
+          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
+        }
+      ],
+      "comparison": {
+        "version": "third_focus_v1",
+        "automatic_promotion": false,
+        "variants": {
+          "current": [],
+          "third_focus": []
+        }
+      },
+      "risk_coordination": {
+        "chaos_index": 24.94,
         "risk_level": "低",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -949,9 +1879,9 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "012120261109",
-      "venue": "弥彦",
-      "race_no": 1,
+      "race_id": "034620261110",
+      "venue": "富山",
+      "race_no": 3,
       "version": "high_payout_v1",
       "rating": "見送り",
       "expectation_score": 0,
@@ -1033,286 +1963,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 56.86,
-        "risk_level": "高",
-        "line_collapse_probability": null,
-        "scenario_probability": null,
-        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "analysis_rating": "見送り"
-    },
-    {
-      "race_id": "028420261109",
-      "venue": "武雄",
-      "race_no": 2,
-      "version": "high_payout_v1",
-      "rating": "見送り",
-      "expectation_score": 0,
-      "recommended_count": 0,
-      "patterns": [],
-      "tickets": [],
-      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
-      "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
-      ],
-      "probability_method": "geometric_model_market_estimate_uncalibrated",
-      "minimum_probability": 0.001,
-      "minimum_ev": 1.25,
-      "automatic_purchase": false,
-      "analysts": [
-        {
-          "role": "高配当専用軍師",
-          "status": "検証中",
-          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
-        },
-        {
-          "role": "1着波乱担当",
-          "status": "検証中",
-          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
-        },
-        {
-          "role": "2着突っ込み担当",
-          "status": "検証中",
-          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
-        },
-        {
-          "role": "3着紛れ担当",
-          "status": "検証中",
-          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
-        },
-        {
-          "role": "ライン崩壊担当",
-          "status": "検証中",
-          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
-        },
-        {
-          "role": "細切れ戦担当",
-          "status": "検証中",
-          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
-        },
-        {
-          "role": "単騎担当",
-          "status": "検証中",
-          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
-        },
-        {
-          "role": "人気過剰担当",
-          "status": "検証中",
-          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
-        },
-        {
-          "role": "高配当期待値担当",
-          "status": "検証中",
-          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
-        },
-        {
-          "role": "データ確認担当",
-          "status": "検証中",
-          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
-        },
-        {
-          "role": "比較検証担当",
-          "status": "検証中",
-          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
-        }
-      ],
-      "comparison": {
-        "version": "third_focus_v1",
-        "automatic_promotion": false,
-        "variants": {
-          "current": [],
-          "third_focus": []
-        }
-      },
-      "risk_coordination": {
-        "chaos_index": 53.99,
-        "risk_level": "高",
-        "line_collapse_probability": null,
-        "scenario_probability": null,
-        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "analysis_rating": "見送り"
-    },
-    {
-      "race_id": "027420261109",
-      "venue": "高知",
-      "race_no": 2,
-      "version": "high_payout_v1",
-      "rating": "見送り",
-      "expectation_score": 0,
-      "recommended_count": 0,
-      "patterns": [],
-      "tickets": [],
-      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
-      "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
-      ],
-      "probability_method": "geometric_model_market_estimate_uncalibrated",
-      "minimum_probability": 0.001,
-      "minimum_ev": 1.25,
-      "automatic_purchase": false,
-      "analysts": [
-        {
-          "role": "高配当専用軍師",
-          "status": "検証中",
-          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
-        },
-        {
-          "role": "1着波乱担当",
-          "status": "検証中",
-          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
-        },
-        {
-          "role": "2着突っ込み担当",
-          "status": "検証中",
-          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
-        },
-        {
-          "role": "3着紛れ担当",
-          "status": "検証中",
-          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
-        },
-        {
-          "role": "ライン崩壊担当",
-          "status": "検証中",
-          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
-        },
-        {
-          "role": "細切れ戦担当",
-          "status": "検証中",
-          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
-        },
-        {
-          "role": "単騎担当",
-          "status": "検証中",
-          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
-        },
-        {
-          "role": "人気過剰担当",
-          "status": "検証中",
-          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
-        },
-        {
-          "role": "高配当期待値担当",
-          "status": "検証中",
-          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
-        },
-        {
-          "role": "データ確認担当",
-          "status": "検証中",
-          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
-        },
-        {
-          "role": "比較検証担当",
-          "status": "検証中",
-          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
-        }
-      ],
-      "comparison": {
-        "version": "third_focus_v1",
-        "automatic_promotion": false,
-        "variants": {
-          "current": [],
-          "third_focus": []
-        }
-      },
-      "risk_coordination": {
-        "chaos_index": 54.62,
-        "risk_level": "高",
-        "line_collapse_probability": null,
-        "scenario_probability": null,
-        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "analysis_rating": "見送り"
-    },
-    {
-      "race_id": "022120261109",
-      "venue": "弥彦",
-      "race_no": 2,
-      "version": "high_payout_v1",
-      "rating": "見送り",
-      "expectation_score": 0,
-      "recommended_count": 0,
-      "patterns": [],
-      "tickets": [],
-      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
-      "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
-      ],
-      "probability_method": "geometric_model_market_estimate_uncalibrated",
-      "minimum_probability": 0.001,
-      "minimum_ev": 1.25,
-      "automatic_purchase": false,
-      "analysts": [
-        {
-          "role": "高配当専用軍師",
-          "status": "検証中",
-          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
-        },
-        {
-          "role": "1着波乱担当",
-          "status": "検証中",
-          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
-        },
-        {
-          "role": "2着突っ込み担当",
-          "status": "検証中",
-          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
-        },
-        {
-          "role": "3着紛れ担当",
-          "status": "検証中",
-          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
-        },
-        {
-          "role": "ライン崩壊担当",
-          "status": "検証中",
-          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
-        },
-        {
-          "role": "細切れ戦担当",
-          "status": "検証中",
-          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
-        },
-        {
-          "role": "単騎担当",
-          "status": "検証中",
-          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
-        },
-        {
-          "role": "人気過剰担当",
-          "status": "検証中",
-          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
-        },
-        {
-          "role": "高配当期待値担当",
-          "status": "検証中",
-          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
-        },
-        {
-          "role": "データ確認担当",
-          "status": "検証中",
-          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
-        },
-        {
-          "role": "比較検証担当",
-          "status": "検証中",
-          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
-        }
-      ],
-      "comparison": {
-        "version": "third_focus_v1",
-        "automatic_promotion": false,
-        "variants": {
-          "current": [],
-          "third_focus": []
-        }
-      },
-      "risk_coordination": {
-        "chaos_index": 35.04,
+        "chaos_index": 34.75,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -1321,286 +1972,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "038420261109",
-      "venue": "武雄",
-      "race_no": 3,
-      "version": "high_payout_v1",
-      "rating": "見送り",
-      "expectation_score": 0,
-      "recommended_count": 0,
-      "patterns": [],
-      "tickets": [],
-      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
-      "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
-      ],
-      "probability_method": "geometric_model_market_estimate_uncalibrated",
-      "minimum_probability": 0.001,
-      "minimum_ev": 1.25,
-      "automatic_purchase": false,
-      "analysts": [
-        {
-          "role": "高配当専用軍師",
-          "status": "検証中",
-          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
-        },
-        {
-          "role": "1着波乱担当",
-          "status": "検証中",
-          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
-        },
-        {
-          "role": "2着突っ込み担当",
-          "status": "検証中",
-          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
-        },
-        {
-          "role": "3着紛れ担当",
-          "status": "検証中",
-          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
-        },
-        {
-          "role": "ライン崩壊担当",
-          "status": "検証中",
-          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
-        },
-        {
-          "role": "細切れ戦担当",
-          "status": "検証中",
-          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
-        },
-        {
-          "role": "単騎担当",
-          "status": "検証中",
-          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
-        },
-        {
-          "role": "人気過剰担当",
-          "status": "検証中",
-          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
-        },
-        {
-          "role": "高配当期待値担当",
-          "status": "検証中",
-          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
-        },
-        {
-          "role": "データ確認担当",
-          "status": "検証中",
-          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
-        },
-        {
-          "role": "比較検証担当",
-          "status": "検証中",
-          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
-        }
-      ],
-      "comparison": {
-        "version": "third_focus_v1",
-        "automatic_promotion": false,
-        "variants": {
-          "current": [],
-          "third_focus": []
-        }
-      },
-      "risk_coordination": {
-        "chaos_index": 41.25,
-        "risk_level": "中",
-        "line_collapse_probability": null,
-        "scenario_probability": null,
-        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "analysis_rating": "見送り"
-    },
-    {
-      "race_id": "037420261109",
-      "venue": "高知",
-      "race_no": 3,
-      "version": "high_payout_v1",
-      "rating": "見送り",
-      "expectation_score": 0,
-      "recommended_count": 0,
-      "patterns": [],
-      "tickets": [],
-      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
-      "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
-      ],
-      "probability_method": "geometric_model_market_estimate_uncalibrated",
-      "minimum_probability": 0.001,
-      "minimum_ev": 1.25,
-      "automatic_purchase": false,
-      "analysts": [
-        {
-          "role": "高配当専用軍師",
-          "status": "検証中",
-          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
-        },
-        {
-          "role": "1着波乱担当",
-          "status": "検証中",
-          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
-        },
-        {
-          "role": "2着突っ込み担当",
-          "status": "検証中",
-          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
-        },
-        {
-          "role": "3着紛れ担当",
-          "status": "検証中",
-          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
-        },
-        {
-          "role": "ライン崩壊担当",
-          "status": "検証中",
-          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
-        },
-        {
-          "role": "細切れ戦担当",
-          "status": "検証中",
-          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
-        },
-        {
-          "role": "単騎担当",
-          "status": "検証中",
-          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
-        },
-        {
-          "role": "人気過剰担当",
-          "status": "検証中",
-          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
-        },
-        {
-          "role": "高配当期待値担当",
-          "status": "検証中",
-          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
-        },
-        {
-          "role": "データ確認担当",
-          "status": "検証中",
-          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
-        },
-        {
-          "role": "比較検証担当",
-          "status": "検証中",
-          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
-        }
-      ],
-      "comparison": {
-        "version": "third_focus_v1",
-        "automatic_promotion": false,
-        "variants": {
-          "current": [],
-          "third_focus": []
-        }
-      },
-      "risk_coordination": {
-        "chaos_index": 58.21,
-        "risk_level": "高",
-        "line_collapse_probability": null,
-        "scenario_probability": null,
-        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "analysis_rating": "見送り"
-    },
-    {
-      "race_id": "032120261109",
-      "venue": "弥彦",
-      "race_no": 3,
-      "version": "high_payout_v1",
-      "rating": "見送り",
-      "expectation_score": 0,
-      "recommended_count": 0,
-      "patterns": [],
-      "tickets": [],
-      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
-      "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
-      ],
-      "probability_method": "geometric_model_market_estimate_uncalibrated",
-      "minimum_probability": 0.001,
-      "minimum_ev": 1.25,
-      "automatic_purchase": false,
-      "analysts": [
-        {
-          "role": "高配当専用軍師",
-          "status": "検証中",
-          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
-        },
-        {
-          "role": "1着波乱担当",
-          "status": "検証中",
-          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
-        },
-        {
-          "role": "2着突っ込み担当",
-          "status": "検証中",
-          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
-        },
-        {
-          "role": "3着紛れ担当",
-          "status": "検証中",
-          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
-        },
-        {
-          "role": "ライン崩壊担当",
-          "status": "検証中",
-          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
-        },
-        {
-          "role": "細切れ戦担当",
-          "status": "検証中",
-          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
-        },
-        {
-          "role": "単騎担当",
-          "status": "検証中",
-          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
-        },
-        {
-          "role": "人気過剰担当",
-          "status": "検証中",
-          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
-        },
-        {
-          "role": "高配当期待値担当",
-          "status": "検証中",
-          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
-        },
-        {
-          "role": "データ確認担当",
-          "status": "検証中",
-          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
-        },
-        {
-          "role": "比較検証担当",
-          "status": "検証中",
-          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
-        }
-      ],
-      "comparison": {
-        "version": "third_focus_v1",
-        "automatic_promotion": false,
-        "variants": {
-          "current": [],
-          "third_focus": []
-        }
-      },
-      "risk_coordination": {
-        "chaos_index": 66.07,
-        "risk_level": "高",
-        "line_collapse_probability": null,
-        "scenario_probability": null,
-        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "analysis_rating": "見送り"
-    },
-    {
-      "race_id": "048420261109",
+      "race_id": "048420261110",
       "venue": "武雄",
       "race_no": 4,
       "version": "high_payout_v1",
@@ -1684,1495 +2056,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 37.53,
-        "risk_level": "中",
-        "line_collapse_probability": null,
-        "scenario_probability": null,
-        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "analysis_rating": "見送り"
-    },
-    {
-      "race_id": "047420261109",
-      "venue": "高知",
-      "race_no": 4,
-      "version": "high_payout_v1",
-      "rating": "見送り",
-      "expectation_score": 0,
-      "recommended_count": 0,
-      "patterns": [],
-      "tickets": [],
-      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
-      "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
-      ],
-      "probability_method": "geometric_model_market_estimate_uncalibrated",
-      "minimum_probability": 0.001,
-      "minimum_ev": 1.25,
-      "automatic_purchase": false,
-      "analysts": [
-        {
-          "role": "高配当専用軍師",
-          "status": "検証中",
-          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
-        },
-        {
-          "role": "1着波乱担当",
-          "status": "検証中",
-          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
-        },
-        {
-          "role": "2着突っ込み担当",
-          "status": "検証中",
-          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
-        },
-        {
-          "role": "3着紛れ担当",
-          "status": "検証中",
-          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
-        },
-        {
-          "role": "ライン崩壊担当",
-          "status": "検証中",
-          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
-        },
-        {
-          "role": "細切れ戦担当",
-          "status": "検証中",
-          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
-        },
-        {
-          "role": "単騎担当",
-          "status": "検証中",
-          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
-        },
-        {
-          "role": "人気過剰担当",
-          "status": "検証中",
-          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
-        },
-        {
-          "role": "高配当期待値担当",
-          "status": "検証中",
-          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
-        },
-        {
-          "role": "データ確認担当",
-          "status": "検証中",
-          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
-        },
-        {
-          "role": "比較検証担当",
-          "status": "検証中",
-          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
-        }
-      ],
-      "comparison": {
-        "version": "third_focus_v1",
-        "automatic_promotion": false,
-        "variants": {
-          "current": [],
-          "third_focus": []
-        }
-      },
-      "risk_coordination": {
-        "chaos_index": 52.14,
-        "risk_level": "高",
-        "line_collapse_probability": null,
-        "scenario_probability": null,
-        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "analysis_rating": "見送り"
-    },
-    {
-      "race_id": "042120261109",
-      "venue": "弥彦",
-      "race_no": 4,
-      "version": "high_payout_v1",
-      "rating": "見送り",
-      "expectation_score": 0,
-      "recommended_count": 0,
-      "patterns": [],
-      "tickets": [],
-      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
-      "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
-      ],
-      "probability_method": "geometric_model_market_estimate_uncalibrated",
-      "minimum_probability": 0.001,
-      "minimum_ev": 1.25,
-      "automatic_purchase": false,
-      "analysts": [
-        {
-          "role": "高配当専用軍師",
-          "status": "検証中",
-          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
-        },
-        {
-          "role": "1着波乱担当",
-          "status": "検証中",
-          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
-        },
-        {
-          "role": "2着突っ込み担当",
-          "status": "検証中",
-          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
-        },
-        {
-          "role": "3着紛れ担当",
-          "status": "検証中",
-          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
-        },
-        {
-          "role": "ライン崩壊担当",
-          "status": "検証中",
-          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
-        },
-        {
-          "role": "細切れ戦担当",
-          "status": "検証中",
-          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
-        },
-        {
-          "role": "単騎担当",
-          "status": "検証中",
-          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
-        },
-        {
-          "role": "人気過剰担当",
-          "status": "検証中",
-          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
-        },
-        {
-          "role": "高配当期待値担当",
-          "status": "検証中",
-          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
-        },
-        {
-          "role": "データ確認担当",
-          "status": "検証中",
-          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
-        },
-        {
-          "role": "比較検証担当",
-          "status": "検証中",
-          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
-        }
-      ],
-      "comparison": {
-        "version": "third_focus_v1",
-        "automatic_promotion": false,
-        "variants": {
-          "current": [],
-          "third_focus": []
-        }
-      },
-      "risk_coordination": {
-        "chaos_index": 35.59,
-        "risk_level": "中",
-        "line_collapse_probability": null,
-        "scenario_probability": null,
-        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "analysis_rating": "見送り"
-    },
-    {
-      "race_id": "058420261109",
-      "venue": "武雄",
-      "race_no": 5,
-      "version": "high_payout_v1",
-      "rating": "見送り",
-      "expectation_score": 0,
-      "recommended_count": 0,
-      "patterns": [],
-      "tickets": [],
-      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
-      "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
-      ],
-      "probability_method": "geometric_model_market_estimate_uncalibrated",
-      "minimum_probability": 0.001,
-      "minimum_ev": 1.25,
-      "automatic_purchase": false,
-      "analysts": [
-        {
-          "role": "高配当専用軍師",
-          "status": "検証中",
-          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
-        },
-        {
-          "role": "1着波乱担当",
-          "status": "検証中",
-          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
-        },
-        {
-          "role": "2着突っ込み担当",
-          "status": "検証中",
-          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
-        },
-        {
-          "role": "3着紛れ担当",
-          "status": "検証中",
-          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
-        },
-        {
-          "role": "ライン崩壊担当",
-          "status": "検証中",
-          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
-        },
-        {
-          "role": "細切れ戦担当",
-          "status": "検証中",
-          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
-        },
-        {
-          "role": "単騎担当",
-          "status": "検証中",
-          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
-        },
-        {
-          "role": "人気過剰担当",
-          "status": "検証中",
-          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
-        },
-        {
-          "role": "高配当期待値担当",
-          "status": "検証中",
-          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
-        },
-        {
-          "role": "データ確認担当",
-          "status": "検証中",
-          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
-        },
-        {
-          "role": "比較検証担当",
-          "status": "検証中",
-          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
-        }
-      ],
-      "comparison": {
-        "version": "third_focus_v1",
-        "automatic_promotion": false,
-        "variants": {
-          "current": [],
-          "third_focus": []
-        }
-      },
-      "risk_coordination": {
-        "chaos_index": 40.98,
-        "risk_level": "中",
-        "line_collapse_probability": null,
-        "scenario_probability": null,
-        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "analysis_rating": "見送り"
-    },
-    {
-      "race_id": "057420261109",
-      "venue": "高知",
-      "race_no": 5,
-      "version": "high_payout_v1",
-      "rating": "見送り",
-      "expectation_score": 0,
-      "recommended_count": 0,
-      "patterns": [],
-      "tickets": [],
-      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
-      "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
-      ],
-      "probability_method": "geometric_model_market_estimate_uncalibrated",
-      "minimum_probability": 0.001,
-      "minimum_ev": 1.25,
-      "automatic_purchase": false,
-      "analysts": [
-        {
-          "role": "高配当専用軍師",
-          "status": "検証中",
-          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
-        },
-        {
-          "role": "1着波乱担当",
-          "status": "検証中",
-          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
-        },
-        {
-          "role": "2着突っ込み担当",
-          "status": "検証中",
-          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
-        },
-        {
-          "role": "3着紛れ担当",
-          "status": "検証中",
-          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
-        },
-        {
-          "role": "ライン崩壊担当",
-          "status": "検証中",
-          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
-        },
-        {
-          "role": "細切れ戦担当",
-          "status": "検証中",
-          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
-        },
-        {
-          "role": "単騎担当",
-          "status": "検証中",
-          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
-        },
-        {
-          "role": "人気過剰担当",
-          "status": "検証中",
-          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
-        },
-        {
-          "role": "高配当期待値担当",
-          "status": "検証中",
-          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
-        },
-        {
-          "role": "データ確認担当",
-          "status": "検証中",
-          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
-        },
-        {
-          "role": "比較検証担当",
-          "status": "検証中",
-          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
-        }
-      ],
-      "comparison": {
-        "version": "third_focus_v1",
-        "automatic_promotion": false,
-        "variants": {
-          "current": [],
-          "third_focus": []
-        }
-      },
-      "risk_coordination": {
-        "chaos_index": 50.44,
-        "risk_level": "高",
-        "line_collapse_probability": null,
-        "scenario_probability": null,
-        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "analysis_rating": "見送り"
-    },
-    {
-      "race_id": "052120261109",
-      "venue": "弥彦",
-      "race_no": 5,
-      "version": "high_payout_v1",
-      "rating": "見送り",
-      "expectation_score": 0,
-      "recommended_count": 0,
-      "patterns": [],
-      "tickets": [],
-      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
-      "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
-      ],
-      "probability_method": "geometric_model_market_estimate_uncalibrated",
-      "minimum_probability": 0.001,
-      "minimum_ev": 1.25,
-      "automatic_purchase": false,
-      "analysts": [
-        {
-          "role": "高配当専用軍師",
-          "status": "検証中",
-          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
-        },
-        {
-          "role": "1着波乱担当",
-          "status": "検証中",
-          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
-        },
-        {
-          "role": "2着突っ込み担当",
-          "status": "検証中",
-          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
-        },
-        {
-          "role": "3着紛れ担当",
-          "status": "検証中",
-          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
-        },
-        {
-          "role": "ライン崩壊担当",
-          "status": "検証中",
-          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
-        },
-        {
-          "role": "細切れ戦担当",
-          "status": "検証中",
-          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
-        },
-        {
-          "role": "単騎担当",
-          "status": "検証中",
-          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
-        },
-        {
-          "role": "人気過剰担当",
-          "status": "検証中",
-          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
-        },
-        {
-          "role": "高配当期待値担当",
-          "status": "検証中",
-          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
-        },
-        {
-          "role": "データ確認担当",
-          "status": "検証中",
-          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
-        },
-        {
-          "role": "比較検証担当",
-          "status": "検証中",
-          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
-        }
-      ],
-      "comparison": {
-        "version": "third_focus_v1",
-        "automatic_promotion": false,
-        "variants": {
-          "current": [],
-          "third_focus": []
-        }
-      },
-      "risk_coordination": {
-        "chaos_index": 48.44,
-        "risk_level": "中",
-        "line_collapse_probability": null,
-        "scenario_probability": null,
-        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "analysis_rating": "見送り"
-    },
-    {
-      "race_id": "068420261109",
-      "venue": "武雄",
-      "race_no": 6,
-      "version": "high_payout_v1",
-      "rating": "見送り",
-      "expectation_score": 0,
-      "recommended_count": 0,
-      "patterns": [],
-      "tickets": [],
-      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
-      "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
-      ],
-      "probability_method": "geometric_model_market_estimate_uncalibrated",
-      "minimum_probability": 0.001,
-      "minimum_ev": 1.25,
-      "automatic_purchase": false,
-      "analysts": [
-        {
-          "role": "高配当専用軍師",
-          "status": "検証中",
-          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
-        },
-        {
-          "role": "1着波乱担当",
-          "status": "検証中",
-          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
-        },
-        {
-          "role": "2着突っ込み担当",
-          "status": "検証中",
-          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
-        },
-        {
-          "role": "3着紛れ担当",
-          "status": "検証中",
-          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
-        },
-        {
-          "role": "ライン崩壊担当",
-          "status": "検証中",
-          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
-        },
-        {
-          "role": "細切れ戦担当",
-          "status": "検証中",
-          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
-        },
-        {
-          "role": "単騎担当",
-          "status": "検証中",
-          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
-        },
-        {
-          "role": "人気過剰担当",
-          "status": "検証中",
-          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
-        },
-        {
-          "role": "高配当期待値担当",
-          "status": "検証中",
-          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
-        },
-        {
-          "role": "データ確認担当",
-          "status": "検証中",
-          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
-        },
-        {
-          "role": "比較検証担当",
-          "status": "検証中",
-          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
-        }
-      ],
-      "comparison": {
-        "version": "third_focus_v1",
-        "automatic_promotion": false,
-        "variants": {
-          "current": [],
-          "third_focus": []
-        }
-      },
-      "risk_coordination": {
-        "chaos_index": 34.41,
-        "risk_level": "中",
-        "line_collapse_probability": null,
-        "scenario_probability": null,
-        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "analysis_rating": "見送り"
-    },
-    {
-      "race_id": "067420261109",
-      "venue": "高知",
-      "race_no": 6,
-      "version": "high_payout_v1",
-      "rating": "見送り",
-      "expectation_score": 0,
-      "recommended_count": 0,
-      "patterns": [],
-      "tickets": [],
-      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
-      "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
-      ],
-      "probability_method": "geometric_model_market_estimate_uncalibrated",
-      "minimum_probability": 0.001,
-      "minimum_ev": 1.25,
-      "automatic_purchase": false,
-      "analysts": [
-        {
-          "role": "高配当専用軍師",
-          "status": "検証中",
-          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
-        },
-        {
-          "role": "1着波乱担当",
-          "status": "検証中",
-          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
-        },
-        {
-          "role": "2着突っ込み担当",
-          "status": "検証中",
-          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
-        },
-        {
-          "role": "3着紛れ担当",
-          "status": "検証中",
-          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
-        },
-        {
-          "role": "ライン崩壊担当",
-          "status": "検証中",
-          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
-        },
-        {
-          "role": "細切れ戦担当",
-          "status": "検証中",
-          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
-        },
-        {
-          "role": "単騎担当",
-          "status": "検証中",
-          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
-        },
-        {
-          "role": "人気過剰担当",
-          "status": "検証中",
-          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
-        },
-        {
-          "role": "高配当期待値担当",
-          "status": "検証中",
-          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
-        },
-        {
-          "role": "データ確認担当",
-          "status": "検証中",
-          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
-        },
-        {
-          "role": "比較検証担当",
-          "status": "検証中",
-          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
-        }
-      ],
-      "comparison": {
-        "version": "third_focus_v1",
-        "automatic_promotion": false,
-        "variants": {
-          "current": [],
-          "third_focus": []
-        }
-      },
-      "risk_coordination": {
-        "chaos_index": 38.15,
-        "risk_level": "中",
-        "line_collapse_probability": null,
-        "scenario_probability": null,
-        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "analysis_rating": "見送り"
-    },
-    {
-      "race_id": "062120261109",
-      "venue": "弥彦",
-      "race_no": 6,
-      "version": "high_payout_v1",
-      "rating": "見送り",
-      "expectation_score": 0,
-      "recommended_count": 0,
-      "patterns": [],
-      "tickets": [],
-      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
-      "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
-      ],
-      "probability_method": "geometric_model_market_estimate_uncalibrated",
-      "minimum_probability": 0.001,
-      "minimum_ev": 1.25,
-      "automatic_purchase": false,
-      "analysts": [
-        {
-          "role": "高配当専用軍師",
-          "status": "検証中",
-          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
-        },
-        {
-          "role": "1着波乱担当",
-          "status": "検証中",
-          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
-        },
-        {
-          "role": "2着突っ込み担当",
-          "status": "検証中",
-          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
-        },
-        {
-          "role": "3着紛れ担当",
-          "status": "検証中",
-          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
-        },
-        {
-          "role": "ライン崩壊担当",
-          "status": "検証中",
-          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
-        },
-        {
-          "role": "細切れ戦担当",
-          "status": "検証中",
-          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
-        },
-        {
-          "role": "単騎担当",
-          "status": "検証中",
-          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
-        },
-        {
-          "role": "人気過剰担当",
-          "status": "検証中",
-          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
-        },
-        {
-          "role": "高配当期待値担当",
-          "status": "検証中",
-          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
-        },
-        {
-          "role": "データ確認担当",
-          "status": "検証中",
-          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
-        },
-        {
-          "role": "比較検証担当",
-          "status": "検証中",
-          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
-        }
-      ],
-      "comparison": {
-        "version": "third_focus_v1",
-        "automatic_promotion": false,
-        "variants": {
-          "current": [],
-          "third_focus": []
-        }
-      },
-      "risk_coordination": {
-        "chaos_index": 57.03,
-        "risk_level": "高",
-        "line_collapse_probability": null,
-        "scenario_probability": null,
-        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "analysis_rating": "見送り"
-    },
-    {
-      "race_id": "078420261109",
-      "venue": "武雄",
-      "race_no": 7,
-      "version": "high_payout_v1",
-      "rating": "見送り",
-      "expectation_score": 0,
-      "recommended_count": 0,
-      "patterns": [],
-      "tickets": [],
-      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
-      "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
-      ],
-      "probability_method": "geometric_model_market_estimate_uncalibrated",
-      "minimum_probability": 0.001,
-      "minimum_ev": 1.25,
-      "automatic_purchase": false,
-      "analysts": [
-        {
-          "role": "高配当専用軍師",
-          "status": "検証中",
-          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
-        },
-        {
-          "role": "1着波乱担当",
-          "status": "検証中",
-          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
-        },
-        {
-          "role": "2着突っ込み担当",
-          "status": "検証中",
-          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
-        },
-        {
-          "role": "3着紛れ担当",
-          "status": "検証中",
-          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
-        },
-        {
-          "role": "ライン崩壊担当",
-          "status": "検証中",
-          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
-        },
-        {
-          "role": "細切れ戦担当",
-          "status": "検証中",
-          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
-        },
-        {
-          "role": "単騎担当",
-          "status": "検証中",
-          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
-        },
-        {
-          "role": "人気過剰担当",
-          "status": "検証中",
-          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
-        },
-        {
-          "role": "高配当期待値担当",
-          "status": "検証中",
-          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
-        },
-        {
-          "role": "データ確認担当",
-          "status": "検証中",
-          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
-        },
-        {
-          "role": "比較検証担当",
-          "status": "検証中",
-          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
-        }
-      ],
-      "comparison": {
-        "version": "third_focus_v1",
-        "automatic_promotion": false,
-        "variants": {
-          "current": [],
-          "third_focus": []
-        }
-      },
-      "risk_coordination": {
-        "chaos_index": 36.17,
-        "risk_level": "中",
-        "line_collapse_probability": null,
-        "scenario_probability": null,
-        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "analysis_rating": "見送り"
-    },
-    {
-      "race_id": "077420261109",
-      "venue": "高知",
-      "race_no": 7,
-      "version": "high_payout_v1",
-      "rating": "見送り",
-      "expectation_score": 0,
-      "recommended_count": 0,
-      "patterns": [],
-      "tickets": [],
-      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
-      "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
-      ],
-      "probability_method": "geometric_model_market_estimate_uncalibrated",
-      "minimum_probability": 0.001,
-      "minimum_ev": 1.25,
-      "automatic_purchase": false,
-      "analysts": [
-        {
-          "role": "高配当専用軍師",
-          "status": "検証中",
-          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
-        },
-        {
-          "role": "1着波乱担当",
-          "status": "検証中",
-          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
-        },
-        {
-          "role": "2着突っ込み担当",
-          "status": "検証中",
-          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
-        },
-        {
-          "role": "3着紛れ担当",
-          "status": "検証中",
-          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
-        },
-        {
-          "role": "ライン崩壊担当",
-          "status": "検証中",
-          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
-        },
-        {
-          "role": "細切れ戦担当",
-          "status": "検証中",
-          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
-        },
-        {
-          "role": "単騎担当",
-          "status": "検証中",
-          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
-        },
-        {
-          "role": "人気過剰担当",
-          "status": "検証中",
-          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
-        },
-        {
-          "role": "高配当期待値担当",
-          "status": "検証中",
-          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
-        },
-        {
-          "role": "データ確認担当",
-          "status": "検証中",
-          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
-        },
-        {
-          "role": "比較検証担当",
-          "status": "検証中",
-          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
-        }
-      ],
-      "comparison": {
-        "version": "third_focus_v1",
-        "automatic_promotion": false,
-        "variants": {
-          "current": [],
-          "third_focus": []
-        }
-      },
-      "risk_coordination": {
-        "chaos_index": 37.5,
-        "risk_level": "中",
-        "line_collapse_probability": null,
-        "scenario_probability": null,
-        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "analysis_rating": "見送り"
-    },
-    {
-      "race_id": "072120261109",
-      "venue": "弥彦",
-      "race_no": 7,
-      "version": "high_payout_v1",
-      "rating": "見送り",
-      "expectation_score": 0,
-      "recommended_count": 0,
-      "patterns": [],
-      "tickets": [],
-      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
-      "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
-      ],
-      "probability_method": "geometric_model_market_estimate_uncalibrated",
-      "minimum_probability": 0.001,
-      "minimum_ev": 1.25,
-      "automatic_purchase": false,
-      "analysts": [
-        {
-          "role": "高配当専用軍師",
-          "status": "検証中",
-          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
-        },
-        {
-          "role": "1着波乱担当",
-          "status": "検証中",
-          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
-        },
-        {
-          "role": "2着突っ込み担当",
-          "status": "検証中",
-          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
-        },
-        {
-          "role": "3着紛れ担当",
-          "status": "検証中",
-          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
-        },
-        {
-          "role": "ライン崩壊担当",
-          "status": "検証中",
-          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
-        },
-        {
-          "role": "細切れ戦担当",
-          "status": "検証中",
-          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
-        },
-        {
-          "role": "単騎担当",
-          "status": "検証中",
-          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
-        },
-        {
-          "role": "人気過剰担当",
-          "status": "検証中",
-          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
-        },
-        {
-          "role": "高配当期待値担当",
-          "status": "検証中",
-          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
-        },
-        {
-          "role": "データ確認担当",
-          "status": "検証中",
-          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
-        },
-        {
-          "role": "比較検証担当",
-          "status": "検証中",
-          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
-        }
-      ],
-      "comparison": {
-        "version": "third_focus_v1",
-        "automatic_promotion": false,
-        "variants": {
-          "current": [],
-          "third_focus": []
-        }
-      },
-      "risk_coordination": {
-        "chaos_index": 44.64,
-        "risk_level": "中",
-        "line_collapse_probability": null,
-        "scenario_probability": null,
-        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "analysis_rating": "見送り"
-    },
-    {
-      "race_id": "088420261109",
-      "venue": "武雄",
-      "race_no": 8,
-      "version": "high_payout_v1",
-      "rating": "見送り",
-      "expectation_score": 0,
-      "recommended_count": 0,
-      "patterns": [],
-      "tickets": [],
-      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
-      "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
-      ],
-      "probability_method": "geometric_model_market_estimate_uncalibrated",
-      "minimum_probability": 0.001,
-      "minimum_ev": 1.25,
-      "automatic_purchase": false,
-      "analysts": [
-        {
-          "role": "高配当専用軍師",
-          "status": "検証中",
-          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
-        },
-        {
-          "role": "1着波乱担当",
-          "status": "検証中",
-          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
-        },
-        {
-          "role": "2着突っ込み担当",
-          "status": "検証中",
-          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
-        },
-        {
-          "role": "3着紛れ担当",
-          "status": "検証中",
-          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
-        },
-        {
-          "role": "ライン崩壊担当",
-          "status": "検証中",
-          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
-        },
-        {
-          "role": "細切れ戦担当",
-          "status": "検証中",
-          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
-        },
-        {
-          "role": "単騎担当",
-          "status": "検証中",
-          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
-        },
-        {
-          "role": "人気過剰担当",
-          "status": "検証中",
-          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
-        },
-        {
-          "role": "高配当期待値担当",
-          "status": "検証中",
-          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
-        },
-        {
-          "role": "データ確認担当",
-          "status": "検証中",
-          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
-        },
-        {
-          "role": "比較検証担当",
-          "status": "検証中",
-          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
-        }
-      ],
-      "comparison": {
-        "version": "third_focus_v1",
-        "automatic_promotion": false,
-        "variants": {
-          "current": [],
-          "third_focus": []
-        }
-      },
-      "risk_coordination": {
-        "chaos_index": 36.13,
-        "risk_level": "中",
-        "line_collapse_probability": null,
-        "scenario_probability": null,
-        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "analysis_rating": "見送り"
-    },
-    {
-      "race_id": "087420261109",
-      "venue": "高知",
-      "race_no": 8,
-      "version": "high_payout_v1",
-      "rating": "見送り",
-      "expectation_score": 0,
-      "recommended_count": 0,
-      "patterns": [],
-      "tickets": [],
-      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
-      "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
-      ],
-      "probability_method": "geometric_model_market_estimate_uncalibrated",
-      "minimum_probability": 0.001,
-      "minimum_ev": 1.25,
-      "automatic_purchase": false,
-      "analysts": [
-        {
-          "role": "高配当専用軍師",
-          "status": "検証中",
-          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
-        },
-        {
-          "role": "1着波乱担当",
-          "status": "検証中",
-          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
-        },
-        {
-          "role": "2着突っ込み担当",
-          "status": "検証中",
-          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
-        },
-        {
-          "role": "3着紛れ担当",
-          "status": "検証中",
-          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
-        },
-        {
-          "role": "ライン崩壊担当",
-          "status": "検証中",
-          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
-        },
-        {
-          "role": "細切れ戦担当",
-          "status": "検証中",
-          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
-        },
-        {
-          "role": "単騎担当",
-          "status": "検証中",
-          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
-        },
-        {
-          "role": "人気過剰担当",
-          "status": "検証中",
-          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
-        },
-        {
-          "role": "高配当期待値担当",
-          "status": "検証中",
-          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
-        },
-        {
-          "role": "データ確認担当",
-          "status": "検証中",
-          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
-        },
-        {
-          "role": "比較検証担当",
-          "status": "検証中",
-          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
-        }
-      ],
-      "comparison": {
-        "version": "third_focus_v1",
-        "automatic_promotion": false,
-        "variants": {
-          "current": [],
-          "third_focus": []
-        }
-      },
-      "risk_coordination": {
-        "chaos_index": 70.95,
-        "risk_level": "極高",
-        "line_collapse_probability": null,
-        "scenario_probability": null,
-        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "analysis_rating": "見送り"
-    },
-    {
-      "race_id": "082120261109",
-      "venue": "弥彦",
-      "race_no": 8,
-      "version": "high_payout_v1",
-      "rating": "見送り",
-      "expectation_score": 0,
-      "recommended_count": 0,
-      "patterns": [],
-      "tickets": [],
-      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
-      "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
-      ],
-      "probability_method": "geometric_model_market_estimate_uncalibrated",
-      "minimum_probability": 0.001,
-      "minimum_ev": 1.25,
-      "automatic_purchase": false,
-      "analysts": [
-        {
-          "role": "高配当専用軍師",
-          "status": "検証中",
-          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
-        },
-        {
-          "role": "1着波乱担当",
-          "status": "検証中",
-          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
-        },
-        {
-          "role": "2着突っ込み担当",
-          "status": "検証中",
-          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
-        },
-        {
-          "role": "3着紛れ担当",
-          "status": "検証中",
-          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
-        },
-        {
-          "role": "ライン崩壊担当",
-          "status": "検証中",
-          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
-        },
-        {
-          "role": "細切れ戦担当",
-          "status": "検証中",
-          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
-        },
-        {
-          "role": "単騎担当",
-          "status": "検証中",
-          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
-        },
-        {
-          "role": "人気過剰担当",
-          "status": "検証中",
-          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
-        },
-        {
-          "role": "高配当期待値担当",
-          "status": "検証中",
-          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
-        },
-        {
-          "role": "データ確認担当",
-          "status": "検証中",
-          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
-        },
-        {
-          "role": "比較検証担当",
-          "status": "検証中",
-          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
-        }
-      ],
-      "comparison": {
-        "version": "third_focus_v1",
-        "automatic_promotion": false,
-        "variants": {
-          "current": [],
-          "third_focus": []
-        }
-      },
-      "risk_coordination": {
-        "chaos_index": 42.18,
-        "risk_level": "中",
-        "line_collapse_probability": null,
-        "scenario_probability": null,
-        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "analysis_rating": "見送り"
-    },
-    {
-      "race_id": "098420261109",
-      "venue": "武雄",
-      "race_no": 9,
-      "version": "high_payout_v1",
-      "rating": "見送り",
-      "expectation_score": 0,
-      "recommended_count": 0,
-      "patterns": [],
-      "tickets": [],
-      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
-      "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
-      ],
-      "probability_method": "geometric_model_market_estimate_uncalibrated",
-      "minimum_probability": 0.001,
-      "minimum_ev": 1.25,
-      "automatic_purchase": false,
-      "analysts": [
-        {
-          "role": "高配当専用軍師",
-          "status": "検証中",
-          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
-        },
-        {
-          "role": "1着波乱担当",
-          "status": "検証中",
-          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
-        },
-        {
-          "role": "2着突っ込み担当",
-          "status": "検証中",
-          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
-        },
-        {
-          "role": "3着紛れ担当",
-          "status": "検証中",
-          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
-        },
-        {
-          "role": "ライン崩壊担当",
-          "status": "検証中",
-          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
-        },
-        {
-          "role": "細切れ戦担当",
-          "status": "検証中",
-          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
-        },
-        {
-          "role": "単騎担当",
-          "status": "検証中",
-          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
-        },
-        {
-          "role": "人気過剰担当",
-          "status": "検証中",
-          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
-        },
-        {
-          "role": "高配当期待値担当",
-          "status": "検証中",
-          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
-        },
-        {
-          "role": "データ確認担当",
-          "status": "検証中",
-          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
-        },
-        {
-          "role": "比較検証担当",
-          "status": "検証中",
-          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
-        }
-      ],
-      "comparison": {
-        "version": "third_focus_v1",
-        "automatic_promotion": false,
-        "variants": {
-          "current": [],
-          "third_focus": []
-        }
-      },
-      "risk_coordination": {
-        "chaos_index": 46.92,
-        "risk_level": "中",
-        "line_collapse_probability": null,
-        "scenario_probability": null,
-        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "analysis_rating": "見送り"
-    },
-    {
-      "race_id": "097420261109",
-      "venue": "高知",
-      "race_no": 9,
-      "version": "high_payout_v1",
-      "rating": "見送り",
-      "expectation_score": 0,
-      "recommended_count": 0,
-      "patterns": [],
-      "tickets": [],
-      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
-      "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
-      ],
-      "probability_method": "geometric_model_market_estimate_uncalibrated",
-      "minimum_probability": 0.001,
-      "minimum_ev": 1.25,
-      "automatic_purchase": false,
-      "analysts": [
-        {
-          "role": "高配当専用軍師",
-          "status": "検証中",
-          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
-        },
-        {
-          "role": "1着波乱担当",
-          "status": "検証中",
-          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
-        },
-        {
-          "role": "2着突っ込み担当",
-          "status": "検証中",
-          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
-        },
-        {
-          "role": "3着紛れ担当",
-          "status": "検証中",
-          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
-        },
-        {
-          "role": "ライン崩壊担当",
-          "status": "検証中",
-          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
-        },
-        {
-          "role": "細切れ戦担当",
-          "status": "検証中",
-          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
-        },
-        {
-          "role": "単騎担当",
-          "status": "検証中",
-          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
-        },
-        {
-          "role": "人気過剰担当",
-          "status": "検証中",
-          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
-        },
-        {
-          "role": "高配当期待値担当",
-          "status": "検証中",
-          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
-        },
-        {
-          "role": "データ確認担当",
-          "status": "検証中",
-          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
-        },
-        {
-          "role": "比較検証担当",
-          "status": "検証中",
-          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
-        }
-      ],
-      "comparison": {
-        "version": "third_focus_v1",
-        "automatic_promotion": false,
-        "variants": {
-          "current": [],
-          "third_focus": []
-        }
-      },
-      "risk_coordination": {
-        "chaos_index": 25.45,
+        "chaos_index": 29.8,
         "risk_level": "低",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -3181,9 +2065,9 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "092120261109",
-      "venue": "弥彦",
-      "race_no": 9,
+      "race_id": "044620261110",
+      "venue": "富山",
+      "race_no": 4,
       "version": "high_payout_v1",
       "rating": "見送り",
       "expectation_score": 0,
@@ -3265,7 +2149,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 39.49,
+        "chaos_index": 34.96,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -3274,9 +2158,9 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "108420261109",
+      "race_id": "058420261110",
       "venue": "武雄",
-      "race_no": 10,
+      "race_no": 5,
       "version": "high_payout_v1",
       "rating": "見送り",
       "expectation_score": 0,
@@ -3358,7 +2242,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 39.52,
+        "chaos_index": 43.37,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -3367,9 +2251,9 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "107420261109",
-      "venue": "高知",
-      "race_no": 10,
+      "race_id": "054620261110",
+      "venue": "富山",
+      "race_no": 5,
       "version": "high_payout_v1",
       "rating": "見送り",
       "expectation_score": 0,
@@ -3451,7 +2335,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 39.89,
+        "chaos_index": 34.49,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -3460,102 +2344,9 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "102120261109",
-      "venue": "弥彦",
-      "race_no": 10,
-      "version": "high_payout_v1",
-      "rating": "見送り",
-      "expectation_score": 0,
-      "recommended_count": 0,
-      "patterns": [],
-      "tickets": [],
-      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
-      "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
-      ],
-      "probability_method": "geometric_model_market_estimate_uncalibrated",
-      "minimum_probability": 0.001,
-      "minimum_ev": 1.25,
-      "automatic_purchase": false,
-      "analysts": [
-        {
-          "role": "高配当専用軍師",
-          "status": "検証中",
-          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
-        },
-        {
-          "role": "1着波乱担当",
-          "status": "検証中",
-          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
-        },
-        {
-          "role": "2着突っ込み担当",
-          "status": "検証中",
-          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
-        },
-        {
-          "role": "3着紛れ担当",
-          "status": "検証中",
-          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
-        },
-        {
-          "role": "ライン崩壊担当",
-          "status": "検証中",
-          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
-        },
-        {
-          "role": "細切れ戦担当",
-          "status": "検証中",
-          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
-        },
-        {
-          "role": "単騎担当",
-          "status": "検証中",
-          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
-        },
-        {
-          "role": "人気過剰担当",
-          "status": "検証中",
-          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
-        },
-        {
-          "role": "高配当期待値担当",
-          "status": "検証中",
-          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
-        },
-        {
-          "role": "データ確認担当",
-          "status": "検証中",
-          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
-        },
-        {
-          "role": "比較検証担当",
-          "status": "検証中",
-          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
-        }
-      ],
-      "comparison": {
-        "version": "third_focus_v1",
-        "automatic_promotion": false,
-        "variants": {
-          "current": [],
-          "third_focus": []
-        }
-      },
-      "risk_coordination": {
-        "chaos_index": 34.71,
-        "risk_level": "中",
-        "line_collapse_probability": null,
-        "scenario_probability": null,
-        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "analysis_rating": "見送り"
-    },
-    {
-      "race_id": "118420261109",
+      "race_id": "068420261110",
       "venue": "武雄",
-      "race_no": 11,
+      "race_no": 6,
       "version": "high_payout_v1",
       "rating": "見送り",
       "expectation_score": 0,
@@ -3637,7 +2428,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 47.42,
+        "chaos_index": 47.38,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -3646,9 +2437,9 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "117420261109",
-      "venue": "高知",
-      "race_no": 11,
+      "race_id": "064620261110",
+      "venue": "富山",
+      "race_no": 6,
       "version": "high_payout_v1",
       "rating": "見送り",
       "expectation_score": 0,
@@ -3730,7 +2521,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 48.22,
+        "chaos_index": 38.43,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -3739,9 +2530,9 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "013120261109",
-      "venue": "松戸",
-      "race_no": 1,
+      "race_id": "078420261110",
+      "venue": "武雄",
+      "race_no": 7,
       "version": "high_payout_v1",
       "rating": "見送り",
       "expectation_score": 0,
@@ -3832,8 +2623,659 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "112120261109",
-      "venue": "弥彦",
+      "race_id": "074620261110",
+      "venue": "富山",
+      "race_no": 7,
+      "version": "high_payout_v1",
+      "rating": "見送り",
+      "expectation_score": 0,
+      "recommended_count": 0,
+      "patterns": [],
+      "tickets": [],
+      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
+      "unknowns": [
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
+        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+      ],
+      "probability_method": "geometric_model_market_estimate_uncalibrated",
+      "minimum_probability": 0.001,
+      "minimum_ev": 1.25,
+      "automatic_purchase": false,
+      "analysts": [
+        {
+          "role": "高配当専用軍師",
+          "status": "検証中",
+          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
+        },
+        {
+          "role": "1着波乱担当",
+          "status": "検証中",
+          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
+        },
+        {
+          "role": "2着突っ込み担当",
+          "status": "検証中",
+          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
+        },
+        {
+          "role": "3着紛れ担当",
+          "status": "検証中",
+          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
+        },
+        {
+          "role": "ライン崩壊担当",
+          "status": "検証中",
+          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
+        },
+        {
+          "role": "細切れ戦担当",
+          "status": "検証中",
+          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
+        },
+        {
+          "role": "単騎担当",
+          "status": "検証中",
+          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
+        },
+        {
+          "role": "人気過剰担当",
+          "status": "検証中",
+          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
+        },
+        {
+          "role": "高配当期待値担当",
+          "status": "検証中",
+          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
+        },
+        {
+          "role": "データ確認担当",
+          "status": "検証中",
+          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
+        },
+        {
+          "role": "比較検証担当",
+          "status": "検証中",
+          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
+        }
+      ],
+      "comparison": {
+        "version": "third_focus_v1",
+        "automatic_promotion": false,
+        "variants": {
+          "current": [],
+          "third_focus": []
+        }
+      },
+      "risk_coordination": {
+        "chaos_index": 24.43,
+        "risk_level": "低",
+        "line_collapse_probability": null,
+        "scenario_probability": null,
+        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
+      },
+      "analysis_rating": "見送り"
+    },
+    {
+      "race_id": "088420261110",
+      "venue": "武雄",
+      "race_no": 8,
+      "version": "high_payout_v1",
+      "rating": "見送り",
+      "expectation_score": 0,
+      "recommended_count": 0,
+      "patterns": [],
+      "tickets": [],
+      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
+      "unknowns": [
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
+        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+      ],
+      "probability_method": "geometric_model_market_estimate_uncalibrated",
+      "minimum_probability": 0.001,
+      "minimum_ev": 1.25,
+      "automatic_purchase": false,
+      "analysts": [
+        {
+          "role": "高配当専用軍師",
+          "status": "検証中",
+          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
+        },
+        {
+          "role": "1着波乱担当",
+          "status": "検証中",
+          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
+        },
+        {
+          "role": "2着突っ込み担当",
+          "status": "検証中",
+          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
+        },
+        {
+          "role": "3着紛れ担当",
+          "status": "検証中",
+          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
+        },
+        {
+          "role": "ライン崩壊担当",
+          "status": "検証中",
+          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
+        },
+        {
+          "role": "細切れ戦担当",
+          "status": "検証中",
+          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
+        },
+        {
+          "role": "単騎担当",
+          "status": "検証中",
+          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
+        },
+        {
+          "role": "人気過剰担当",
+          "status": "検証中",
+          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
+        },
+        {
+          "role": "高配当期待値担当",
+          "status": "検証中",
+          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
+        },
+        {
+          "role": "データ確認担当",
+          "status": "検証中",
+          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
+        },
+        {
+          "role": "比較検証担当",
+          "status": "検証中",
+          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
+        }
+      ],
+      "comparison": {
+        "version": "third_focus_v1",
+        "automatic_promotion": false,
+        "variants": {
+          "current": [],
+          "third_focus": []
+        }
+      },
+      "risk_coordination": {
+        "chaos_index": 47.13,
+        "risk_level": "中",
+        "line_collapse_probability": null,
+        "scenario_probability": null,
+        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
+      },
+      "analysis_rating": "見送り"
+    },
+    {
+      "race_id": "084620261110",
+      "venue": "富山",
+      "race_no": 8,
+      "version": "high_payout_v1",
+      "rating": "見送り",
+      "expectation_score": 0,
+      "recommended_count": 0,
+      "patterns": [],
+      "tickets": [],
+      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
+      "unknowns": [
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
+        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+      ],
+      "probability_method": "geometric_model_market_estimate_uncalibrated",
+      "minimum_probability": 0.001,
+      "minimum_ev": 1.25,
+      "automatic_purchase": false,
+      "analysts": [
+        {
+          "role": "高配当専用軍師",
+          "status": "検証中",
+          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
+        },
+        {
+          "role": "1着波乱担当",
+          "status": "検証中",
+          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
+        },
+        {
+          "role": "2着突っ込み担当",
+          "status": "検証中",
+          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
+        },
+        {
+          "role": "3着紛れ担当",
+          "status": "検証中",
+          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
+        },
+        {
+          "role": "ライン崩壊担当",
+          "status": "検証中",
+          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
+        },
+        {
+          "role": "細切れ戦担当",
+          "status": "検証中",
+          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
+        },
+        {
+          "role": "単騎担当",
+          "status": "検証中",
+          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
+        },
+        {
+          "role": "人気過剰担当",
+          "status": "検証中",
+          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
+        },
+        {
+          "role": "高配当期待値担当",
+          "status": "検証中",
+          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
+        },
+        {
+          "role": "データ確認担当",
+          "status": "検証中",
+          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
+        },
+        {
+          "role": "比較検証担当",
+          "status": "検証中",
+          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
+        }
+      ],
+      "comparison": {
+        "version": "third_focus_v1",
+        "automatic_promotion": false,
+        "variants": {
+          "current": [],
+          "third_focus": []
+        }
+      },
+      "risk_coordination": {
+        "chaos_index": 44.91,
+        "risk_level": "中",
+        "line_collapse_probability": null,
+        "scenario_probability": null,
+        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
+      },
+      "analysis_rating": "見送り"
+    },
+    {
+      "race_id": "098420261110",
+      "venue": "武雄",
+      "race_no": 9,
+      "version": "high_payout_v1",
+      "rating": "見送り",
+      "expectation_score": 0,
+      "recommended_count": 0,
+      "patterns": [],
+      "tickets": [],
+      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
+      "unknowns": [
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
+        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+      ],
+      "probability_method": "geometric_model_market_estimate_uncalibrated",
+      "minimum_probability": 0.001,
+      "minimum_ev": 1.25,
+      "automatic_purchase": false,
+      "analysts": [
+        {
+          "role": "高配当専用軍師",
+          "status": "検証中",
+          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
+        },
+        {
+          "role": "1着波乱担当",
+          "status": "検証中",
+          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
+        },
+        {
+          "role": "2着突っ込み担当",
+          "status": "検証中",
+          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
+        },
+        {
+          "role": "3着紛れ担当",
+          "status": "検証中",
+          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
+        },
+        {
+          "role": "ライン崩壊担当",
+          "status": "検証中",
+          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
+        },
+        {
+          "role": "細切れ戦担当",
+          "status": "検証中",
+          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
+        },
+        {
+          "role": "単騎担当",
+          "status": "検証中",
+          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
+        },
+        {
+          "role": "人気過剰担当",
+          "status": "検証中",
+          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
+        },
+        {
+          "role": "高配当期待値担当",
+          "status": "検証中",
+          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
+        },
+        {
+          "role": "データ確認担当",
+          "status": "検証中",
+          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
+        },
+        {
+          "role": "比較検証担当",
+          "status": "検証中",
+          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
+        }
+      ],
+      "comparison": {
+        "version": "third_focus_v1",
+        "automatic_promotion": false,
+        "variants": {
+          "current": [],
+          "third_focus": []
+        }
+      },
+      "risk_coordination": {
+        "chaos_index": 66.37,
+        "risk_level": "高",
+        "line_collapse_probability": null,
+        "scenario_probability": null,
+        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
+      },
+      "analysis_rating": "見送り"
+    },
+    {
+      "race_id": "094620261110",
+      "venue": "富山",
+      "race_no": 9,
+      "version": "high_payout_v1",
+      "rating": "見送り",
+      "expectation_score": 0,
+      "recommended_count": 0,
+      "patterns": [],
+      "tickets": [],
+      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
+      "unknowns": [
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
+        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+      ],
+      "probability_method": "geometric_model_market_estimate_uncalibrated",
+      "minimum_probability": 0.001,
+      "minimum_ev": 1.25,
+      "automatic_purchase": false,
+      "analysts": [
+        {
+          "role": "高配当専用軍師",
+          "status": "検証中",
+          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
+        },
+        {
+          "role": "1着波乱担当",
+          "status": "検証中",
+          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
+        },
+        {
+          "role": "2着突っ込み担当",
+          "status": "検証中",
+          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
+        },
+        {
+          "role": "3着紛れ担当",
+          "status": "検証中",
+          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
+        },
+        {
+          "role": "ライン崩壊担当",
+          "status": "検証中",
+          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
+        },
+        {
+          "role": "細切れ戦担当",
+          "status": "検証中",
+          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
+        },
+        {
+          "role": "単騎担当",
+          "status": "検証中",
+          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
+        },
+        {
+          "role": "人気過剰担当",
+          "status": "検証中",
+          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
+        },
+        {
+          "role": "高配当期待値担当",
+          "status": "検証中",
+          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
+        },
+        {
+          "role": "データ確認担当",
+          "status": "検証中",
+          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
+        },
+        {
+          "role": "比較検証担当",
+          "status": "検証中",
+          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
+        }
+      ],
+      "comparison": {
+        "version": "third_focus_v1",
+        "automatic_promotion": false,
+        "variants": {
+          "current": [],
+          "third_focus": []
+        }
+      },
+      "risk_coordination": {
+        "chaos_index": 52.99,
+        "risk_level": "高",
+        "line_collapse_probability": null,
+        "scenario_probability": null,
+        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
+      },
+      "analysis_rating": "見送り"
+    },
+    {
+      "race_id": "108420261110",
+      "venue": "武雄",
+      "race_no": 10,
+      "version": "high_payout_v1",
+      "rating": "見送り",
+      "expectation_score": 0,
+      "recommended_count": 0,
+      "patterns": [],
+      "tickets": [],
+      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
+      "unknowns": [
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
+        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+      ],
+      "probability_method": "geometric_model_market_estimate_uncalibrated",
+      "minimum_probability": 0.001,
+      "minimum_ev": 1.25,
+      "automatic_purchase": false,
+      "analysts": [
+        {
+          "role": "高配当専用軍師",
+          "status": "検証中",
+          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
+        },
+        {
+          "role": "1着波乱担当",
+          "status": "検証中",
+          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
+        },
+        {
+          "role": "2着突っ込み担当",
+          "status": "検証中",
+          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
+        },
+        {
+          "role": "3着紛れ担当",
+          "status": "検証中",
+          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
+        },
+        {
+          "role": "ライン崩壊担当",
+          "status": "検証中",
+          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
+        },
+        {
+          "role": "細切れ戦担当",
+          "status": "検証中",
+          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
+        },
+        {
+          "role": "単騎担当",
+          "status": "検証中",
+          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
+        },
+        {
+          "role": "人気過剰担当",
+          "status": "検証中",
+          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
+        },
+        {
+          "role": "高配当期待値担当",
+          "status": "検証中",
+          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
+        },
+        {
+          "role": "データ確認担当",
+          "status": "検証中",
+          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
+        },
+        {
+          "role": "比較検証担当",
+          "status": "検証中",
+          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
+        }
+      ],
+      "comparison": {
+        "version": "third_focus_v1",
+        "automatic_promotion": false,
+        "variants": {
+          "current": [],
+          "third_focus": []
+        }
+      },
+      "risk_coordination": {
+        "chaos_index": 43.77,
+        "risk_level": "中",
+        "line_collapse_probability": null,
+        "scenario_probability": null,
+        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
+      },
+      "analysis_rating": "見送り"
+    },
+    {
+      "race_id": "104620261110",
+      "venue": "富山",
+      "race_no": 10,
+      "version": "high_payout_v1",
+      "rating": "見送り",
+      "expectation_score": 0,
+      "recommended_count": 0,
+      "patterns": [],
+      "tickets": [],
+      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
+      "unknowns": [
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
+        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+      ],
+      "probability_method": "geometric_model_market_estimate_uncalibrated",
+      "minimum_probability": 0.001,
+      "minimum_ev": 1.25,
+      "automatic_purchase": false,
+      "analysts": [
+        {
+          "role": "高配当専用軍師",
+          "status": "検証中",
+          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
+        },
+        {
+          "role": "1着波乱担当",
+          "status": "検証中",
+          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
+        },
+        {
+          "role": "2着突っ込み担当",
+          "status": "検証中",
+          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
+        },
+        {
+          "role": "3着紛れ担当",
+          "status": "検証中",
+          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
+        },
+        {
+          "role": "ライン崩壊担当",
+          "status": "検証中",
+          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
+        },
+        {
+          "role": "細切れ戦担当",
+          "status": "検証中",
+          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
+        },
+        {
+          "role": "単騎担当",
+          "status": "検証中",
+          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
+        },
+        {
+          "role": "人気過剰担当",
+          "status": "検証中",
+          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
+        },
+        {
+          "role": "高配当期待値担当",
+          "status": "検証中",
+          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
+        },
+        {
+          "role": "データ確認担当",
+          "status": "検証中",
+          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
+        },
+        {
+          "role": "比較検証担当",
+          "status": "検証中",
+          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
+        }
+      ],
+      "comparison": {
+        "version": "third_focus_v1",
+        "automatic_promotion": false,
+        "variants": {
+          "current": [],
+          "third_focus": []
+        }
+      },
+      "risk_coordination": {
+        "chaos_index": 39.62,
+        "risk_level": "中",
+        "line_collapse_probability": null,
+        "scenario_probability": null,
+        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
+      },
+      "analysis_rating": "見送り"
+    },
+    {
+      "race_id": "118420261110",
+      "venue": "武雄",
       "race_no": 11,
       "version": "high_payout_v1",
       "rating": "見送り",
@@ -3916,7 +3358,193 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 55.42,
+        "chaos_index": 39.95,
+        "risk_level": "中",
+        "line_collapse_probability": null,
+        "scenario_probability": null,
+        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
+      },
+      "analysis_rating": "見送り"
+    },
+    {
+      "race_id": "013120261110",
+      "venue": "松戸",
+      "race_no": 1,
+      "version": "high_payout_v1",
+      "rating": "見送り",
+      "expectation_score": 0,
+      "recommended_count": 0,
+      "patterns": [],
+      "tickets": [],
+      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
+      "unknowns": [
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
+        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+      ],
+      "probability_method": "geometric_model_market_estimate_uncalibrated",
+      "minimum_probability": 0.001,
+      "minimum_ev": 1.25,
+      "automatic_purchase": false,
+      "analysts": [
+        {
+          "role": "高配当専用軍師",
+          "status": "検証中",
+          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
+        },
+        {
+          "role": "1着波乱担当",
+          "status": "検証中",
+          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
+        },
+        {
+          "role": "2着突っ込み担当",
+          "status": "検証中",
+          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
+        },
+        {
+          "role": "3着紛れ担当",
+          "status": "検証中",
+          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
+        },
+        {
+          "role": "ライン崩壊担当",
+          "status": "検証中",
+          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
+        },
+        {
+          "role": "細切れ戦担当",
+          "status": "検証中",
+          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
+        },
+        {
+          "role": "単騎担当",
+          "status": "検証中",
+          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
+        },
+        {
+          "role": "人気過剰担当",
+          "status": "検証中",
+          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
+        },
+        {
+          "role": "高配当期待値担当",
+          "status": "検証中",
+          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
+        },
+        {
+          "role": "データ確認担当",
+          "status": "検証中",
+          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
+        },
+        {
+          "role": "比較検証担当",
+          "status": "検証中",
+          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
+        }
+      ],
+      "comparison": {
+        "version": "third_focus_v1",
+        "automatic_promotion": false,
+        "variants": {
+          "current": [],
+          "third_focus": []
+        }
+      },
+      "risk_coordination": {
+        "chaos_index": 49.78,
+        "risk_level": "中",
+        "line_collapse_probability": null,
+        "scenario_probability": null,
+        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
+      },
+      "analysis_rating": "見送り"
+    },
+    {
+      "race_id": "114620261110",
+      "venue": "富山",
+      "race_no": 11,
+      "version": "high_payout_v1",
+      "rating": "見送り",
+      "expectation_score": 0,
+      "recommended_count": 0,
+      "patterns": [],
+      "tickets": [],
+      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
+      "unknowns": [
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
+        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+      ],
+      "probability_method": "geometric_model_market_estimate_uncalibrated",
+      "minimum_probability": 0.001,
+      "minimum_ev": 1.25,
+      "automatic_purchase": false,
+      "analysts": [
+        {
+          "role": "高配当専用軍師",
+          "status": "検証中",
+          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
+        },
+        {
+          "role": "1着波乱担当",
+          "status": "検証中",
+          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
+        },
+        {
+          "role": "2着突っ込み担当",
+          "status": "検証中",
+          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
+        },
+        {
+          "role": "3着紛れ担当",
+          "status": "検証中",
+          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
+        },
+        {
+          "role": "ライン崩壊担当",
+          "status": "検証中",
+          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
+        },
+        {
+          "role": "細切れ戦担当",
+          "status": "検証中",
+          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
+        },
+        {
+          "role": "単騎担当",
+          "status": "検証中",
+          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
+        },
+        {
+          "role": "人気過剰担当",
+          "status": "検証中",
+          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
+        },
+        {
+          "role": "高配当期待値担当",
+          "status": "検証中",
+          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
+        },
+        {
+          "role": "データ確認担当",
+          "status": "検証中",
+          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
+        },
+        {
+          "role": "比較検証担当",
+          "status": "検証中",
+          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
+        }
+      ],
+      "comparison": {
+        "version": "third_focus_v1",
+        "automatic_promotion": false,
+        "variants": {
+          "current": [],
+          "third_focus": []
+        }
+      },
+      "risk_coordination": {
+        "chaos_index": 52.78,
         "risk_level": "高",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -3925,7 +3553,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "012420261109",
+      "race_id": "012420261110",
       "venue": "宇都宮",
       "race_no": 1,
       "version": "high_payout_v1",
@@ -4009,7 +3637,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 39.03,
+        "chaos_index": 37.37,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -4018,7 +3646,100 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "128420261109",
+      "race_id": "023120261110",
+      "venue": "松戸",
+      "race_no": 2,
+      "version": "high_payout_v1",
+      "rating": "見送り",
+      "expectation_score": 0,
+      "recommended_count": 0,
+      "patterns": [],
+      "tickets": [],
+      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
+      "unknowns": [
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
+        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+      ],
+      "probability_method": "geometric_model_market_estimate_uncalibrated",
+      "minimum_probability": 0.001,
+      "minimum_ev": 1.25,
+      "automatic_purchase": false,
+      "analysts": [
+        {
+          "role": "高配当専用軍師",
+          "status": "検証中",
+          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
+        },
+        {
+          "role": "1着波乱担当",
+          "status": "検証中",
+          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
+        },
+        {
+          "role": "2着突っ込み担当",
+          "status": "検証中",
+          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
+        },
+        {
+          "role": "3着紛れ担当",
+          "status": "検証中",
+          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
+        },
+        {
+          "role": "ライン崩壊担当",
+          "status": "検証中",
+          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
+        },
+        {
+          "role": "細切れ戦担当",
+          "status": "検証中",
+          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
+        },
+        {
+          "role": "単騎担当",
+          "status": "検証中",
+          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
+        },
+        {
+          "role": "人気過剰担当",
+          "status": "検証中",
+          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
+        },
+        {
+          "role": "高配当期待値担当",
+          "status": "検証中",
+          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
+        },
+        {
+          "role": "データ確認担当",
+          "status": "検証中",
+          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
+        },
+        {
+          "role": "比較検証担当",
+          "status": "検証中",
+          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
+        }
+      ],
+      "comparison": {
+        "version": "third_focus_v1",
+        "automatic_promotion": false,
+        "variants": {
+          "current": [],
+          "third_focus": []
+        }
+      },
+      "risk_coordination": {
+        "chaos_index": 55.82,
+        "risk_level": "高",
+        "line_collapse_probability": null,
+        "scenario_probability": null,
+        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
+      },
+      "analysis_rating": "見送り"
+    },
+    {
+      "race_id": "128420261110",
       "venue": "武雄",
       "race_no": 12,
       "version": "high_payout_v1",
@@ -4102,7 +3823,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 55.14,
+        "chaos_index": 61.08,
         "risk_level": "高",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -4111,193 +3832,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "023120261109",
-      "venue": "松戸",
-      "race_no": 2,
-      "version": "high_payout_v1",
-      "rating": "見送り",
-      "expectation_score": 0,
-      "recommended_count": 0,
-      "patterns": [],
-      "tickets": [],
-      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
-      "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
-      ],
-      "probability_method": "geometric_model_market_estimate_uncalibrated",
-      "minimum_probability": 0.001,
-      "minimum_ev": 1.25,
-      "automatic_purchase": false,
-      "analysts": [
-        {
-          "role": "高配当専用軍師",
-          "status": "検証中",
-          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
-        },
-        {
-          "role": "1着波乱担当",
-          "status": "検証中",
-          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
-        },
-        {
-          "role": "2着突っ込み担当",
-          "status": "検証中",
-          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
-        },
-        {
-          "role": "3着紛れ担当",
-          "status": "検証中",
-          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
-        },
-        {
-          "role": "ライン崩壊担当",
-          "status": "検証中",
-          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
-        },
-        {
-          "role": "細切れ戦担当",
-          "status": "検証中",
-          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
-        },
-        {
-          "role": "単騎担当",
-          "status": "検証中",
-          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
-        },
-        {
-          "role": "人気過剰担当",
-          "status": "検証中",
-          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
-        },
-        {
-          "role": "高配当期待値担当",
-          "status": "検証中",
-          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
-        },
-        {
-          "role": "データ確認担当",
-          "status": "検証中",
-          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
-        },
-        {
-          "role": "比較検証担当",
-          "status": "検証中",
-          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
-        }
-      ],
-      "comparison": {
-        "version": "third_focus_v1",
-        "automatic_promotion": false,
-        "variants": {
-          "current": [],
-          "third_focus": []
-        }
-      },
-      "risk_coordination": {
-        "chaos_index": 45.44,
-        "risk_level": "中",
-        "line_collapse_probability": null,
-        "scenario_probability": null,
-        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "analysis_rating": "見送り"
-    },
-    {
-      "race_id": "127420261109",
-      "venue": "高知",
-      "race_no": 12,
-      "version": "high_payout_v1",
-      "rating": "見送り",
-      "expectation_score": 0,
-      "recommended_count": 0,
-      "patterns": [],
-      "tickets": [],
-      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
-      "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
-      ],
-      "probability_method": "geometric_model_market_estimate_uncalibrated",
-      "minimum_probability": 0.001,
-      "minimum_ev": 1.25,
-      "automatic_purchase": false,
-      "analysts": [
-        {
-          "role": "高配当専用軍師",
-          "status": "検証中",
-          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
-        },
-        {
-          "role": "1着波乱担当",
-          "status": "検証中",
-          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
-        },
-        {
-          "role": "2着突っ込み担当",
-          "status": "検証中",
-          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
-        },
-        {
-          "role": "3着紛れ担当",
-          "status": "検証中",
-          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
-        },
-        {
-          "role": "ライン崩壊担当",
-          "status": "検証中",
-          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
-        },
-        {
-          "role": "細切れ戦担当",
-          "status": "検証中",
-          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
-        },
-        {
-          "role": "単騎担当",
-          "status": "検証中",
-          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
-        },
-        {
-          "role": "人気過剰担当",
-          "status": "検証中",
-          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
-        },
-        {
-          "role": "高配当期待値担当",
-          "status": "検証中",
-          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
-        },
-        {
-          "role": "データ確認担当",
-          "status": "検証中",
-          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
-        },
-        {
-          "role": "比較検証担当",
-          "status": "検証中",
-          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
-        }
-      ],
-      "comparison": {
-        "version": "third_focus_v1",
-        "automatic_promotion": false,
-        "variants": {
-          "current": [],
-          "third_focus": []
-        }
-      },
-      "risk_coordination": {
-        "chaos_index": 47.77,
-        "risk_level": "中",
-        "line_collapse_probability": null,
-        "scenario_probability": null,
-        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "analysis_rating": "見送り"
-    },
-    {
-      "race_id": "022420261109",
+      "race_id": "022420261110",
       "venue": "宇都宮",
       "race_no": 2,
       "version": "high_payout_v1",
@@ -4381,8 +3916,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 51.51,
-        "risk_level": "高",
+        "chaos_index": 42.75,
+        "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -4390,7 +3925,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "033120261109",
+      "race_id": "033120261110",
       "venue": "松戸",
       "race_no": 3,
       "version": "high_payout_v1",
@@ -4474,7 +4009,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 33.48,
+        "chaos_index": 40.4,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -4483,7 +4018,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "032420261109",
+      "race_id": "032420261110",
       "venue": "宇都宮",
       "race_no": 3,
       "version": "high_payout_v1",
@@ -4567,8 +4102,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 22.24,
-        "risk_level": "低",
+        "chaos_index": 38.99,
+        "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -4576,7 +4111,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "043120261109",
+      "race_id": "043120261110",
       "venue": "松戸",
       "race_no": 4,
       "version": "high_payout_v1",
@@ -4660,7 +4195,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 36.05,
+        "chaos_index": 31.74,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -4669,7 +4204,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "042420261109",
+      "race_id": "042420261110",
       "venue": "宇都宮",
       "race_no": 4,
       "version": "high_payout_v1",
@@ -4753,8 +4288,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 35.7,
-        "risk_level": "中",
+        "chaos_index": 54.4,
+        "risk_level": "高",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -4762,7 +4297,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "053120261109",
+      "race_id": "053120261110",
       "venue": "松戸",
       "race_no": 5,
       "version": "high_payout_v1",
@@ -4846,8 +4381,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 52.32,
-        "risk_level": "高",
+        "chaos_index": 39.11,
+        "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -4855,7 +4390,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "052420261109",
+      "race_id": "052420261110",
       "venue": "宇都宮",
       "race_no": 5,
       "version": "high_payout_v1",
@@ -4939,8 +4474,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 53.04,
-        "risk_level": "高",
+        "chaos_index": 45.21,
+        "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -4948,7 +4483,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "063120261109",
+      "race_id": "063120261110",
       "venue": "松戸",
       "race_no": 6,
       "version": "high_payout_v1",
@@ -5032,7 +4567,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 53.41,
+        "chaos_index": 64.6,
         "risk_level": "高",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -5041,7 +4576,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "062420261109",
+      "race_id": "062420261110",
       "venue": "宇都宮",
       "race_no": 6,
       "version": "high_payout_v1",
@@ -5050,325 +4585,6 @@
       "recommended_count": 0,
       "patterns": [],
       "tickets": [],
-      "skip_reason": "このレースは穴予想見送り",
-      "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
-      ],
-      "probability_method": "geometric_model_market_estimate_uncalibrated",
-      "minimum_probability": 0.001,
-      "minimum_ev": 1.25,
-      "automatic_purchase": false,
-      "analysts": [
-        {
-          "role": "高配当専用軍師",
-          "status": "検証中",
-          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
-        },
-        {
-          "role": "1着波乱担当",
-          "status": "検証中",
-          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
-        },
-        {
-          "role": "2着突っ込み担当",
-          "status": "検証中",
-          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
-        },
-        {
-          "role": "3着紛れ担当",
-          "status": "検証中",
-          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
-        },
-        {
-          "role": "ライン崩壊担当",
-          "status": "検証中",
-          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
-        },
-        {
-          "role": "細切れ戦担当",
-          "status": "検証中",
-          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
-        },
-        {
-          "role": "単騎担当",
-          "status": "検証中",
-          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
-        },
-        {
-          "role": "人気過剰担当",
-          "status": "検証中",
-          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
-        },
-        {
-          "role": "高配当期待値担当",
-          "status": "検証中",
-          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
-        },
-        {
-          "role": "データ確認担当",
-          "status": "検証中",
-          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
-        },
-        {
-          "role": "比較検証担当",
-          "status": "検証中",
-          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
-        }
-      ],
-      "comparison": {
-        "version": "third_focus_v1",
-        "automatic_promotion": false,
-        "variants": {
-          "current": [],
-          "third_focus": []
-        }
-      },
-      "risk_coordination": {
-        "chaos_index": 37.72,
-        "risk_level": "中",
-        "line_collapse_probability": null,
-        "scenario_probability": null,
-        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      }
-    },
-    {
-      "race_id": "073120261109",
-      "venue": "松戸",
-      "race_no": 7,
-      "version": "high_payout_v1",
-      "rating": "B",
-      "expectation_score": 63,
-      "recommended_count": 7,
-      "patterns": [
-        "2着荒れ",
-        "3着荒れ"
-      ],
-      "tickets": [
-        {
-          "buy": "3-1-6",
-          "odds": 603.8,
-          "probability": 0.0037626834732112486,
-          "ev": 2.2719082811249516,
-          "patterns": [
-            "2着荒れ"
-          ]
-        },
-        {
-          "buy": "5-1-6",
-          "odds": 377.4,
-          "probability": 0.00516735493548389,
-          "ev": 1.95015975265162,
-          "patterns": [
-            "2着荒れ"
-          ]
-        },
-        {
-          "buy": "5-1-7",
-          "odds": 106.5,
-          "probability": 0.017509031299600904,
-          "ev": 1.8647118334074964,
-          "patterns": [
-            "2着荒れ"
-          ]
-        },
-        {
-          "buy": "3-1-2",
-          "odds": 369.7,
-          "probability": 0.004760591480299939,
-          "ev": 1.7599906702668875,
-          "patterns": [
-            "2着荒れ"
-          ]
-        },
-        {
-          "buy": "3-1-7",
-          "odds": 105.3,
-          "probability": 0.016218016437749755,
-          "ev": 1.7077571308950492,
-          "patterns": [
-            "2着荒れ"
-          ]
-        },
-        {
-          "buy": "5-4-7",
-          "odds": 149.7,
-          "probability": 0.010025965437605545,
-          "ev": 1.50088702600955,
-          "patterns": [
-            "3着荒れ"
-          ]
-        },
-        {
-          "buy": "3-4-7",
-          "odds": 170.9,
-          "probability": 0.008728401892158446,
-          "ev": 1.4916838833698784,
-          "patterns": [
-            "3着荒れ"
-          ]
-        }
-      ],
-      "skip_reason": "",
-      "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。"
-      ],
-      "probability_method": "geometric_model_market_estimate_uncalibrated",
-      "minimum_probability": 0.001,
-      "minimum_ev": 1.25,
-      "automatic_purchase": false,
-      "analysts": [
-        {
-          "role": "高配当専用軍師",
-          "status": "検証中",
-          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
-        },
-        {
-          "role": "1着波乱担当",
-          "status": "検証中",
-          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
-        },
-        {
-          "role": "2着突っ込み担当",
-          "status": "検証中",
-          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
-        },
-        {
-          "role": "3着紛れ担当",
-          "status": "検証中",
-          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
-        },
-        {
-          "role": "ライン崩壊担当",
-          "status": "検証中",
-          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
-        },
-        {
-          "role": "細切れ戦担当",
-          "status": "検証中",
-          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
-        },
-        {
-          "role": "単騎担当",
-          "status": "検証中",
-          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
-        },
-        {
-          "role": "人気過剰担当",
-          "status": "検証中",
-          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
-        },
-        {
-          "role": "高配当期待値担当",
-          "status": "検証中",
-          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
-        },
-        {
-          "role": "データ確認担当",
-          "status": "検証中",
-          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
-        },
-        {
-          "role": "比較検証担当",
-          "status": "検証中",
-          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
-        }
-      ],
-      "comparison": {
-        "version": "third_focus_v1",
-        "automatic_promotion": false,
-        "variants": {
-          "current": [
-            {
-              "buy": "3-1-6",
-              "odds": 603.8,
-              "probability": 0.0037626834732112486,
-              "ev": 2.2719082811249516
-            },
-            {
-              "buy": "5-1-6",
-              "odds": 377.4,
-              "probability": 0.00516735493548389,
-              "ev": 1.95015975265162
-            },
-            {
-              "buy": "5-1-7",
-              "odds": 106.5,
-              "probability": 0.017509031299600904,
-              "ev": 1.8647118334074964
-            },
-            {
-              "buy": "3-1-2",
-              "odds": 369.7,
-              "probability": 0.004760591480299939,
-              "ev": 1.7599906702668875
-            },
-            {
-              "buy": "3-1-7",
-              "odds": 105.3,
-              "probability": 0.016218016437749755,
-              "ev": 1.7077571308950492
-            },
-            {
-              "buy": "5-4-7",
-              "odds": 149.7,
-              "probability": 0.010025965437605545,
-              "ev": 1.50088702600955
-            },
-            {
-              "buy": "3-4-7",
-              "odds": 170.9,
-              "probability": 0.008728401892158446,
-              "ev": 1.4916838833698784
-            }
-          ],
-          "third_focus": [
-            {
-              "buy": "5-4-7",
-              "odds": 149.7,
-              "probability": 0.010025965437605545,
-              "ev": 1.50088702600955
-            },
-            {
-              "buy": "3-4-7",
-              "odds": 170.9,
-              "probability": 0.008728401892158446,
-              "ev": 1.4916838833698784
-            }
-          ]
-        },
-        "decision": "本番は現在方式。3着重点方式は同じ上限点数・同じ最低EVで成立確率順に比較。"
-      },
-      "risk_coordination": {
-        "chaos_index": 46.13,
-        "risk_level": "中",
-        "line_collapse_probability": null,
-        "scenario_probability": null,
-        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "specialist_analysis": {
-        "細切れ戦": {
-          "status": "分析可能",
-          "line_count": 3
-        },
-        "単騎": {
-          "status": "分析可能",
-          "cars": []
-        }
-      },
-      "strong_ev_candidate_count": 6,
-      "twelve_point_min_ev": 1.5
-    },
-    {
-      "race_id": "072420261109",
-      "venue": "宇都宮",
-      "race_no": 7,
-      "version": "high_payout_v1",
-      "rating": "見送り",
-      "expectation_score": 0,
-      "recommended_count": 0,
-      "patterns": [],
-      "tickets": [],
       "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
       "unknowns": [
         "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
@@ -5444,100 +4660,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 34.97,
-        "risk_level": "中",
-        "line_collapse_probability": null,
-        "scenario_probability": null,
-        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
-      },
-      "analysis_rating": "見送り"
-    },
-    {
-      "race_id": "083120261109",
-      "venue": "松戸",
-      "race_no": 8,
-      "version": "high_payout_v1",
-      "rating": "見送り",
-      "expectation_score": 0,
-      "recommended_count": 0,
-      "patterns": [],
-      "tickets": [],
-      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
-      "unknowns": [
-        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
-        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
-      ],
-      "probability_method": "geometric_model_market_estimate_uncalibrated",
-      "minimum_probability": 0.001,
-      "minimum_ev": 1.25,
-      "automatic_purchase": false,
-      "analysts": [
-        {
-          "role": "高配当専用軍師",
-          "status": "検証中",
-          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
-        },
-        {
-          "role": "1着波乱担当",
-          "status": "検証中",
-          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
-        },
-        {
-          "role": "2着突っ込み担当",
-          "status": "検証中",
-          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
-        },
-        {
-          "role": "3着紛れ担当",
-          "status": "検証中",
-          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
-        },
-        {
-          "role": "ライン崩壊担当",
-          "status": "検証中",
-          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
-        },
-        {
-          "role": "細切れ戦担当",
-          "status": "検証中",
-          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
-        },
-        {
-          "role": "単騎担当",
-          "status": "検証中",
-          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
-        },
-        {
-          "role": "人気過剰担当",
-          "status": "検証中",
-          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
-        },
-        {
-          "role": "高配当期待値担当",
-          "status": "検証中",
-          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
-        },
-        {
-          "role": "データ確認担当",
-          "status": "検証中",
-          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
-        },
-        {
-          "role": "比較検証担当",
-          "status": "検証中",
-          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
-        }
-      ],
-      "comparison": {
-        "version": "third_focus_v1",
-        "automatic_promotion": false,
-        "variants": {
-          "current": [],
-          "third_focus": []
-        }
-      },
-      "risk_coordination": {
-        "chaos_index": 51.0,
+        "chaos_index": 50.26,
         "risk_level": "高",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -5546,7 +4669,286 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "082420261109",
+      "race_id": "073120261110",
+      "venue": "松戸",
+      "race_no": 7,
+      "version": "high_payout_v1",
+      "rating": "見送り",
+      "expectation_score": 0,
+      "recommended_count": 0,
+      "patterns": [],
+      "tickets": [],
+      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
+      "unknowns": [
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
+        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+      ],
+      "probability_method": "geometric_model_market_estimate_uncalibrated",
+      "minimum_probability": 0.001,
+      "minimum_ev": 1.25,
+      "automatic_purchase": false,
+      "analysts": [
+        {
+          "role": "高配当専用軍師",
+          "status": "検証中",
+          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
+        },
+        {
+          "role": "1着波乱担当",
+          "status": "検証中",
+          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
+        },
+        {
+          "role": "2着突っ込み担当",
+          "status": "検証中",
+          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
+        },
+        {
+          "role": "3着紛れ担当",
+          "status": "検証中",
+          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
+        },
+        {
+          "role": "ライン崩壊担当",
+          "status": "検証中",
+          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
+        },
+        {
+          "role": "細切れ戦担当",
+          "status": "検証中",
+          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
+        },
+        {
+          "role": "単騎担当",
+          "status": "検証中",
+          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
+        },
+        {
+          "role": "人気過剰担当",
+          "status": "検証中",
+          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
+        },
+        {
+          "role": "高配当期待値担当",
+          "status": "検証中",
+          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
+        },
+        {
+          "role": "データ確認担当",
+          "status": "検証中",
+          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
+        },
+        {
+          "role": "比較検証担当",
+          "status": "検証中",
+          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
+        }
+      ],
+      "comparison": {
+        "version": "third_focus_v1",
+        "automatic_promotion": false,
+        "variants": {
+          "current": [],
+          "third_focus": []
+        }
+      },
+      "risk_coordination": {
+        "chaos_index": 60.58,
+        "risk_level": "高",
+        "line_collapse_probability": null,
+        "scenario_probability": null,
+        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
+      },
+      "analysis_rating": "見送り"
+    },
+    {
+      "race_id": "072420261110",
+      "venue": "宇都宮",
+      "race_no": 7,
+      "version": "high_payout_v1",
+      "rating": "見送り",
+      "expectation_score": 0,
+      "recommended_count": 0,
+      "patterns": [],
+      "tickets": [],
+      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
+      "unknowns": [
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
+        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+      ],
+      "probability_method": "geometric_model_market_estimate_uncalibrated",
+      "minimum_probability": 0.001,
+      "minimum_ev": 1.25,
+      "automatic_purchase": false,
+      "analysts": [
+        {
+          "role": "高配当専用軍師",
+          "status": "検証中",
+          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
+        },
+        {
+          "role": "1着波乱担当",
+          "status": "検証中",
+          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
+        },
+        {
+          "role": "2着突っ込み担当",
+          "status": "検証中",
+          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
+        },
+        {
+          "role": "3着紛れ担当",
+          "status": "検証中",
+          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
+        },
+        {
+          "role": "ライン崩壊担当",
+          "status": "検証中",
+          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
+        },
+        {
+          "role": "細切れ戦担当",
+          "status": "検証中",
+          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
+        },
+        {
+          "role": "単騎担当",
+          "status": "検証中",
+          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
+        },
+        {
+          "role": "人気過剰担当",
+          "status": "検証中",
+          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
+        },
+        {
+          "role": "高配当期待値担当",
+          "status": "検証中",
+          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
+        },
+        {
+          "role": "データ確認担当",
+          "status": "検証中",
+          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
+        },
+        {
+          "role": "比較検証担当",
+          "status": "検証中",
+          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
+        }
+      ],
+      "comparison": {
+        "version": "third_focus_v1",
+        "automatic_promotion": false,
+        "variants": {
+          "current": [],
+          "third_focus": []
+        }
+      },
+      "risk_coordination": {
+        "chaos_index": 64.33,
+        "risk_level": "高",
+        "line_collapse_probability": null,
+        "scenario_probability": null,
+        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
+      },
+      "analysis_rating": "見送り"
+    },
+    {
+      "race_id": "083120261110",
+      "venue": "松戸",
+      "race_no": 8,
+      "version": "high_payout_v1",
+      "rating": "見送り",
+      "expectation_score": 0,
+      "recommended_count": 0,
+      "patterns": [],
+      "tickets": [],
+      "skip_reason": "このレースは穴予想見送り（締切時刻未取得・締切5分以内・対象時間外）",
+      "unknowns": [
+        "番手競り・分断・コース取り・当日状態・展開成立確率・類似パターン成績は未検証。",
+        "全組み合わせの有効オッズが不足。市場確率との比較不可。"
+      ],
+      "probability_method": "geometric_model_market_estimate_uncalibrated",
+      "minimum_probability": 0.001,
+      "minimum_ev": 1.25,
+      "automatic_purchase": false,
+      "analysts": [
+        {
+          "role": "高配当専用軍師",
+          "status": "検証中",
+          "evidence_scope": "各担当の根拠・市場乖離・リスクと候補数から出す／見送る・点数を決定。"
+        },
+        {
+          "role": "1着波乱担当",
+          "status": "検証中",
+          "evidence_scope": "市場1着人気とAI1着順位、荒れ指数。競り・仕掛け不発・当日状態は未確認。"
+        },
+        {
+          "role": "2着突っ込み担当",
+          "status": "検証中",
+          "evidence_scope": "市場人気薄と2着スコアの一致。番手差し・外伸び・コース取りは未確認。"
+        },
+        {
+          "role": "3着紛れ担当",
+          "status": "検証中",
+          "evidence_scope": "人気薄と3着スコアの一致。内残り・落車回避・流れ込みは未確認。"
+        },
+        {
+          "role": "ライン崩壊担当",
+          "status": "検証中",
+          "evidence_scope": "並び確認済みの別線組み合わせを仮説評価。分断・援護失敗・崩壊確率は未確認。"
+        },
+        {
+          "role": "細切れ戦担当",
+          "status": "検証中",
+          "evidence_scope": "確認済み並びが4ライン以上で、別線の上位着順スコアを評価。先行争い・仕掛け時刻は未確認。"
+        },
+        {
+          "role": "単騎担当",
+          "status": "検証中",
+          "evidence_scope": "確認済みの1人ラインと着順別スコアを照合。位置取り・当日の追走先は未確認。"
+        },
+        {
+          "role": "人気過剰担当",
+          "status": "検証中",
+          "evidence_scope": "全三連単市場の1着人気順位とAI評価順位の乖離。地元・知名度の影響は未確認。"
+        },
+        {
+          "role": "高配当期待値担当",
+          "status": "検証中",
+          "evidence_scope": "全市場とモデルを合わせた暫定確率・EV・最低確率を審査。過去類似パターンは未確認。"
+        },
+        {
+          "role": "データ確認担当",
+          "status": "検証中",
+          "evidence_scope": "全組み合わせオッズを確認。欠場・並び・取得時刻は取得情報の範囲だけ確認。"
+        },
+        {
+          "role": "比較検証担当",
+          "status": "検証中",
+          "evidence_scope": "締切前に現在方式と3着重点方式を同時保存。確定結果で別集計し、自動採用しない。"
+        }
+      ],
+      "comparison": {
+        "version": "third_focus_v1",
+        "automatic_promotion": false,
+        "variants": {
+          "current": [],
+          "third_focus": []
+        }
+      },
+      "risk_coordination": {
+        "chaos_index": 78.07,
+        "risk_level": "極高",
+        "line_collapse_probability": null,
+        "scenario_probability": null,
+        "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
+      },
+      "analysis_rating": "見送り"
+    },
+    {
+      "race_id": "082420261110",
       "venue": "宇都宮",
       "race_no": 8,
       "version": "high_payout_v1",
@@ -5630,8 +5032,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 38.78,
-        "risk_level": "中",
+        "chaos_index": 53.08,
+        "risk_level": "高",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -5639,7 +5041,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "093120261109",
+      "race_id": "093120261110",
       "venue": "松戸",
       "race_no": 9,
       "version": "high_payout_v1",
@@ -5723,7 +5125,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 47.16,
+        "chaos_index": 32.94,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -5732,7 +5134,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "092420261109",
+      "race_id": "092420261110",
       "venue": "宇都宮",
       "race_no": 9,
       "version": "high_payout_v1",
@@ -5816,7 +5218,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 35.26,
+        "chaos_index": 37.14,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -5825,7 +5227,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "103120261109",
+      "race_id": "103120261110",
       "venue": "松戸",
       "race_no": 10,
       "version": "high_payout_v1",
@@ -5909,8 +5311,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 34.78,
-        "risk_level": "中",
+        "chaos_index": 58.04,
+        "risk_level": "高",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -5918,7 +5320,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "102420261109",
+      "race_id": "102420261110",
       "venue": "宇都宮",
       "race_no": 10,
       "version": "high_payout_v1",
@@ -6002,8 +5404,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 51.68,
-        "risk_level": "高",
+        "chaos_index": 37.05,
+        "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -6011,7 +5413,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "113120261109",
+      "race_id": "113120261110",
       "venue": "松戸",
       "race_no": 11,
       "version": "high_payout_v1",
@@ -6095,7 +5497,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 33.43,
+        "chaos_index": 34.85,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -6104,7 +5506,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "112420261109",
+      "race_id": "112420261110",
       "venue": "宇都宮",
       "race_no": 11,
       "version": "high_payout_v1",
@@ -6188,8 +5590,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 51.46,
-        "risk_level": "高",
+        "chaos_index": 29.76,
+        "risk_level": "低",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -6197,7 +5599,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "123120261109",
+      "race_id": "123120261110",
       "venue": "松戸",
       "race_no": 12,
       "version": "high_payout_v1",
@@ -6281,7 +5683,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 33.82,
+        "chaos_index": 39.02,
         "risk_level": "中",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -6290,7 +5692,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "017520261109",
+      "race_id": "017520261110",
       "venue": "松山",
       "race_no": 1,
       "version": "high_payout_v1",
@@ -6374,8 +5776,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 12.42,
-        "risk_level": "低",
+        "chaos_index": 55.25,
+        "risk_level": "高",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -6383,7 +5785,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "015320261109",
+      "race_id": "015320261110",
       "venue": "奈良",
       "race_no": 1,
       "version": "high_payout_v1",
@@ -6467,8 +5869,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 40.01,
-        "risk_level": "中",
+        "chaos_index": 14.17,
+        "risk_level": "低",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -6476,7 +5878,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "027520261109",
+      "race_id": "027520261110",
       "venue": "松山",
       "race_no": 2,
       "version": "high_payout_v1",
@@ -6560,7 +5962,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 17.93,
+        "chaos_index": 14.53,
         "risk_level": "低",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -6569,7 +5971,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "025320261109",
+      "race_id": "025320261110",
       "venue": "奈良",
       "race_no": 2,
       "version": "high_payout_v1",
@@ -6653,7 +6055,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 11.32,
+        "chaos_index": 8.23,
         "risk_level": "低",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -6662,7 +6064,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "037520261109",
+      "race_id": "037520261110",
       "venue": "松山",
       "race_no": 3,
       "version": "high_payout_v1",
@@ -6746,7 +6148,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 12.59,
+        "chaos_index": 12.12,
         "risk_level": "低",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -6755,7 +6157,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "035320261109",
+      "race_id": "035320261110",
       "venue": "奈良",
       "race_no": 3,
       "version": "high_payout_v1",
@@ -6839,7 +6241,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 14.85,
+        "chaos_index": 13.98,
         "risk_level": "低",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -6848,7 +6250,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "047520261109",
+      "race_id": "047520261110",
       "venue": "松山",
       "race_no": 4,
       "version": "high_payout_v1",
@@ -6932,7 +6334,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 20.04,
+        "chaos_index": 10.36,
         "risk_level": "低",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -6941,7 +6343,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "045320261109",
+      "race_id": "045320261110",
       "venue": "奈良",
       "race_no": 4,
       "version": "high_payout_v1",
@@ -7025,7 +6427,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 14.14,
+        "chaos_index": 8.37,
         "risk_level": "低",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -7034,7 +6436,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "057520261109",
+      "race_id": "057520261110",
       "venue": "松山",
       "race_no": 5,
       "version": "high_payout_v1",
@@ -7118,8 +6520,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 37.81,
-        "risk_level": "中",
+        "chaos_index": 8.25,
+        "risk_level": "低",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -7127,7 +6529,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "055320261109",
+      "race_id": "055320261110",
       "venue": "奈良",
       "race_no": 5,
       "version": "high_payout_v1",
@@ -7211,8 +6613,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 34.05,
-        "risk_level": "中",
+        "chaos_index": 11.35,
+        "risk_level": "低",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -7220,7 +6622,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "067520261109",
+      "race_id": "067520261110",
       "venue": "松山",
       "race_no": 6,
       "version": "high_payout_v1",
@@ -7304,7 +6706,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 12.26,
+        "chaos_index": 29.48,
         "risk_level": "低",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -7313,7 +6715,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "065320261109",
+      "race_id": "065320261110",
       "venue": "奈良",
       "race_no": 6,
       "version": "high_payout_v1",
@@ -7397,7 +6799,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 11.93,
+        "chaos_index": 18.43,
         "risk_level": "低",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -7406,7 +6808,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "077520261109",
+      "race_id": "077520261110",
       "venue": "松山",
       "race_no": 7,
       "version": "high_payout_v1",
@@ -7490,7 +6892,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 25.85,
+        "chaos_index": 7.97,
         "risk_level": "低",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -7499,7 +6901,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "075320261109",
+      "race_id": "075320261110",
       "venue": "奈良",
       "race_no": 7,
       "version": "high_payout_v1",
@@ -7583,7 +6985,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 16.9,
+        "chaos_index": 11.76,
         "risk_level": "低",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -7592,7 +6994,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "087520261109",
+      "race_id": "087520261110",
       "venue": "松山",
       "race_no": 8,
       "version": "high_payout_v1",
@@ -7676,7 +7078,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 20.89,
+        "chaos_index": 13.4,
         "risk_level": "低",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -7685,7 +7087,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "085320261109",
+      "race_id": "085320261110",
       "venue": "奈良",
       "race_no": 8,
       "version": "high_payout_v1",
@@ -7769,7 +7171,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 14.65,
+        "chaos_index": 12.9,
         "risk_level": "低",
         "line_collapse_probability": null,
         "scenario_probability": null,
@@ -7778,7 +7180,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "097520261109",
+      "race_id": "097520261110",
       "venue": "松山",
       "race_no": 9,
       "version": "high_payout_v1",
@@ -7862,8 +7264,8 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 32.88,
-        "risk_level": "中",
+        "chaos_index": 17.94,
+        "risk_level": "低",
         "line_collapse_probability": null,
         "scenario_probability": null,
         "skip_recommendation": "順当寄りなら見送り。その他は各候補を審査。"
@@ -7871,7 +7273,7 @@
       "analysis_rating": "見送り"
     },
     {
-      "race_id": "095320261109",
+      "race_id": "095320261110",
       "venue": "奈良",
       "race_no": 9,
       "version": "high_payout_v1",
@@ -7955,7 +7357,7 @@
         }
       },
       "risk_coordination": {
-        "chaos_index": 13.64,
+        "chaos_index": 21.78,
         "risk_level": "低",
         "line_collapse_probability": null,
         "scenario_probability": null,
