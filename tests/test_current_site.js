@@ -1,10 +1,20 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
-const {expand,validate,status,copyText,officialRecord,archivedOfficialRows,attachOfficialResults,MODEL,MODEL_LABELS}=require('../site/current.js');
+const {expand,validate,status,copyText,officialRecord,archivedOfficialRows,attachOfficialResults,MODEL,MODEL_LABELS,jstDay,feedFreshness}=require('../site/current.js');
 assert.deepEqual(expand([{first:[1],second:[1,2],third:[2,3,4]},{first:[1],second:[2],third:[3]}]),['1-2-3','1-2-4']);
 const data=JSON.parse(fs.readFileSync('outputs/current_live.json','utf8'));
 assert.equal(data.model_id,MODEL);data.races.forEach(validate);
 assert.equal(data.observed.model_id,MODEL);
+// A published snapshot is not "today" just because its internal today field says so.
+assert.equal(jstDay(new Date('2026-11-09T15:01:00Z')),'2026-11-10');
+const yesterday=feedFreshness({today:'2026-11-06',generated_at:'2026-11-06T06:17:12+09:00',races:[{date:'2026-11-06',forecast:{}}]},new Date('2026-11-10T01:01:00Z'));
+assert.equal(yesterday.today,'2026-11-10');
+assert.equal(yesterday.missingToday,true);
+assert.equal(yesterday.stale,true);
+const today=feedFreshness({today:'2026-11-10',generated_at:'2026-11-10T09:50:00+09:00',races:[{date:'2026-11-10',forecast:{tickets:[]}}]},new Date('2026-11-10T01:01:00Z'));
+assert.equal(today.missingToday,false);
+assert.equal(today.stale,false);
+assert.equal(feedFreshness({today:'2026-11-10',generated_at:'2026-11-10T09:50:00+09:00',races:[]},new Date('2026-11-10T01:01:00Z')).missingToday,true);
 const sample=data.races.find(r=>r.forecast);
 // A fully cancelled day or a first launch after closing may have no forecast.
 if(sample){

@@ -7,6 +7,18 @@
  const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const num=x=>Number(x).toLocaleString('ja-JP');
  const pct=x=>Number.isFinite(x)?x.toFixed(2):'—';
+ const jstDay=at=>{
+  const parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(at);
+  const values=Object.fromEntries(parts.map(p=>[p.type,p.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+ };
+ function feedFreshness(feed,at=new Date()){
+  const today=jstDay(at),races=Array.isArray(feed?.races)?feed.races:[];
+  const forecastN=races.filter(r=>r.date===today&&!!r.forecast).length;
+  const ageMinutes=(at.valueOf()-Date.parse(feed?.generated_at||''))/60000;
+  return {today,forecastN,missingToday:feed?.today!==today||forecastN===0,
+   stale:!Number.isFinite(ageMinutes)||ageMinutes>45||ageMinutes< -2};
+ }
  function expand(blocks){const ts=new Set();for(const f of blocks)for(const a of f.first)for(const b of f.second)for(const c of f.third)if(new Set([a,b,c]).size===3)ts.add([a,b,c].join('-'));return [...ts].sort();}
  function validate(r){
   const p=r.forecast;if(!p)return true;
@@ -122,7 +134,7 @@
  const stamp=x=>x?new Date(x).toLocaleString('ja-JP',{timeZone:'Asia/Tokyo',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
  const car=c=>`<span class="car c${Number(c)}">${Number(c)}</span>`;
  function stat(label,value,unit,detail){return `<div class="stat"><div class="stat-label">${label}</div><div class="stat-value">${esc(value)}<small>${unit}</small></div><div class="stat-detail">${detail}</div></div>`;}
- if(typeof module!=='undefined'&&module.exports){module.exports={expand,validate,status,copyText,officialRecord,archivedOfficialRows,attachOfficialResults,MODEL,MODEL_LABELS};return;}
+ if(typeof module!=='undefined'&&module.exports){module.exports={expand,validate,status,copyText,officialRecord,archivedOfficialRows,attachOfficialResults,MODEL,MODEL_LABELS,jstDay,feedFreshness};return;}
  let data=null,day='',session='all',venue='',selected='',copyTimer;
  const $=id=>document.getElementById(id);
  function performance(){const s=data.observed||{};$('observed').innerHTML=stat('的中率',pct(s.hit_pct),'%',`${num(s.hits||0)} / ${num(s.races||0)}レース`)+stat('回収率',pct(s.roi_pct),'%',`払戻 ${num(s.returned||0)}円 / 購入 ${num(s.stake||0)}円`)+stat('100倍以上の的中',s.HIGH_hits||0,'件','実際の払戻が100倍以上')+stat('結果待ち',s.pending||0,'レース',`全額返還 ${s.void||0}件は的中率から除外`);$('performance-note').textContent=s.races?'改善版を締切前に公開できた予想だけを集計しています。旧版の結果は含みません。':'改善版の公開後成績は、結果が揃ってから表示します。旧版や締切後の公開分は含めません。';
@@ -132,15 +144,15 @@
  function render(){if(!data)return;
  const rs=visible();const vs=[...new Map(rs.map(r=>[r.venue_id,r])).values()].sort((a,b)=>a.venue_id.localeCompare(b.venue_id));
  if(!vs.some(x=>x.venue_id===venue)){const next=rs.find(r=>r.forecast&&r.close_at*1000>Date.now());venue=next?.venue_id||vs[0]?.venue_id||'';}
- $('venues').innerHTML=vs.length?vs.map(r=>`<button data-venue="${esc(r.venue_id)}" aria-pressed="${r.venue_id===venue}">${esc(r.venue)}<small>${r.graded?'重賞':sessions[r.session]||''}</small></button>`).join(''):'<span class="muted">この条件の開催はありません。</span>';
+ $('venues').innerHTML=vs.length?vs.map(r=>`<button data-venue="${esc(r.venue_id)}" aria-pressed="${r.venue_id===venue}">${esc(r.venue)}<small>${r.graded?'重賞':sessions[r.session]||''}</small></button>`).join(''):'<span class="muted">'+(day===jstDay(new Date())?'本日の現行モデル予想は未掲載です。':'この条件の開催はありません。')+'</span>';
  const races=rs.filter(r=>r.venue_id===venue).sort((a,b)=>a.race_number-b.race_number);
  if(!races.some(r=>r.race_id===selected))selected=(races.find(r=>r.forecast&&r.close_at*1000>Date.now())||races.find(r=>r.forecast)||races[0])?.race_id||'';
  $('race-count').textContent=races.length?`${races.length}レース`:'';
- $('race-list').innerHTML=races.length?races.map(r=>{const p=r.forecast;return `<button class="race-item" data-race="${esc(r.race_id)}" aria-current="${r.race_id===selected}" aria-label="${esc(r.venue)} ${r.race_number}レース ${p?labels[p.category]+'判定':''} ${esc(status(r))}"><div><div class="race-no">${r.race_number}<small>R</small></div><div class="race-time">${time(r.close_at)}</div></div><div><div class="race-name">${esc(r.race_type)}</div><div class="race-state">${esc(status(r))}</div></div><span class="tag ${p?p.category:'none'}">${p?labels[p.category]:r.status==='cancelled'?'中止':'未作成'}</span></button>`;}).join(''):'<p class="empty">条件を変更してご確認ください。</p>';
+ $('race-list').innerHTML=races.length?races.map(r=>{const p=r.forecast;return `<button class="race-item" data-race="${esc(r.race_id)}" aria-current="${r.race_id===selected}" aria-label="${esc(r.venue)} ${r.race_number}レース ${p?labels[p.category]+'判定':''} ${esc(status(r))}"><div><div class="race-no">${r.race_number}<small>R</small></div><div class="race-time">${time(r.close_at)}</div></div><div><div class="race-name">${esc(r.race_type)}</div><div class="race-state">${esc(status(r))}</div></div><span class="tag ${p?p.category:'none'}">${p?labels[p.category]:r.status==='cancelled'?'中止':'未作成'}</span></button>`;}).join(''):'<p class="empty">'+(day===jstDay(new Date())?'本日の現行モデル予想はまだ掲載されていません。':'条件を変更してご確認ください。')+'</p>';
  detail(races.find(r=>r.race_id===selected));
  }
  function detail(r){
- if(!r){$('race-detail').innerHTML='<div class="empty detail-empty"><span class="empty-icon">◎</span><h2>該当するレースがありません</h2><p>日付や時間帯を変更してください。</p></div>';return;}
+ if(!r){const todayMissing=day===jstDay(new Date())&&!data.races.some(x=>x.date===day);$('race-detail').innerHTML=todayMissing?'<div class="empty detail-empty"><span class="empty-icon">—</span><h2>本日の予想は未掲載です</h2><p>現行モデルの新しい予想ファイルを確認できません。過去の買い目は本日分として表示しません。</p></div>':'<div class="empty detail-empty"><span class="empty-icon">◎</span><h2>該当するレースがありません</h2><p>日付や時間帯を変更してください。</p></div>';return;}
  const p=r.forecast;let body=`<div class="detail-header"><div><h2>${esc(r.venue)} <span>${r.race_number}R</span></h2><div class="detail-meta">${esc(r.race_class)} ${esc(r.race_type)} · ${r.graded?'重賞 · ':''}${esc(sessions[r.session]||'')} · ${esc(status(r))}</div></div><div class="deadline"><span>締切</span><b>${time(r.close_at)}</b>${p?`<div class="tag ${p.category}">${labels[p.category]}判定</div>`:''}</div></div>`;
  if(p)body+=`<p class="notice ${p.model_id===MODEL?'':'warn'}">${esc(MODEL_LABELS[p.model_id])}${p.model_id===MODEL?'の予想です。':'で公開した予想です。改善版の成績には含めません。'}</p>`;
  if(r.withdrawal_warning)body+=`<p class="notice warn">${esc(r.withdrawal_warning)}</p>`;
@@ -180,10 +192,11 @@
  const officialResponses=await officialPromise;
  const officialRows=officialResponses.filter(x=>x.status==='fulfilled').flatMap(x=>x.value);
  attachOfficialResults(data,officialRows);
- const days=[...new Set([data.today,...data.races.map(r=>r.date)])].sort().reverse();if(!days.includes(day))day=data.today;
- $('date').innerHTML=days.map(d=>`<option value="${esc(d)}" ${d===day?'selected':''}>${esc(d.replace(/-/g,'/'))}${d===data.today?'（今日）':''}</option>`).join('');
- const age=(Date.now()-Date.parse(data.generated_at))/60000;const stale=age>45;const forecasts=data.races.filter(r=>r.date===data.today&&r.forecast).length;
- $('notice').classList.toggle('warn',stale||data.health.stage!=='ready');$('notice').textContent=stale?`最終更新は${stamp(data.generated_at)}です。更新が遅れています。締切・欠場情報は公式でご確認ください。`:`${data.health.message} 本日${forecasts}レースの予想を保存済みです。`;
+ const freshness=feedFreshness(data);
+ const days=[...new Set([freshness.today,data.today,...data.races.map(r=>r.date)])].sort().reverse();if(!days.includes(day))day=freshness.today;
+ $('date').innerHTML=days.map(d=>`<option value="${esc(d)}" ${d===day?'selected':''}>${esc(d.replace(/-/g,'/'))}${d===freshness.today?(freshness.missingToday?'（今日・未掲載）':'（今日）'):''}</option>`).join('');
+ $('notice').classList.toggle('warn',freshness.stale||freshness.missingToday||data.health.stage!=='ready');
+ $('notice').textContent=freshness.missingToday?`現行モデルの本日（${freshness.today.replace(/-/g,'/')}）の予想は未掲載です。最終生成 ${stamp(data.generated_at)}。過去の買い目を今日の予想として表示しません。`:freshness.stale?`最終更新は${stamp(data.generated_at)}です。更新が遅れています。締切・欠場情報は公式でご確認ください。`:`${data.health.message} 本日${freshness.forecastN}レースの予想を保存済みです。`;
  $('updated').textContent=`予想更新 ${stamp(data.generated_at)} ／ 結果取得 ${stamp(data.results_updated_at)}（日本時間）`;
  render();performance();loadDayResults(day);
  }catch(e){$('notice').classList.add('warn');$('notice').textContent='予想を読み込めませんでした。「更新」で再試行してください。';if(!data){$('race-list').innerHTML='<p class="empty">予想データを確認中です。</p>';$('race-detail').innerHTML='<div class="empty detail-empty"><h2>データを確認中です</h2><p>古い方式の予想への置き換えは行いません。</p></div>';}}finally{$('reload').disabled=false;}
