@@ -1,5 +1,5 @@
 {
-  "updated_at_jst": "2026-11-09T22:48:55+09:00",
+  "updated_at_jst": "2026-11-10T08:53:02+09:00",
   "role": "executive_officer",
   "source": "ceo_decision_support",
   "status": "dissemination_package_pending_ceo_or_owner_decision",
@@ -83,7 +83,7 @@
       "action": "freeze automatic model promotion and investigate shifted/missing live features before changing production",
       "evidence": {
         "status": "red",
-        "flagged_features": 18,
+        "flagged_features": 13,
         "features_checked": 94,
         "top_flags": [
           {
@@ -102,6 +102,20 @@
             "training_median": 16.0
           },
           {
+            "feature": "player_prior_races",
+            "flagged": true,
+            "reasons": [
+              "outlier_share"
+            ],
+            "median_iqr_shift": 0.7482014388489209,
+            "outlier_share_vs_training_1_99pct": 0.32044198895027626,
+            "live_source_missing_rate": 0.0,
+            "training_source_missing_rate": 0.0,
+            "missing_rate_increase": 0.0,
+            "live_median": 179.0,
+            "training_median": 75.0
+          },
+          {
             "feature": "weather_races",
             "flagged": true,
             "reasons": [
@@ -116,46 +130,32 @@
             "training_median": 272.0
           },
           {
-            "feature": "player_prior_races",
-            "flagged": true,
-            "reasons": [
-              "outlier_share"
-            ],
-            "median_iqr_shift": 0.539568345323741,
-            "outlier_share_vs_training_1_99pct": 0.980836236933798,
-            "live_source_missing_rate": 0.0,
-            "training_source_missing_rate": 0.0,
-            "missing_rate_increase": 0.0,
-            "live_median": 0.0,
-            "training_median": 75.0
-          },
-          {
-            "feature": "player_prior_days_since_last_race",
+            "feature": "line_role_place3_rate",
             "flagged": true,
             "reasons": [
               "missingness_jump"
             ],
-            "median_iqr_shift": 0.1111111111111111,
-            "outlier_share_vs_training_1_99pct": 0.0,
-            "live_source_missing_rate": 0.9634146341463414,
-            "training_source_missing_rate": 0.007300456684957408,
-            "missing_rate_increase": 0.956114177461384,
-            "live_median": 11.0,
-            "training_median": 8.0
+            "median_iqr_shift": 0.0,
+            "outlier_share_vs_training_1_99pct": 0.007366482504604052,
+            "live_source_missing_rate": 0.2302025782688766,
+            "training_source_missing_rate": 0.0001525617875239472,
+            "missing_rate_increase": 0.23005001648135265,
+            "live_median": 0.12,
+            "training_median": 0.12
           },
           {
-            "feature": "player_prior_avg_finish",
+            "feature": "line_role_win_rate",
             "flagged": true,
             "reasons": [
               "missingness_jump"
             ],
-            "median_iqr_shift": 0.03613439991642946,
-            "outlier_share_vs_training_1_99pct": 0.0017421602787456446,
-            "live_source_missing_rate": 0.9634146341463414,
-            "training_source_missing_rate": 0.007300456684957408,
-            "missing_rate_increase": 0.956114177461384,
-            "live_median": 4.0572599531615925,
-            "training_median": 4.0
+            "median_iqr_shift": 0.0,
+            "outlier_share_vs_training_1_99pct": 0.0055248618784530384,
+            "live_source_missing_rate": 0.2302025782688766,
+            "training_source_missing_rate": 0.0001525617875239472,
+            "missing_rate_increase": 0.23005001648135265,
+            "live_median": 0.1,
+            "training_median": 0.1
           }
         ]
       }
