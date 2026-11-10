@@ -1,8 +1,8 @@
 {
-  "updated_at_jst": "2026-11-10T15:21:35+09:00",
+  "updated_at_jst": "2026-11-11T00:05:42+09:00",
   "role": "strategist",
-  "central_races_available": 62179,
-  "official_evaluated_races": 2836,
+  "central_races_available": 62225,
+  "official_evaluated_races": 2882,
   "warnings": [],
   "recommended_actions": [
     {
@@ -10,10 +10,10 @@
       "type": "final_trifecta_product_kpi",
       "action": "treat latest selected trifecta tickets as the primary product KPI; keep model Top10 coverage as a diagnostic KPI",
       "evidence": {
-        "races": 432,
-        "hit_rate": 0.09490740740740741,
-        "recent_50_hit_rate": 0.06,
-        "avg_ticket_count": 8.055555555555555
+        "races": 435,
+        "hit_rate": 0.09655172413793103,
+        "recent_50_hit_rate": 0.08,
+        "avg_ticket_count": 8.055172413793104
       }
     },
     {
@@ -22,7 +22,7 @@
       "action": "freeze automatic model promotion and investigate shifted/missing live features before changing production",
       "evidence": {
         "status": "red",
-        "flagged_features": 18,
+        "flagged_features": 11,
         "features_checked": 94,
         "top_flags": [
           {
@@ -61,7 +61,7 @@
               "outlier_share"
             ],
             "median_iqr_shift": 0.539568345323741,
-            "outlier_share_vs_training_1_99pct": 0.9742173112338858,
+            "outlier_share_vs_training_1_99pct": 0.9760589318600368,
             "live_source_missing_rate": 0.0,
             "training_source_missing_rate": 0.0,
             "missing_rate_increase": 0.0,
@@ -89,7 +89,7 @@
               "missingness_jump"
             ],
             "median_iqr_shift": 0.03613439991642946,
-            "outlier_share_vs_training_1_99pct": 0.001841620626151013,
+            "outlier_share_vs_training_1_99pct": 0.0,
             "live_source_missing_rate": 0.9613259668508287,
             "training_source_missing_rate": 0.007300456684957408,
             "missing_rate_increase": 0.9540255101658713,
@@ -100,13 +100,18 @@
       }
     },
     {
+      "priority": 1,
+      "type": "deterioration_watch",
+      "action": "freeze automatic weight promotion; require shadow validation before production changes"
+    },
+    {
       "priority": 2,
       "type": "trifecta_top10_kpi",
       "action": "optimize ticket logic against live 10-point hit rate as a separate KPI from Top1 accuracy",
       "evidence": {
-        "races": 408,
-        "hit_rate": 0.11519607843137254,
-        "recent_50_hit_rate": 0.06
+        "races": 411,
+        "hit_rate": 0.11678832116788321,
+        "recent_50_hit_rate": 0.08
       }
     },
     {
@@ -116,17 +121,17 @@
       "evidence": {
         "variant": "core_model",
         "department": "model_audit_office",
-        "races": 2560,
-        "production_hits": 1144,
-        "challenger_hits": 1181,
-        "production_hit_rate": 0.446875,
-        "challenger_hit_rate": 0.461328125,
-        "delta_hit_rate": 0.014453124999999956,
-        "delta_pp": 1.4453124999999956,
-        "changed_races": 262,
-        "flip_gains": 98,
-        "flip_losses": 61,
-        "net_hits": 37,
+        "races": 2606,
+        "production_hits": 1160,
+        "challenger_hits": 1199,
+        "production_hit_rate": 0.44512663085188026,
+        "challenger_hit_rate": 0.4600920951650038,
+        "delta_hit_rate": 0.014965464313123567,
+        "delta_pp": 1.4965464313123567,
+        "changed_races": 270,
+        "flip_gains": 101,
+        "flip_losses": 62,
+        "net_hits": 39,
         "promotion_status": "promising_shadow"
       }
     },
@@ -137,15 +142,15 @@
       "evidence": {
         "rule": "switch_to_second_when_margin<=0.03",
         "margin_threshold": 0.03,
-        "switched_races": 148,
+        "switched_races": 150,
         "production_hits_in_switched_races": 37,
-        "second_pick_hits_in_switched_races": 43,
-        "net_hits": 6,
-        "baseline_total_hits": 1259,
-        "hypothetical_total_hits": 1265,
-        "baseline_hit_rate": 0.443935119887165,
-        "hypothetical_hit_rate": 0.4460507757404795,
-        "global_delta_pp": 0.21156558533145275,
+        "second_pick_hits_in_switched_races": 44,
+        "net_hits": 7,
+        "baseline_total_hits": 1275,
+        "hypothetical_total_hits": 1282,
+        "baseline_hit_rate": 0.44240111034004165,
+        "hypothetical_hit_rate": 0.4448299791811242,
+        "global_delta_pp": 0.24288688410825815,
         "status": "shadow_candidate_only",
         "promotion_requirement": "must beat production prospectively on >=300 settled races and pass external validation"
       }
@@ -156,9 +161,9 @@
       "action": "keep multi-head coverage for near-tie races; do not collapse to a single head",
       "evidence": {
         "segment": "near_tie_<=0.03",
-        "races": 148,
+        "races": 150,
         "hits": 38,
-        "hit_rate": 0.256757
+        "hit_rate": 0.253333
       }
     }
   ],
@@ -200,7 +205,7 @@
     "live_snapshot_model": {}
   },
   "prospective_comparison": {
-    "updated_at_jst": "2026-11-10T15:21:35+09:00",
+    "updated_at_jst": "2026-11-11T00:05:42+09:00",
     "version": "strategist_consensus_v1",
     "status": "collecting",
     "production_effect": "advisory_and_shadow_only",
@@ -155669,8 +155674,8 @@
       {
         "version": "strategist_consensus_v1",
         "race_id": "045320261110",
-        "snapshot_at": "2026-11-10T13:08:41+09:00",
-        "source_snapshot_at": "2026-11-10T13:08:41+09:00",
+        "snapshot_at": "2026-11-10T21:37:33+09:00",
+        "source_snapshot_at": "2026-11-10T21:37:33+09:00",
         "close_at": 1794314700.0,
         "venue": "奈良",
         "race_no": 4,
@@ -155679,29 +155684,30 @@
             "department": "data_department",
             "winner_car": 1,
             "tickets": [],
-            "minimum_reference_races": 0
+            "minimum_reference_races": 31.0
           },
           {
             "department": "pace_department",
-            "winner_car": 1,
+            "winner_car": 4,
             "tickets": [],
-            "minimum_reference_races": 0
+            "minimum_reference_races": 31.0
           },
           {
             "department": "line_department",
             "winner_car": 1,
             "tickets": [],
-            "minimum_reference_races": 0
+            "minimum_reference_races": 31.0
           },
           {
             "department": "risk_department",
             "winner_car": 1,
             "tickets": [],
-            "minimum_reference_races": 0
+            "minimum_reference_races": 31.0
           }
         ],
         "winner_votes": {
-          "1": 4
+          "1": 3,
+          "4": 1
         },
         "tickets": [],
         "purchase_authorized": false
@@ -155709,8 +155715,8 @@
       {
         "version": "strategist_consensus_v1",
         "race_id": "057520261110",
-        "snapshot_at": "2026-11-10T13:08:41+09:00",
-        "source_snapshot_at": "2026-11-10T13:08:41+09:00",
+        "snapshot_at": "2026-11-10T21:37:33+09:00",
+        "source_snapshot_at": "2026-11-10T21:37:33+09:00",
         "close_at": 1794315300.0,
         "venue": "松山",
         "race_no": 5,
@@ -155719,29 +155725,30 @@
             "department": "data_department",
             "winner_car": 4,
             "tickets": [],
-            "minimum_reference_races": 0
+            "minimum_reference_races": 30.0
           },
           {
             "department": "pace_department",
-            "winner_car": 4,
+            "winner_car": 1,
             "tickets": [],
-            "minimum_reference_races": 0
+            "minimum_reference_races": 30.0
           },
           {
             "department": "line_department",
             "winner_car": 4,
             "tickets": [],
-            "minimum_reference_races": 0
+            "minimum_reference_races": 30.0
           },
           {
             "department": "risk_department",
             "winner_car": 4,
             "tickets": [],
-            "minimum_reference_races": 0
+            "minimum_reference_races": 30.0
           }
         ],
         "winner_votes": {
-          "4": 4
+          "4": 3,
+          "1": 1
         },
         "tickets": [],
         "purchase_authorized": false
@@ -155749,8 +155756,8 @@
       {
         "version": "strategist_consensus_v1",
         "race_id": "055320261110",
-        "snapshot_at": "2026-11-10T13:08:41+09:00",
-        "source_snapshot_at": "2026-11-10T13:08:41+09:00",
+        "snapshot_at": "2026-11-10T21:37:33+09:00",
+        "source_snapshot_at": "2026-11-10T21:37:33+09:00",
         "close_at": 1794315900.0,
         "venue": "奈良",
         "race_no": 5,
@@ -155759,25 +155766,25 @@
             "department": "data_department",
             "winner_car": 1,
             "tickets": [],
-            "minimum_reference_races": 0
+            "minimum_reference_races": 36.0
           },
           {
             "department": "pace_department",
             "winner_car": 1,
             "tickets": [],
-            "minimum_reference_races": 0
+            "minimum_reference_races": 36.0
           },
           {
             "department": "line_department",
             "winner_car": 1,
             "tickets": [],
-            "minimum_reference_races": 0
+            "minimum_reference_races": 36.0
           },
           {
             "department": "risk_department",
             "winner_car": 1,
             "tickets": [],
-            "minimum_reference_races": 0
+            "minimum_reference_races": 36.0
           }
         ],
         "winner_votes": {
@@ -155789,8 +155796,8 @@
       {
         "version": "strategist_consensus_v1",
         "race_id": "067520261110",
-        "snapshot_at": "2026-11-10T13:08:41+09:00",
-        "source_snapshot_at": "2026-11-10T13:08:41+09:00",
+        "snapshot_at": "2026-11-10T21:37:33+09:00",
+        "source_snapshot_at": "2026-11-10T21:37:33+09:00",
         "close_at": 1794316500.0,
         "venue": "松山",
         "race_no": 6,
@@ -155829,8 +155836,8 @@
       {
         "version": "strategist_consensus_v1",
         "race_id": "065320261110",
-        "snapshot_at": "2026-11-10T13:08:41+09:00",
-        "source_snapshot_at": "2026-11-10T13:08:41+09:00",
+        "snapshot_at": "2026-11-10T21:37:33+09:00",
+        "source_snapshot_at": "2026-11-10T21:37:33+09:00",
         "close_at": 1794317100.0,
         "venue": "奈良",
         "race_no": 6,
@@ -155869,8 +155876,8 @@
       {
         "version": "strategist_consensus_v1",
         "race_id": "077520261110",
-        "snapshot_at": "2026-11-10T13:08:41+09:00",
-        "source_snapshot_at": "2026-11-10T13:08:41+09:00",
+        "snapshot_at": "2026-11-10T21:37:33+09:00",
+        "source_snapshot_at": "2026-11-10T21:37:33+09:00",
         "close_at": 1794317700.0,
         "venue": "松山",
         "race_no": 7,
@@ -155909,8 +155916,8 @@
       {
         "version": "strategist_consensus_v1",
         "race_id": "075320261110",
-        "snapshot_at": "2026-11-10T13:08:41+09:00",
-        "source_snapshot_at": "2026-11-10T13:08:41+09:00",
+        "snapshot_at": "2026-11-10T21:37:33+09:00",
+        "source_snapshot_at": "2026-11-10T21:37:33+09:00",
         "close_at": 1794318300.0,
         "venue": "奈良",
         "race_no": 7,
@@ -155949,8 +155956,8 @@
       {
         "version": "strategist_consensus_v1",
         "race_id": "087520261110",
-        "snapshot_at": "2026-11-10T13:08:41+09:00",
-        "source_snapshot_at": "2026-11-10T13:08:41+09:00",
+        "snapshot_at": "2026-11-10T21:37:33+09:00",
+        "source_snapshot_at": "2026-11-10T21:37:33+09:00",
         "close_at": 1794318900.0,
         "venue": "松山",
         "race_no": 8,
@@ -155989,8 +155996,8 @@
       {
         "version": "strategist_consensus_v1",
         "race_id": "085320261110",
-        "snapshot_at": "2026-11-10T13:08:41+09:00",
-        "source_snapshot_at": "2026-11-10T13:08:41+09:00",
+        "snapshot_at": "2026-11-10T21:37:33+09:00",
+        "source_snapshot_at": "2026-11-10T21:37:33+09:00",
         "close_at": 1794319500.0,
         "venue": "奈良",
         "race_no": 8,
@@ -156029,8 +156036,8 @@
       {
         "version": "strategist_consensus_v1",
         "race_id": "097520261110",
-        "snapshot_at": "2026-11-10T13:08:41+09:00",
-        "source_snapshot_at": "2026-11-10T13:08:41+09:00",
+        "snapshot_at": "2026-11-10T21:37:33+09:00",
+        "source_snapshot_at": "2026-11-10T21:37:33+09:00",
         "close_at": 1794320100.0,
         "venue": "松山",
         "race_no": 9,
@@ -156069,8 +156076,8 @@
       {
         "version": "strategist_consensus_v1",
         "race_id": "095320261110",
-        "snapshot_at": "2026-11-10T13:08:41+09:00",
-        "source_snapshot_at": "2026-11-10T13:08:41+09:00",
+        "snapshot_at": "2026-11-10T21:37:33+09:00",
+        "source_snapshot_at": "2026-11-10T21:37:33+09:00",
         "close_at": 1794320700.0,
         "venue": "奈良",
         "race_no": 9,
@@ -156108,7 +156115,7 @@
       }
     ],
     "settled": {
-      "settled_races": 2349,
+      "settled_races": 2395,
       "bet_races": 591,
       "hits": 23,
       "hit_rate": 0.038917089678511,
@@ -156116,9 +156123,9 @@
       "return_yen": 117790,
       "return_rate": 0.3536175322725908
     },
-    "paired_races": 368,
+    "paired_races": 371,
     "paired_strategist": {
-      "settled_races": 368,
+      "settled_races": 371,
       "bet_races": 185,
       "hits": 6,
       "hit_rate": 0.032432432432432434,
@@ -156127,20 +156134,20 @@
       "return_rate": 0.26373098478783025
     },
     "paired_production": {
-      "settled_races": 368,
-      "bet_races": 335,
-      "hits": 31,
-      "hit_rate": 0.09253731343283582,
-      "stake_yen": 242800,
-      "return_yen": 147750,
-      "return_rate": 0.6085255354200988
+      "settled_races": 371,
+      "bet_races": 338,
+      "hits": 32,
+      "hit_rate": 0.09467455621301775,
+      "stake_yen": 245200,
+      "return_yen": 149260,
+      "return_rate": 0.6087275693311582
     },
     "production_miss_reasons": {
       "ev_filter_skip": 171,
       "skip": 33,
       "odds_missing": 22,
-      "formation_omission": 101,
-      "hit": 31,
+      "formation_omission": 103,
+      "hit": 32,
       "ev_compression_miss": 10
     }
   }
