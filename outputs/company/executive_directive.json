@@ -1,5 +1,5 @@
 {
-  "updated_at_jst": "2026-11-11T06:11:22+09:00",
+  "updated_at_jst": "2026-11-11T14:09:51+09:00",
   "role": "executive_officer",
   "source": "ceo_decision_support",
   "status": "dissemination_package_pending_ceo_or_owner_decision",
@@ -71,10 +71,10 @@
       "type": "final_trifecta_product_kpi",
       "action": "treat latest selected trifecta tickets as the primary product KPI; keep model Top10 coverage as a diagnostic KPI",
       "evidence": {
-        "races": 435,
-        "hit_rate": 0.09655172413793103,
-        "recent_50_hit_rate": 0.08,
-        "avg_ticket_count": 8.055172413793104
+        "races": 439,
+        "hit_rate": 0.09567198177676538,
+        "recent_50_hit_rate": 0.04,
+        "avg_ticket_count": 8.075170842824601
       }
     },
     {
@@ -82,8 +82,8 @@
       "type": "live_feature_drift",
       "action": "freeze automatic model promotion and investigate shifted/missing live features before changing production",
       "evidence": {
-        "status": "amber",
-        "flagged_features": 6,
+        "status": "red",
+        "flagged_features": 11,
         "features_checked": 94,
         "top_flags": [
           {
@@ -102,20 +102,6 @@
             "training_median": 16.0
           },
           {
-            "feature": "player_prior_races",
-            "flagged": true,
-            "reasons": [
-              "outlier_share"
-            ],
-            "median_iqr_shift": 0.7553956834532374,
-            "outlier_share_vs_training_1_99pct": 0.33560477001703576,
-            "live_source_missing_rate": 0.0,
-            "training_source_missing_rate": 0.0,
-            "missing_rate_increase": 0.0,
-            "live_median": 180.0,
-            "training_median": 75.0
-          },
-          {
             "feature": "weather_races",
             "flagged": true,
             "reasons": [
@@ -130,32 +116,46 @@
             "training_median": 272.0
           },
           {
-            "feature": "weather_win_rate",
+            "feature": "player_prior_races",
             "flagged": true,
             "reasons": [
-              "missingness_jump"
+              "outlier_share"
             ],
-            "median_iqr_shift": 0.0,
-            "outlier_share_vs_training_1_99pct": 0.0,
-            "live_source_missing_rate": 1.0,
-            "training_source_missing_rate": 0.0038040406364577652,
-            "missing_rate_increase": 0.9961959593635422,
-            "live_median": 0.13,
-            "training_median": 0.13
+            "median_iqr_shift": 0.539568345323741,
+            "outlier_share_vs_training_1_99pct": 0.959114139693356,
+            "live_source_missing_rate": 0.0,
+            "training_source_missing_rate": 0.0,
+            "missing_rate_increase": 0.0,
+            "live_median": 0.0,
+            "training_median": 75.0
           },
           {
-            "feature": "weather_place2_rate",
+            "feature": "player_prior_days_since_last_race",
             "flagged": true,
             "reasons": [
               "missingness_jump"
             ],
-            "median_iqr_shift": 0.0,
+            "median_iqr_shift": 0.1111111111111111,
             "outlier_share_vs_training_1_99pct": 0.0,
-            "live_source_missing_rate": 1.0,
-            "training_source_missing_rate": 0.0038040406364577652,
-            "missing_rate_increase": 0.9961959593635422,
-            "live_median": 0.13,
-            "training_median": 0.13
+            "live_source_missing_rate": 0.9522998296422487,
+            "training_source_missing_rate": 0.007300456684957408,
+            "missing_rate_increase": 0.9449993729572913,
+            "live_median": 11.0,
+            "training_median": 8.0
+          },
+          {
+            "feature": "player_prior_avg_finish",
+            "flagged": true,
+            "reasons": [
+              "missingness_jump"
+            ],
+            "median_iqr_shift": 0.03613439991642946,
+            "outlier_share_vs_training_1_99pct": 0.0,
+            "live_source_missing_rate": 0.9522998296422487,
+            "training_source_missing_rate": 0.007300456684957408,
+            "missing_rate_increase": 0.9449993729572913,
+            "live_median": 4.0572599531615925,
+            "training_median": 4.0
           }
         ]
       }
@@ -170,8 +170,8 @@
       "type": "trifecta_top10_kpi",
       "action": "optimize ticket logic against live 10-point hit rate as a separate KPI from Top1 accuracy",
       "evidence": {
-        "races": 411,
-        "hit_rate": 0.11678832116788321,
+        "races": 415,
+        "hit_rate": 0.11566265060240964,
         "recent_50_hit_rate": 0.08
       }
     },
@@ -182,16 +182,16 @@
       "evidence": {
         "variant": "core_model",
         "department": "model_audit_office",
-        "races": 2606,
-        "production_hits": 1160,
-        "challenger_hits": 1199,
-        "production_hit_rate": 0.44512663085188026,
-        "challenger_hit_rate": 0.4600920951650038,
-        "delta_hit_rate": 0.014965464313123567,
-        "delta_pp": 1.4965464313123567,
-        "changed_races": 270,
-        "flip_gains": 101,
-        "flip_losses": 62,
+        "races": 2633,
+        "production_hits": 1172,
+        "challenger_hits": 1211,
+        "production_hit_rate": 0.4451196353968857,
+        "challenger_hit_rate": 0.4599316369160653,
+        "delta_hit_rate": 0.014812001519179607,
+        "delta_pp": 1.4812001519179607,
+        "changed_races": 272,
+        "flip_gains": 102,
+        "flip_losses": 63,
         "net_hits": 39,
         "promotion_status": "promising_shadow"
       }
@@ -207,11 +207,11 @@
         "production_hits_in_switched_races": 37,
         "second_pick_hits_in_switched_races": 44,
         "net_hits": 7,
-        "baseline_total_hits": 1275,
-        "hypothetical_total_hits": 1282,
-        "baseline_hit_rate": 0.44240111034004165,
-        "hypothetical_hit_rate": 0.4448299791811242,
-        "global_delta_pp": 0.24288688410825815,
+        "baseline_total_hits": 1287,
+        "hypothetical_total_hits": 1294,
+        "baseline_hit_rate": 0.44242007562736335,
+        "hypothetical_hit_rate": 0.4448264008250258,
+        "global_delta_pp": 0.24063251976624267,
         "status": "shadow_candidate_only",
         "promotion_requirement": "must beat production prospectively on >=300 settled races and pass external validation"
       }
