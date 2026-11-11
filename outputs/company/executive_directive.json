@@ -1,5 +1,5 @@
 {
-  "updated_at_jst": "2026-11-11T14:09:51+09:00",
+  "updated_at_jst": "2026-11-11T21:39:40+09:00",
   "role": "executive_officer",
   "source": "ceo_decision_support",
   "status": "dissemination_package_pending_ceo_or_owner_decision",
@@ -71,10 +71,10 @@
       "type": "final_trifecta_product_kpi",
       "action": "treat latest selected trifecta tickets as the primary product KPI; keep model Top10 coverage as a diagnostic KPI",
       "evidence": {
-        "races": 439,
-        "hit_rate": 0.09567198177676538,
+        "races": 442,
+        "hit_rate": 0.09502262443438914,
         "recent_50_hit_rate": 0.04,
-        "avg_ticket_count": 8.075170842824601
+        "avg_ticket_count": 8.058823529411764
       }
     },
     {
@@ -122,7 +122,7 @@
               "outlier_share"
             ],
             "median_iqr_shift": 0.539568345323741,
-            "outlier_share_vs_training_1_99pct": 0.959114139693356,
+            "outlier_share_vs_training_1_99pct": 0.9778534923339012,
             "live_source_missing_rate": 0.0,
             "training_source_missing_rate": 0.0,
             "missing_rate_increase": 0.0,
@@ -137,9 +137,9 @@
             ],
             "median_iqr_shift": 0.1111111111111111,
             "outlier_share_vs_training_1_99pct": 0.0,
-            "live_source_missing_rate": 0.9522998296422487,
+            "live_source_missing_rate": 0.9642248722316865,
             "training_source_missing_rate": 0.007300456684957408,
-            "missing_rate_increase": 0.9449993729572913,
+            "missing_rate_increase": 0.9569244155467291,
             "live_median": 11.0,
             "training_median": 8.0
           },
@@ -150,10 +150,10 @@
               "missingness_jump"
             ],
             "median_iqr_shift": 0.03613439991642946,
-            "outlier_share_vs_training_1_99pct": 0.0,
-            "live_source_missing_rate": 0.9522998296422487,
+            "outlier_share_vs_training_1_99pct": 0.0017035775127768314,
+            "live_source_missing_rate": 0.9642248722316865,
             "training_source_missing_rate": 0.007300456684957408,
-            "missing_rate_increase": 0.9449993729572913,
+            "missing_rate_increase": 0.9569244155467291,
             "live_median": 4.0572599531615925,
             "training_median": 4.0
           }
@@ -170,9 +170,9 @@
       "type": "trifecta_top10_kpi",
       "action": "optimize ticket logic against live 10-point hit rate as a separate KPI from Top1 accuracy",
       "evidence": {
-        "races": 415,
-        "hit_rate": 0.11566265060240964,
-        "recent_50_hit_rate": 0.08
+        "races": 418,
+        "hit_rate": 0.11483253588516747,
+        "recent_50_hit_rate": 0.04
       }
     },
     {
@@ -182,17 +182,17 @@
       "evidence": {
         "variant": "core_model",
         "department": "model_audit_office",
-        "races": 2633,
-        "production_hits": 1172,
-        "challenger_hits": 1211,
-        "production_hit_rate": 0.4451196353968857,
-        "challenger_hit_rate": 0.4599316369160653,
-        "delta_hit_rate": 0.014812001519179607,
-        "delta_pp": 1.4812001519179607,
-        "changed_races": 272,
-        "flip_gains": 102,
-        "flip_losses": 63,
-        "net_hits": 39,
+        "races": 2677,
+        "production_hits": 1188,
+        "challenger_hits": 1226,
+        "production_hit_rate": 0.44378035113933506,
+        "challenger_hit_rate": 0.4579753455360478,
+        "delta_hit_rate": 0.014194994396712735,
+        "delta_pp": 1.4194994396712735,
+        "changed_races": 280,
+        "flip_gains": 104,
+        "flip_losses": 66,
+        "net_hits": 38,
         "promotion_status": "promising_shadow"
       }
     },
@@ -203,15 +203,15 @@
       "evidence": {
         "rule": "switch_to_second_when_margin<=0.03",
         "margin_threshold": 0.03,
-        "switched_races": 150,
-        "production_hits_in_switched_races": 37,
-        "second_pick_hits_in_switched_races": 44,
+        "switched_races": 155,
+        "production_hits_in_switched_races": 38,
+        "second_pick_hits_in_switched_races": 45,
         "net_hits": 7,
-        "baseline_total_hits": 1287,
-        "hypothetical_total_hits": 1294,
-        "baseline_hit_rate": 0.44242007562736335,
-        "hypothetical_hit_rate": 0.4448264008250258,
-        "global_delta_pp": 0.24063251976624267,
+        "baseline_total_hits": 1303,
+        "hypothetical_total_hits": 1310,
+        "baseline_hit_rate": 0.44124619031493395,
+        "hypothetical_hit_rate": 0.4436166610226888,
+        "global_delta_pp": 0.23704707077548257,
         "status": "shadow_candidate_only",
         "promotion_requirement": "must beat production prospectively on >=300 settled races and pass external validation"
       }
@@ -222,9 +222,9 @@
       "action": "keep multi-head coverage for near-tie races; do not collapse to a single head",
       "evidence": {
         "segment": "near_tie_<=0.03",
-        "races": 150,
-        "hits": 38,
-        "hit_rate": 0.253333
+        "races": 155,
+        "hits": 39,
+        "hit_rate": 0.251613
       }
     }
   ],
