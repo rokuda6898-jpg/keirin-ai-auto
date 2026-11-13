@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-11-13T19:08:28+09:00",
+  "checked_at": "2026-11-14T01:49:55+09:00",
   "owners": {
     "data": "データ品質責任者",
     "coverage": "全レース予想責任者",
@@ -9,24 +9,6 @@
   },
   "status": "error",
   "findings": [
-    {
-      "owner": "coverage",
-      "code": "missing_company",
-      "level": "error",
-      "message": "会社予想が締切15分前または締切後にも未作成です。後付けせず未作成として記録します。",
-      "race_ids": [
-        "012820261113",
-        "013120261113",
-        "015120261113",
-        "023120261113",
-        "025120261113",
-        "033120261113",
-        "043120261113",
-        "053120261113",
-        "063120261113",
-        "073120261113"
-      ]
-    },
     {
       "owner": "settlement",
       "code": "withdrawn_tickets",
@@ -75,29 +57,37 @@
       "message": "intraday.yml の直近完了処理が失敗しています。",
       "race_ids": [],
       "run_url": "https://github.com/rokuda6898-jpg/keirin-ai-auto/actions/runs/43404725565"
+    },
+    {
+      "owner": "operations",
+      "code": "workflow_conditional-live.yml",
+      "level": "error",
+      "message": "conditional-live.yml の直近完了処理が失敗しています。",
+      "race_ids": [],
+      "run_url": "https://github.com/rokuda6898-jpg/keirin-ai-auto/actions/runs/43460290968"
     }
   ],
   "coverage": {
     "company": {
-      "total": 72,
-      "saved": 62,
-      "missing": 10
+      "total": 0,
+      "saved": 0,
+      "missing": 0
     }
   },
   "matched_comparison": {
     "company": {
-      "races": 36,
-      "hits": 6,
-      "stake_yen": 18600,
-      "return_yen": 19290.0,
-      "largest_hit_return_share": 0.48626231207879733
+      "races": 0,
+      "hits": 0,
+      "stake_yen": 0,
+      "return_yen": 0,
+      "largest_hit_return_share": null
     }
   },
   "active_modes": [
     "company"
   ],
   "comparison_scope": "会社方式のみ・初回締切前予想・各点100円。従来の独立予想は終了。",
-  "department_mean_ticket_overlap": 0.2677077624793808,
+  "department_mean_ticket_overlap": null,
   "email_configured": false,
   "notification_channel": "github_actions",
   "email_status": "github_actions_duplicate"
