@@ -1,11 +1,23 @@
 {
-  "checked_at_jst": "2026-11-13T03:28:37+09:00",
+  "checked_at_jst": "2026-11-13T11:36:01+09:00",
   "status": "repaired",
   "repaired": true,
   "attempts": [
     {
       "attempt": 0,
       "problems": [
+        {
+          "type": "race_schedule_date_missing",
+          "date": "2026-11-12"
+        },
+        {
+          "type": "daily_inputs_stale",
+          "path": "/home/runner/work/keirin-ai-auto/keirin-ai-auto/data/raw/today_entries.csv",
+          "dates": [
+            "2026-11-12"
+          ],
+          "expected": "2026-11-13"
+        },
         {
           "type": "results_overdue",
           "race_ids": [
@@ -98,6 +110,8 @@
       "health": {
         "severity": "warning",
         "problem_types": [
+          "daily_inputs_stale",
+          "race_schedule_date_missing",
           "results_overdue"
         ],
         "race_count": 83,
@@ -105,7 +119,7 @@
         "actual_riders": 600,
         "rider_integrity_ok": true
       },
-      "repair_action": "settlement_refresh"
+      "repair_action": "full_day_data_rebuild_gated+prediction_regeneration+settlement_refresh"
     },
     {
       "attempt": 1,
@@ -113,30 +127,15 @@
       "health": {
         "severity": "ok",
         "problem_types": [],
-        "race_count": 83,
-        "expected_riders": 600,
-        "actual_riders": 600,
+        "race_count": 72,
+        "expected_riders": 509,
+        "actual_riders": 509,
         "rider_integrity_ok": true
       }
     }
   ],
   "race_stats": {
-    "012520261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "012820261112": {
+    "012820261113": {
       "cars": [
         1,
         2,
@@ -145,15 +144,14 @@
         5,
         6,
         7,
-        8,
-        9
+        8
       ],
-      "count": 9,
-      "expected_entries": 9,
-      "declared_entries": 9,
+      "count": 8,
+      "expected_entries": 8,
+      "declared_entries": 8,
       "cancelled_cars": []
     },
-    "014620261112": {
+    "013120261113": {
       "cars": [
         1,
         2,
@@ -168,7 +166,7 @@
       "declared_entries": 7,
       "cancelled_cars": []
     },
-    "014720261112": {
+    "014720261113": {
       "cars": [
         1,
         2,
@@ -182,7 +180,7 @@
       "declared_entries": 6,
       "cancelled_cars": []
     },
-    "014820261112": {
+    "014820261113": {
       "cars": [
         1,
         2,
@@ -197,830 +195,7 @@
       "declared_entries": 7,
       "cancelled_cars": []
     },
-    "015120261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6
-      ],
-      "count": 6,
-      "expected_entries": 6,
-      "declared_entries": 6,
-      "cancelled_cars": []
-    },
-    "016120261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "018520261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "022520261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "022820261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9
-      ],
-      "count": 9,
-      "expected_entries": 9,
-      "declared_entries": 9,
-      "cancelled_cars": []
-    },
-    "024620261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "024720261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "024820261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "025120261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "026120261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "028520261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "032520261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "032820261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9
-      ],
-      "count": 9,
-      "expected_entries": 9,
-      "declared_entries": 9,
-      "cancelled_cars": []
-    },
-    "034620261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "034720261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "034820261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "035120261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "036120261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "038520261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "042520261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "042820261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9
-      ],
-      "count": 9,
-      "expected_entries": 9,
-      "declared_entries": 9,
-      "cancelled_cars": []
-    },
-    "044620261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "044720261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "044820261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "045120261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "046120261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "048520261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "052520261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "052820261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9
-      ],
-      "count": 9,
-      "expected_entries": 9,
-      "declared_entries": 9,
-      "cancelled_cars": []
-    },
-    "054620261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "054720261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "054820261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "055120261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "056120261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "058520261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "062520261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "062820261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9
-      ],
-      "count": 9,
-      "expected_entries": 9,
-      "declared_entries": 9,
-      "cancelled_cars": []
-    },
-    "064620261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "064720261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "064820261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "065120261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "066120261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "068520261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "072520261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "072820261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9
-      ],
-      "count": 9,
-      "expected_entries": 9,
-      "declared_entries": 9,
-      "cancelled_cars": []
-    },
-    "074620261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "074720261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "074820261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "075120261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "076120261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "078520261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "082820261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9
-      ],
-      "count": 9,
-      "expected_entries": 9,
-      "declared_entries": 9,
-      "cancelled_cars": []
-    },
-    "084620261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "084720261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "084820261112": {
+    "015120261113": {
       "cars": [
         1,
         2,
@@ -1033,7 +208,7 @@
       "declared_entries": 5,
       "cancelled_cars": []
     },
-    "085120261112": {
+    "016120261113": {
       "cars": [
         1,
         2,
@@ -1048,37 +223,20 @@
       "declared_entries": 7,
       "cancelled_cars": []
     },
-    "086120261112": {
+    "018520261113": {
       "cars": [
         1,
         2,
         3,
         4,
-        5,
-        6,
-        7
+        5
       ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
+      "count": 5,
+      "expected_entries": 5,
+      "declared_entries": 5,
       "cancelled_cars": []
     },
-    "088520261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "092820261112": {
+    "022820261113": {
       "cars": [
         1,
         2,
@@ -1087,15 +245,14 @@
         5,
         6,
         7,
-        8,
-        9
+        8
       ],
-      "count": 9,
-      "expected_entries": 9,
-      "declared_entries": 9,
+      "count": 8,
+      "expected_entries": 8,
+      "declared_entries": 8,
       "cancelled_cars": []
     },
-    "094620261112": {
+    "023120261113": {
       "cars": [
         1,
         2,
@@ -1110,22 +267,7 @@
       "declared_entries": 7,
       "cancelled_cars": []
     },
-    "094720261112": {
-      "cars": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "count": 7,
-      "expected_entries": 7,
-      "declared_entries": 7,
-      "cancelled_cars": []
-    },
-    "094820261112": {
+    "024720261113": {
       "cars": [
         1,
         2,
@@ -1139,7 +281,7 @@
       "declared_entries": 6,
       "cancelled_cars": []
     },
-    "095120261112": {
+    "024820261113": {
       "cars": [
         1,
         2,
@@ -1154,7 +296,20 @@
       "declared_entries": 7,
       "cancelled_cars": []
     },
-    "096120261112": {
+    "025120261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "count": 5,
+      "expected_entries": 5,
+      "declared_entries": 5,
+      "cancelled_cars": []
+    },
+    "026120261113": {
       "cars": [
         1,
         2,
@@ -1169,7 +324,36 @@
       "declared_entries": 7,
       "cancelled_cars": []
     },
-    "098520261112": {
+    "028520261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "count": 5,
+      "expected_entries": 5,
+      "declared_entries": 5,
+      "cancelled_cars": []
+    },
+    "032820261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "count": 8,
+      "expected_entries": 8,
+      "declared_entries": 8,
+      "cancelled_cars": []
+    },
+    "033120261113": {
       "cars": [
         1,
         2,
@@ -1184,7 +368,81 @@
       "declared_entries": 7,
       "cancelled_cars": []
     },
-    "102820261112": {
+    "034720261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "count": 6,
+      "expected_entries": 6,
+      "declared_entries": 6,
+      "cancelled_cars": []
+    },
+    "034820261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "count": 7,
+      "expected_entries": 7,
+      "declared_entries": 7,
+      "cancelled_cars": []
+    },
+    "035120261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "count": 7,
+      "expected_entries": 7,
+      "declared_entries": 7,
+      "cancelled_cars": []
+    },
+    "036120261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "count": 7,
+      "expected_entries": 7,
+      "declared_entries": 7,
+      "cancelled_cars": []
+    },
+    "038520261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "count": 7,
+      "expected_entries": 7,
+      "declared_entries": 7,
+      "cancelled_cars": []
+    },
+    "042820261113": {
       "cars": [
         1,
         2,
@@ -1201,7 +459,7 @@
       "declared_entries": 9,
       "cancelled_cars": []
     },
-    "104620261112": {
+    "043120261113": {
       "cars": [
         1,
         2,
@@ -1216,7 +474,7 @@
       "declared_entries": 7,
       "cancelled_cars": []
     },
-    "104820261112": {
+    "044720261113": {
       "cars": [
         1,
         2,
@@ -1231,7 +489,7 @@
       "declared_entries": 7,
       "cancelled_cars": []
     },
-    "105120261112": {
+    "044820261113": {
       "cars": [
         1,
         2,
@@ -1246,7 +504,7 @@
       "declared_entries": 7,
       "cancelled_cars": []
     },
-    "106120261112": {
+    "045120261113": {
       "cars": [
         1,
         2,
@@ -1261,7 +519,37 @@
       "declared_entries": 7,
       "cancelled_cars": []
     },
-    "112820261112": {
+    "046120261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "count": 7,
+      "expected_entries": 7,
+      "declared_entries": 7,
+      "cancelled_cars": []
+    },
+    "048520261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "count": 7,
+      "expected_entries": 7,
+      "declared_entries": 7,
+      "cancelled_cars": []
+    },
+    "052820261113": {
       "cars": [
         1,
         2,
@@ -1278,7 +566,7 @@
       "declared_entries": 9,
       "cancelled_cars": []
     },
-    "114620261112": {
+    "053120261113": {
       "cars": [
         1,
         2,
@@ -1293,7 +581,7 @@
       "declared_entries": 7,
       "cancelled_cars": []
     },
-    "114820261112": {
+    "054720261113": {
       "cars": [
         1,
         2,
@@ -1308,7 +596,7 @@
       "declared_entries": 7,
       "cancelled_cars": []
     },
-    "115120261112": {
+    "054820261113": {
       "cars": [
         1,
         2,
@@ -1323,7 +611,21 @@
       "declared_entries": 7,
       "cancelled_cars": []
     },
-    "116120261112": {
+    "055120261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "count": 6,
+      "expected_entries": 6,
+      "declared_entries": 6,
+      "cancelled_cars": []
+    },
+    "056120261113": {
       "cars": [
         1,
         2,
@@ -1338,7 +640,22 @@
       "declared_entries": 7,
       "cancelled_cars": []
     },
-    "122820261112": {
+    "058520261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "count": 7,
+      "expected_entries": 7,
+      "declared_entries": 7,
+      "cancelled_cars": []
+    },
+    "062820261113": {
       "cars": [
         1,
         2,
@@ -1355,7 +672,7 @@
       "declared_entries": 9,
       "cancelled_cars": []
     },
-    "124820261112": {
+    "063120261113": {
       "cars": [
         1,
         2,
@@ -1370,7 +687,527 @@
       "declared_entries": 7,
       "cancelled_cars": []
     },
-    "125120261112": {
+    "064720261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "count": 7,
+      "expected_entries": 7,
+      "declared_entries": 7,
+      "cancelled_cars": []
+    },
+    "064820261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "count": 6,
+      "expected_entries": 6,
+      "declared_entries": 6,
+      "cancelled_cars": []
+    },
+    "065120261113": {
+      "cars": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "count": 6,
+      "expected_entries": 6,
+      "declared_entries": 7,
+      "cancelled_cars": [
+        2
+      ]
+    },
+    "066120261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "count": 6,
+      "expected_entries": 6,
+      "declared_entries": 6,
+      "cancelled_cars": []
+    },
+    "068520261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "count": 7,
+      "expected_entries": 7,
+      "declared_entries": 7,
+      "cancelled_cars": []
+    },
+    "072820261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "count": 9,
+      "expected_entries": 9,
+      "declared_entries": 9,
+      "cancelled_cars": []
+    },
+    "073120261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "count": 7,
+      "expected_entries": 7,
+      "declared_entries": 7,
+      "cancelled_cars": []
+    },
+    "074720261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "count": 7,
+      "expected_entries": 7,
+      "declared_entries": 7,
+      "cancelled_cars": []
+    },
+    "074820261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "count": 6,
+      "expected_entries": 6,
+      "declared_entries": 6,
+      "cancelled_cars": []
+    },
+    "075120261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "count": 7,
+      "expected_entries": 7,
+      "declared_entries": 7,
+      "cancelled_cars": []
+    },
+    "076120261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "count": 7,
+      "expected_entries": 7,
+      "declared_entries": 7,
+      "cancelled_cars": []
+    },
+    "078520261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "count": 7,
+      "expected_entries": 7,
+      "declared_entries": 7,
+      "cancelled_cars": []
+    },
+    "082820261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "count": 9,
+      "expected_entries": 9,
+      "declared_entries": 9,
+      "cancelled_cars": []
+    },
+    "084720261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "count": 7,
+      "expected_entries": 7,
+      "declared_entries": 7,
+      "cancelled_cars": []
+    },
+    "084820261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "count": 7,
+      "expected_entries": 7,
+      "declared_entries": 7,
+      "cancelled_cars": []
+    },
+    "085120261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "count": 7,
+      "expected_entries": 7,
+      "declared_entries": 7,
+      "cancelled_cars": []
+    },
+    "086120261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "count": 7,
+      "expected_entries": 7,
+      "declared_entries": 7,
+      "cancelled_cars": []
+    },
+    "088520261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "count": 7,
+      "expected_entries": 7,
+      "declared_entries": 7,
+      "cancelled_cars": []
+    },
+    "092820261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "count": 9,
+      "expected_entries": 9,
+      "declared_entries": 9,
+      "cancelled_cars": []
+    },
+    "094720261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "count": 7,
+      "expected_entries": 7,
+      "declared_entries": 7,
+      "cancelled_cars": []
+    },
+    "094820261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "count": 7,
+      "expected_entries": 7,
+      "declared_entries": 7,
+      "cancelled_cars": []
+    },
+    "095120261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "count": 7,
+      "expected_entries": 7,
+      "declared_entries": 7,
+      "cancelled_cars": []
+    },
+    "096120261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "count": 7,
+      "expected_entries": 7,
+      "declared_entries": 7,
+      "cancelled_cars": []
+    },
+    "098520261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "count": 7,
+      "expected_entries": 7,
+      "declared_entries": 7,
+      "cancelled_cars": []
+    },
+    "102820261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "count": 9,
+      "expected_entries": 9,
+      "declared_entries": 9,
+      "cancelled_cars": []
+    },
+    "104820261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "count": 7,
+      "expected_entries": 7,
+      "declared_entries": 7,
+      "cancelled_cars": []
+    },
+    "105120261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "count": 7,
+      "expected_entries": 7,
+      "declared_entries": 7,
+      "cancelled_cars": []
+    },
+    "106120261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "count": 7,
+      "expected_entries": 7,
+      "declared_entries": 7,
+      "cancelled_cars": []
+    },
+    "112820261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "count": 9,
+      "expected_entries": 9,
+      "declared_entries": 9,
+      "cancelled_cars": []
+    },
+    "114820261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "count": 7,
+      "expected_entries": 7,
+      "declared_entries": 7,
+      "cancelled_cars": []
+    },
+    "115120261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "count": 7,
+      "expected_entries": 7,
+      "declared_entries": 7,
+      "cancelled_cars": []
+    },
+    "116120261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "count": 7,
+      "expected_entries": 7,
+      "declared_entries": 7,
+      "cancelled_cars": []
+    },
+    "122820261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "count": 9,
+      "expected_entries": 9,
+      "declared_entries": 9,
+      "cancelled_cars": []
+    },
+    "124820261113": {
+      "cars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "count": 7,
+      "expected_entries": 7,
+      "declared_entries": 7,
+      "cancelled_cars": []
+    },
+    "125120261113": {
       "cars": [
         1,
         2,
@@ -1389,9 +1226,9 @@
   "health": {
     "severity": "ok",
     "problem_types": [],
-    "race_count": 83,
-    "expected_riders": 600,
-    "actual_riders": 600,
+    "race_count": 72,
+    "expected_riders": 509,
+    "actual_riders": 509,
     "rider_integrity_ok": true
   },
   "recurrence": {
