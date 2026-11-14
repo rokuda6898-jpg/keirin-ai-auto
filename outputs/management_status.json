@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-11-14T10:57:39+09:00",
+  "checked_at": "2026-11-14T11:14:45+09:00",
   "owners": {
     "data": "データ品質責任者",
     "coverage": "全レース予想責任者",
@@ -10,13 +10,6 @@
   "status": "error",
   "findings": [
     {
-      "owner": "data",
-      "code": "feed_stale",
-      "level": "error",
-      "message": "締切前レースがありますが公開データが45分以上古い、または時刻が不正です。",
-      "race_ids": []
-    },
-    {
       "owner": "coverage",
       "code": "missing_company",
       "level": "error",
@@ -25,6 +18,7 @@
         "012820261114",
         "013120261114",
         "018420261114",
+        "022820261114",
         "023120261114",
         "028420261114",
         "033120261114",
@@ -73,15 +67,6 @@
       ]
     },
     {
-      "owner": "settlement",
-      "code": "results_overdue",
-      "level": "warning",
-      "message": "発走から2時間以上経過しても結果未確認です。中止・延期も確認してください。",
-      "race_ids": [
-        "018420261114"
-      ]
-    },
-    {
       "owner": "operations",
       "code": "workflow_daily.yml",
       "level": "error",
@@ -95,7 +80,7 @@
       "level": "error",
       "message": "intraday.yml の直近完了処理が失敗しています。",
       "race_ids": [],
-      "run_url": "https://github.com/rokuda6898-jpg/keirin-ai-auto/actions/runs/43473636584"
+      "run_url": "https://github.com/rokuda6898-jpg/keirin-ai-auto/actions/runs/43543704109"
     }
   ],
   "coverage": {
@@ -121,5 +106,5 @@
   "department_mean_ticket_overlap": null,
   "email_configured": false,
   "notification_channel": "github_actions",
-  "email_status": "github_actions_alert"
+  "email_status": "github_actions_duplicate"
 }
