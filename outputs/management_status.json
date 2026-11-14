@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-11-14T07:16:51+09:00",
+  "checked_at": "2026-11-14T10:57:39+09:00",
   "owners": {
     "data": "データ品質責任者",
     "coverage": "全レース予想責任者",
@@ -9,6 +9,36 @@
   },
   "status": "error",
   "findings": [
+    {
+      "owner": "data",
+      "code": "feed_stale",
+      "level": "error",
+      "message": "締切前レースがありますが公開データが45分以上古い、または時刻が不正です。",
+      "race_ids": []
+    },
+    {
+      "owner": "coverage",
+      "code": "missing_company",
+      "level": "error",
+      "message": "会社予想が締切15分前または締切後にも未作成です。後付けせず未作成として記録します。",
+      "race_ids": [
+        "012820261114",
+        "013120261114",
+        "018420261114",
+        "023120261114",
+        "028420261114",
+        "033120261114",
+        "038420261114",
+        "043120261114",
+        "048420261114",
+        "053120261114",
+        "058420261114",
+        "063120261114",
+        "068420261114",
+        "073120261114",
+        "078420261114"
+      ]
+    },
     {
       "owner": "settlement",
       "code": "withdrawn_tickets",
@@ -43,12 +73,21 @@
       ]
     },
     {
+      "owner": "settlement",
+      "code": "results_overdue",
+      "level": "warning",
+      "message": "発走から2時間以上経過しても結果未確認です。中止・延期も確認してください。",
+      "race_ids": [
+        "018420261114"
+      ]
+    },
+    {
       "owner": "operations",
       "code": "workflow_daily.yml",
       "level": "error",
       "message": "daily.yml の直近完了処理が失敗しています。",
       "race_ids": [],
-      "run_url": "https://github.com/rokuda6898-jpg/keirin-ai-auto/actions/runs/43349862558"
+      "run_url": "https://github.com/rokuda6898-jpg/keirin-ai-auto/actions/runs/43542376334"
     },
     {
       "owner": "operations",
