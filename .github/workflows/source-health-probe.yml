@@ -1,0 +1,39 @@
+name: keirin-source-health-probe
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/source-health-probe.yml']
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check only public data providers (no login or bypass)
+        run: |
+          python - <<'PY'
+          import urllib.request
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+          today=datetime.now(ZoneInfo("Asia/Tokyo")).date().isoformat()
+          urls={
+              "winticket":"https://www.winticket.jp/keirin/racecard",
+              "netkeirin":"https://keirin.netkeiba.com/race/",
+              "kdreams":f"https://keirin.kdreams.jp/kaisai/{today.replace('-', '/')}/",
+              "dmm":"https://keirin.dmm.com/utsunomiya/racecard/"+today,
+              "keirin_official":"https://www.keirin.jp/pc/raceschedule",
+          }
+          for name,url in urls.items():
+              try:
+                  req=urllib.request.Request(url,headers={"User-Agent":"keirin-source-health/1.0","Accept-Language":"ja"})
+                  with urllib.request.urlopen(req,timeout=12) as r:
+                      data=r.read(350000)
+                      print(f"PROVIDER {name}: status={r.status} bytes={len(data)} final={r.url} html={data[:65]!r}",flush=True)
+              except Exception as e:
+                  print(f"PROVIDER {name}: {type(e).__name__}: {str(e)[:150]}",flush=True)
+          PY
