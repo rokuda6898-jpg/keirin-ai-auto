@@ -502,7 +502,22 @@ def cached_race_ids_for_date(race_date):
 def fetch_today_entries(race_date=None, max_races=None, sleep_sec=0.2):
     ensure_dirs()
     race_date = race_date or datetime.now(ZoneInfo("Asia/Tokyo")).strftime("%Y-%m-%d")
-    index_html = http_get(RACECARD_URL)
+    licensed_url = os.getenv("KEIRIN_TODAY_CSV_URL", "").strip()
+    if licensed_url:
+        if max_races:
+            raise ValueError("authorized full-day CSV may not be truncated")
+        from authorized_today_feed import load
+        return load(licensed_url)
+    try:
+        index_html = http_get(RACECARD_URL)
+    except requests.HTTPError as exc:
+        if exc.response is not None and exc.response.status_code == 403:
+            raise RuntimeError(
+                "WINTICKET denied automated access (HTTP 403). "
+                "No stale or fabricated racecards will be published. "
+                "Set KEIRIN_TODAY_CSV_URL to a complete licensed pre-race CSV."
+            ) from exc
+        raise
     nexus_index_captured_at = datetime.now(ZoneInfo("Asia/Tokyo")).isoformat()
     links = collect_race_links(index_html, race_date)
     if links:
