@@ -28,7 +28,9 @@ def main():
         print("KEIRIN_HISTORY_CSV_URL is empty; skip history download")
 
     if today_url:
-        download_csv(today_url, TODAY_CSV)
+        # Verify user-authorized racecards and rebuild the matching schedule.
+        from authorized_today_feed import load
+        load(today_url)
     else:
         auto_fetch = os.getenv("AUTO_FETCH_TODAY_ENTRIES", "1").strip().lower()
         if auto_fetch in {"1", "true", "yes", "on"}:
