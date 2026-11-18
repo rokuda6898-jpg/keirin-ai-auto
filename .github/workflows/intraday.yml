@@ -240,7 +240,7 @@ jobs:
           python src/preserve_validation.py save /tmp/intraday_validation
 
           stage_intraday_state() {
-            git add outputs data/raw/today_entries.csv data/raw/today_odds.csv || true
+            git add outputs data/raw/today_entries.csv data/raw/today_odds.csv data/raw/today_entries_metadata.json || true
             git diff --staged --quiet || git commit -m "Add near-close keirin snapshot"
           }
 
