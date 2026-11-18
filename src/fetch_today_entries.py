@@ -392,6 +392,12 @@ def guard_against_destructive_shrink(entries_df):
         return
     if old.empty or "race_id" not in old.columns or entries_df.empty:
         return
+    # Compare only matching dates; daily programme sizes legitimately change.
+    if "date" in old.columns and "date" in entries_df.columns:
+        dates = set(entries_df["date"].dropna().astype(str))
+        old = old[old["date"].astype(str).isin(dates)]
+    if old.empty:
+        return
     old_races = old["race_id"].astype(str).nunique()
     new_races = entries_df["race_id"].astype(str).nunique()
     # A full-day replacement should never collapse a healthy snapshot by more
@@ -470,7 +476,7 @@ def save_today_frames(all_entries, all_odds):
 
 
 def _race_id_from_link(link):
-    m = re.search(r"/racecard/(\\d{10})/\\d+/\\d+", str(link))
+    m = re.search(r"/racecard/(\d{10})/\d+/\d+", str(link))
     return m.group(1) if m else ""
 
 
@@ -481,7 +487,7 @@ def write_source_attempt_log(race_date, attempts):
     with path.open("a", encoding="utf-8") as fh:
         for item in attempts:
             row = {"checked_at_jst": checked_at, "date": race_date, **item}
-            fh.write(json.dumps(row, ensure_ascii=False) + "\\n")
+            fh.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 
 def cached_race_ids_for_date(race_date):
