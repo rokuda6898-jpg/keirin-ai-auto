@@ -6,9 +6,6 @@ on:
     paths: ['outputs/latest_race_schedule.csv', 'src/conditional_live.py', 'src/conditional_budget*.py', 'src/conditional_input_refresh.py', 'src/trifecta_chain_research.py', 'models/conditional_trifecta_v1.*', '.github/workflows/conditional-live.yml']
   schedule:
     - cron: '13,43 * * * *'
-  workflow_run:
-    workflows: ['daily-keirin-predict', 'intraday-keirin-odds', 'quick-keirin-results', 'settle-keirin-results']
-    types: [completed]
 permissions:
   contents: write
 concurrency:
