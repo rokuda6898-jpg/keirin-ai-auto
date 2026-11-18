@@ -3,10 +3,15 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['src/public_live.py', 'src/public_archive.py', '.github/workflows/public-live-data.yml']
-  workflow_run:
-    workflows: ['daily-keirin-predict', 'intraday-keirin-odds', 'fusion-shadow-live', 'quick-keirin-results', 'settle-keirin-results']
-    types: [completed]
+    paths:
+      - 'src/public_live.py'
+      - 'src/public_archive.py'
+      - '.github/workflows/public-live-data.yml'
+      - 'outputs/latest_race_schedule.csv'
+      - 'outputs/latest_predictions.csv'
+      - 'outputs/latest_results.json'
+      - 'data/raw/today_entries.csv'
+      - 'outputs/company/company_decision_predictions.json'
 permissions:
   contents: write
 concurrency:
