@@ -71,7 +71,7 @@ def validate(frame: pd.DataFrame, now: datetime) -> pd.DataFrame:
         raise ValueError("official result-bearing source cannot be used as pre-race input")
     if "result_available" in frame.columns:
         flags = frame["result_available"].fillna("").astype(str).str.lower().str.strip()
-        if ~flags.isin(["", "0", "0.0", "false", "nan"]).all():
+        if not flags.isin(["", "0", "0.0", "false", "nan"]).all():
             raise ValueError("already-settled data cannot be used as pre-race input")
     for name in ("car_no", "race_no", "entries_number", "start_at", "close_at"):
         nums = pd.to_numeric(frame[name], errors="coerce")
