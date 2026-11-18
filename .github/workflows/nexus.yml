@@ -4,9 +4,6 @@ on:
   push:
     branches: [main]
     paths: ['src/nexus_model/**', 'src/nexus_*.py', 'src/conditional_budget_near_close.py', 'src/conditional_roi.py', 'models/nexus53/**', 'tests/test_nexus*.py', 'tests/test_conditional_budget_near_close.py', 'tests/test_conditional_roi.py', '.github/workflows/nexus.yml']
-  workflow_run:
-    workflows: ['daily-keirin-predict', 'intraday-keirin-odds', 'quick-keirin-results', 'settle-keirin-results', 'conditional-trifecta-live']
-    types: [completed]
 permissions:
   contents: read
 concurrency:
