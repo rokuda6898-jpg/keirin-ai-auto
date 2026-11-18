@@ -140,6 +140,8 @@ jobs:
           PY
 
       - name: Run manager and self-repair
+        env:
+          KEIRIN_TODAY_CSV_URL: ${{ secrets.KEIRIN_TODAY_CSV_URL }}
         run: python src/site_manager.py
       - name: Preserve central history across manager git resets
         run: |
