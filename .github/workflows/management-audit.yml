@@ -6,9 +6,6 @@ on:
   push:
     branches: [main]
     paths: ['src/management_*.py', '.github/workflows/management-audit.yml']
-  workflow_run:
-    workflows: ['keirin-site-manager', 'keirin-manager-watchdog', 'daily-keirin-predict', 'intraday-keirin-odds', 'fusion-shadow-live', 'quick-keirin-results', 'settle-keirin-results', 'public-live-data', 'deploy-pages']
-    types: [completed]
 permissions:
   contents: write
   actions: read
