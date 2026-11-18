@@ -122,6 +122,25 @@ def refresh(root=ROOT, clock=now_jst, fetcher=fetch_racecard_only,
     if not schedule or len(schedule) != sum(x.get("date") == today for x in schedule_rows):
         raise ValueError("missing or duplicate current-day schedule")
     cached = read_valid_cache(root / INPUT, schedule, today)
+    # A commercially authorized, validated CSV is already checked in by the
+    # canonical collector. Reuse its identical pre-race evidence rather than
+    # calling the denied WINTICKET URL again from this isolated workflow.
+    authorized = False
+    metadata_path = root / "data/raw/today_entries_metadata.json"
+    if metadata_path.is_file():
+        try:
+            provenance = json.loads(metadata_path.read_text(encoding="utf-8"))
+            authorized = (
+                provenance.get("source") == "operator_configured_authorized_csv"
+                and provenance.get("date") == today
+            )
+        except (OSError, ValueError, TypeError):
+            authorized = False
+    if authorized:
+        verified = read_valid_cache(root / "data/raw/today_entries.csv", schedule, today)
+        cached.update(verified)
+        if not verified:
+            raise ValueError("licensed racecards failed the conditional model input gate")
     ledger = frozen(root / LEDGER)
     upcoming = sorted(
         (r for r in schedule.values()
@@ -140,6 +159,9 @@ def refresh(root=ROOT, clock=now_jst, fetcher=fetch_racecard_only,
         attempted += 1
         rid = str(item["race_id"])
         url = item.get("source_url", "")
+        if authorized:
+            failures.append({"race_id": rid, "reason": "missing_verified_authorized_racecard"})
+            continue
         if not str(url).startswith("https://www.winticket.jp/keirin/"):
             failures.append({"race_id": rid, "reason": "invalid_source_url"})
             continue
@@ -172,7 +194,7 @@ def refresh(root=ROOT, clock=now_jst, fetcher=fetch_racecard_only,
         path.unlink()
     report = {"date": today, "scheduled": len(schedule), "already_frozen": sum(
         rid in ledger for rid in schedule), "valid_cached": len(cached),
-        "newly_fetched": fetched, "attempted": attempted,
+        "newly_fetched": fetched, "attempted": attempted, "licensed_feed": authorized,
         "failed": failures, "unfetched": max(0, len(upcoming) - attempted)}
     print("CONDITIONAL_ENTRY_REFRESH " + json.dumps(report, ensure_ascii=False), flush=True)
     return report
