@@ -90,6 +90,25 @@ class ManagementTests(unittest.TestCase):
         self.assertIsNone(result['matched_comparison']['company']['return_yen'])
         self.assertEqual(result['matched_comparison']['company']['hits'],1)
 
+    def test_feed_stale_begins_after_morning_refresh_window(self):
+        from datetime import timedelta
+        before = datetime.fromisoformat('2026-10-09T06:30:00+09:00')
+        feed = dict(self.feed, updated_at='2026-10-09T00:10:00+09:00')
+        race = self.race()
+        race['close_at'] = datetime.fromisoformat('2026-10-09T09:00:00+09:00').timestamp()
+        feed['races'] = [race]
+        self.assertNotIn('feed_stale', {f['code'] for f in audit(feed, before)['findings']})
+        after = datetime.fromisoformat('2026-10-09T07:01:00+09:00')
+        self.assertIn('feed_stale', {f['code'] for f in audit(feed, after)['findings']})
+
+    def test_early_race_does_not_bypass_freshness_monitor(self):
+        before = datetime.fromisoformat('2026-10-09T06:30:00+09:00')
+        feed = dict(self.feed, updated_at='2026-10-09T00:10:00+09:00')
+        race = self.race()
+        race['close_at'] = datetime.fromisoformat('2026-10-09T06:50:00+09:00').timestamp()
+        feed['races'] = [race]
+        self.assertIn('feed_stale', {f['code'] for f in audit(feed, before)['findings']})
+
     def test_email_dedup_recovery_and_failed_delivery(self):
         report=audit({**self.feed,'races':[self.race()]},self.now)
         env={k:'test' for k in ('SMTP_HOST','SMTP_USER','SMTP_PASSWORD','ALERT_FROM','ALERT_TO')}
