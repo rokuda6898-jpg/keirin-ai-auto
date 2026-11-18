@@ -55,6 +55,8 @@ jobs:
       # the legacy training CSV. Publish their fresh inputs before its gates.
       - name: Fetch races near close
         id: upcoming
+        env:
+          KEIRIN_TODAY_CSV_URL: ${{ secrets.KEIRIN_TODAY_CSV_URL }}
         run: |
           python src/coverage_refresh.py
           echo "count=$(cat data/raw/upcoming_races_count.txt)" >> "$GITHUB_OUTPUT"
