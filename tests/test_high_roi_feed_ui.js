@@ -76,9 +76,17 @@ function environment(cloud){
  assert.equal(el('performance-title').textContent,'再構築版の公開後成績');
  assert.ok(el('notice').textContent.includes('1 / 1レース'));
 
- if(cloud.model_id===CLOUD_MODEL&&cloud.races.some(r=>r.forecast)){
+ // The real feed may have today's schedule with no predictions while still
+ // retaining valid forecasts from previous dates. Select the archived race
+ // explicitly before checking the detail panel.
+ const sample=cloud.model_id===CLOUD_MODEL
+  ?cloud.races.find(r=>r.forecast?.model_id===CLOUD_MODEL):null;
+ if(sample){
   const real=environment(cloud);await new Promise(setImmediate);
   real.elements.get('forecast-model').handlers.change({target:{value:CLOUD_MODEL}});
+  real.elements.get('date').handlers.change({target:{value:sample.date}});
+  real.elements.get('venues').handlers.click({target:{closest(){return {dataset:{venue:sample.venue_id}};}}});
+  real.elements.get('race-list').handlers.click({target:{closest(){return {dataset:{race:sample.race_id}};}}});
   assert.equal(real.elements.get('performance-title').textContent,'再構築版の公開後成績');
   assert.ok(real.elements.get('race-detail').innerHTML.includes('3連単フォーメーション'));
  }
