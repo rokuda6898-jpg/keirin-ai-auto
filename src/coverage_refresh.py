@@ -2,6 +2,7 @@
 import csv
 import argparse
 import json
+import os
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -33,6 +34,14 @@ def main():
     parser.add_argument('--verify', action='store_true')
     args = parser.parse_args()
     now = datetime.now(ZoneInfo('Asia/Tokyo'))
+    licensed_url = os.getenv('KEIRIN_TODAY_CSV_URL', '').strip()
+    if licensed_url:
+        from authorized_today_feed import load
+        frame = load(licensed_url, now=now)
+        upcoming = frame.loc[frame['close_at'].astype(float) > now.timestamp(), 'race_id'].nunique()
+        (ROOT/'data/raw/upcoming_races_count.txt').write_text(str(int(upcoming)), encoding='ascii')
+        print(f'Authorized CSV: {int(upcoming)} upcoming of {frame.race_id.nunique()} races', flush=True)
+        return
     path = ROOT/'outputs/company/company_decision_ledger.jsonl'
     saved = set()
     if path.exists():
