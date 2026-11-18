@@ -410,8 +410,9 @@ def apply_position_models(pred):
 
 def ensure_ready():
     if not TODAY_CSV.exists():
-        print("today_entries.csv not found; generating sample data")
-        subprocess.check_call([sys.executable, "src/make_sample_data.py", "--if-missing"])
+        raise FileNotFoundError(
+            "No verified today_entries.csv; refusing sample or fabricated live predictions"
+        )
 
     if not MODEL_PATH.exists():
         print("model not found; training model")
@@ -1329,8 +1330,13 @@ def main():
     fill_values = bundle["fill_values"]
 
     df = pd.read_csv(TODAY_CSV, dtype={"race_id": str, "player_id": str})
-    if "race_id" not in df.columns:
-        raise ValueError("today_entries.csv must have race_id column")
+    if "race_id" not in df.columns or "date" not in df.columns or df.empty:
+        raise ValueError("today_entries.csv is empty or missing race/date identity")
+    expected_date = now_jst.date().isoformat()
+    if not df["date"].astype(str).eq(expected_date).all():
+        raise ValueError(
+            f"Refusing stale or mixed-day prediction input: required {expected_date}"
+        )
     df = add_today_prior_features(df)
     df = add_live_odds_movement(df)
 
