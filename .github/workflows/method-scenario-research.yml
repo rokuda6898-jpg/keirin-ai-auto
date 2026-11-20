@@ -1,0 +1,73 @@
+name: method-scenario-research
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/method-scenario-fusion]
+    paths:
+      - src/method_scenario_fusion.py
+      - src/method_scenario_study.py
+      - tests/test_method_scenario_fusion.py
+      - tests/test_method_scenario_study.py
+      - .github/workflows/method-scenario-research.yml
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: method-scenario-research
+  cancel-in-progress: false
+
+jobs:
+  retrospective:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      PYTHONPATH: src
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '2'
+      MKL_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Validate chronological data separation and normalized distributions
+        run: |
+          python -m unittest discover -s tests -p 'test_method_scenario_fusion.py' -v
+          python -m unittest discover -s tests -p 'test_method_scenario_study.py' -v
+      - name: Restore original central history used by frozen baseline
+        uses: actions/cache/restore@v4
+        with:
+          path: data/raw/history.csv
+          key: keirin-central-history-v1-37796966787
+          fail-on-cache-miss: true
+      - name: Restore independently verified actual first and second methods
+        uses: actions/download-artifact@v4
+        with:
+          name: official-methods-38326215428
+          run-id: 38326215428
+          github-token: ${{ github.token }}
+          path: .
+      - name: Restore frozen full-trifecta predictions from original year study
+        uses: actions/download-artifact@v4
+        with:
+          name: fixed-year-research-37857407998
+          run-id: 37857407998
+          github-token: ${{ github.token }}
+          path: research/frozen_original/
+      - name: Freeze 3/8/12/18-point scenario predictions without loading outcomes
+        run: python src/method_scenario_study.py --stage predict
+      - name: Assess identical races against original fusion only after freezing
+        run: python src/method_scenario_study.py --stage assess
+      - name: Preserve independently inspectable research report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: method-scenario-${{ github.run_id }}
+          path: research/method_scenario/
+          if-no-files-found: warn
+          retention-days: 30
